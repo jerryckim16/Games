@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lotto 6/45 Simulator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Lotto 6/45 Simulator <span class="ko">로또 6/45</span></h1>
+    <p class="sub">Buy tickets every Saturday until you hit the jackpot. How long does it take, and what does it cost?</p>
+  </header>
+
+  <main>
+    <section class="panel controls">
+      <div class="field">
+        <label for="tickets">Tickets per draw</label>
+        <input id="tickets" type="number" min="1" max="100000" value="5">
+        <small>₩1,000 each. Real limit is ₩100,000 (100 tickets) per person per draw.</small>
+      </div>
+      <div class="field">
+        <label for="jackpot">Average 1st prize (₩)</label>
+        <input id="jackpot" type="number" min="100000000" step="100000000" value="2000000000">
+        <small>Pari-mutuel in reality; gross, before tax.</small>
+      </div>
+      <div class="field">
+        <label for="age">Your age at start</label>
+        <input id="age" type="number" min="0" max="120" value="30">
+      </div>
+      <div class="field">
+        <label><input id="useMine" type="checkbox"> Play my own numbers on ticket #1</label>
+        <input id="mine" type="text" value="3, 7, 12, 21, 33, 42" placeholder="6 numbers, 1–45">
+        <small id="mineErr" class="err"></small>
+      </div>
+      <div class="field">
+        <label for="speed">Speed: <span id="speedLabel"></span></label>
+        <input id="speed" type="range" min="0" max="100" value="40">
+      </div>
+      <div class="field">
+        <label><input id="stopOnJackpot" type="checkbox" checked> Stop when I win 1st prize</label>
+      </div>
+      <div class="buttons">
+        <button id="startBtn" class="primary">Start</button>
+        <button id="stepBtn">1 draw</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><span class="k">Draws played</span><span class="v" id="sDraws">0</span></div>
+      <div class="stat"><span class="k">Time passed</span><span class="v" id="sTime">0 weeks</span><span class="s" id="sAge"></span></div>
+      <div class="stat"><span class="k">Money spent</span><span class="v" id="sSpent">₩0</span><span class="s" id="sTickets"></span></div>
+      <div class="stat"><span class="k">Money won</span><span class="v" id="sWon">₩0</span><span class="s" id="sReturn"></span></div>
+      <div class="stat wide"><span class="k">Net profit</span><span class="v big" id="sNet">₩0</span><span class="s" id="sNetCompact"></span></div>
+    </section>
+
+    <section class="panel chart-panel">
+      <div class="chart-head">
+        <h2>Net profit over time</h2>
+        <div class="legend"><span class="dot d1"></span>1st <span class="dot d2"></span>2nd <span class="dot d3"></span>3rd</div>
+      </div>
+      <canvas id="chart"></canvas>
+    </section>
+
+    <section class="row">
+      <div class="panel">
+        <h2>Latest draw <span id="drawDate" class="muted"></span></h2>
+        <div id="balls" class="balls"></div>
+        <h2>Prize tally</h2>
+        <table class="tally">
+          <thead><tr><th>Tier</th><th>Match</th><th>Odds</th><th>Prize</th><th>Wins</th></tr></thead>
+          <tbody id="tallyBody"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Big wins log</h2>
+        <ul id="log" class="log"><li class="muted">3rd prize or better will show up here.</li></ul>
+      </div>
+    </section>
+  </main>
+
+  <div id="banner" class="banner hidden">
+    <div class="banner-card">
+      <div class="confetti">🎉</div>
+      <h2>JACKPOT!</h2>
+      <p id="bannerText"></p>
+      <button id="bannerClose" class="primary">Keep playing</button>
+    </div>
+  </div>
+
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
