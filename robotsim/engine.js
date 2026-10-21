@@ -44,13 +44,15 @@
       this.pickups = STATION_ROWS.map((y) => this.idx(1, y));
       this.drops = STATION_ROWS.map((y) => this.idx(COLS - 2, y));
       this.starts = ROBOT_STARTS.map(([x, y]) => this.idx(x, y));
-      this.reserved = new Set([...this.pickups, ...this.drops, ...this.starts]);
+      this.stations = new Set([...this.pickups, ...this.drops]);
+      this.reserved = new Set([...this.stations, ...this.starts]);
     }
 
     idx(x, y) { return y * this.cols + x; }
     x(i) { return i % this.cols; }
     y(i) { return (i / this.cols) | 0; }
     isWall(i) { return this.walls[i] === 1; }
+    isStation(i) { return this.stations.has(i); }
     manhattan(a, b) { return Math.abs(this.x(a) - this.x(b)) + Math.abs(this.y(a) - this.y(b)); }
 
     // Open 4-connected neighbours of cell i.
@@ -176,13 +178,17 @@
       r.path = path.slice();
     }
 
+    // Besides basic movement rules, a path may only touch a station cell where it starts or
+    // where it ends: robots can't cut through another station on the way.
     validPath(start, path) {
       if (!Array.isArray(path) || path.length === 0 || path[0] !== start) return false;
+      const end = path[path.length - 1];
       const w = this.world;
       for (let k = 1; k < path.length; k++) {
         const a = path[k - 1], b = path[k];
         if (b < 0 || b >= w.walls.length || w.isWall(b)) return false;
         if (a !== b && w.manhattan(a, b) !== 1) return false;
+        if (w.isStation(b) && b !== start && b !== end) return false;
       }
       return true;
     }

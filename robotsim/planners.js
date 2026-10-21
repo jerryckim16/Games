@@ -11,7 +11,8 @@
 //   }
 //
 // plan(req) receives:
-//   req.world    grid helpers: cols, rows, idx(x, y), x(i), y(i), isWall(i), neighbors(i), manhattan(a, b)
+//   req.world    grid helpers: cols, rows, idx(x, y), x(i), y(i), isWall(i), isStation(i),
+//                neighbors(i), manhattan(a, b)
 //   req.start    current cell index of this robot
 //   req.goal     target cell index
 //   req.robotId  0..4; robots are planned in id order, lower ids first
@@ -21,7 +22,8 @@
 //                After the path ends the robot stays put (for `dwell` ticks if it's at a station).
 //
 // Return an array of cell indices, one per tick, starting with req.start. Repeat a cell to
-// wait in place. Each step must be to the same cell or an adjacent open cell. Return null if
+// wait in place. Each step must be to the same cell or an adjacent open cell, and the path may
+// not pass through a station other than the one it starts or ends on. Return null if
 // there's no path; the robot waits a tick and asks again.
 (function (root) {
   "use strict";
@@ -61,7 +63,8 @@
     less(x, y) { return x.f < y.f || (x.f === y.f && x.s < y.s); }
   }
 
-  // Plain A* on the static map. Other robots are ignored entirely.
+  // Plain A* on the static map. Other robots are ignored entirely. Station cells are only
+  // entered when they're the goal.
   function astar(world, start, goal) {
     if (start === goal) return [start];
     const n = world.cols * world.rows;
@@ -74,6 +77,7 @@
       const cur = open.pop();
       if (cur === goal) break;
       for (const nb of world.neighbors(cur)) {
+        if (nb !== goal && world.isStation(nb)) continue;
         const cost = g[cur] + 1;
         if (g[nb] !== -1 && g[nb] <= cost) continue;
         g[nb] = cost;
