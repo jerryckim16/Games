@@ -625,7 +625,29 @@
       st.next = pibtSolve(world, agents, fixed, st);
     }
     const next = st.next.get(req.robotId);
-    return next === undefined ? [start, start] : [start, next];
+    if (next === undefined) return [start, start];
+    // Only the first step is decided; the rest is where PIBT is heading (downhill on the
+    // distance map, ignoring other robots). It's redone every tick and is there so the route
+    // can be drawn.
+    return [start].concat(downhill(world, next, goal));
+  }
+
+  // Shortest route from `from` to `goal` by following the distance map. Starts with `from`.
+  function downhill(world, from, goal) {
+    const dist = distanceMap(world, goal);
+    const route = [from];
+    for (let cur = from, guard = world.cols * world.rows; cur !== goal && guard > 0; guard--) {
+      const here = dist[cur] === -1 ? Infinity : dist[cur];
+      let best = -1;
+      for (const nb of world.neighbors(cur)) {
+        if (nb !== goal && (world.isStation(nb) || dist[nb] === -1)) continue;
+        if (dist[nb] < here && (best === -1 || dist[nb] < dist[best])) best = nb;
+      }
+      if (best === -1) break;
+      route.push(best);
+      cur = best;
+    }
+    return route;
   }
 
   const PLANNERS = [
