@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Warehouse Robot Simulator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Warehouse Robot Simulator</h1>
+    <p class="sub">5 robots shuttle items from 5 pickup stations to 5 drop-off spots, over and over. Swap the pathfinding algorithm and see whether they crash into each other.</p>
+  </header>
+
+  <main>
+    <section class="panel controls">
+      <div class="field">
+        <label for="planner">Algorithm</label>
+        <select id="planner"></select>
+        <small id="plannerDesc"></small>
+      </div>
+      <div class="field">
+        <label for="assignment">Task assignment</label>
+        <select id="assignment">
+          <option value="random">Random station each trip</option>
+          <option value="fixed">Fixed: robot N uses pickup N → drop-off N</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="seed">Random seed</label>
+        <input id="seed" type="number" min="0" step="1" value="42">
+        <small>Same seed + same map = same task sequence, for fair comparisons.</small>
+      </div>
+      <div class="field">
+        <label for="dwell">Pick / place time (ticks)</label>
+        <input id="dwell" type="number" min="0" max="50" step="1" value="3">
+      </div>
+      <div class="field">
+        <label for="speed">Speed: <span id="speedLabel"></span></label>
+        <input id="speed" type="range" min="1" max="60" value="6">
+      </div>
+      <div class="field checks">
+        <label><input id="showPaths" type="checkbox" checked> Show planned paths</label>
+        <label><input id="pauseOnHit" type="checkbox"> Pause on collision</label>
+      </div>
+      <div class="buttons">
+        <button id="startBtn" class="primary">Start</button>
+        <button id="stepBtn">Step</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><span class="k">Tick</span><span class="v" id="sTick">0</span></div>
+      <div class="stat"><span class="k">Deliveries</span><span class="v" id="sDeliv">0</span><span class="s" id="sRate"></span></div>
+      <div class="stat"><span class="k">Collisions</span><span class="v" id="sColl">0</span><span class="s" id="sCollSplit"></span></div>
+      <div class="stat"><span class="k">Wait ticks</span><span class="v" id="sWaits">0</span><span class="s">Standing still en route</span></div>
+    </section>
+
+    <section class="panel map-panel">
+      <div class="map-head">
+        <h2>Warehouse floor</h2>
+        <div class="legend">
+          <span class="sw sw-pick"></span>Pickup
+          <span class="sw sw-drop"></span>Drop-off
+          <span class="sw sw-wall"></span>Shelf
+          <span class="sw sw-hit"></span>Collision
+        </div>
+      </div>
+      <canvas id="map"></canvas>
+      <small class="muted">Click an empty cell to add or remove a shelf; robots re-plan right away.</small>
+    </section>
+
+    <section class="row">
+      <div class="panel">
+        <h2>Robots</h2>
+        <table class="tbl">
+          <thead><tr><th>Robot</th><th>Doing</th><th>Deliveries</th><th>Collisions</th><th>Waits</th></tr></thead>
+          <tbody id="robotBody"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Collision log</h2>
+        <ul id="log" class="log"><li class="muted">Collisions will show up here.</li></ul>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="map-head">
+        <h2>Benchmark</h2>
+        <div class="bench-controls">
+          <label for="benchTicks">Ticks</label>
+          <input id="benchTicks" type="number" min="100" max="200000" step="100" value="5000">
+          <button id="benchBtn">Run with current settings</button>
+          <button id="benchClear">Clear</button>
+        </div>
+      </div>
+      <p class="muted">Runs a fresh simulation instantly in the background on the current map, then adds a row. Change the algorithm and run again to compare.</p>
+      <table class="tbl">
+        <thead><tr><th>Algorithm</th><th>Assignment</th><th>Seed</th><th>Ticks</th><th>Deliveries</th><th>Per 1k ticks</th><th>Collisions</th><th>Vertex / swap</th><th>Wait ticks</th></tr></thead>
+        <tbody id="benchBody"><tr class="empty"><td colspan="9" class="muted">No runs yet.</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="engine.js"></script>
+  <script src="planners.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
