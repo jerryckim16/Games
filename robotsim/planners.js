@@ -548,6 +548,86 @@
     return path.slice(0, last + 1);
   }
 
+  // PIBT: Priority Inheritance with Backtracking (Okumura et al. 2019/2022). Plans one step
+  // at a time for everyone, with no search through time.
+  //
+  // Each robot has a priority that grows by one every tick it's still on its way and resets
+  // when it gets a new task (robot id breaks ties). Every tick, in priority order, a robot
+  // that hasn't moved yet picks the neighbouring cell (or its own) closest to its goal that
+  // nobody has claimed for the next tick. If another robot is standing there and hasn't moved
+  // yet, that robot inherits the priority and must move out of the way first (recursively).
+  // If it can't, the first robot backtracks and tries its next-best cell; if nothing works it
+  // stays. A pushed robot never steps into its pusher's cell, so there are no swaps, and two
+  // robots never claim the same cell, so the step is always collision-free.
+  //
+  // Robots picking or placing at a station can't be pushed. Stations are only entered by the
+  // robot heading there. Stations are dead ends, which plain PIBT handles badly: a robot that
+  // just finished at a station has the lowest priority, so robots waiting outside never make
+  // room and it can't get out. Robots leaving a station therefore plan first and push their
+  // way out.
+  const pibtState = new WeakMap(); // world -> { tick, walls, next: Map id -> cell, prio, goalOf }
+  function pibtSolve(world, agents, fixed, st) {
+    const occNow = new Map(), occNext = new Map();
+    for (const c of fixed) { occNow.set(c, null); occNext.set(c, null); }
+    for (const a of agents) { occNow.set(a.pos, a); a.next = -1; }
+
+    const step = (a, pusher) => {
+      const dist = distanceMap(world, a.goal);
+      const score = (c) => {
+        if (c === a.goal) return -1;
+        return dist[c] === -1 ? Infinity : dist[c];
+      };
+      const cands = [a.pos];
+      for (const nb of world.neighbors(a.pos)) if (nb === a.goal || !world.isStation(nb)) cands.push(nb);
+      // Closest to the goal first; among ties prefer a free cell, then a fixed direction order.
+      cands.sort((u, v) => score(u) - score(v) || (occNow.has(u) ? 1 : 0) - (occNow.has(v) ? 1 : 0));
+      for (const u of cands) {
+        if (occNext.has(u)) continue;
+        if (pusher && u === pusher.pos) continue;
+        occNext.set(u, a);
+        a.next = u;
+        const k = occNow.get(u);
+        if (k && k !== a && k.next === -1 && !step(k, a)) continue;
+        return true;
+      }
+      occNext.set(a.pos, a);
+      a.next = a.pos;
+      return false;
+    };
+
+    const key = (a) => st.prio.get(a.id) + (world.isStation(a.pos) ? 1e6 : 0);
+    const order = agents.slice().sort((a, b) => key(b) - key(a) || a.id - b.id);
+    for (const a of order) if (a.next === -1) step(a, null);
+    return new Map(agents.map((a) => [a.id, a.next]));
+  }
+
+  function pibt(req) {
+    const { world, start, goal, others, tick } = req;
+    let st = pibtState.get(world);
+    if (!st) pibtState.set(world, (st = { tick: -1, walls: null, next: null, prio: new Map(), goalOf: new Map() }));
+    if (st.tick !== tick || !sameWalls(st.walls, world.walls)) {
+      const agents = [{ id: req.robotId, pos: start, goal }];
+      const fixed = [];
+      for (const o of others) {
+        if (o.moving && o.pos !== o.goal) agents.push({ id: o.id, pos: o.pos, goal: o.goal });
+        else fixed.push(o.pos);
+      }
+      // Update priorities once per tick (not again if the shelves change mid-tick).
+      if (st.tick !== tick) {
+        for (const a of agents) {
+          const fresh = st.goalOf.get(a.id) !== a.goal;
+          st.prio.set(a.id, fresh ? 0 : st.prio.get(a.id) + 1);
+          st.goalOf.set(a.id, a.goal);
+        }
+      }
+      st.tick = tick;
+      st.walls = world.walls.slice();
+      st.next = pibtSolve(world, agents, fixed, st);
+    }
+    const next = st.next.get(req.robotId);
+    return next === undefined ? [start, start] : [start, next];
+  }
+
   const PLANNERS = [
     {
       id: "astar",
@@ -579,9 +659,16 @@
       replanEachTick: true,
       plan: windowedCbs,
     },
+    {
+      id: "pibt",
+      name: "PIBT (priority inheritance)",
+      description: "Every tick, robots pick their next step in priority order; a robot in the way inherits the priority and must move aside. One step ahead only, so it's very fast.",
+      replanEachTick: true,
+      plan: pibt,
+    },
   ];
 
-  const api = { PLANNERS, astar, whca, reservationAstar, windowedCbs, MinHeap };
+  const api = { PLANNERS, astar, whca, reservationAstar, windowedCbs, pibt, MinHeap };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.RobotPlanners = api;
 })(typeof self !== "undefined" ? self : this);
