@@ -165,6 +165,7 @@
       try {
         path = this.planner.plan({
           world: this.world, start: r.pos, goal: r.goal, robotId: r.id, tick: this.tick, others,
+          current: r.path.slice(),
         });
       } catch (err) {
         if (typeof console !== "undefined") console.error(`Planner "${this.planner.name}" threw:`, err);

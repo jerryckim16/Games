@@ -292,11 +292,10 @@
     const empty = els.benchBody.querySelector(".empty");
     if (empty) empty.remove();
     const tr = document.createElement("tr");
-    tr.title = `Ran in ${ms.toFixed(0)} ms`;
     tr.innerHTML = `<td>${opts.planner.name}</td><td>${opts.assignment}</td><td>${opts.seed}</td>` +
       `<td>${ticks.toLocaleString()}</td><td>${b.deliveries.toLocaleString()}</td>` +
       `<td>${(b.deliveries / ticks * 1000).toFixed(1)}</td><td>${b.totalCollisions.toLocaleString()}</td>` +
-      `<td>${b.collisions.vertex} / ${b.collisions.swap}</td><td>${waits.toLocaleString()}</td>`;
+      `<td>${b.collisions.vertex} / ${b.collisions.swap}</td><td>${waits.toLocaleString()}</td><td>${Math.round(ms).toLocaleString()}</td>`;
     els.benchBody.appendChild(tr);
   }
 
@@ -310,7 +309,7 @@
   els.speed.addEventListener("input", updateSpeedLabel);
   els.benchBtn.addEventListener("click", runBenchmark);
   els.benchClear.addEventListener("click", () => {
-    els.benchBody.innerHTML = '<tr class="empty"><td colspan="9" class="muted">No runs yet.</td></tr>';
+    els.benchBody.innerHTML = '<tr class="empty"><td colspan="10" class="muted">No runs yet.</td></tr>';
   });
 
   els.map.addEventListener("click", (ev) => {

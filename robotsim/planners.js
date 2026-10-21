@@ -15,6 +15,7 @@
 //                neighbors(i), manhattan(a, b)
 //   req.start    current cell index of this robot
 //   req.goal     target cell index
+//   req.current  this robot's own remaining path from last time (current[0] = start)
 //   req.robotId  0..4; robots are planned in id order, lower ids first
 //   req.tick     current simulation tick
 //   req.others   the other robots: { id, pos, goal, state, dwell, path }
@@ -94,11 +95,15 @@
   // True distance to `goal` on the static map (stations other than the goal are impassable),
   // cached per world and goal until the shelves change. Used as the WHCA* heuristic.
   const distCache = new WeakMap();
+  function sameWalls(a, b) {
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
   function distanceMap(world, goal) {
     let byGoal = distCache.get(world);
     if (!byGoal) distCache.set(world, (byGoal = new Map()));
     const hit = byGoal.get(goal);
-    if (hit && hit.walls.every((v, i) => v === world.walls[i])) return hit.dist;
+    if (hit && sameWalls(hit.walls, world.walls)) return hit.dist;
     const dist = new Int32Array(world.cols * world.rows).fill(-1);
     const queue = [goal];
     dist[goal] = 0;
@@ -114,20 +119,79 @@
     return dist;
   }
 
-  // Windowed Hierarchical Cooperative A* (Silver, 2005), simplified.
-  // Searches over (cell, time) for the next WHCA_WINDOW ticks, treating every other robot's
-  // committed path as a reservation, then follows the true distance heuristic beyond that.
-  // Robots replan every tick in id order, so each one routes around the robots planned
-  // before it. A cell is reserved both at the tick another robot is in it and the tick after
-  // it leaves, which rules out head-on swaps and guarantees that staying put on the next
-  // tick is always safe.
-  const WHCA_WINDOW = 16;
-  function whca(req) {
-    const { world, start, goal, others } = req;
-    if (start === goal) return [start];
-    const n = world.cols * world.rows, W = WHCA_WINDOW;
-    const dist = distanceMap(world, goal);
+  // Space-time reservations built from the other robots' committed paths.
+  // occ[t * n + c] = 1 means cell c can't be entered at tick t. A cell is reserved both at the
+  // tick another robot is in it and the tick after it leaves, which rules out head-on swaps
+  // and guarantees that staying put on the next tick is always safe. After everyone's path
+  // ends the world is static (robots stay where they stopped), so layer `last` stands in for
+  // every later tick.
+  function reservations(world, others, layers) {
+    const n = world.cols * world.rows;
+    if (layers === undefined) {
+      layers = 1;
+      for (const o of others) layers = Math.max(layers, o.path.length);
+    }
+    const occ = new Uint8Array((layers + 1) * n);
+    for (const o of others) {
+      const end = o.path.length - 1;
+      for (let t = 1; t <= layers; t++) {
+        occ[t * n + o.path[Math.min(t, end)]] = 1;
+        occ[t * n + o.path[Math.min(t - 1, end)]] = 1;
+      }
+    }
+    return { at: (t, c) => occ[Math.min(t, layers) * n + c] === 1, last: layers };
+  }
 
+  // Tick at which a robot's path reaches its final cell and stays there.
+  function arrival(path) {
+    let t = path.length - 1;
+    while (t > 0 && path[t - 1] === path[t]) t--;
+    return t;
+  }
+
+  // canKeepGoal(t): may this robot step onto `goal` at tick t and stay there? Other robots'
+  // paths through or onto the goal block it. With `bump`, a robot that has merely planned to
+  // park on the goal later (arriving after t + 1) doesn't: whoever gets there first wins, and
+  // the later robot sees its plan is broken and replans before it gets close.
+  function goalAdmission(goal, others, bump) {
+    let busy = -1;          // last tick a non-bumpable robot is on (or just leaving) the goal
+    const parkers = [];     // arrival ticks of robots that will park on the goal
+    for (const o of others) {
+      const end = o.path.length - 1;
+      if (o.path[end] === goal) {
+        const arr = arrival(o.path);
+        if (bump && arr > 0) { parkers.push(arr); continue; }
+        busy = Infinity;
+        continue;
+      }
+      for (let k = end; k >= 0; k--) if (o.path[k] === goal) { busy = Math.max(busy, k + 1); break; }
+    }
+    const latest = parkers.length ? Math.min(...parkers) - 2 : Infinity;
+    const admit = (t) => t > busy && t <= latest;
+    admit.latest = latest;               // must be on the goal by this tick
+    admit.never = busy === Infinity || latest <= busy;
+    return admit;
+  }
+
+  // Scratch space shared by every search: stamp[k] === gen marks state k as seen in the
+  // current search, so nothing needs clearing or reallocating between calls.
+  let stamp = new Uint32Array(0), parentOf = new Int32Array(0), gen = 0;
+  function scratch(size) {
+    if (stamp.length < size) {
+      stamp = new Uint32Array(size);
+      parentOf = new Int32Array(size);
+      gen = 0;
+    }
+    if (++gen === 0xffffffff) { stamp.fill(0); gen = 1; }
+  }
+
+  // A* over (cell, tick) up to `horizon` ticks. Each tick costs 1, moving or waiting. Ends when
+  // the robot reaches the goal and can stay there; with `partial`, a search that runs out of
+  // ticks returns the route that got closest instead. Stations are never passed through, and
+  // the goal is only entered once it can be kept.
+  function spaceTimeSearch(world, start, goal, others, res, horizon, partial, bump) {
+    const cols = world.cols, rows = world.rows, n = cols * rows;
+    const dist = distanceMap(world, goal);
     // Starting on a station (e.g. leaving a pickup): the BFS never enters it, so derive h.
     let startH = dist[start];
     if (startH === -1) {
@@ -137,47 +201,92 @@
       if (startH === -1) return null; // goal unreachable on the static map
     }
     const h = (c) => (c === start && dist[c] === -1 ? startH : dist[c]);
+    const canKeepGoal = goalAdmission(goal, others, bump);
+    if (canKeepGoal.never && !partial) return null;
 
-    // occ[t * n + c] = 1: cell c can't be entered at tick t.
-    const occ = new Uint8Array((W + 1) * n);
-    for (const o of others) {
-      const last = o.path.length - 1;
-      for (let t = 1; t <= W; t++) {
-        occ[t * n + o.path[Math.min(t, last)]] = 1;
-        occ[t * n + o.path[Math.min(t - 1, last)]] = 1;
-      }
-    }
-    // Arriving at the goal ends the search only if nobody else needs that cell afterwards.
-    let goalBusyUntil = -1;
-    for (let t = 1; t <= W; t++) if (occ[t * n + goal]) goalBusyUntil = t;
-
-    const seen = new Uint8Array((W + 1) * n);
-    const parent = new Int32Array((W + 1) * n).fill(-1);
+    scratch((horizon + 1) * n);
     const open = new MinHeap();
-    seen[start] = 1;
+    stamp[start] = gen;
+    parentOf[start] = -1;
     open.push(start, startH);
     let end = -1;
     while (open.size) {
       const key = open.pop();
       const t = (key / n) | 0, c = key - t * n;
-      if ((c === goal && t > goalBusyUntil) || t === W) { end = key; break; }
-      // Stations are never passed through; the goal is only entered once it can be kept.
-      const moves = [c];
-      for (const nb of world.neighbors(c)) {
-        if (nb === goal ? t + 1 > goalBusyUntil : !world.isStation(nb)) moves.push(nb);
+      if (c === goal && canKeepGoal(t)) { end = key; break; }
+      if (t === horizon) {
+        if (partial) { end = key; break; }
+        continue;
       }
-      for (const nc of moves) {
+      // Wait, then up / right / down / left (same order as world.neighbors).
+      const x = c % cols, y = (c / cols) | 0;
+      for (let m = 0; m < 5; m++) {
+        let nc = c;
+        if (m === 1) { if (y === 0) continue; nc = c - cols; }
+        else if (m === 2) { if (x === cols - 1) continue; nc = c + 1; }
+        else if (m === 3) { if (y === rows - 1) continue; nc = c + cols; }
+        else if (m === 4) { if (x === 0) continue; nc = c - 1; }
+        if (m > 0) {
+          if (world.walls[nc]) continue;
+          // Stations are never passed through; the goal is only entered once it can be kept.
+          if (nc === goal ? !canKeepGoal(t + 1) : world.isStation(nc)) continue;
+        }
         const nk = (t + 1) * n + nc;
-        if (seen[nk] || occ[nk] || h(nc) === -1) continue;
-        seen[nk] = 1;
-        parent[nk] = key;
+        if (stamp[nk] === gen || h(nc) === -1) continue;
+        if (!partial && t + 1 + h(nc) > canKeepGoal.latest) continue; // can't beat the next parker
+        if (nc !== goal && res.at(t + 1, nc)) continue;
+        stamp[nk] = gen;
+        parentOf[nk] = key;
         open.push(nk, t + 1 + h(nc));
       }
     }
-    if (end === -1) return [start, start]; // boxed in for now: hold position
+    if (end === -1) return null;
     const path = [];
-    for (let k = end; k !== -1; k = parent[k]) path.push(k % n);
+    for (let k = end; k !== -1; k = parentOf[k]) path.push(k % n);
     return path.reverse();
+  }
+
+  // Windowed Hierarchical Cooperative A* (Silver, 2005), simplified.
+  // Searches over (cell, time) for the next WHCA_WINDOW ticks, treating every other robot's
+  // committed path as a reservation, then follows the true distance heuristic beyond that.
+  // Robots replan every tick in id order, so each one routes around the robots planned
+  // before it.
+  const WHCA_WINDOW = 16;
+  function whca(req) {
+    const { world, start, goal, others } = req;
+    if (start === goal) return [start];
+    const res = reservations(world, others, WHCA_WINDOW);
+    // Boxed in for now: hold position, which is always safe for one tick.
+    return spaceTimeSearch(world, start, goal, others, res, WHCA_WINDOW, true, false) || [start, start];
+  }
+
+  // Reservation A*: plan the whole trip through time once, then keep that plan as long as it
+  // stays conflict-free. Most ticks cost only a cheap check of the plan against the others'
+  // paths; a full search runs when a robot gets a new destination or its plan is broken.
+  // Stations go to whoever arrives first (see goalAdmission), and a robot queuing for a busy
+  // station falls back to a short windowed plan until it frees up. Committed plans never
+  // conflict with each other, so the same safety argument as WHCA holds.
+  const RESERVE_SLACK = 64;
+  function stillValid(world, path, start, goal, others) {
+    if (!path || path.length < 2 || path[0] !== start || path[path.length - 1] !== goal) return false;
+    for (let t = 1; t < path.length; t++) if (world.isWall(path[t])) return false; // shelf added
+    for (const o of others) {
+      const end = o.path.length - 1;
+      const at = (t) => o.path[t < end ? t : end];
+      for (let t = 1; t < path.length; t++) {
+        if (path[t] !== goal && (path[t] === at(t) || path[t] === at(t - 1))) return false;
+      }
+    }
+    return goalAdmission(goal, others, true)(arrival(path));
+  }
+  function reservationAstar(req) {
+    const { world, start, goal, others, current } = req;
+    if (start === goal) return [start];
+    if (stillValid(world, current, start, goal, others)) return current;
+    const res = reservations(world, others);
+    const horizon = res.last + world.manhattan(start, goal) * 2 + RESERVE_SLACK;
+    return spaceTimeSearch(world, start, goal, others, res, horizon, false, true) ||
+      spaceTimeSearch(world, start, goal, others, res, WHCA_WINDOW, true, true) || [start, start];
   }
 
   const PLANNERS = [
@@ -195,9 +304,16 @@
       replanEachTick: true,
       plan: whca,
     },
+    {
+      id: "reserve",
+      name: "Reservation A* (plan once)",
+      description: "Plans each trip's full route through time once and reserves it; others route around it. Replans only when the route is blocked, so it needs far less computing.",
+      replanEachTick: true,
+      plan: reservationAstar,
+    },
   ];
 
-  const api = { PLANNERS, astar, whca, MinHeap };
+  const api = { PLANNERS, astar, whca, reservationAstar, MinHeap };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.RobotPlanners = api;
 })(typeof self !== "undefined" ? self : this);
