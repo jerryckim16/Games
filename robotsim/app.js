@@ -14,7 +14,9 @@
 
   const $ = (id) => document.getElementById(id);
   const els = {
-    robots: $("robots"), pickups: $("pickups"), drops: $("drops"),
+    robots: $("robots"), pickups: $("pickups"), drops: $("drops"), chargers: $("chargers"),
+    chargersHint: $("chargersHint"), batteryLife: $("batteryLife"), chargeTime: $("chargeTime"),
+    sCharges: $("sCharges"), sBattery: $("sBattery"),
     planner: $("planner"), plannerDesc: $("plannerDesc"), assignment: $("assignment"),
     seed: $("seed"), dwell: $("dwell"), speed: $("speed"), speedLabel: $("speedLabel"),
     showPaths: $("showPaths"), pauseOnHit: $("pauseOnHit"),
@@ -51,7 +53,20 @@
       seed: Math.max(0, Math.floor(Number(els.seed.value) || 0)),
       dwellTicks: Math.min(50, Math.max(0, Math.floor(Number(els.dwell.value) || 0))),
       world,
+      battery: { capacity: clampField(els.batteryLife, [50, 100000]), chargeTicks: clampField(els.chargeTime, [1, 10000]) },
     };
+  }
+
+  // Each robot spends chargeTime of every (batteryLife + chargeTime) ticks on a charger, so
+  // fewer chargers than this can't keep up.
+  function updateChargerHint() {
+    const n = clampField(els.chargers, LIMITS.chargers);
+    if (n === 0) { els.chargersHint.textContent = "0–20, along the bottom wall. 0 turns batteries off."; return; }
+    const life = clampField(els.batteryLife, [50, 100000]), charge = clampField(els.chargeTime, [1, 10000]);
+    const need = Math.ceil(clampField(els.robots, LIMITS.robots) * charge / (life + charge));
+    els.chargersHint.textContent = `0–20, along the bottom wall. These robots need at least ${need}` +
+      (n < need ? "; with fewer, some will run out." : ".");
+    els.chargersHint.classList.toggle("err", n < need);
   }
 
   const clampField = (el, [lo, hi]) => {
@@ -66,8 +81,10 @@
       robots: clampField(els.robots, LIMITS.robots),
       pickups: clampField(els.pickups, LIMITS.stations),
       drops: clampField(els.drops, LIMITS.stations),
+      chargers: clampField(els.chargers, LIMITS.chargers),
     });
     resizeCanvas();
+    updateChargerHint();
   }
 
   function reset() {
@@ -106,6 +123,9 @@
       case STATE.PICKING: return `Picking at P${r.pickup + 1}`;
       case STATE.TO_DROP: return `→ Drop-off ${r.drop + 1}`;
       case STATE.DROPPING: return `Placing at D${r.drop + 1}`;
+      case STATE.TO_CHARGER: return `→ Charger ${r.charger + 1}`;
+      case STATE.CHARGING: return `Charging at C${r.charger + 1}`;
+      case STATE.DEAD: return '<span class="warn">Out of battery</span>';
       default: return r.state;
     }
   }
@@ -126,9 +146,17 @@
     els.sCollSplit.textContent = `${sim.collisions.vertex} same-cell · ${sim.collisions.swap} head-on swap`;
     els.sWaits.textContent = waits.toLocaleString();
 
-    els.robotBody.innerHTML = sim.robots.map((r) =>
-      `<tr><td>${robotLabel(r.id)}</td><td>${describe(r)}</td><td>${r.deliveries}</td><td>${r.collisions}</td><td>${r.waits}</td></tr>`
-    ).join("");
+    els.sCharges.textContent = sim.batteryOn ? sim.chargeTrips.toLocaleString() : "Off";
+    els.sBattery.textContent = !sim.batteryOn ? "No charging stations"
+      : sim.ranOut ? `${sim.ranOut} robot${sim.ranOut === 1 ? "" : "s"} ran out of battery` : "No robot has run out";
+    els.sBattery.classList.toggle("warn", sim.ranOut > 0);
+
+    els.robotBody.innerHTML = sim.robots.map((r) => {
+      const batt = sim.batteryOn
+        ? `<span class="batt"><i style="width:${batteryPct(r)}%;background:${batteryColor(r)}"></i></span>${batteryPct(r)}%`
+        : "–";
+      return `<tr><td>${robotLabel(r.id)}</td><td>${describe(r)}</td><td>${batt}</td><td>${r.deliveries}</td><td>${r.collisions}</td><td>${r.waits}</td></tr>`;
+    }).join("");
 
     if (!sim.events.length) {
       els.log.innerHTML = '<li class="muted">Collisions will show up here.</li>';
@@ -140,11 +168,17 @@
     if (!running) els.startBtn.textContent = sim.tick > 0 ? "Resume" : "Start";
   }
 
+  const batteryPct = (r) => Math.round(100 * r.battery / sim.batteryCapacity);
+  const batteryColor = (r) => {
+    const f = r.battery / sim.batteryCapacity;
+    return f > 0.5 ? colors.pick : f > 0.2 ? colors.drop : colors.neg;
+  };
+
   // ---------- drawing ----------
   let colors = {};
   function readColors() {
     const cs = getComputedStyle(document.documentElement);
-    for (const k of ["floor", "grid", "wall", "pick", "drop", "neg", "text", "muted", "panel"]) {
+    for (const k of ["floor", "grid", "wall", "pick", "drop", "charge", "neg", "text", "muted", "panel"]) {
       colors[k] = cs.getPropertyValue("--" + k).trim();
     }
   }
@@ -229,6 +263,7 @@
 
     world.pickups.forEach((p, k) => drawStation(p, colors.pick, "P" + (k + 1)));
     world.drops.forEach((d, k) => drawStation(d, colors.drop, "D" + (k + 1)));
+    world.chargers.forEach((c, k) => drawStation(c, colors.charge, "C" + (k + 1)));
 
     // planned paths, starting from where each robot is drawn right now
     if (els.showPaths.checked) {
@@ -275,13 +310,24 @@
     for (const r of sim.robots) {
       const x = lerp(cx(r.prev), cx(r.pos), frac), y = lerp(cy(r.prev), cy(r.pos), frac);
       const rad = cell * 0.36;
+      const dead = r.state === STATE.DEAD;
+      ctx.globalAlpha = dead ? 0.35 : 1;
       ctx.fillStyle = ROBOT_COLORS[r.id];
       ctx.beginPath();
       ctx.arc(x, y, rad, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = colors.panel;
-      ctx.lineWidth = Math.min(2, cell * 0.1);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = dead ? colors.neg : colors.panel;
+      ctx.lineWidth = dead ? Math.max(1.5, cell * 0.08) : Math.min(2, cell * 0.1);
       ctx.stroke();
+      if (sim.batteryOn) {
+        // Battery gauge under the robot.
+        const bw = cell * 0.7, bh = Math.max(2, cell * 0.1), by = y + rad + bh * 0.4;
+        ctx.fillStyle = colors.grid;
+        ctx.fillRect(x - bw / 2, by, bw, bh);
+        ctx.fillStyle = batteryColor(r);
+        ctx.fillRect(x - bw / 2, by, bw * r.battery / sim.batteryCapacity, bh);
+      }
       const carrying = r.state === STATE.TO_DROP || r.state === STATE.DROPPING;
       if (carrying) {
         const b = rad * 0.75;
@@ -328,12 +374,16 @@
     const empty = els.benchBody.querySelector(".empty");
     if (empty) empty.remove();
     const tr = document.createElement("tr");
-    const { robots, pickups, drops } = world.layout;
-    tr.innerHTML = `<td>${opts.planner.name}</td><td>${robots} robots · ${pickups}P → ${drops}D</td><td>${opts.assignment}</td><td>${opts.seed}</td>` +
+    const { robots, pickups, drops, chargers } = world.layout;
+    const setup = `${robots} robots · ${pickups}P → ${drops}D` +
+      (b.batteryOn ? ` · ${chargers} chargers, ${opts.battery.capacity}/${opts.battery.chargeTicks}` : "");
+    tr.innerHTML = `<td>${opts.planner.name}</td><td>${setup}</td><td>${opts.assignment}</td><td>${opts.seed}</td>` +
       `<td>${ticks.toLocaleString()}</td><td>${b.deliveries.toLocaleString()}</td>` +
       `<td>${(b.deliveries / ticks * 1000).toFixed(1)}</td><td>${b.totalCollisions.toLocaleString()}</td>` +
       `<td>${b.collisions.vertex} / ${b.collisions.swap}</td><td>${waits.toLocaleString()}</td>` +
       `<td${b.longestStall >= STALL_WARNING ? ' class="warn"' : ""}>${b.longestStall.toLocaleString()}</td>` +
+      `<td>${b.batteryOn ? b.chargeTrips.toLocaleString() : "–"}</td>` +
+      `<td${b.ranOut ? ' class="warn"' : ""}>${b.batteryOn ? b.ranOut : "–"}</td>` +
       `<td>${Math.round(ms).toLocaleString()}</td>`;
     els.benchBody.appendChild(tr);
   }
@@ -342,16 +392,16 @@
   els.startBtn.addEventListener("click", () => setRunning(!running));
   els.stepBtn.addEventListener("click", () => { setRunning(false); stepOnce(); });
   els.resetBtn.addEventListener("click", () => { setRunning(false); reset(); });
-  for (const el of [els.planner, els.assignment, els.seed, els.dwell]) {
-    el.addEventListener("change", () => { setRunning(false); reset(); });
+  for (const el of [els.planner, els.assignment, els.seed, els.dwell, els.batteryLife, els.chargeTime]) {
+    el.addEventListener("change", () => { setRunning(false); updateChargerHint(); reset(); });
   }
-  for (const el of [els.robots, els.pickups, els.drops]) {
+  for (const el of [els.robots, els.pickups, els.drops, els.chargers]) {
     el.addEventListener("change", () => { setRunning(false); rebuildWorld(); reset(); });
   }
   els.speed.addEventListener("input", updateSpeedLabel);
   els.benchBtn.addEventListener("click", runBenchmark);
   els.benchClear.addEventListener("click", () => {
-    els.benchBody.innerHTML = '<tr class="empty"><td colspan="12" class="muted">No runs yet.</td></tr>';
+    els.benchBody.innerHTML = '<tr class="empty"><td colspan="14" class="muted">No runs yet.</td></tr>';
   });
 
   els.map.addEventListener("click", (ev) => {

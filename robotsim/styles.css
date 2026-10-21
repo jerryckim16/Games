@@ -11,6 +11,7 @@
   --wall: #8a8f9c;
   --pick: #12a150;
   --drop: #e8a400;
+  --charge: #0891b2;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,6 +28,7 @@
     --wall: #4a5060;
     --pick: #3ccf7a;
     --drop: #f2b72e;
+    --charge: #22d3ee;
     color-scheme: dark;
   }
 }
@@ -43,6 +45,7 @@
   --wall: #4a5060;
   --pick: #3ccf7a;
   --drop: #f2b72e;
+  --charge: #22d3ee;
   color-scheme: dark;
 }
 
@@ -137,6 +140,9 @@ button:hover { filter: brightness(1.05); }
 .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-left: 6px; }
 .sw-pick { background: var(--pick); }
 .sw-drop { background: var(--drop); }
+.sw-charge { background: var(--charge); }
+.batt { display: inline-block; width: 34px; height: 8px; border-radius: 3px; background: var(--grid); vertical-align: 0; margin-right: 6px; overflow: hidden; }
+.batt > i { display: block; height: 100%; }
 .sw-wall { background: var(--wall); }
 .sw-hit { background: var(--neg); border-radius: 50%; }
 #map { width: 100%; display: block; cursor: crosshair; touch-action: manipulation; margin-bottom: 6px; }

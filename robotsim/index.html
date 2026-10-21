@@ -30,6 +30,21 @@
         <small>1–100, along the right wall (then the bottom). Changing these clears shelf edits.</small>
       </div>
       <div class="field">
+        <label for="chargers">Charging stations</label>
+        <input id="chargers" type="number" min="0" max="20" step="1" value="3">
+        <small id="chargersHint">0–20, along the bottom wall. 0 turns batteries off.</small>
+      </div>
+      <div class="field">
+        <label for="batteryLife">Battery life (ticks)</label>
+        <input id="batteryLife" type="number" min="50" max="100000" step="50" value="500">
+        <small>A full battery lasts this many ticks of work.</small>
+      </div>
+      <div class="field">
+        <label for="chargeTime">Full charge time (ticks)</label>
+        <input id="chargeTime" type="number" min="1" max="10000" step="10" value="100">
+        <small>Robots charge to full, then go back to work.</small>
+      </div>
+      <div class="field">
         <label for="planner">Algorithm</label>
         <select id="planner"></select>
         <small id="plannerDesc"></small>
@@ -70,6 +85,7 @@
       <div class="stat"><span class="k">Deliveries</span><span class="v" id="sDeliv">0</span><span class="s" id="sRate"></span></div>
       <div class="stat"><span class="k">Collisions</span><span class="v" id="sColl">0</span><span class="s" id="sCollSplit"></span></div>
       <div class="stat"><span class="k">Wait ticks</span><span class="v" id="sWaits">0</span><span class="s">Standing still en route</span></div>
+      <div class="stat"><span class="k">Charging trips</span><span class="v" id="sCharges">0</span><span class="s" id="sBattery"></span></div>
     </section>
 
     <section class="panel map-panel">
@@ -78,6 +94,7 @@
         <div class="legend">
           <span class="sw sw-pick"></span>Pickup
           <span class="sw sw-drop"></span>Drop-off
+          <span class="sw sw-charge"></span>Charger
           <span class="sw sw-wall"></span>Shelf
           <span class="sw sw-hit"></span>Collision
         </div>
@@ -90,7 +107,7 @@
       <div class="panel">
         <h2>Robots</h2>
         <table class="tbl">
-          <thead><tr><th>Robot</th><th>Doing</th><th>Deliveries</th><th>Collisions</th><th>Waits</th></tr></thead>
+          <thead><tr><th>Robot</th><th>Doing</th><th>Battery</th><th>Deliveries</th><th>Collisions</th><th>Waits</th></tr></thead>
           <tbody id="robotBody"></tbody>
         </table>
       </div>
@@ -112,8 +129,8 @@
       </div>
       <p class="muted">Runs a fresh simulation instantly in the background on the current map, then adds a row. Change the algorithm and run again to compare.</p>
       <table class="tbl">
-        <thead><tr><th>Algorithm</th><th>Setup</th><th>Assignment</th><th>Seed</th><th>Ticks</th><th>Deliveries</th><th>Per 1k ticks</th><th>Collisions</th><th>Vertex / swap</th><th>Wait ticks</th><th title="Most ticks in a row without a delivery">Longest stall</th><th>Compute (ms)</th></tr></thead>
-        <tbody id="benchBody"><tr class="empty"><td colspan="12" class="muted">No runs yet.</td></tr></tbody>
+        <thead><tr><th>Algorithm</th><th>Setup</th><th>Assignment</th><th>Seed</th><th>Ticks</th><th>Deliveries</th><th>Per 1k ticks</th><th>Collisions</th><th>Vertex / swap</th><th>Wait ticks</th><th title="Most ticks in a row without a delivery">Longest stall</th><th>Charges</th><th>Ran out</th><th>Compute (ms)</th></tr></thead>
+        <tbody id="benchBody"><tr class="empty"><td colspan="14" class="muted">No runs yet.</td></tr></tbody>
       </table>
     </section>
   </main>
