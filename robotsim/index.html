@@ -9,11 +9,26 @@
 <body>
   <header>
     <h1>Warehouse Robot Simulator</h1>
-    <p class="sub">5 robots shuttle items from 5 pickup stations to 5 drop-off spots, over and over. Swap the pathfinding algorithm and see whether they crash into each other.</p>
+    <p class="sub">Robots shuttle items from pickup stations to drop-off spots, over and over. Swap the pathfinding algorithm and see whether they crash into each other.</p>
   </header>
 
   <main>
     <section class="panel controls">
+      <div class="field">
+        <label for="robots">Robots</label>
+        <input id="robots" type="number" min="1" max="20" step="1" value="5">
+        <small>1–20. The warehouse grows to fit robots and stations.</small>
+      </div>
+      <div class="field">
+        <label for="pickups">Pickup stations</label>
+        <input id="pickups" type="number" min="1" max="100" step="1" value="5">
+        <small>1–100, along the left wall (then the top).</small>
+      </div>
+      <div class="field">
+        <label for="drops">Drop-off spots</label>
+        <input id="drops" type="number" min="1" max="100" step="1" value="5">
+        <small>1–100, along the right wall (then the bottom). Changing these clears shelf edits.</small>
+      </div>
       <div class="field">
         <label for="planner">Algorithm</label>
         <select id="planner"></select>
@@ -97,8 +112,8 @@
       </div>
       <p class="muted">Runs a fresh simulation instantly in the background on the current map, then adds a row. Change the algorithm and run again to compare.</p>
       <table class="tbl">
-        <thead><tr><th>Algorithm</th><th>Assignment</th><th>Seed</th><th>Ticks</th><th>Deliveries</th><th>Per 1k ticks</th><th>Collisions</th><th>Vertex / swap</th><th>Wait ticks</th><th>Compute (ms)</th></tr></thead>
-        <tbody id="benchBody"><tr class="empty"><td colspan="10" class="muted">No runs yet.</td></tr></tbody>
+        <thead><tr><th>Algorithm</th><th>Setup</th><th>Assignment</th><th>Seed</th><th>Ticks</th><th>Deliveries</th><th>Per 1k ticks</th><th>Collisions</th><th>Vertex / swap</th><th>Wait ticks</th><th title="Most ticks in a row without a delivery">Longest stall</th><th>Compute (ms)</th></tr></thead>
+        <tbody id="benchBody"><tr class="empty"><td colspan="12" class="muted">No runs yet.</td></tr></tbody>
       </table>
     </section>
   </main>

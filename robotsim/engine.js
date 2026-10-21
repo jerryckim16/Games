@@ -8,16 +8,28 @@
 (function (root) {
   "use strict";
 
-  const COLS = 28;
-  const ROWS = 17;
-  const STATION_ROWS = [2, 5, 8, 11, 14];
-  // Shelf blocks as [x0, y0, x1, y1] inclusive. Aisles run between them in both directions.
-  const SHELVES = [
-    [5, 2, 8, 4], [12, 2, 15, 4], [19, 2, 22, 4],
-    [5, 7, 8, 9], [12, 7, 15, 9], [19, 7, 22, 9],
-    [5, 12, 8, 13], [12, 12, 15, 13], [19, 12, 22, 13],
-  ];
-  const ROBOT_STARTS = [[10, 16], [12, 16], [14, 16], [16, 16], [18, 16]];
+  // Smallest floor; it grows (keeping this shape) to fit more stations or robots.
+  const BASE_COLS = 28;
+  const BASE_ROWS = 17;
+  const LIMITS = { robots: [1, 20], stations: [1, 100] };
+  const DEFAULT_LAYOUT = { robots: 5, pickups: 5, drops: 5 };
+  // Shelf blocks and the aisles between them.
+  const SHELF_W = 4, SHELF_H = 3, AISLE_X = 3, AISLE_Y = 2;
+  // Open floor between the outer walls (where stations sit) and the shelves. The top and
+  // bottom margins shrink when no stations line those walls.
+  const MARGIN = 3, MARGIN_NO_STATIONS = 2;
+
+  const clampInt = (v, [lo, hi], fallback) => {
+    const n = Math.floor(Number(v));
+    return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : fallback;
+  };
+
+  // Pick `count` cells spread evenly along `cells`.
+  function spread(cells, count) {
+    const out = [];
+    for (let i = 0; i < count; i++) out.push(cells[Math.floor((i + 0.5) * cells.length / count)]);
+    return out;
+  }
 
   const STATE = { TO_PICKUP: "to pickup", PICKING: "picking", TO_DROP: "to drop-off", DROPPING: "dropping" };
 
@@ -33,18 +45,64 @@
     };
   }
 
+  // Warehouse floor. Pickup stations line the left wall (then the top wall when there are
+  // more than fit), drop-off spots line the right wall (then the bottom wall). Shelf blocks
+  // fill the middle, and robots start in a row near the bottom.
+  // layout: { robots: 1..20, pickups: 1..100, drops: 1..100 }
   class World {
-    constructor() {
-      this.cols = COLS;
-      this.rows = ROWS;
-      this.walls = new Uint8Array(COLS * ROWS);
-      for (const [x0, y0, x1, y1] of SHELVES) {
-        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) this.walls[this.idx(x, y)] = 1;
+    constructor(layout) {
+      layout = layout || {};
+      const robots = clampInt(layout.robots, LIMITS.robots, DEFAULT_LAYOUT.robots);
+      const pickups = clampInt(layout.pickups, LIMITS.stations, DEFAULT_LAYOUT.pickups);
+      const drops = clampInt(layout.drops, LIMITS.stations, DEFAULT_LAYOUT.drops);
+      this.layout = { robots, pickups, drops };
+
+      // Grow until each station type fits on its two walls and the robots have room.
+      const need = Math.max(pickups, drops);
+      let cols = BASE_COLS, rows = BASE_ROWS;
+      for (let k = 1; ; k += 0.05) {
+        cols = Math.round(BASE_COLS * k);
+        rows = Math.round(BASE_ROWS * k);
+        if (cols + rows - 4 >= need && k * k * 8 >= robots) break;
       }
-      this.pickups = STATION_ROWS.map((y) => this.idx(1, y));
-      this.drops = STATION_ROWS.map((y) => this.idx(COLS - 2, y));
-      this.starts = ROBOT_STARTS.map(([x, y]) => this.idx(x, y));
+      this.cols = cols;
+      this.rows = rows;
+      this.walls = new Uint8Array(cols * rows);
+
+      const my = need <= rows - 2 ? MARGIN_NO_STATIONS : MARGIN;
+      const innerW = cols - 2 * MARGIN, innerH = rows - 2 * my;
+      const nx = Math.floor((innerW + AISLE_X) / (SHELF_W + AISLE_X));
+      const ny = Math.floor((innerH + AISLE_Y) / (SHELF_H + AISLE_Y));
+      const x0 = MARGIN + Math.floor((innerW - (nx * (SHELF_W + AISLE_X) - AISLE_X)) / 2);
+      const y0 = my + Math.floor((innerH - (ny * (SHELF_H + AISLE_Y) - AISLE_Y)) / 2);
+      for (let by = 0; by < ny; by++) {
+        for (let bx = 0; bx < nx; bx++) {
+          const sx = x0 + bx * (SHELF_W + AISLE_X), sy = y0 + by * (SHELF_H + AISLE_Y);
+          for (let y = sy; y < sy + SHELF_H; y++) for (let x = sx; x < sx + SHELF_W; x++) this.walls[this.idx(x, y)] = 1;
+        }
+      }
+
+      const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+      const left = range(1, rows - 2).map((y) => this.idx(0, y));
+      const top = range(1, cols - 2).map((x) => this.idx(x, 0));
+      const right = range(1, rows - 2).map((y) => this.idx(cols - 1, y));
+      const bottom = range(1, cols - 2).map((x) => this.idx(x, rows - 1));
+      this.pickups = spread(pickups <= left.length ? left : left.concat(top), pickups);
+      this.drops = spread(drops <= right.length ? right : right.concat(bottom), drops);
+      this.starts = spread(range(MARGIN, cols - MARGIN - 1).map((x) => this.idx(x, rows - my)), robots);
       this.stations = new Set([...this.pickups, ...this.drops]);
+      // Doorways: floor cells next to a station. Robots get in and out of stations through
+      // them, so planners shouldn't park there.
+      this.doorways = new Uint8Array(cols * rows);
+      for (const st of this.stations) {
+        const x = this.x(st), y = this.y(st);
+        for (const [dx, dy] of [[0, -1], [1, 0], [0, 1], [-1, 0]]) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+          const nb = this.idx(nx, ny);
+          if (!this.stations.has(nb)) this.doorways[nb] = 1;
+        }
+      }
       this.reserved = new Set([...this.stations, ...this.starts]);
     }
 
@@ -53,6 +111,7 @@
     y(i) { return (i / this.cols) | 0; }
     isWall(i) { return this.walls[i] === 1; }
     isStation(i) { return this.stations.has(i); }
+    isDoorway(i) { return this.doorways[i] === 1; }
     manhattan(a, b) { return Math.abs(this.x(a) - this.x(b)) + Math.abs(this.y(a) - this.y(b)); }
 
     // Open 4-connected neighbours of cell i.
@@ -73,7 +132,7 @@
     }
 
     clone() {
-      const w = new World();
+      const w = new World(this.layout);
       w.walls.set(this.walls);
       return w;
     }
@@ -98,7 +157,7 @@
     }
   }
 
-  // opts: { planner, assignment: "random" | "fixed", seed, dwellTicks, world }
+  // opts: { planner, assignment: "random" | "fixed", seed, dwellTicks, world | layout }
   class RobotSim {
     constructor(opts) {
       this.reset(opts);
@@ -110,10 +169,12 @@
       this.assignment = opts.assignment || "random";
       this.seed = opts.seed >>> 0;
       this.dwellTicks = Math.max(0, opts.dwellTicks | 0);
-      this.world = opts.world ? opts.world.clone() : new World();
+      this.world = opts.world ? opts.world.clone() : new World(opts.layout);
       this.rng = mulberry32(this.seed);
       this.tick = 0;
       this.deliveries = 0;
+      this.lastDeliveryTick = 0;
+      this.longestStall = 0;     // most ticks in a row without a delivery
       this.collisions = { vertex: 0, swap: 0 };
       this.events = [];          // collision log, newest last
       this.lastCollisionCells = [];
@@ -146,21 +207,23 @@
     // Ask the planner for a path for every moving robot that needs one (or all moving robots
     // when `force` is set). Robots are planned in id order, and each request can see the
     // paths already committed by the others, so prioritized planners work out of the box.
+    // A planner may set priority(robot, robots) to change the order (lower plans first; ties by id).
     planAll(force) {
       const replanEachTick = !!(this.planner && this.planner.replanEachTick);
-      for (const r of this.robots) {
+      let order = this.robots;
+      if (this.planner && this.planner.priority) {
+        const views = this.robots.map((r) => this.view(r));
+        const key = new Map(this.robots.map((r, i) => [r, this.planner.priority(views[i], views)]));
+        order = [...this.robots].sort((a, b) => key.get(a) - key.get(b) || a.id - b.id);
+      }
+      for (const r of order) {
         if (!this.moving(r) || r.pos === r.goal) continue;
         if (force || replanEachTick || r.path.length <= 1) this.plan(r);
       }
     }
 
     plan(r) {
-      const others = this.robots.filter((o) => o !== r).map((o) => ({
-        id: o.id, pos: o.pos, goal: o.goal, state: o.state,
-        path: o.path.slice(),
-        // How many more ticks it will sit still at its station before it moves on.
-        dwell: this.moving(o) ? 0 : o.dwell,
-      }));
+      const others = this.robots.filter((o) => o !== r).map((o) => this.view(o));
       let path = null;
       try {
         path = this.planner.plan({
@@ -181,6 +244,17 @@
 
     // Besides basic movement rules, a path may only touch a station cell where it starts or
     // where it ends: robots can't cut through another station on the way.
+    // What a planner gets to see of a robot.
+    view(o) {
+      return {
+        id: o.id, pos: o.pos, goal: o.goal, state: o.state,
+        moving: this.moving(o),
+        path: o.path.slice(),
+        // How many more ticks it will sit still at its station before it moves on.
+        dwell: this.moving(o) ? 0 : o.dwell,
+      };
+    }
+
     validPath(start, path) {
       if (!Array.isArray(path) || path.length === 0 || path[0] !== start) return false;
       const end = path[path.length - 1];
@@ -210,6 +284,7 @@
         }
       }
       this.tick++;
+      this.longestStall = Math.max(this.longestStall, this.tick - this.lastDeliveryTick);
       this.detectCollisions();
 
       // Arrivals and station work.
@@ -226,6 +301,7 @@
           } else {
             r.deliveries++;
             this.deliveries++;
+            this.lastDeliveryTick = this.tick;
             this.assignPickup(r);
           }
         }
@@ -262,7 +338,7 @@
     replan() { this.planAll(true); }
   }
 
-  const api = { World, RobotSim, STATE, mulberry32 };
+  const api = { World, RobotSim, STATE, LIMITS, mulberry32 };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.RobotEngine = api;
 })(typeof self !== "undefined" ? self : this);

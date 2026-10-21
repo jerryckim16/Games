@@ -129,6 +129,7 @@ button:hover { filter: brightness(1.05); }
 .stat .v { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .stat .s { color: var(--muted); font-size: 0.78rem; }
 .stat .v.hit { color: var(--neg); }
+.warn { color: var(--neg); font-weight: 600; }
 
 .map-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .map-head h2 { margin: 0; }

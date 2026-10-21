@@ -7,18 +7,19 @@
 //     name: "My algorithm",
 //     description: "One line shown under the dropdown.",
 //     replanEachTick: false,   // true = plan() is called for every moving robot on every tick
+//     priority(robot, robots) { ... }, // optional: lower plans first each tick (ties by id)
 //     plan(req) { ... return path; },
 //   }
 //
 // plan(req) receives:
 //   req.world    grid helpers: cols, rows, idx(x, y), x(i), y(i), isWall(i), isStation(i),
-//                neighbors(i), manhattan(a, b)
+//                isDoorway(i) (floor cell next to a station), neighbors(i), manhattan(a, b)
 //   req.start    current cell index of this robot
 //   req.goal     target cell index
 //   req.current  this robot's own remaining path from last time (current[0] = start)
 //   req.robotId  0..4; robots are planned in id order, lower ids first
 //   req.tick     current simulation tick
-//   req.others   the other robots: { id, pos, goal, state, dwell, path }
+//   req.others   the other robots: { id, pos, goal, state, moving, dwell, path }
 //                path[k] is where that robot will be k ticks from now (path[0] = pos).
 //                After the path ends the robot stays put (for `dwell` ticks if it's at a station).
 //
@@ -125,22 +126,46 @@
   // and guarantees that staying put on the next tick is always safe. After everyone's path
   // ends the world is static (robots stay where they stopped), so layer `last` stands in for
   // every later tick.
-  function reservations(world, others, layers) {
+  // Queued robots (see `isQueued`) only hold their cells for the next tick; later on they're
+  // expected to step aside.
+  function reservations(world, others, layers, queued) {
     const n = world.cols * world.rows;
     if (layers === undefined) {
       layers = 1;
-      for (const o of others) layers = Math.max(layers, o.path.length);
+      for (const o of others) if (!queued(o)) layers = Math.max(layers, o.path.length);
     }
     const occ = new Uint8Array((layers + 1) * n);
     for (const o of others) {
       const end = o.path.length - 1;
-      for (let t = 1; t <= layers; t++) {
+      const until = queued(o) ? 1 : layers;
+      for (let t = 1; t <= until; t++) {
         occ[t * n + o.path[Math.min(t, end)]] = 1;
         occ[t * n + o.path[Math.min(t - 1, end)]] = 1;
       }
     }
     return { at: (t, c) => occ[Math.min(t, layers) * n + c] === 1, last: layers };
   }
+
+  // A robot is queued when it's waiting for a station another robot has claimed (is on, or
+  // has a plan that ends on it). Queued robots plan after everyone else and yield: the others
+  // may plan through their cells from two ticks out, and a queued robot then has to move
+  // aside. The next tick is always reserved strictly, so this never causes a collision.
+  // Returns a test for robots in `robots` (each { goal, moving, path }).
+  function isQueued(robots) {
+    const claimedBy = new Map();
+    for (const r of robots) {
+      const end = r.path[r.path.length - 1];
+      if (end === r.goal) claimedBy.set(end, r);
+    }
+    return (o) => {
+      if (!o.moving || o.path[o.path.length - 1] === o.goal) return false;
+      const owner = claimedBy.get(o.goal);
+      return owner !== undefined && owner !== o;
+    };
+  }
+  const queuedLast = (r, robots) => (isQueued(robots)(r) ? 1 : 0);
+  // The robot being planned, in the same shape as req.others.
+  const selfView = (req) => ({ id: req.robotId, goal: req.goal, moving: true, path: req.current || [req.start] });
 
   // Tick at which a robot's path reaches its final cell and stays there.
   function arrival(path) {
@@ -188,8 +213,17 @@
   // A* over (cell, tick) up to `horizon` ticks. Each tick costs 1, moving or waiting. Ends when
   // the robot reaches the goal and can stay there; with `partial`, a search that runs out of
   // ticks returns the route that got closest instead. Stations are never passed through, and
-  // the goal is only entered once it can be kept.
-  function spaceTimeSearch(world, start, goal, others, res, horizon, partial, bump) {
+  // the goal is only entered once it can be kept. Robots never wait (or end a partial route)
+  // on a doorway, so a queue for a busy station can't trap the robot inside it. A full search
+  // gives up after MAX_EXPANSIONS states and the caller falls back to a windowed one.
+  const MAX_EXPANSIONS = 40000;
+  // opts: { partial, bump, doorwayPause, holdDistance }
+  //   doorwayPause  allow a one-tick wait on a doorway at the start, for planners that keep
+  //                 their plans rather than replanning every tick
+  //   holdDistance  while another robot holds the goal, a partial search aims to wait this
+  //                 many steps away rather than crowding the doorway
+  function spaceTimeSearch(world, start, goal, others, res, horizon, opts) {
+    const { partial, bump, doorwayPause, holdDistance = 0 } = opts;
     const cols = world.cols, rows = world.rows, n = cols * rows;
     const dist = distanceMap(world, goal);
     // Starting on a station (e.g. leaving a pickup): the BFS never enters it, so derive h.
@@ -200,28 +234,36 @@
       }
       if (startH === -1) return null; // goal unreachable on the static map
     }
-    const h = (c) => (c === start && dist[c] === -1 ? startH : dist[c]);
     const canKeepGoal = goalAdmission(goal, others, bump);
     if (canKeepGoal.never && !partial) return null;
+    const hold = partial && canKeepGoal.never ? holdDistance : 0;
+    const h = (c) => {
+      const d = c === start && dist[c] === -1 ? startH : dist[c];
+      return d === -1 ? -1 : Math.max(d, hold);
+    };
+    startH = h(start);
 
     scratch((horizon + 1) * n);
     const open = new MinHeap();
     stamp[start] = gen;
     parentOf[start] = -1;
     open.push(start, startH);
-    let end = -1;
+    let end = -1, expanded = 0;
     while (open.size) {
       const key = open.pop();
       const t = (key / n) | 0, c = key - t * n;
       if (c === goal && canKeepGoal(t)) { end = key; break; }
       if (t === horizon) {
-        if (partial) { end = key; break; }
+        if (partial && !world.isDoorway(c)) { end = key; break; }
         continue;
       }
+      if (!partial && ++expanded > MAX_EXPANSIONS) break;
       // Wait, then up / right / down / left (same order as world.neighbors).
       const x = c % cols, y = (c / cols) | 0;
       for (let m = 0; m < 5; m++) {
         let nc = c;
+        // No waiting on doorways, except a robot in transit that's boxed in this very tick.
+        if (m === 0 && world.isDoorway(c) && (t > 0 || hold || !doorwayPause)) continue;
         if (m === 1) { if (y === 0) continue; nc = c - cols; }
         else if (m === 2) { if (x === cols - 1) continue; nc = c + 1; }
         else if (m === 3) { if (y === rows - 1) continue; nc = c + cols; }
@@ -255,9 +297,9 @@
   function whca(req) {
     const { world, start, goal, others } = req;
     if (start === goal) return [start];
-    const res = reservations(world, others, WHCA_WINDOW);
+    const res = reservations(world, others, WHCA_WINDOW, isQueued(others.concat(selfView(req))));
     // Boxed in for now: hold position, which is always safe for one tick.
-    return spaceTimeSearch(world, start, goal, others, res, WHCA_WINDOW, true, false) || [start, start];
+    return spaceTimeSearch(world, start, goal, others, res, WHCA_WINDOW, { partial: true }) || [start, start];
   }
 
   // Reservation A*: plan the whole trip through time once, then keep that plan as long as it
@@ -267,13 +309,15 @@
   // station falls back to a short windowed plan until it frees up. Committed plans never
   // conflict with each other, so the same safety argument as WHCA holds.
   const RESERVE_SLACK = 64;
-  function stillValid(world, path, start, goal, others) {
+  const RESERVE_HOLD = 6;
+  function stillValid(world, path, start, goal, others, queued) {
     if (!path || path.length < 2 || path[0] !== start || path[path.length - 1] !== goal) return false;
     for (let t = 1; t < path.length; t++) if (world.isWall(path[t])) return false; // shelf added
     for (const o of others) {
       const end = o.path.length - 1;
       const at = (t) => o.path[t < end ? t : end];
-      for (let t = 1; t < path.length; t++) {
+      const until = queued(o) ? Math.min(2, path.length) : path.length;
+      for (let t = 1; t < until; t++) {
         if (path[t] !== goal && (path[t] === at(t) || path[t] === at(t - 1))) return false;
       }
     }
@@ -282,11 +326,14 @@
   function reservationAstar(req) {
     const { world, start, goal, others, current } = req;
     if (start === goal) return [start];
-    if (stillValid(world, current, start, goal, others)) return current;
-    const res = reservations(world, others);
+    const queued = isQueued(others.concat(selfView(req)));
+    if (stillValid(world, current, start, goal, others, queued)) return current;
+    const res = reservations(world, others, undefined, queued);
     const horizon = res.last + world.manhattan(start, goal) * 2 + RESERVE_SLACK;
-    return spaceTimeSearch(world, start, goal, others, res, horizon, false, true) ||
-      spaceTimeSearch(world, start, goal, others, res, WHCA_WINDOW, true, true) || [start, start];
+    return spaceTimeSearch(world, start, goal, others, res, horizon, { bump: true, doorwayPause: true }) ||
+      spaceTimeSearch(world, start, goal, others, res, WHCA_WINDOW,
+        { partial: true, bump: true, doorwayPause: true, holdDistance: RESERVE_HOLD }) ||
+      [start, start];
   }
 
   const PLANNERS = [
@@ -302,6 +349,7 @@
       name: "Cooperative A* (reservations)",
       description: "Plans 16 ticks ahead in space and time, reserving cells so robots wait or detour instead of colliding. Robot 1 has right of way, then 2, and so on.",
       replanEachTick: true,
+      priority: queuedLast,
       plan: whca,
     },
     {
@@ -309,6 +357,7 @@
       name: "Reservation A* (plan once)",
       description: "Plans each trip's full route through time once and reserves it; others route around it. Replans only when the route is blocked, so it needs far less computing.",
       replanEachTick: true,
+      priority: queuedLast,
       plan: reservationAstar,
     },
   ];

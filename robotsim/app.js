@@ -1,14 +1,20 @@
 (function () {
   "use strict";
 
-  const { World, RobotSim, STATE } = window.RobotEngine;
+  const { World, RobotSim, STATE, LIMITS } = window.RobotEngine;
   const { PLANNERS } = window.RobotPlanners;
+  // Five hand-picked colors, then golden-angle hues so up to 20 robots stay distinguishable.
   const ROBOT_COLORS = ["#3b82f6", "#a855f7", "#14b8a6", "#ec4899", "#f97316"];
+  for (let i = ROBOT_COLORS.length; i < LIMITS.robots[1]; i++) {
+    ROBOT_COLORS.push(`hsl(${Math.round((i * 137.508 + 40) % 360)} 70% 48%)`);
+  }
   const MAX_TICKS_PER_FRAME = 20;
   const HIT_FLASH_TICKS = 8;
+  const STALL_WARNING = 300; // ticks without a delivery before we flag a possible gridlock
 
   const $ = (id) => document.getElementById(id);
   const els = {
+    robots: $("robots"), pickups: $("pickups"), drops: $("drops"),
     planner: $("planner"), plannerDesc: $("plannerDesc"), assignment: $("assignment"),
     seed: $("seed"), dwell: $("dwell"), speed: $("speed"), speedLabel: $("speedLabel"),
     showPaths: $("showPaths"), pauseOnHit: $("pauseOnHit"),
@@ -21,7 +27,7 @@
   const ctx = els.map.getContext("2d");
 
   // The map lives outside the sim so shelf edits survive a reset.
-  const world = new World();
+  let world = null;
   let sim = null;
   let running = false;
   let acc = 0;          // ms accumulated toward the next tick
@@ -46,6 +52,22 @@
       dwellTicks: Math.min(50, Math.max(0, Math.floor(Number(els.dwell.value) || 0))),
       world,
     };
+  }
+
+  const clampField = (el, [lo, hi]) => {
+    const n = Math.min(hi, Math.max(lo, Math.floor(Number(el.value) || lo)));
+    el.value = n;
+    return n;
+  };
+
+  // New floor plan for the current robot and station counts.
+  function rebuildWorld() {
+    world = new World({
+      robots: clampField(els.robots, LIMITS.robots),
+      pickups: clampField(els.pickups, LIMITS.stations),
+      drops: clampField(els.drops, LIMITS.stations),
+    });
+    resizeCanvas();
   }
 
   function reset() {
@@ -94,7 +116,11 @@
     const waits = sim.robots.reduce((s, r) => s + r.waits, 0);
     els.sTick.textContent = sim.tick.toLocaleString();
     els.sDeliv.textContent = sim.deliveries.toLocaleString();
-    els.sRate.textContent = sim.tick ? `${(sim.deliveries / sim.tick * 1000).toFixed(1)} per 1,000 ticks` : "";
+    const idle = sim.tick - sim.lastDeliveryTick;
+    els.sRate.textContent = idle >= STALL_WARNING
+      ? `None in the last ${idle.toLocaleString()} ticks. Gridlocked?`
+      : sim.tick ? `${(sim.deliveries / sim.tick * 1000).toFixed(1)} per 1,000 ticks` : "";
+    els.sRate.classList.toggle("warn", idle >= STALL_WARNING);
     els.sColl.textContent = sim.totalCollisions.toLocaleString();
     els.sColl.classList.toggle("hit", sim.totalCollisions > 0);
     els.sCollSplit.textContent = `${sim.collisions.vertex} same-cell · ${sim.collisions.swap} head-on swap`;
@@ -156,10 +182,23 @@
     ctx.lineWidth = Math.max(1.5, cell * 0.08);
     ctx.stroke();
     ctx.fillStyle = color;
-    ctx.font = `700 ${Math.max(8, cell * 0.36)}px system-ui, sans-serif`;
+    fitLabel(label, cx(i), cy(i), cell * 0.8);
+  }
+
+  // Centered label shrunk to fit `maxW`; skipped when cells are too small to read.
+  function fitLabel(text, x, y, maxW) {
+    if (cell < 11) return;
+    let size = Math.max(7, cell * 0.36);
+    ctx.font = `700 ${size}px system-ui, sans-serif`;
+    const w = ctx.measureText(text).width;
+    if (w > maxW) {
+      size = size * maxW / w;
+      if (size < 6) return;
+      ctx.font = `700 ${size}px system-ui, sans-serif`;
+    }
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(label, cx(i), cy(i));
+    ctx.fillText(text, x, y);
   }
 
   function draw(frac) {
@@ -198,7 +237,7 @@
       ctx.lineJoin = "round";
       for (const r of sim.robots) {
         if (r.path.length < 2) continue;
-        const offset = (r.id - 2) * cell * 0.07; // nudge so overlapping paths stay visible
+        const offset = ((r.id % 5) - 2) * cell * 0.07; // nudge so overlapping paths stay visible
         ctx.strokeStyle = ROBOT_COLORS[r.id];
         ctx.globalAlpha = 0.45;
         ctx.beginPath();
@@ -241,7 +280,7 @@
       ctx.arc(x, y, rad, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = colors.panel;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = Math.min(2, cell * 0.1);
       ctx.stroke();
       const carrying = r.state === STATE.TO_DROP || r.state === STATE.DROPPING;
       if (carrying) {
@@ -250,10 +289,7 @@
         ctx.fillRect(x - b / 2, y - rad - b * 0.6, b, b * 0.7);
       }
       ctx.fillStyle = "#fff";
-      ctx.font = `700 ${Math.max(8, cell * 0.36)}px system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(String(r.id + 1), x, y + 0.5);
+      fitLabel(String(r.id + 1), x, y + 0.5, rad * 1.6);
     }
   }
 
@@ -292,10 +328,13 @@
     const empty = els.benchBody.querySelector(".empty");
     if (empty) empty.remove();
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${opts.planner.name}</td><td>${opts.assignment}</td><td>${opts.seed}</td>` +
+    const { robots, pickups, drops } = world.layout;
+    tr.innerHTML = `<td>${opts.planner.name}</td><td>${robots} robots · ${pickups}P → ${drops}D</td><td>${opts.assignment}</td><td>${opts.seed}</td>` +
       `<td>${ticks.toLocaleString()}</td><td>${b.deliveries.toLocaleString()}</td>` +
       `<td>${(b.deliveries / ticks * 1000).toFixed(1)}</td><td>${b.totalCollisions.toLocaleString()}</td>` +
-      `<td>${b.collisions.vertex} / ${b.collisions.swap}</td><td>${waits.toLocaleString()}</td><td>${Math.round(ms).toLocaleString()}</td>`;
+      `<td>${b.collisions.vertex} / ${b.collisions.swap}</td><td>${waits.toLocaleString()}</td>` +
+      `<td${b.longestStall >= STALL_WARNING ? ' class="warn"' : ""}>${b.longestStall.toLocaleString()}</td>` +
+      `<td>${Math.round(ms).toLocaleString()}</td>`;
     els.benchBody.appendChild(tr);
   }
 
@@ -306,10 +345,13 @@
   for (const el of [els.planner, els.assignment, els.seed, els.dwell]) {
     el.addEventListener("change", () => { setRunning(false); reset(); });
   }
+  for (const el of [els.robots, els.pickups, els.drops]) {
+    el.addEventListener("change", () => { setRunning(false); rebuildWorld(); reset(); });
+  }
   els.speed.addEventListener("input", updateSpeedLabel);
   els.benchBtn.addEventListener("click", runBenchmark);
   els.benchClear.addEventListener("click", () => {
-    els.benchBody.innerHTML = '<tr class="empty"><td colspan="10" class="muted">No runs yet.</td></tr>';
+    els.benchBody.innerHTML = '<tr class="empty"><td colspan="12" class="muted">No runs yet.</td></tr>';
   });
 
   els.map.addEventListener("click", (ev) => {
@@ -328,7 +370,7 @@
 
   readColors();
   updateSpeedLabel();
-  resizeCanvas();
+  rebuildWorld();
   reset();
   requestAnimationFrame(frame);
 })();
