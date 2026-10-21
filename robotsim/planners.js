@@ -336,6 +336,218 @@
       [start, start];
   }
 
+  // Windowed Conflict-Based Search (Sharon et al. 2015), used the way lifelong planners such
+  // as RHCR (Li et al. 2021) do: every tick, plan all moving robots jointly for the next
+  // CBS_WINDOW ticks, ignoring conflicts beyond that. Only the first step is executed, then
+  // everything is planned again.
+  //
+  // High level: a best-first search over constraint sets. Each node holds one path per robot.
+  // Take the earliest conflict (two robots in one cell, or two robots swapping cells) and split
+  // into two children, each forbidding one of the two robots from that cell/move at that tick,
+  // then replan just that robot. The cheapest conflict-free node wins. Because every robot's
+  // first step comes from one joint solution, robots may follow each other closely.
+  //
+  // Low level: space-time A* for one robot under its constraints. A path costs its arrival
+  // tick if it reaches the goal inside the window, otherwise CBS_WINDOW plus the remaining
+  // distance. Robots dwelling at a station are fixed obstacles.
+  //
+  // Station access is settled before the search, the way Reservation A* does it: when several
+  // robots head for the same free station, the closest one gets it and the rest aim to wait
+  // CBS_HOLD steps back. Without this most of the search goes into deciding who parks first.
+  //
+  // If the search hits CBS_MAX_NODES, fall back to prioritized planning (station winners first),
+  // where
+  // nobody may step into a cell another robot is standing on. Only the next tick has to be
+  // collision-free (everything is replanned after it), and that rule guarantees it.
+  const CBS_WINDOW = 10;
+  const CBS_MAX_NODES = 300;
+  const CBS_HOLD = 3;
+
+  function cbsLowLevel(world, agent, blocked, constraints) {
+    const { start, goal, canPark } = agent;
+    const cols = world.cols, rows = world.rows, n = cols * rows, W = CBS_WINDOW;
+    const hold = canPark ? 0 : CBS_HOLD;
+    const dist = distanceMap(world, goal);
+    let startH = dist[start];
+    if (startH === -1) {
+      for (const nb of world.neighbors(start)) {
+        if (dist[nb] !== -1 && (startH === -1 || dist[nb] + 1 < startH)) startH = dist[nb] + 1;
+      }
+      if (startH === -1) return null;
+    }
+    const h = (c) => {
+      const d = c === start && dist[c] === -1 ? startH : dist[c];
+      return d === -1 ? -1 : Math.max(d, hold);
+    };
+    startH = h(start);
+    const vertex = new Set(), edge = new Set();
+    let goalBusyUntil = canPark ? 0 : Infinity;
+    for (const k of constraints) {
+      if (k.to === undefined) {
+        vertex.add(k.t * n + k.cell);
+        if (k.cell === goal) goalBusyUntil = Math.max(goalBusyUntil, k.t);
+      } else {
+        edge.add((k.t * n + k.from) * n + k.to);
+      }
+    }
+
+    scratch((W + 1) * n);
+    const open = new MinHeap();
+    stamp[start] = gen;
+    parentOf[start] = -1;
+    open.push(start, startH);
+    let end = -1, cost = 0;
+    while (open.size) {
+      const key = open.pop();
+      const t = (key / n) | 0, c = key - t * n;
+      if (c === goal && t > goalBusyUntil) { end = key; cost = t; break; }
+      if (t === W) { end = key; cost = W + h(c); break; }
+      const x = c % cols, y = (c / cols) | 0;
+      for (let m = 0; m < 5; m++) {
+        let nc = c;
+        if (m === 1) { if (y === 0) continue; nc = c - cols; }
+        else if (m === 2) { if (x === cols - 1) continue; nc = c + 1; }
+        else if (m === 3) { if (y === rows - 1) continue; nc = c + cols; }
+        else if (m === 4) { if (x === 0) continue; nc = c - 1; }
+        if (m > 0) {
+          if (world.walls[nc] || blocked[nc]) continue;
+          if (nc === goal ? t + 1 <= goalBusyUntil : world.isStation(nc)) continue;
+        }
+        const nk = (t + 1) * n + nc;
+        if (stamp[nk] === gen || h(nc) === -1) continue;
+        if (vertex.has(nk) || edge.has(((t + 1) * n + c) * n + nc)) continue;
+        stamp[nk] = gen;
+        parentOf[nk] = key;
+        // Reaching the goal is final, so rank it by arrival time alone.
+        open.push(nk, nc === goal && t + 1 > goalBusyUntil ? t + 1 : t + 1 + h(nc));
+      }
+    }
+    if (end === -1) return null;
+    const path = [];
+    for (let k = end; k !== -1; k = parentOf[k]) path.push(k % n);
+    path.reverse();
+    while (path.length < W + 1) path.push(path[path.length - 1]); // parked at the goal
+    return { path, cost };
+  }
+
+  // Earliest conflict between any two paths, plus how many conflicting pairs there are.
+  function findConflicts(paths) {
+    let first = null, count = 0;
+    for (let t = 1; t <= CBS_WINDOW; t++) {
+      for (let i = 0; i < paths.length; i++) {
+        const a = paths[i];
+        for (let j = i + 1; j < paths.length; j++) {
+          const b = paths[j];
+          let hit = null;
+          if (a[t] === b[t]) hit = { t, i, j, cell: a[t] };
+          else if (a[t] === b[t - 1] && b[t] === a[t - 1]) hit = { t, i, j, swap: true };
+          if (!hit) continue;
+          count++;
+          if (!first) first = hit;
+        }
+      }
+    }
+    return { first, count };
+  }
+
+  function cbsSolve(world, agents, blocked) {
+    const constraintsFor = (node, i) => {
+      const out = [];
+      for (let k = node.constraint; k; k = k.parent) if (k.agent === i) out.push(k);
+      return out;
+    };
+    const root = { constraint: null, paths: [], costs: [] };
+    for (let i = 0; i < agents.length; i++) {
+      const r = cbsLowLevel(world, agents[i], blocked, []);
+      if (!r) return null;
+      root.paths.push(r.path);
+      root.costs.push(r.cost);
+    }
+    const open = new MinHeap();
+    const score = (node) => {
+      node.conflicts = findConflicts(node.paths);
+      node.cost = node.costs.reduce((s, c) => s + c, 0);
+      // Cost first; among equal costs prefer fewer conflicts.
+      return node.cost + node.conflicts.count / 1000;
+    };
+    open.push(root, score(root));
+    for (let expanded = 0; open.size && expanded < CBS_MAX_NODES; expanded++) {
+      const node = open.pop();
+      const c = node.conflicts.first;
+      if (!c) return node.paths;
+      for (const i of [c.i, c.j]) {
+        const p = node.paths[i];
+        const k = c.swap
+          ? { agent: i, t: c.t, from: p[c.t - 1], to: p[c.t], parent: node.constraint }
+          : { agent: i, t: c.t, cell: c.cell, parent: node.constraint };
+        const child = { constraint: k, paths: node.paths.slice(), costs: node.costs.slice() };
+        const r = cbsLowLevel(world, agents[i], blocked, constraintsFor(child, i));
+        if (!r) continue;
+        child.paths[i] = r.path;
+        child.costs[i] = r.cost;
+        open.push(child, score(child));
+      }
+    }
+    return null;
+  }
+
+  function prioritizedFallback(world, agents, blocked) {
+    const n = world.cols * world.rows;
+    const paths = [];
+    for (let i = 0; i < agents.length; i++) {
+      const cons = [];
+      for (const p of paths) {
+        for (let t = 1; t <= CBS_WINDOW; t++) {
+          cons.push({ t, cell: p[t] });
+          cons.push({ t, from: p[t], to: p[t - 1] }); // no swapping with it
+        }
+      }
+      // Stepping onto a robot that hasn't planned yet could trap it, so don't.
+      for (let j = i + 1; j < agents.length; j++) cons.push({ t: 1, cell: agents[j].start });
+      const r = cbsLowLevel(world, agents[i], blocked, cons);
+      paths.push(r ? r.path : new Array(CBS_WINDOW + 1).fill(agents[i].start));
+    }
+    return paths;
+  }
+
+  // One joint solution per world per tick (recomputed if the shelves change); each robot's
+  // plan() call picks its own path out.
+  const cbsCache = new WeakMap();
+  function windowedCbs(req) {
+    const { world, start, goal, others, tick } = req;
+    let entry = cbsCache.get(world);
+    if (!entry || entry.tick !== tick || !sameWalls(entry.walls, world.walls)) {
+      const n = world.cols * world.rows;
+      const blocked = new Uint8Array(n);
+      const agents = [{ id: req.robotId, start, goal }];
+      for (const o of others) {
+        if (o.moving && o.pos !== o.goal) agents.push({ id: o.id, start: o.pos, goal: o.goal });
+        else blocked[o.pos] = 1;
+      }
+      // Who may park on each free station: the closest robot heading there (ties by id).
+      const winner = new Map();
+      for (const a of agents) {
+        if (blocked[a.goal]) continue;
+        const d = distanceMap(world, a.goal)[a.start];
+        const best = winner.get(a.goal);
+        const key = d === -1 ? Infinity : d;
+        if (!best || key < best.key || (key === best.key && a.id < best.a.id)) winner.set(a.goal, { a, key });
+      }
+      for (const a of agents) a.canPark = winner.has(a.goal) && winner.get(a.goal).a === a;
+      // Station winners first (the fallback plans in this order), then by id.
+      agents.sort((a, b) => (b.canPark - a.canPark) || a.id - b.id);
+      const paths = cbsSolve(world, agents, blocked) || prioritizedFallback(world, agents, blocked);
+      entry = { tick, walls: world.walls.slice(), paths: new Map(agents.map((a, i) => [a.id, paths[i]])) };
+      cbsCache.set(world, entry);
+    }
+    const path = entry.paths.get(req.robotId);
+    if (!path || path[0] !== start) return [start, start];
+    // Trim the parked tail so the path ends on arrival.
+    let last = path.length - 1;
+    while (last > 0 && path[last - 1] === path[last] && path[last] === goal) last--;
+    return path.slice(0, last + 1);
+  }
+
   const PLANNERS = [
     {
       id: "astar",
@@ -360,9 +572,16 @@
       priority: queuedLast,
       plan: reservationAstar,
     },
+    {
+      id: "cbs",
+      name: "Windowed CBS (joint planning)",
+      description: "Every tick, Conflict-Based Search plans all moving robots together 10 ticks ahead, so robots can follow closely and step aside for each other.",
+      replanEachTick: true,
+      plan: windowedCbs,
+    },
   ];
 
-  const api = { PLANNERS, astar, whca, reservationAstar, MinHeap };
+  const api = { PLANNERS, astar, whca, reservationAstar, windowedCbs, MinHeap };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.RobotPlanners = api;
 })(typeof self !== "undefined" ? self : this);
