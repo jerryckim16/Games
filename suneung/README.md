@@ -94,7 +94,25 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   | Mid-sized city | Pohang, Jeonju, Cheongju | ×0.9 | ×0.9 | ×0.85 | calmer | local |
   | Rural county | Pyeongchang, Haenam | ×0.75 | none to hire | ×0.7 | calmer, healthier | local and rural |
 
-  - **Where you're born:** weighted by rough population share (the capital-area suburbs about a third, Seoul about 18%, the countryside about 9%). It's drawn after your family, so families stay 20% per income fifth, but high-income families are far more likely to live in Gangnam (8.5% vs 0.5% for the bottom fifth) and low-income families in the countryside (17% vs 4%).
+  - **Where you're born is random, with the chance of each place equal to its share of Korea's 2024 registered population.** Each place stands for a group of real areas, so the twelve add up to the whole country:
+
+    | Place | Stands for | Chance |
+    |---|---|---|
+    | Gangnam | Gangnam, Seocho and Songpa districts | 3.2% |
+    | Nowon | the rest of Seoul | 15.1% |
+    | Suwon | Gyeonggi and Incheon | 32.6% |
+    | Busan | Busan and Ulsan | 8.5% |
+    | Daegu | Daegu | 4.6% |
+    | Gwangju | Gwangju | 2.7% |
+    | Daejeon | Daejeon and Sejong | 3.6% |
+    | Pohang | Gyeongsang provincial cities | 8.2% |
+    | Jeonju | Jeolla provincial cities | 4.3% |
+    | Cheongju | Chungcheong, Gangwon and Jeju cities | 8.6% |
+    | Pyeongchang | rural counties of Gangwon, Chungcheong and Gyeongsang | 6.1% |
+    | Haenam | rural counties of Jeolla | 2.5% |
+
+    Shares are approximate (sub-provincial splits and the rural-county total of about 4.4 million are estimates).
+  - **Your family is dealt next, from that place's mix of incomes.** The region-by-income table is balanced (iterative proportional fitting) so every place keeps exactly its population share and every income fifth stays exactly 20% overall, while a child born in Gangnam is in the top fifth half the time (3% in the bottom fifth), and a rural child is in the bottom fifth 36% of the time (8% in the top).
   - **Cram school and tutor** multipliers apply to the method's study speed and price. A retake academy's speed follows its region too.
   - **Quotas** (real 정시 practice, simplified as points off a university's cut; both need middle and high school in the region, so you must arrive by grade 7):
     - 지역인재 (local quota): 0.6 points at medical school, and at the local national university (Pusan National for Busan, Kyungpook National for Daegu and Pohang), for students outside the capital region;
@@ -249,39 +267,39 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 42 | 2.9 · 2.0 · 1.9 | 330 | 330 | 1.00 | 0% | 0% | 1% |
-| slacker (half games & friends), 1 try | 29 | 3.1 · 2.7 · 8.1 | 309 | 309 | 1.00 | 0% | 0% | 0% |
-| grinder (no rest), self-study, 1 try | 58 | 3.2 · 2.3 · 2.0 | 370 | 370 | 1.00 | 0% | 0% | 40% |
-| smart, online lectures, 1 try | 63 | 2.3 · 2.3 · 2.2 | 375 | 375 | 1.00 | 6% | 0% | 58% |
-| smart, best affordable method, 1 try | 67 | 1.9 · 1.8 · 1.9 | 387 | 387 | 1.00 | 14% | 3% | 78% |
-| smart, best affordable, retakes up to 3 tries | 67 | 1.9 · 1.8 · 1.9 | 387 | 410 | 2.42 | 61% | 19% | 96% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.0 · 1.7 · 1.8 | 387 | 419 | 3.55 | 91% | 88% | 99% |
+| balanced, self-study, 1 try | 42 | 2.7 · 2.1 · 1.9 | 330 | 330 | 1.00 | 0% | 0% | 3% |
+| slacker (half games & friends), 1 try | 29 | 3.2 · 2.6 · 8.1 | 309 | 309 | 1.00 | 0% | 0% | 0% |
+| grinder (no rest), self-study, 1 try | 58 | 3.2 · 2.4 · 2.0 | 370 | 370 | 1.00 | 0% | 0% | 39% |
+| smart, online lectures, 1 try | 62 | 2.3 · 2.3 · 2.2 | 374 | 374 | 1.00 | 3% | 0% | 58% |
+| smart, best affordable method, 1 try | 67 | 2.1 · 1.9 · 1.8 | 385 | 385 | 1.00 | 14% | 4% | 71% |
+| smart, best affordable, retakes up to 3 tries | 67 | 2.1 · 1.9 · 1.8 | 385 | 409 | 2.52 | 59% | 21% | 95% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.1 · 1.9 · 1.9 | 384 | 418 | 3.63 | 95% | 85% | 100% |
 
 The smart bot with the best affordable method, first try only, by family:
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 12 | 60 | 372 | 8% | 58% |
-| Lower-middle income | 11 | 59 | 370 | 0% | 55% |
-| Middle income | 21 | 68 | 390 | 10% | 76% |
-| Upper-middle income | 18 | 69 | 392 | 17% | 83% |
-| High income | 18 | 74 | 400 | 28% | 100% |
+| Low income | 14 | 59 | 369 | 7% | 50% |
+| Lower-middle income | 15 | 63 | 377 | 7% | 60% |
+| Middle income | 16 | 67 | 386 | 13% | 69% |
+| Upper-middle income | 16 | 69 | 389 | 6% | 75% |
+| High income | 19 | 74 | 401 | 32% | 95% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 23 | 71 | 397 | 22% | 91% | 96% |
-| Seoul | 7 | 69 | 394 | 29% | 57% | 100% |
-| Capital-region city | 17 | 62 | 373 | 0% | 59% | 76% |
-| Big city | 16 | 68 | 389 | 25% | 81% | 88% |
-| Mid-sized city | 9 | 64 | 385 | 0% | 89% | 89% |
-| Rural county | 8 | 65 | 383 | 0% | 75% | 75% |
+| Gangnam | 26 | 72 | 396 | 27% | 85% | 88% |
+| Seoul | 7 | 71 | 396 | 14% | 71% | 100% |
+| Capital-region city | 19 | 62 | 373 | 0% | 53% | 79% |
+| Big city | 11 | 67 | 386 | 18% | 82% | 91% |
+| Mid-sized city | 8 | 63 | 382 | 0% | 75% | 100% |
+| Rural county | 9 | 64 | 375 | 11% | 56% | 56% |
 
 What the tables show:
 
 - **Childhood habits decide where you start grade 12:** the same random talents end up anywhere from 29 to 68 on average.
-- **Family income matters, but it isn't destiny:** with the same smart play, the top two fifths reach SKY on the first try 17–28% of the time and the bottom two rarely do. Retakes close much of the gap.
+- **Family income matters, but it isn't destiny:** with the same smart play, the top fifth reaches SKY on the first try about a third of the time and the bottom two fifths rarely do. Retakes close much of the gap.
 - **Where you live matters too:** Gangnam's academies give the strongest start, while local and rural quotas help students outside the capital (the region groups above are small, so treat them as a direction, not exact rates).
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
 - **Medical school** takes talent, a sciences track and usually several years: the bot chasing it rarely gets in on the first try, but a near-optimal player who keeps retaking usually makes it within five.
@@ -298,6 +316,7 @@ What the tables show:
 
 ## Changelog
 
+- **v2.8:** your birth region is now drawn purely by population share (2024 registered population, each of the twelve places standing for a group of real areas), and your family is dealt from that place's income mix. A balanced region-by-income table keeps both exact: every place at its population share, every income fifth at 20%. Balance tables regenerated.
 - **v2.7:** regions. You're born in one of twelve real places (Gangnam, Nowon, Suwon, Busan, Daegu, Gwangju, Daejeon, Pohang, Jeonju, Cheongju, Pyeongchang, Haenam), weighted by population and linked to family income. Regions change cram-school and tutor strength and prices (no tutors in rural counties), daily pressure, and admission quotas (지역인재 local quota for medical school and local national universities; 농어촌 rural quota), which need middle and high school in the region. A Move house button relocates the family once a year (housing limits for Seoul and Gangnam; a new school, a lost block and new-kid risk). New region events (Pohang earthquake, beach, countryside, studying ahead in Gangnam, the rural commute, quota news, moving for the medical-school quota), the window view follows the region, and the Daechi-dong event now really moves you. Balance tables regenerated, with a new by-region table.
 - **v2.6:** choose to be a boy or a girl. It sets how you're drawn (short hair, trousers and a tie, or long hair or a bob, a skirt and a ribbon on the school uniform), the default name (Minjun / Seoyeon), and the birth line; the rules are the same. Fixes: a finished life reopens on its ending instead of the new-life screen (and the hall of fame no longer double-counts it); ability past the top of the scale shows "100+" instead of looking stuck at 100; choosing a full retake after a 반수 year now leaves that school, so it stops being offered (the retake buttons say so); the age shown after enrolling now matches the diary; the mood bubble no longer covers the school's name on the gate. Saves from before the choice keep their old look.
 - **v2.5:** an illustrated, animated interface, so it feels like living a life rather than reading a dashboard. A scene for every life stage with an avatar that grows up and shows its mood, a picture for every event and screen, activity cards and time slots for planning, a calendar page between turns, animated ability gains, a period-by-period exam day, stamped admission results, confetti, and a diary-style life log. All art is original inline SVG in the new `art.js`. Gameplay, saves and balance numbers are unchanged. When a turn ends with an event, the event card waits for the calendar page to finish instead of opening underneath it.

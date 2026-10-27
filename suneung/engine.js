@@ -178,26 +178,32 @@
     city: { hagwon: 0.9, tutor: 0.9, price: 0.85, stress: -1, motivation: 0, health: 0 },
     rural: { hagwon: 0.75, tutor: 0, price: 0.7, stress: -2, motivation: -1, health: 1 },
   };
-  // pop: rough share of people (%), the weights for where you're born. view: what the windows show.
+  // pop: share of Korea's 2024 registered population (%), the chance of being born there. Each place
+  // stands for a group, so the twelve add up to the whole country: Gangnam = the three Gangnam
+  // districts (강남·서초·송파), Nowon = the rest of Seoul, Suwon = Gyeonggi and Incheon, Busan = Busan
+  // and Ulsan, Daejeon = Daejeon and Sejong, Pohang / Jeonju / Cheongju = the provincial cities of
+  // Gyeongsang / Jeolla / Chungcheong, Gangwon and Jeju, Pyeongchang / Haenam = the rural counties.
+  // view: what the windows show.
   // need: the family income fifth it takes to move there (housing). nat: the regional national
   // university whose local quota you can use.
   const REGIONS = [
-    { id: "gangnam", kind: "gangnam", capital: true, pop: 3, need: 4 },
-    { id: "nowon", kind: "seoul", capital: true, pop: 15, need: 3 },
-    { id: "suwon", kind: "capital", capital: true, pop: 32 },
-    { id: "busan", kind: "metro", pop: 6.5, view: "sea", nat: "pnu" },
-    { id: "daegu", kind: "metro", pop: 4.5, nat: "knu" },
-    { id: "gwangju", kind: "metro", pop: 3 },
-    { id: "daejeon", kind: "metro", pop: 3 },
-    { id: "pohang", kind: "city", pop: 6, view: "sea", nat: "knu" },
-    { id: "jeonju", kind: "city", pop: 5 },
-    { id: "cheongju", kind: "city", pop: 6 },
-    { id: "pyeongchang", kind: "rural", pop: 4.5, view: "country" },
-    { id: "haenam", kind: "rural", pop: 4.5, view: "sea" },
+    { id: "gangnam", kind: "gangnam", capital: true, pop: 3.2, need: 4 },
+    { id: "nowon", kind: "seoul", capital: true, pop: 15.1, need: 3 },
+    { id: "suwon", kind: "capital", capital: true, pop: 32.6 },
+    { id: "busan", kind: "metro", pop: 8.5, view: "sea", nat: "pnu" },
+    { id: "daegu", kind: "metro", pop: 4.6, nat: "knu" },
+    { id: "gwangju", kind: "metro", pop: 2.7 },
+    { id: "daejeon", kind: "metro", pop: 3.6 },
+    { id: "pohang", kind: "city", pop: 8.2, view: "sea", nat: "knu" },
+    { id: "jeonju", kind: "city", pop: 4.3 },
+    { id: "cheongju", kind: "city", pop: 8.6 },
+    { id: "pyeongchang", kind: "rural", pop: 6.1, view: "country" },
+    { id: "haenam", kind: "rural", pop: 2.5, view: "sea" },
   ];
   const REGION_BY_ID = Object.fromEntries(REGIONS.map((r) => [r.id, r]));
-  // Where a family of each income fifth is likely to live, relative to population: Gangnam is mostly
-  // the top fifths, rural counties mostly the bottom ones. Families stay 20% each; the region follows.
+  // How likely each income fifth is in each kind of place, relative to the national mix: Gangnam is
+  // mostly the top fifths, rural counties mostly the bottom ones. These are only the shape; JOINT below
+  // rescales them so the totals come out exact.
   const REGION_AFFINITY = {
     gangnam: [0.15, 0.35, 0.8, 1.5, 2.7],
     seoul: [0.8, 0.9, 1, 1.1, 1.2],
@@ -206,6 +212,22 @@
     city: [1.1, 1.1, 1, 0.95, 0.85],
     rural: [1.8, 1.3, 0.9, 0.6, 0.4],
   };
+  // The chance of each (region, family) pair at birth. Built from REGION_AFFINITY by iterative
+  // proportional fitting, so every region keeps exactly its population share and every income fifth
+  // exactly 20%, while rich families still cluster in Gangnam and poorer ones in the countryside.
+  const JOINT = (() => {
+    const popSum = REGIONS.reduce((a, r) => a + r.pop, 0);
+    const rows = REGIONS.map((r) => REGION_AFFINITY[r.kind].slice());
+    for (let it = 0; it < 500; it++) {
+      rows.forEach((row, i) => { const t = REGIONS[i].pop / popSum, s = row.reduce((a, b) => a + b, 0); for (let j = 0; j < row.length; j++) row[j] *= t / s; });
+      for (let j = 0; j < FAMILY_IDS.length; j++) {
+        const s = rows.reduce((a, row) => a + row[j], 0);
+        rows.forEach((row) => { row[j] *= (1 / FAMILY_IDS.length) / s; });
+      }
+    }
+    return rows;
+  })();
+
   // Admission quotas, as cut reductions in percentile points. 지역인재 (regional talent): medical schools
   // outside Seoul and the regional national universities reserve seats for students who did middle and
   // high school in the region. 농어촌 (rural students): a separate quota at most universities.
@@ -693,8 +715,10 @@
       // Chosen by the player. It changes how you're drawn and named, not the rules; saves from before
       // the choice existed have no sex and keep their old look.
       this.sex = opts.sex === "f" ? "f" : "m";
-      // The family is dealt at birth from the five income quintiles; opts.family exists for sim.js only.
-      this.family = FAMILIES[opts.family] ? opts.family : Game.rollFamily(seed);
+      // Where you're born is dealt first, by population share; then the family, from that place's mix of
+      // incomes (overall each income fifth is still 20%). opts.region / opts.family exist for sim.js only.
+      const bornIn = REGION_BY_ID[opts.region] ? opts.region : Game.rollRegion(seed);
+      this.family = FAMILIES[opts.family] ? opts.family : Game.rollFamily(seed, bornIn);
       this.track = null; // chosen at the end of grade 10
       this.inq = null;
       this.startYear = opts.startYear || 2026;
@@ -727,22 +751,29 @@
       this.ending = null;
       this.lastPlan = null;
       this.bully = null; // { lv, n, sup } while being bullied; see bully-start
-      // Where you're born is dealt with the family (opts.region exists for sim.js only). regionFrom is
-      // the school grade you arrived in: the local quotas need middle and high school there (from grade 7).
-      this.region = REGION_BY_ID[opts.region] ? opts.region : Game.rollRegion(seed, this.family);
+      // regionFrom is the school grade you arrived in: the local quotas need middle and high school
+      // there (from grade 7).
+      this.region = bornIn;
       this.regionFrom = 1;
       this.addLog("log.born", { fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex, reg: this.region }, "milestone");
     }
 
-    static rollRegion(seed, family) {
-      const fi = Math.max(0, FAMILY_IDS.indexOf(family));
-      const w = REGIONS.map((r) => r.pop * REGION_AFFINITY[r.kind][fi]);
-      let x = makeRng(hashSeed(seed, "region"))() * w.reduce((a, b) => a + b, 0);
-      for (let i = 0; i < REGIONS.length; i++) { x -= w[i]; if (x <= 0) return REGIONS[i].id; }
+    // Birth region, weighted only by population share.
+    static rollRegion(seed) {
+      let x = makeRng(hashSeed(seed, "region"))() * REGIONS.reduce((a, r) => a + r.pop, 0);
+      for (const r of REGIONS) { x -= r.pop; if (x <= 0) return r.id; }
       return REGIONS[REGIONS.length - 1].id;
     }
-    static rollFamily(seed) {
-      return FAMILY_IDS[Math.floor(makeRng(hashSeed(seed, "family"))() * FAMILY_IDS.length)];
+    // The family's income fifth, from the birth region's mix (JOINT). Without a region (old callers),
+    // each fifth is equally likely.
+    static rollFamily(seed, region) {
+      const u = makeRng(hashSeed(seed, "family"))();
+      const i = REGIONS.findIndex((r) => r.id === region);
+      if (i < 0) return FAMILY_IDS[Math.floor(u * FAMILY_IDS.length)];
+      const row = JOINT[i], tot = row.reduce((a, b) => a + b, 0);
+      let x = u * tot;
+      for (let j = 0; j < row.length; j++) { x -= row[j]; if (x <= 0) return FAMILY_IDS[j]; }
+      return FAMILY_IDS[row.length - 1];
     }
     // Starting talent: a general knack plus per-subject quirks. Aptitude multiplies study gains.
     static rollTalent(seed, family) {
