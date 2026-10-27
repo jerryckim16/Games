@@ -11,7 +11,7 @@
   const $ = (id) => document.getElementById(id);
   const els = {
     lang: $("lang"),
-    setup: $("setup"), game: $("game"), name: $("name"), startBtn: $("startBtn"), resumeBtn: $("resumeBtn"), fame: $("fame"),
+    setup: $("setup"), game: $("game"), name: $("name"), sex: $("sex"), startBtn: $("startBtn"), resumeBtn: $("resumeBtn"), fame: $("fame"),
     sDate: $("sDate"), sDday: $("sDday"), sAttempt: $("sAttempt"), sStatus: $("sStatus"), sAge: $("sAge"),
     sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
@@ -74,7 +74,7 @@
     document.documentElement.lang = T("lang.html");
     document.title = T("app.title");
     for (const el of document.querySelectorAll("[data-t]")) el.textContent = T(el.dataset.t);
-    els.name.placeholder = T("setup.namePh");
+    els.name.placeholder = T("setup.namePh." + sex);
     for (const b of els.lang.querySelectorAll("button")) b.classList.toggle("on", b.dataset.v === lang);
   }
   els.lang.addEventListener("click", (e) => {
@@ -89,8 +89,14 @@
   });
 
   // ---------- setup screen ----------
-  // Only a name: family and talent are dealt at birth.
+  // A name and boy or girl: family and talent are dealt at birth.
+  let sex = "m";
   function renderSetup() {
+    for (const b of els.sex.querySelectorAll("button")) {
+      b.classList.toggle("on", b.dataset.v === sex);
+      b.setAttribute("aria-pressed", b.dataset.v === sex ? "true" : "false");
+    }
+    els.name.placeholder = T("setup.namePh." + sex);
     els.setupArt.innerHTML = Art.scene({ scene: "start", aria: T("art.place.start") });
     renderFame();
   }
@@ -115,8 +121,14 @@
   }
 
   els.resumeBtn.addEventListener("click", () => showGame());
+  els.sex.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-v]");
+    if (!b) return;
+    sex = b.dataset.v;
+    renderSetup();
+  });
   els.startBtn.addEventListener("click", () => {
-    game = new Game({ name: els.name.value.trim() || T("setup.namePh"), startYear: new Date().getFullYear() });
+    game = new Game({ name: els.name.value.trim() || T("setup.namePh." + sex), sex, startYear: new Date().getFullYear() });
     plan = {};
     save();
     showGame();
@@ -190,7 +202,7 @@
     return Object.assign({
       stage: g.ending ? "uni" : g.status,
       season: Art.seasonOf(g.month),
-      look: Art.lookFor(g.seed),
+      look: Art.lookFor(g.seed, g.sex),
       mood: Art.moodOf(g),
       family: g.family,
     }, extra || {});
@@ -215,6 +227,7 @@
     if (key !== sceneKey) {
       sceneKey = key;
       els.scene.innerHTML = Art.scene(c);
+      els.scene.parentElement.dataset.place = Art.sceneName(c.stage, c);
     }
     const thoughts = T("mood." + c.mood);
     els.moodName.textContent = T("mood.name." + c.mood);
@@ -238,7 +251,8 @@
   }
 
   // from: where the fill starts, so a fresh turn can grow the bar from last turn's value.
-  function bar(name, value, color, delta, title, icon, from) {
+  // shown: text in place of the number (e.g. "100+"); over: ability past the top of the scale.
+  function bar(name, value, color, delta, title, icon, from, shown, over) {
     const v = Math.max(0, Math.min(100, value));
     const start = from == null ? v : Math.max(0, Math.min(100, from));
     let d = "", pop = "";
@@ -248,7 +262,7 @@
       if (from != null) pop = '<span class="gain ' + (delta > 0 ? "up" : "down") + '" aria-hidden="true">' + txt + "</span>";
     }
     return '<div class="bar"' + (title ? ' title="' + esc(title) + '"' : "") + '><span class="name">' + (icon ? '<span class="bi" aria-hidden="true">' + icon + "</span>" : "") + esc(name) +
-      '</span><span class="track"><span class="fill" data-w="' + v + '" style="width:' + start + "%;background:" + color + '"></span></span><span class="val">' + Math.round(value) + d + pop + "</span></div>";
+      '</span><span class="track"><span class="fill" data-w="' + v + '" style="width:' + start + "%;background:" + color + '"></span></span><span class="val' + (over ? " over" : "") + '">' + (shown != null ? shown : Math.round(value)) + d + pop + "</span></div>";
   }
   // Ability gains animate once, on the render right after a turn: bars grow and the gain floats up.
   let shownTrace = 0;
@@ -263,7 +277,11 @@
       const fresh = g.trace[g.trace.length - 1].track && (s === "inq1" || s === "inq2");
       const delta = prev && !fresh ? (g.skills[s] - prev[s]) * 16.67 : 0;
       const from = animate && prev && !fresh ? S.skillScore(prev[s]) : null;
-      return bar(L.sub(s), S.skillScore(g.skills[s]), "var(" + subColor[s] + ")", delta, T("ability.tip", { a: g.aptitude[s] }), actIcon(s), from);
+      // The bar tops out at 100 (θ = 3), but ability keeps counting past it, and it still matters for
+      // SNU and 의대, so say so instead of looking stuck.
+      const over = 50 + g.skills[s] * 16.67 >= 100.5;
+      const tip = T("ability.tip", { a: g.aptitude[s] }) + (over ? " · " + T("ability.over") : "");
+      return bar(L.sub(s), S.skillScore(g.skills[s]), "var(" + subColor[s] + ")", delta, tip, actIcon(s), from, over ? "100+" : null, over);
     }).join("");
     const lvl = (v, goodHigh) => {
       const x = goodHigh ? v : 100 - v;
@@ -318,7 +336,7 @@
       const k = plan[a.id] || 0;
       const study = a.kind === "study";
       const nm = name(a);
-      const hint = study ? T("plan.studyHint", { v: S.skillScore(g.skills[a.subject]), s: a.subject }) : L.actHint(a.id);
+      const hint = study ? T("plan.studyHint", { v: 50 + g.skills[a.subject] * 16.67 >= 100.5 ? "100+" : S.skillScore(g.skills[a.subject]), s: a.subject }) : L.actHint(a.id);
       const pips = k ? '<span class="pips" aria-hidden="true">' + "●".repeat(Math.min(k, 8)) + "</span>" : "";
       return '<div class="act' + (k ? " has" : "") + (used < n && !done ? " open" : "") + '" data-card="' + a.id + '" style="--c:var(' + actColor(a) + ')">' +
         '<span class="ic" aria-hidden="true">' + actIcon(a.id) + "</span>" +
@@ -620,7 +638,7 @@
   function showBirth() {
     const g = game;
     openModal(T("birth.title"),
-      "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance() })) + "</p>" +
+      "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex })) + "</p>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",
       [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }],
       Art.screenArt("birth", artCtx({ stage: "elem" })));
@@ -829,7 +847,9 @@
     const icons = { academy: "🏫", selfstudy: "📚" };
     for (const o of g.retakeOptions(top.score)) {
       if (o.id === "halfretake") continue;
-      const sub = o.blocked ? T("offers." + o.blocked) : (o.scholarship ? T("offers.scholarship") : "") + T("offers." + o.id + ".sub");
+      // A full retake means leaving the 반수 school for good, so say so on the button.
+      const sub = o.blocked ? T("offers." + o.blocked) : (o.scholarship ? T("offers.scholarship") : "") + T("offers." + o.id + ".sub") +
+        (g.enrolled ? T("offers.leave", { uni: g.enrolled }) : "");
       html += btn("", icons[o.id] || "🔁", T("offers." + o.id), sub, o.blocked ? "" : o.id);
     }
     html += btn("", "🚪", T("offers.stop"), T(offerIds.length ? "offers.stop.sub" : "offers.stop.none"), "quit");
@@ -860,6 +880,7 @@
     if (!g.endingRecorded && best) {
       addFame({ name: g.name, total: best.total, g: gr, uni: u ? u.id : null, attempts: e.attempts });
       g.endingRecorded = true;
+      save(); // so reopening the finished life doesn't add the same entry again
       if (u) setTimeout(() => confetti(120), 300);
     }
     const verdict = !u ? "end.none" : u.id === "med" ? "end.med" : ["snu", "yonsei", "korea"].indexOf(u.id) >= 0 ? "end.sky" :
@@ -879,6 +900,8 @@
   // ---------- boot ----------
   applyStatic();
   game = loadSave();
-  if (game && !game.ending) showGame();
+  // A finished life reopens on its ending (or the look-back view), not the new-life screen; "Start a
+  // new life" is right there on the page.
+  if (game) showGame();
   else showSetup();
 })();

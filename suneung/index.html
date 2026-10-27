@@ -25,9 +25,18 @@
         <div class="hero" id="setupArt"></div>
         <h2 data-t="setup.title"></h2>
         <p class="intro" data-t="setup.intro"></p>
-        <div class="field name-field">
-          <label for="name" data-t="setup.name"></label>
-          <input id="name" type="text" maxlength="20">
+        <div class="setup-row">
+          <div class="field">
+            <span class="flabel" id="sexLabel" data-t="setup.sex"></span>
+            <div class="seg sex" id="sex" role="group" aria-labelledby="sexLabel">
+              <button type="button" data-v="m" data-t="sex.m"></button>
+              <button type="button" data-v="f" data-t="sex.f"></button>
+            </div>
+          </div>
+          <div class="field name-field">
+            <label for="name" data-t="setup.name"></label>
+            <input id="name" type="text" maxlength="20">
+          </div>
         </div>
         <div class="buttons">
           <button id="startBtn" type="button" class="primary" data-t="setup.go"></button>

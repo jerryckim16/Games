@@ -603,6 +603,9 @@
       this.seed = seed;
       this.rngState = seed;
       this.name = opts.name || "You";
+      // Chosen by the player. It changes how you're drawn and named, not the rules; saves from before
+      // the choice existed have no sex and keep their old look.
+      this.sex = opts.sex === "f" ? "f" : "m";
       // The family is dealt at birth from the five income quintiles; opts.family exists for sim.js only.
       this.family = FAMILIES[opts.family] ? opts.family : Game.rollFamily(seed);
       this.track = null; // chosen at the end of grade 10
@@ -637,7 +640,7 @@
       this.ending = null;
       this.lastPlan = null;
       this.bully = null; // { lv, n, sup } while being bullied; see bully-start
-      this.addLog("log.born", { fam: this.family, y: this.year, inc: FAMILIES[this.family].income }, "milestone");
+      this.addLog("log.born", { fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex }, "milestone");
     }
 
     static rollFamily(seed) {
@@ -1077,9 +1080,11 @@
       if (d.action === "enroll" || d.action === "quit") {
         this.leaveSchool();
         const uni = d.action === "enroll" ? UNI_BY_ID[d.uni] : null;
-        this.ending = { uni: uni && uni.id, attempts: this.attempt, age: this.age + 1, best: this.bestResult() };
+        // The calendar moves on to March, and so does the birthday (the stats card shows this age).
         this.month = 3;
         this.year += 1;
+        this.age += 1;
+        this.ending = { uni: uni && uni.id, attempts: this.attempt, age: this.age, best: this.bestResult() };
         this.addLog(uni ? "log.enroll" : "log.quit", { uni: uni && uni.id, y: this.year }, "milestone");
         return;
       }
@@ -1088,7 +1093,12 @@
       if (ro.blocked) throw new Error(ro.blocked);
       this.leaveSchool();
       this.scholarship = !!ro.scholarship;
-      this.enrolled = d.action === "halfretake" ? d.uni : this.enrolled;
+      // A full retake means leaving the 반수 school, so it stops being a fallback; another 반수 keeps one.
+      if (d.action === "halfretake") this.enrolled = d.uni;
+      else if (this.enrolled) {
+        this.addLog("log.dropUni", { uni: this.enrolled }, "event");
+        this.enrolled = null;
+      }
       this.status = d.action;
       this.attempt += 1;
       this.age += 1;

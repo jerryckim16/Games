@@ -139,6 +139,10 @@
       "setup.title": "A new life",
       "setup.name": "Name",
       "setup.namePh": "Minjun Kim",
+      "setup.namePh.m": "Minjun Kim",
+      "setup.namePh.f": "Seoyeon Kim",
+      "setup.sex": "You are a",
+      "sex.m": "Boy", "sex.f": "Girl",
       "setup.intro": "You start at age 6, on your first day of elementary school, and play all the way to the Suneung in grade 12. Your family and your talents are dealt at random when you're born, the way life does it: each of Korea's five household-income fifths is equally likely.",
       "setup.apt": "Aptitude: how fast you learn this subject",
       "setup.go": "Be born →",
@@ -159,6 +163,7 @@
 
       "ability.title": "Ability", "ability.sub": "0–100; 50 is the average Suneung test taker",
       "ability.tip": "Aptitude ×{a}",
+      "ability.over": "Past the top of the scale. More study still raises your odds at the very top schools.",
       "cond.title": "Condition",
       "cond.health": "Health", "cond.stress": "Stress", "cond.motivation": "Motivation", "cond.practice": "Exam stamina",
       "cond.health.tip": "Below 40 slows study and hurts you on exam day",
@@ -204,7 +209,7 @@
       "newLife.keep": "Keep playing", "newLife.go": "Start over",
 
       // Log lines.
-      "log.born": (p, h) => "Born into a " + h.familyAdj(p.fam) + " family (household income about " + h.wonShort(p.inc * 10000) + " a month). March " + p.y + ": you start elementary school.",
+      "log.born": (p, h) => "Born " + (p.sex ? (p.sex === "f" ? "a girl " : "a boy ") : "") + "into a " + h.familyAdj(p.fam) + " family (household income about " + h.wonShort(p.inc * 10000) + " a month). March " + p.y + ": you start elementary school.",
       "log.grade": (p) => "March " + p.y + ": you start grade " + p.g + ".",
       "log.stage": (p) => "March " + p.y + ": " + ({ mid: "you start middle school.", high: "you start high school.", hs3: "your final year of high school. The Suneung is in November." })[p.st],
       "log.teacher": (p) => "Teacher's note: " + ["", "\"Needs more support at home.\"", "\"Steady, careful work.\"", "\"Outstanding. One of the best in the class.\""][p.lvl],
@@ -227,6 +232,8 @@
       "log.apply": (p, h) => "Applications: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "admitted ✓" : "rejected ✗")).join(", "),
       "log.enroll": (p, h) => "March " + p.y + ": you enroll at " + h.uni(p.uni) + ". Exam life is over.",
       "log.quit": "You close the workbooks for good.",
+      "log.dropUni": (p, h) => "You leave " + h.uni(p.uni) + " to retake the exam full time.",
+      "offers.leave": (p, h) => " You'll leave " + h.uni(p.uni) + ".",
       "log.halfpay": "Your parents sit you down: from now on, they can only pay half.",
       "log.newyear": (p, h) => "March " + p.y + ": " + h.att(p.att) + ". " + ({
         academy: "You sign up for a retake academy: 7am to 10pm, phones collected at the door." + (p.sch ? " Your score earned a full scholarship." : p.pays ? " Your parents pay the ₩2.9M a month." : ""),
@@ -368,7 +375,7 @@
       "report.subject": (p, h) => h.sub(p.s) + (p.el ? " (" + p.el + ")" : ""),
       "mock.title": "{name} results",
       "birth.title": "You're born!",
-      "birth.text": (p, h) => p.name + " is born into a " + h.familyAdj(p.fam) + " family. Household income is about " + h.wonShort(p.inc * 10000) +
+      "birth.text": (p, h) => p.name + " is born" + (p.sex ? ", a baby " + (p.sex === "f" ? "girl" : "boy") + "," : "") + " into a " + h.familyAdj(p.fam) + " family. Household income is about " + h.wonShort(p.inc * 10000) +
         " a month, in " + h.fifth(p.fam) + " of Korean households, and your parents can spend about " + h.won(p.a) + " a month on your education.",
       "birth.talent": "Your talents at age 6",
       "birth.note": "Stars show aptitude: how fast you learn a subject. Ability is measured on the Suneung scale, where 50 is the average test taker, so every child starts low and climbs. What you learn stays learned.",
@@ -470,6 +477,10 @@
       "setup.title": "새로운 인생",
       "setup.name": "이름",
       "setup.namePh": "김민준",
+      "setup.namePh.m": "김민준",
+      "setup.namePh.f": "김서연",
+      "setup.sex": "성별",
+      "sex.m": "남자", "sex.f": "여자",
       "setup.intro": "만 6세, 초등학교 입학 첫날부터 고3 수능까지 살아 봅니다. 가정 형편과 재능은 태어날 때 무작위로 정해집니다. 인생이 그렇듯이요. 한국 가구 소득 5분위 가운데 어느 가정에 태어날지는 모두 같은 확률입니다.",
       "setup.apt": "적성: 이 과목을 얼마나 빨리 익히는지",
       "setup.go": "태어나기 →",
@@ -490,6 +501,7 @@
 
       "ability.title": "실력", "ability.sub": "0–100, 50이 수능 응시자 평균",
       "ability.tip": "적성 ×{a}",
+      "ability.over": "최고치를 넘었습니다. 더 공부하면 최상위 대학 합격 확률이 계속 오릅니다.",
       "cond.title": "컨디션",
       "cond.health": "체력", "cond.stress": "스트레스", "cond.motivation": "의지", "cond.practice": "실전력",
       "cond.health.tip": "40 미만이면 공부 효율이 떨어지고 시험 날 점수도 깎입니다",
@@ -534,7 +546,7 @@
       "newLife.text": "지금의 인생과 저장 기록이 사라집니다. 명예의 전당은 남습니다.",
       "newLife.keep": "계속하기", "newLife.go": "새로 시작",
 
-      "log.born": (p, h) => h.familyAdj(p.fam) + " 가정에서 태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + p.y + "년 3월, 초등학교에 입학했다.",
+      "log.born": (p, h) => h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + p.y + "년 3월, 초등학교에 입학했다.",
       "log.grade": (p, h) => p.y + "년 3월, " + josa(h.schoolGrade(p.g), "이", "가") + " 되었다.",
       "log.stage": (p) => p.y + "년 3월, " + ({ mid: "중학교에 입학했다.", high: "고등학교에 입학했다.", hs3: "고3이 되었다. 수능은 11월이다." })[p.st],
       "log.teacher": (p) => "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl],
@@ -557,6 +569,8 @@
       "log.apply": (p, h) => "정시 지원: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "합격 ✓" : "불합격 ✗")).join(", "),
       "log.enroll": (p, h) => p.y + "년 3월, " + josa(h.uni(p.uni), "에", "에") + " 입학했다. 수험 생활 끝.",
       "log.quit": "문제집을 영영 덮었다.",
+      "log.dropUni": (p, h) => josa(h.uni(p.uni), "을", "를") + " 그만두고 수능에 전념하기로 했다.",
+      "offers.leave": (p, h) => " " + josa(h.uni(p.uni), "은", "는") + " 그만둡니다.",
       "log.halfpay": "부모님이 조용히 말씀하신다. 이제부터는 절반만 지원해 줄 수 있다고.",
       "log.newyear": (p, h) => p.y + "년 3월, " + h.att(p.att) + ". " + ({
         academy: "재수종합학원에 등록했다. 아침 7시부터 밤 10시까지, 휴대폰은 입구에서 걷는다." + (p.sch ? " 성적 장학생이라 학원비는 무료다." : p.pays ? " 월 290만원은 부모님이 내신다." : ""),
@@ -695,7 +709,7 @@
       "report.subject": (p, h) => h.sub(p.s) + (p.el ? " (" + p.el + ")" : ""),
       "mock.title": "{name} 결과",
       "birth.title": "태어났습니다!",
-      "birth.text": (p, h) => p.name + "은(는) " + h.familyAdj(p.fam) + " 가정에서 태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
+      "birth.text": (p, h) => p.name + "은(는) " + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
         "으로 한국 가구 중 " + h.fifth(p.fam) + "에 속하고, 부모님은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
       "birth.talent": "만 6세 때의 재능",
       "birth.note": "별은 적성, 즉 그 과목을 얼마나 빨리 익히는지를 뜻합니다. 실력은 수능 기준이라 50이 수능 응시자 평균입니다. 그래서 모든 아이는 낮은 곳에서 출발해 올라갑니다. 한 번 익힌 실력은 줄어들지 않습니다.",

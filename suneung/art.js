@@ -154,8 +154,15 @@
     if (look.hair === 2) s += P("M" + (-hr - 2) + " " + (hy - 2) + " Q" + (-hr - 4) + " " + (hy + hr + 10) + " " + (-hr + 4) + " " + (hy + hr + 14) + " L" + (hr - 4) + " " + (hy + hr + 14) + " Q" + (hr + 4) + " " + (hy + hr + 10) + " " + (hr + 2) + " " + (hy - 2) + " Z", "hair");
     if (look.hair === 3) s += P("M" + (-hr - 2) + " " + hy + " Q" + (-hr - 3) + " " + (hy + hr * 0.95) + " " + (-hr + 6) + " " + (hy + hr * 0.95) + " L" + (hr - 6) + " " + (hy + hr * 0.95) + " Q" + (hr + 3) + " " + (hy + hr * 0.95) + " " + (hr + 2) + " " + hy + " Z", "hair");
 
-    // Legs and shoes. Children wear shorts.
-    if (outfit === "kid") {
+    // Legs and shoes. Children wear shorts; girls wear a skirt with the school uniform and as children.
+    const skirt = look.sex === "f" && (outfit === "uniform" || outfit === "kid");
+    if (skirt) {
+      const sl = b.leg * (outfit === "kid" ? 0.42 : 0.5);
+      s += R(-hw + 7, hipY + sl - 3, hw - 10, b.leg - sl - 3, skin) + R(3, hipY + sl - 3, hw - 10, b.leg - sl - 3, skin);
+      if (outfit === "uniform") s += R(-hw + 6, -14, hw - 8, 9, "snow") + R(2, -14, hw - 8, 9, "snow");
+      s += P("M" + (-hw + 1) + " " + (hipY - 3) + " L" + (hw - 1) + " " + (hipY - 3) + " L" + (hw + 5) + " " + (hipY + sl) + " L" + (-hw - 5) + " " + (hipY + sl) + " Z", outfit === "uniform" ? pants : "c5");
+      if (outfit === "uniform") s += L(-hw / 2, hipY, -hw / 2 - 2, hipY + sl, "shadow", 1) + L(0, hipY, 0, hipY + sl, "shadow", 1) + L(hw / 2, hipY, hw / 2 + 2, hipY + sl, "shadow", 1);
+    } else if (outfit === "kid") {
       s += R(-hw + 5, hipY, hw - 6, b.leg * 0.45, pants, 3) + R(1, hipY, hw - 6, b.leg * 0.45, pants, 3);
       s += R(-hw + 7, hipY + b.leg * 0.4, hw - 10, b.leg * 0.6 - 3, skin) + R(3, hipY + b.leg * 0.4, hw - 10, b.leg * 0.6 - 3, skin);
       s += R(-hw + 6, -6, hw - 7, 4, "snow");
@@ -169,7 +176,11 @@
       " L" + (hw - 1) + " " + (hipY + 3) + " L" + (-hw + 1) + " " + (hipY + 3) + " Z";
     s += P(torso, top);
     if (outfit === "uniform") {
-      s += P("M-8 " + shY + " L0 " + (shY + 18) + " L8 " + shY + " Z", "shirt") + P("M-2 " + (shY + 4) + " L2 " + (shY + 4) + " L3 " + (shY + 20) + " L0 " + (shY + 24) + " L-3 " + (shY + 20) + " Z", "tie");
+      s += P("M-8 " + shY + " L0 " + (shY + 18) + " L8 " + shY + " Z", "shirt");
+      // Boys wear a tie, girls a ribbon bow.
+      s += look.sex === "f"
+        ? P("M0 " + (shY + 6) + " L-8 " + (shY + 1) + " L-8 " + (shY + 11) + " Z M0 " + (shY + 6) + " L8 " + (shY + 1) + " L8 " + (shY + 11) + " Z", "tie") + O(0, shY + 6, 2.4, "tie")
+        : P("M-2 " + (shY + 4) + " L2 " + (shY + 4) + " L3 " + (shY + 20) + " L0 " + (shY + 24) + " L-3 " + (shY + 20) + " Z", "tie");
       s += P("M-8 " + shY + " L-3 " + (shY + 22) + " M8 " + shY + " L3 " + (shY + 22), null, "uniform2", 1.5) + R(hw - 13, shY + 14, 8, 3, "shirt", 1);
     } else if (outfit === "hoodie") {
       s += P("M-10 " + shY + " Q0 " + (shY + 10) + " 10 " + shY, null, "hoodie2", 3) + L(-3, shY + 4, -3, shY + 14, "snow", 1.2) + L(3, shY + 4, 3, shY + 14, "snow", 1.2);
@@ -262,9 +273,13 @@
     if (stage === "academy" || stage === "selfstudy") return { age: "adult", outfit: "hoodie" };
     return { age: "adult", outfit: "casual" };
   }
-  function lookFor(seed) {
+  // sex "m" draws from the two short styles, "f" from long hair and the bob. A save from before the
+  // player chose (no sex) keeps the look it always had, from all four.
+  function lookFor(seed, sex) {
     const r = rand((seed | 0) ^ 0x5eed);
-    return { hair: Math.floor(r() * 4), skin: r() < 0.35 ? 1 : 0, shirt: Math.floor(r() * 4) };
+    const h = Math.floor(r() * 4);
+    const hair = sex === "m" ? h % 2 : sex === "f" ? 2 + (h % 2) : h;
+    return { hair, skin: r() < 0.35 ? 1 : 0, shirt: Math.floor(r() * 4), sex: sex || null };
   }
   // Mood from the condition bars; the thresholds mirror where the engine starts to punish them.
   function moodOf(g) {
