@@ -1,6 +1,6 @@
 // Suneung Simulator engine. No DOM access, so it runs in the browser or in Node (see sim.js).
 //
-// A life runs from the first year of elementary school (age 7) to the 수능 and any retakes. School
+// A life runs from the first year of elementary school (age 6, counted the international way: 만 나이) to the 수능 and any retakes. School
 // years move in big turns (a year, then semesters, then seasons); grade 12 and retake years are
 // played month by month. The game is a queue of screens. The app calls advance(plan) once per turn; the
 // engine applies the plan, rolls events and exams, and pushes anything the player must see or decide
@@ -152,7 +152,7 @@
   // allowance: what the parents spend on your education each month. The 2024 private-education survey
   // gives ₩205,000 per student in households under ₩3M a month and ₩676,000 at ₩8M and above; the top
   // fifth earns well above that bracket, so its figure is extrapolated.
-  // prior: a small head start at age 7 from books at home and parents' schooling.
+  // prior: a small head start at age 6 from books at home and parents' schooling.
   // paysAcademy: whether the parents can pay ₩2.9M a month for a retake academy.
   const FAMILIES = {
     q1: { income: 125, allowance: 150000, prior: -0.1, paysAcademy: false },
@@ -391,7 +391,7 @@
       },
     },
     {
-      id: "crush", weight: 1.5, when: (g) => g.grade >= 8 && g.age <= 21, choices: 2,
+      id: "crush", weight: 1.5, when: (g) => g.grade >= 8 && g.age <= 20, choices: 2,
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -15, motivation: g.rng() < 0.5 ? 8 : -8 }); return g.motivation > 55 ? "r0a" : "r0b"; }
         bump(g, { motivation: 4, stress: 3 }); return "r1";
@@ -482,7 +482,7 @@
   }
 
   // Ability is on the 수능 scale from day one (0 = the average test taker), and it never decays: a
-  // subject you don't study simply stops growing. A 7-year-old starts START_GAP below where an average
+  // subject you don't study simply stops growing. A 6-year-old starts START_GAP below where an average
   // child of the same talent will be at the exam, and the school years close that gap.
   // SCHOOL_GAIN scales study during grades 1–11, so that childhood habits move you about as far as a
   // year of 고3 studying does at the top end. Both are tuned with sim.js.
@@ -506,7 +506,8 @@
       this.month = 3;
       this.grade = 1;
       this.attempt = 1;
-      this.age = 7;
+      // International age (만 나이): most children start grade 1 in March at 6 and turn 7 that year.
+      this.age = 6;
       this.status = "elem";
       this.method = "self";
       const talent = Game.rollTalent(seed, this.family);
@@ -694,7 +695,7 @@
       if (this.status === "mid") this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
       if (school && (this.month === 3 && months === 12 || this.month + months > 12)) {
-        const gift = Math.min(300000, 50000 + this.age * 10000);
+        const gift = Math.min(300000, 60000 + this.age * 10000);
         this.money += gift;
         this.addLog("log.sebae", { a: gift }, "");
       }

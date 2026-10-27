@@ -1,6 +1,6 @@
 # Suneung Simulator (수능 시뮬레이터)
 
-A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You're born at random into one of Korea's five household-income fifths. You start elementary school at 7 and grow up through middle school and high school, deciding each turn how to spend your time: which subjects to study, whether your family pays for cram school, when to read, rest, play or see friends. Life happens along the way. At the end of grade 10 you choose humanities or sciences. In grade 12 you play month by month and sit the real 수능 in November. With your score you apply to universities, then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
+A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You're born at random into one of Korea's five household-income fifths. You start elementary school at 6 and grow up through middle school and high school, deciding each turn how to spend your time: which subjects to study, whether your family pays for cram school, when to read, rest, play or see friends. Life happens along the way. At the end of grade 10 you choose humanities or sciences. In grade 12 you play month by month and sit the real 수능 in November. With your score you apply to universities, then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
 
 Open `index.html` in a browser. There's no build step and no dependencies. Progress autosaves in the browser. It's also published as a single-file claude.ai artifact: https://claude.ai/artifact/H8zzP1PqsHVdvEQEARTuFE
 
@@ -17,7 +17,7 @@ This version ends when you enroll at a university. College life and what comes a
 
    | Stage | One turn is | Blocks |
    |---|---|---|
-   | Elementary school (grades 1–6, age 7–12) | a school year | 4 |
+   | Elementary school (grades 1–6, age 6–11) | a school year | 4 |
    | Middle school (grades 7–9) | a semester | 4 |
    | High school (grades 10–11) | a season: spring term, summer break, fall term, winter break | 4, or 5 in the breaks |
    | Grade 12 | a month (March to November) | 4, 6 in July–August, 2 in 수능 month |
@@ -44,13 +44,13 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 
 ## Features
 
-- **A whole childhood.** Ability is on the 수능 scale from the start (50 is the average test taker), so a 7-year-old begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
+- **A whole childhood.** Ability is on the 수능 scale from the start (50 is the average test taker), so a 6-year-old begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
 - **Families from real income data:**
   - You're born into one of the five national household-income fifths, each with a 20% chance.
   - The family sets your education budget. Money the parents don't spend on you that turn stays with them.
   - Your own savings (New Year's money from relatives, gifts, a part-time job from grade 10) cover anything over the budget.
 
-  | Family | Household income (a month) | Education budget (a month) | Head start at age 7 | Pays for a retake academy |
+  | Family | Household income (a month) | Education budget (a month) | Head start at age 6 | Pays for a retake academy |
   |---|---|---|---|---|
   | Low income (bottom fifth) | about ₩1.25M | ₩150,000 | −0.10 | no (scholarship only) |
   | Lower-middle income | about ₩3.0M | ₩250,000 | −0.05 | no (scholarship only) |
@@ -106,11 +106,12 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **Ability chart** across every stage and attempt, a **life log**, and an **exam history** table with every 수능 and the current year's mocks.
 - **Deterministic:** the seed fixes the family, the talent roll, every paper, and the cohort you're graded against. Your choices only change your own answers.
 - **Two complete languages, English and Korean**, never mixed. Switching mid-game re-renders everything, including past log entries.
+- **Ages are international (만 나이):** grade 1 starts at 6 and grade 12 at 17; the Korean version writes "만 17세".
 - Light and dark themes; works at phone width.
 
 ## How the exam is simulated
 
-- **Ability:** each subject has a latent ability θ on the scale of the 수능 test takers (mean 0, sd 1). The bars show it as 0–100, where 50 + 16.7·θ, so 50 is average and 100 is θ = 3. At age 7, θ is your talent minus 2.4, so a child of average talent starts around 10.
+- **Ability:** each subject has a latent ability θ on the scale of the 수능 test takers (mean 0, sd 1). The bars show it as 0–100, where 50 + 16.7·θ, so 50 is average and 100 is θ = 3. At age 6, θ is your talent minus 2.4, so a child of average talent starts around 10.
 - **Questions** follow the real layouts: 국어 and 영어 have 45 questions, 수학 has 30 (some short-answer), 한국사 and each 탐구 have 20, with 2-, 3- and 4-point items.
   - Each question has an item-response curve: P(correct) = c + (1 − c) / (1 + e^(−1.7·a·(θ − b))).
   - Guessing c is 0.2 for multiple choice and 0 for short answer.
@@ -223,6 +224,7 @@ What the tables show:
 
 ## Changelog
 
+- **v2.2:** ages use the international count (만 나이): you start grade 1 at 6, so a grade-12 student is 17. The Korean version writes ages as "만 6세". Gameplay and balance numbers are unchanged.
 - **v2.1:** ability no longer decays. Subjects you don't study stay where they are instead of slipping (no more peer drift in the school years, and no monthly fade in grade 12 or retake years). Ability is now on the 수능 scale from age 7 (50 is the average test taker), so children start around 10 and climb; the starting level and school-year study speed were retuned so top players reach about the same level as before. Balance tables regenerated.
 - **v2:** lives start in elementary school. Turns are a year in elementary school, a semester in middle school and a season in grades 10–11, then monthly from grade 12. Ability is now relative to your year group, with peer drift during the school years. New childhood activities (reading, arts & sports) and about ten new events (sports day, olympiad, smartphone, Daechi-dong, bullying, class elections, career week, 중2). Middle-school class ranks and grade 10–11 mock exams track your standing. The track and inquiry subjects are chosen at the end of grade 10 instead of at the start. Families are no longer chosen: you're born into one of the five household-income fifths at random, with budgets based on the 2024 private-education survey, and there's no talent re-roll. Unspent education budget no longer piles up; your own savings come from New Year's money, gifts and part-time work. Earlier saves don't carry over.
 - **v1.2:** full English and Korean versions with a language switch, instead of mixed English and Korean text. The engine now emits message keys; all text lives in `strings.js`. Saves from earlier versions don't carry over (the save format changed). Game behavior and balance numbers are unchanged.

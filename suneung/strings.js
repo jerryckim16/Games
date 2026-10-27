@@ -134,12 +134,12 @@
     en: {
       "lang.html": "en",
       "app.title": "Suneung Simulator",
-      "app.sub": "Grow up from age 7 to Korea's college entrance exam (the Suneung). Study, rest, make choices, sit the exam, and retake it as many times as it takes to get into the school you want.",
+      "app.sub": "Grow up from age 6 to Korea's college entrance exam (the Suneung). Study, rest, make choices, sit the exam, and retake it as many times as it takes to get into the school you want.",
 
       "setup.title": "A new life",
       "setup.name": "Name",
       "setup.namePh": "Minjun Kim",
-      "setup.intro": "You start at age 7, on your first day of elementary school, and play all the way to the Suneung in grade 12. Your family and your talents are dealt at random when you're born, the way life does it: each of Korea's five household-income fifths is equally likely.",
+      "setup.intro": "You start at age 6, on your first day of elementary school, and play all the way to the Suneung in grade 12. Your family and your talents are dealt at random when you're born, the way life does it: each of Korea's five household-income fifths is equally likely.",
       "setup.apt": "Aptitude: how fast you learn this subject",
       "setup.go": "Be born →",
       "setup.resume": "Continue saved life",
@@ -336,7 +336,7 @@
       "birth.title": "You're born!",
       "birth.text": (p, h) => p.name + " is born into a " + h.familyAdj(p.fam) + " family. Household income is about " + h.wonShort(p.inc * 10000) +
         " a month, in " + h.fifth(p.fam) + " of Korean households, and your parents can spend about " + h.won(p.a) + " a month on your education.",
-      "birth.talent": "Your talents at age 7",
+      "birth.talent": "Your talents at age 6",
       "birth.note": "Stars show aptitude: how fast you learn a subject. Ability is measured on the Suneung scale, where 50 is the average test taker, so every child starts low and climbs. What you learn stays learned.",
       "birth.go": "Start elementary school →",
       "track.title": "Choose your track",
@@ -411,12 +411,12 @@
     ko: {
       "lang.html": "ko",
       "app.title": "수능 시뮬레이터",
-      "app.sub": "일곱 살부터 수능까지 자라 보세요. 공부하고, 쉬고, 선택하고, 수능을 치르고, 원하는 대학에 갈 때까지 몇 번이든 다시 도전하세요.",
+      "app.sub": "만 6세부터 수능까지 자라 보세요. 공부하고, 쉬고, 선택하고, 수능을 치르고, 원하는 대학에 갈 때까지 몇 번이든 다시 도전하세요.",
 
       "setup.title": "새로운 인생",
       "setup.name": "이름",
       "setup.namePh": "김민준",
-      "setup.intro": "일곱 살, 초등학교 입학 첫날부터 고3 수능까지 살아 봅니다. 가정 형편과 재능은 태어날 때 무작위로 정해집니다. 인생이 그렇듯이요. 한국 가구 소득 5분위 가운데 어느 가정에 태어날지는 모두 같은 확률입니다.",
+      "setup.intro": "만 6세, 초등학교 입학 첫날부터 고3 수능까지 살아 봅니다. 가정 형편과 재능은 태어날 때 무작위로 정해집니다. 인생이 그렇듯이요. 한국 가구 소득 5분위 가운데 어느 가정에 태어날지는 모두 같은 확률입니다.",
       "setup.apt": "적성: 이 과목을 얼마나 빨리 익히는지",
       "setup.go": "태어나기 →",
       "setup.resume": "저장된 인생 이어 하기",
@@ -610,7 +610,7 @@
       "birth.title": "태어났습니다!",
       "birth.text": (p, h) => p.name + "은(는) " + h.familyAdj(p.fam) + " 가정에서 태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
         "으로 한국 가구 중 " + h.fifth(p.fam) + "에 속하고, 부모님은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
-      "birth.talent": "일곱 살 때의 재능",
+      "birth.talent": "만 6세 때의 재능",
       "birth.note": "별은 적성, 즉 그 과목을 얼마나 빨리 익히는지를 뜻합니다. 실력은 수능 기준이라 50이 수능 응시자 평균입니다. 그래서 모든 아이는 낮은 곳에서 출발해 올라갑니다. 한 번 익힌 실력은 줄어들지 않습니다.",
       "birth.go": "초등학교 입학 →",
       "track.title": "계열 선택",
@@ -748,6 +748,8 @@
       won: (n) => (en ? wonEn(n) : wonKo(n)),
       wonShort: (n) => (en ? wonShortEn(n) : wonShortKo(n)),
       date: (y, m) => (en ? D.months[m] + " " + y : y + "년 " + m + "월"),
+      // Ages are international (만 나이) in both languages; Korean says so explicitly.
+      age: (n) => (en ? String(n) : "만 " + n + "세"),
       // Short date for the log column: "Mar '26" / "26.03".
       dateShort(t) {
         const [y, m] = t.split("-").map(Number);

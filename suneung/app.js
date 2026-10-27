@@ -168,7 +168,7 @@
       g.month <= 11 ? (d > 0 ? T("stat.dday", { n: d }) : T("stat.examMonth")) : T("stat.results");
     els.sAttempt.textContent = school ? L.schoolGrade(g.grade) : L.att(g.attempt);
     els.sStatus.textContent = L.status(g.status);
-    els.sAge.textContent = g.age;
+    els.sAge.textContent = L.age(g.age);
     els.sName.textContent = g.name + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
     els.sAllowance.textContent = T("stat.allowance", { a: L.wonShort(g.allowance()) });
@@ -628,7 +628,7 @@
     const tile = (k, v) => '<div><span class="k">' + esc(T(k)) + '</span><span class="v">' + esc(v) + "</span></div>";
     openModal(u ? T("end.title", { uni: L.uni(u.id) }) : T("end.titleNone"),
       "<p>" + esc(T(verdict)) + '</p><div class="summary">' +
-      tile("end.attempts", e.attempts) + tile("end.age", e.age) + tile("end.best", best ? best.total : "—") + tile("end.grades", gr ? gr.join("·") : "—") +
+      tile("end.attempts", e.attempts) + tile("end.age", L.age(e.age)) + tile("end.best", best ? best.total : "—") + tile("end.grades", gr ? gr.join("·") : "—") +
       '</div><p class="muted">' + esc(T("end.note")) + "</p>",
       [
         { label: T("end.look"), run: () => { g.endingSeen = true; after(); } },
