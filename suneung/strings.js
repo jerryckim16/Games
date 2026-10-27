@@ -440,6 +440,26 @@
       "end.attempts": "Attempts", "end.age": "Age at enrollment", "end.best": "Best standard-score total", "end.grades": "Best grades (Kor·Math·Eng)",
       "end.note": "College life, jobs and beyond are coming in a later version. Your life log and exam history stay on the page below.",
       "end.look": "Look back at this life",
+
+      // The illustrated view (art.js): mood bubble, turn transition, activity cards and diary.
+      "mood.name.happy": "Feeling great", "mood.name.ok": "Doing okay", "mood.name.tired": "Running on empty",
+      "mood.name.stressed": "Stressed out", "mood.name.sick": "Feeling unwell",
+      "mood.happy": ["Today was a good day.", "I think I'm getting the hang of this.", "Can't wait for tomorrow.", "Life is pretty good right now."],
+      "mood.ok": ["One step at a time.", "Just another day.", "Not bad, not great.", "Keep going. It adds up."],
+      "mood.tired": ["Why am I even doing this?", "So... sleepy...", "I can't focus on anything.", "Five more minutes. Please."],
+      "mood.stressed": ["Too much. Way too much.", "My head is spinning.", "Everyone else seems so far ahead.", "Breathe. Just breathe."],
+      "mood.sick": ["Ugh, I feel awful.", "Everything aches.", "I need a nap. Or ten.", "Is it hot in here, or is it me?"],
+      "turn.elem": "A year goes by", "turn.mid": "A semester goes by", "turn.high": "A season goes by", "turn.month": "A month goes by",
+      "turn.exam": "The day has come",
+      "turn.age": "Age {a}",
+      "plan.study": "Study", "plan.life": "Life",
+      "plan.tap": "Tap a card to give it a block of time. Tap a filled slot to take it back.",
+      "plan.slot": "Take back a block of {a}", "plan.free": "Free block",
+      "diary.year": "{y} · age {a}",
+      "art.place.classroom": "Your elementary-school classroom", "art.place.hallway": "The middle-school hallway",
+      "art.place.desk": "Your desk, late at night", "art.place.cubicle": "A study-café cubicle", "art.place.academy": "The retake academy's lecture room",
+      "art.place.campus": "The university campus", "art.place.examhall": "The exam hall", "art.place.home": "Home, waiting for results",
+      "art.place.gate": "The university gate", "art.place.road": "The road ahead", "art.place.start": "A city at night, about to welcome a new life",
     },
 
     ko: {
@@ -747,6 +767,26 @@
       "end.attempts": "도전 횟수", "end.age": "입학 나이", "end.best": "최고 국수탐 표준점수 합", "end.grades": "최고 성적 국·수·영",
       "end.note": "대학 생활, 취업, 그 이후의 이야기는 다음 버전에서 이어집니다. 인생 기록과 시험 기록은 아래에 남아 있습니다.",
       "end.look": "이번 인생 돌아보기",
+
+      // 그림으로 보는 화면(art.js): 기분 말풍선, 턴 전환, 활동 카드, 일기장.
+      "mood.name.happy": "기분 최고", "mood.name.ok": "그럭저럭", "mood.name.tired": "방전 직전",
+      "mood.name.stressed": "스트레스 폭발", "mood.name.sick": "몸이 안 좋아",
+      "mood.happy": ["오늘 하루 괜찮았다.", "이제 좀 감이 오는 것 같아.", "내일이 기다려진다.", "요즘 사는 게 꽤 괜찮다."],
+      "mood.ok": ["한 걸음씩.", "그냥 평범한 하루.", "나쁘지도, 좋지도 않아.", "계속 가자. 쌓이면 된다."],
+      "mood.tired": ["내가 이걸 왜 하고 있지?", "졸려... 너무 졸려...", "아무것도 머리에 안 들어와.", "5분만 더. 제발."],
+      "mood.stressed": ["너무 많아. 진짜 너무 많아.", "머리가 빙빙 돈다.", "다들 나보다 저만치 앞서 있는 것 같아.", "숨 쉬자. 천천히."],
+      "mood.sick": ["으, 너무 아프다.", "온몸이 쑤신다.", "낮잠이 필요해. 한 열 번쯤.", "여기 덥나, 아니면 나만 그런가?"],
+      "turn.elem": "1년이 흘렀다", "turn.mid": "한 학기가 흘렀다", "turn.high": "한 계절이 흘렀다", "turn.month": "한 달이 흘렀다",
+      "turn.exam": "드디어 그날이 왔다",
+      "turn.age": "{a}",
+      "plan.study": "공부", "plan.life": "생활",
+      "plan.tap": "카드를 누르면 시간 한 칸을 씁니다. 채워진 칸을 누르면 되돌립니다.",
+      "plan.slot": "{a} 한 칸 되돌리기", "plan.free": "빈 칸",
+      "diary.year": "{y}년 · {a}",
+      "art.place.classroom": "초등학교 교실", "art.place.hallway": "중학교 복도",
+      "art.place.desk": "늦은 밤 내 책상", "art.place.cubicle": "독서실 칸막이 자리", "art.place.academy": "재종반 강의실",
+      "art.place.campus": "대학 캠퍼스", "art.place.examhall": "수능 시험장", "art.place.home": "결과를 기다리는 집",
+      "art.place.gate": "대학교 정문", "art.place.road": "앞으로 이어진 길", "art.place.start": "새 생명을 기다리는 밤의 도시",
     },
   };
 
