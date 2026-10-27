@@ -38,6 +38,42 @@ function calibration() {
     );
   }
   console.log("Real targets: 국어 1등급 cut 84–92, std max 135–150 · 수학 cut 84–88, std max 135–148 · 영어 1등급 4–10% · 한국사 1등급 15–35% · 탐구 cut 44–50, std max 63–77\n");
+  topEnd();
+}
+
+// ---------- 1b. the top end ----------
+// A perfect 탐구 paper should be worth a 99–100 percentile (only 0.5–2% of a pool scores 50/50), and a
+// player with every bar at 100 (θ = 3) should be a likely SNU admit and about a coin flip for 의대.
+// Exam-day noise is left out, so these are the chances on a good day.
+function topEnd() {
+  const N = 150;
+  const snu = S.UNIVERSITIES.find((u) => u.id === "snu"), med = S.UNIVERSITIES.find((u) => u.id === "med");
+  const players = [];
+  for (const theta of [3, 99]) for (const inq of [["phys", "chem"], ["bio", "earth"]]) players.push({ theta, inq, perfPct: 0, perfN: 0, score: 0, ps: 0, pm: 0 });
+  // Sittings on the outside, so each sitting's cohorts are built once and shared by all four players.
+  for (let i = 0; i < N; i++) {
+    const key = S.hashSeed("top", i);
+    for (const pl of players) {
+      const diff = S.makeRng(S.hashSeed(key, "difficulty"));
+      const subjects = {};
+      for (const s of S.SUBJECTS) {
+        const shift = diff.normal() * 0.28;
+        const pop = s === "inq1" ? S.inquiryInfo(pl.inq[0]).pop : s === "inq2" ? S.inquiryInfo(pl.inq[1]).pop : 0;
+        subjects[s] = S.gradeSubject(s, pl.theta, pop, shift, key, s === "eng" || s === "hist" ? "absolute" : "relative");
+        if ((s === "inq1" || s === "inq2") && subjects[s].raw === 50) { pl.perfPct += subjects[s].pct; pl.perfN++; }
+      }
+      const a = S.admissionScore({ subjects });
+      pl.score += a; pl.ps += S.admitChance(a, snu, "sci"); pl.pm += S.admitChance(a, med, "sci");
+    }
+  }
+  console.log("Top end (" + N + " sittings, sciences track, no exam-day noise)");
+  console.log("player                        perfect 탐구 pct   admission   P(SNU)   P(의대)");
+  for (const pl of players) {
+    const who = (pl.theta > 10 ? "every answer right" : "all bars at 100") + ", " + pl.inq.join("/");
+    console.log(who.padEnd(30), (pl.perfN ? (pl.perfPct / pl.perfN).toFixed(1) : "-").padStart(14), (pl.score / N).toFixed(2).padStart(11),
+      ((100 * pl.ps) / N).toFixed(0).padStart(7) + "%", ((100 * pl.pm) / N).toFixed(0).padStart(7) + "%");
+  }
+  console.log("Targets: a perfect 탐구 paper at 99–100 · all bars at 100: SNU likely, 의대 about a coin flip\n");
 }
 
 // ---------- 2. strategy bots ----------
