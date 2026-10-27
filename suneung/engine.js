@@ -172,6 +172,8 @@
   // and whether you count as outside the capital region for the quotas below.
   const REGION_KINDS = {
     gangnam: { hagwon: 1.15, tutor: 1.1, price: 1.4, stress: 2, motivation: 3, health: 0 },
+    // Seoul's other academy streets (Mokdong, Junggye-dong): a step below Daechi-dong.
+    seoulAcad: { hagwon: 1.1, tutor: 1.07, price: 1.25, stress: 1.5, motivation: 2, health: 0 },
     seoul: { hagwon: 1.05, tutor: 1.05, price: 1.15, stress: 1, motivation: 1, health: 0 },
     capital: { hagwon: 1, tutor: 1, price: 1, stress: 0, motivation: 0, health: 0 },
     metro: { hagwon: 0.97, tutor: 0.97, price: 0.95, stress: 0, motivation: 0, health: 0 },
@@ -180,15 +182,22 @@
   };
   // pop: share of Korea's 2024 registered population (%), the chance of being born there. Each place
   // stands for a group, so the twelve add up to the whole country: Gangnam = the three Gangnam
-  // districts (강남·서초·송파), Nowon = the rest of Seoul, Suwon = Gyeonggi and Incheon, Busan = Busan
-  // and Ulsan, Daejeon = Daejeon and Sejong, Pohang / Jeonju / Cheongju = the provincial cities of
-  // Gyeongsang / Jeolla / Chungcheong, Gangwon and Jeju, Pyeongchang / Haenam = the rural counties.
+  // districts (강남·서초·송파); the rest of Seoul is five areas: Nowon = the northeast (노원·도봉·강북·
+  // 성북·중랑·동대문), Mokdong = the southwest (양천·강서·구로), Mapo = the northwest and centre (마포·
+  // 서대문·은평·종로·중구·용산), Gwanak = the south (관악·동작·금천·영등포), Gangdong = the east (강동·광진·
+  // 성동). Suwon = Gyeonggi and Incheon, Busan = Busan and Ulsan, Daejeon = Daejeon and Sejong,
+  // Pohang / Jeonju / Cheongju = the provincial cities of Gyeongsang / Jeolla / Chungcheong and
+  // Gangwon, Jeju = Jeju, Pyeongchang / Haenam = the rural counties.
   // view: what the windows show.
   // need: the family income fifth it takes to move there (housing). nat: the regional national
   // university whose local quota you can use.
   const REGIONS = [
     { id: "gangnam", kind: "gangnam", capital: true, pop: 3.2, need: 4 },
-    { id: "nowon", kind: "seoul", capital: true, pop: 15.1, need: 3 },
+    { id: "nowon", kind: "seoulAcad", capital: true, pop: 4.4, need: 3 },
+    { id: "mokdong", kind: "seoulAcad", capital: true, pop: 2.7, need: 4 },
+    { id: "mapo", kind: "seoul", capital: true, pop: 3.1, need: 3 },
+    { id: "gwanak", kind: "seoul", capital: true, pop: 2.9, need: 2 },
+    { id: "gangdong", kind: "seoul", capital: true, pop: 2.0, need: 3 },
     { id: "suwon", kind: "capital", capital: true, pop: 32.6 },
     { id: "busan", kind: "metro", pop: 8.5, view: "sea", nat: "pnu" },
     { id: "daegu", kind: "metro", pop: 4.6, nat: "knu" },
@@ -196,7 +205,8 @@
     { id: "daejeon", kind: "metro", pop: 3.6 },
     { id: "pohang", kind: "city", pop: 8.2, view: "sea", nat: "knu" },
     { id: "jeonju", kind: "city", pop: 4.3 },
-    { id: "cheongju", kind: "city", pop: 8.6 },
+    { id: "cheongju", kind: "city", pop: 7.3 },
+    { id: "jeju", kind: "city", pop: 1.3, view: "sea" },
     { id: "pyeongchang", kind: "rural", pop: 6.1, view: "country" },
     { id: "haenam", kind: "rural", pop: 2.5, view: "sea" },
   ];
@@ -206,6 +216,7 @@
   // rescales them so the totals come out exact.
   const REGION_AFFINITY = {
     gangnam: [0.15, 0.35, 0.8, 1.5, 2.7],
+    seoulAcad: [0.4, 0.6, 1, 1.3, 1.6],
     seoul: [0.8, 0.9, 1, 1.1, 1.2],
     capital: [1, 1, 1, 1, 1],
     metro: [1, 1, 1, 1, 1],
@@ -424,11 +435,16 @@
       id: "quake", weight: 1, when: (g) => g.region === "pohang" && !g.flags.quake,
       run: (g) => { g.flags.quake = 1; bump(g, { stress: 10 }); g.lostBlocks += 1; return "r"; },
     },
+    // Jeju sits in the path of most typhoons that reach Korea; school closes for a day or two.
+    {
+      id: "typhoon", weight: 1, when: (g) => g.region === "jeju" && g.inSchool(),
+      run: (g) => { studyBoost(g, pickWeak(g), 0.02); bump(g, { stress: 3 }); return "r"; },
+    },
     { id: "beach", weight: 1, when: (g) => (REGION_BY_ID[g.region] || {}).view === "sea", run: (g) => { bump(g, { stress: -10, health: 4 }); return "r"; } },
     { id: "country", weight: 1, when: (g) => regionKind(g) === "rural", run: (g) => { bump(g, { stress: -8, health: 6 }); return "r"; } },
     {
       // 선행학습: studying years ahead of the school curriculum, the norm in Gangnam's academies.
-      id: "ahead", weight: 1.5, when: (g) => (regionKind(g) === "gangnam" || regionKind(g) === "seoul") && g.grade >= 4 && g.grade <= 9, choices: 2,
+      id: "ahead", weight: 1.5, when: (g) => ["gangnam", "seoulAcad", "seoul"].indexOf(regionKind(g)) >= 0 && g.grade >= 4 && g.grade <= 9, choices: 2,
       run: (g, i) => {
         if (i === 0) { studyBoost(g, "math", 0.05); bump(g, { stress: 7, motivation: -2 }); return "r0"; }
         bump(g, { stress: -3 }); return "r1";

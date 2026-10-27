@@ -702,6 +702,7 @@
     eve: { bg: "room", night: true, fx: "examEve", mood: "stressed", icon: "🌙" },
     lunch: { bg: "kitchen", fx: "lunchbox", mood: "ok", icon: "🍱" },
     quake: { bg: "class", fx: "cracks", mood: "stressed", icon: "⚠️" },
+    typhoon: { bg: "room", night: true, fx: "raincloud", mood: "ok", icon: "🌀" },
     beach: { bg: "beach", mood: "happy", pose: "wave", icon: "🏖️" },
     country: { bg: "farm", mood: "happy", icon: "🌾" },
     ahead: { bg: "class", fx: "mathsyms", mood: "stressed", icon: "📐", res: { r1: { mood: "ok" } } },
