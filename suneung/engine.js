@@ -404,7 +404,7 @@
     { id: "sportsday", weight: 1.5, when: (g) => g.grade <= 6, run: (g) => { bump(g, { health: 6, stress: -6, motivation: 4 }); return "r"; } },
     { id: "bookworm", weight: 1.5, when: (g) => g.grade <= 8, run: (g) => { studyBoost(g, "kor", 0.05); bump(g, { motivation: 3 }); return "r"; } },
     {
-      id: "olympiad", weight: 2, when: (g) => g.grade >= 3 && g.grade <= 9 && g.skills.math > 0.5, choices: 2,
+      id: "olympiad", weight: 2, when: (g) => g.grade >= 3 && g.grade <= 9 && g.skills.math > 0.5 && !g.dropoutActive(), choices: 2,
       run: (g, i) => {
         if (i === 1) return "r1";
         if (g.rng() < 0.25 + g.skills.math * 0.15) { studyBoost(g, "math", 0.06); bump(g, { motivation: 10, stress: 4 }); return "r0a"; }
@@ -437,7 +437,7 @@
     },
     // Jeju sits in the path of most typhoons that reach Korea; school closes for a day or two.
     {
-      id: "typhoon", weight: 1, when: (g) => g.region === "jeju" && g.inSchool(),
+      id: "typhoon", weight: 1, when: (g) => g.region === "jeju" && g.inSchool() && !g.dropoutActive(),
       run: (g) => { studyBoost(g, pickWeak(g), 0.02); bump(g, { stress: 3 }); return "r"; },
     },
     { id: "beach", weight: 1, when: (g) => (REGION_BY_ID[g.region] || {}).view === "sea", run: (g) => { bump(g, { stress: -10, health: 4 }); return "r"; } },
@@ -451,7 +451,7 @@
       },
     },
     {
-      id: "commute", weight: 1.5, when: (g) => regionKind(g) === "rural" && g.grade >= 7 && g.inSchool(), choices: 2,
+      id: "commute", weight: 1.5, when: (g) => regionKind(g) === "rural" && g.grade >= 7 && g.inSchool() && !g.dropoutActive(), choices: 2,
       run: (g, i) => {
         if (i === 0) { studyBoost(g, pickWeak(g), 0.04); bump(g, { health: -6, stress: 3 }); return "r0"; }
         bump(g, { motivation: -2 }); return "r1";
@@ -470,6 +470,60 @@
         g.flags.medMove = 1;
         if (i === 0) { g.relocate("daegu"); bump(g, { stress: 6, motivation: 4 }); return "r0"; }
         return "r1";
+      },
+    },
+    // ----- leaving school (자퇴) -----
+    // 검정고시, the school-equivalency exam: open six months after you leave, held twice a year (so a
+    // retry waits four months or more). Easy for most, but it has to be passed before you can sit 수능;
+    // in grade 12 you'd sit the September paper with nothing else on, so it always passes then.
+    {
+      id: "ged", weight: 100, choices: 2,
+      when: (g) => g.dropout != null && !g.flags.ged && g.clock - g.dropout >= 6 && g.clock - (g.flags.gedTry == null ? -99 : g.flags.gedTry) >= 4,
+      run: (g, i) => {
+        g.flags.gedTry = g.clock;
+        g.flags.gedN = (g.flags.gedN || 0) + 1;
+        let p = 0.6 + 0.3 * g.standing() + (g.flags.gedN - 1) * 0.15;
+        // Cramming for it pays off, but takes a block from next turn.
+        if (i === 0) { p += 0.25; g.lostBlocks += 1; }
+        if (g.status === "hs3" && g.month >= 8) p = 1;
+        if (g.rng() < p) {
+          g.flags.ged = g.clock;
+          bump(g, { motivation: 6, stress: -6 });
+          g.addLog("log.ged", { n: g.flags.gedN }, "milestone");
+          return "pass" + i;
+        }
+        bump(g, { motivation: -5, stress: 5 });
+        return "fail" + i;
+      },
+    },
+    // With 검정고시 passed by grade 11, you can sit 수능 a year early (pushed by nextTurn, so never rolled).
+    {
+      id: "early", weight: 0, when: () => false, choices: 2,
+      run: (g, i) => {
+        if (i === 1) return "r1";
+        g.grade = 12;
+        g.status = "hs3";
+        g.flags.early = 1;
+        bump(g, { motivation: 6, stress: 6 });
+        g.addLog("log.early", { y: g.year }, "milestone");
+        return "r0";
+      },
+    },
+    // No classmates: with no time for friends, the days get lonely.
+    {
+      id: "lonely", weight: 2, when: (g) => g.dropoutActive() && !(g.lastPlan && g.lastPlan.friends), choices: 2,
+      run: (g, i) => {
+        if (i === 0) { bump(g, { stress: -10, motivation: 4 }); g.lostBlocks += 1; return "r0"; }
+        bump(g, { stress: 6, motivation: -5 }); return "r1";
+      },
+    },
+    // Relatives at Chuseok ask why you aren't at school.
+    {
+      id: "chuseok", weight: 1.5, when: (g) => g.dropout != null && g.grade <= 12 && !g.flags.chuseok && g.month >= 6 && g.month <= 9, choices: 2,
+      run: (g, i) => {
+        g.flags.chuseok = 1;
+        if (i === 0) { bump(g, { stress: 4, motivation: 6 }); return "r0"; }
+        bump(g, { stress: -2, motivation: -2 }); g.money += 100000; return "r1";
       },
     },
     // The one-off bully event from v2. It never rolls any more (bully-start replaced it); it stays so a
@@ -491,7 +545,7 @@
     // change school stage (see nextTurn), and for good when you leave high school.
     {
       id: "bully-start", weight: bullyWeight, choices: 4,
-      when: (g) => !g.bully && g.inSchool() && g.grade >= 3 && g.grade <= 11 && g.clock - (g.flags.bullyEnd == null ? -99 : g.flags.bullyEnd) >= 12,
+      when: (g) => !g.bully && g.inSchool() && !g.dropoutActive() && g.grade >= 3 && g.grade <= 11 && g.clock - (g.flags.bullyEnd == null ? -99 : g.flags.bullyEnd) >= 12,
       run: (g, i) => {
         // Middle school is when it most often turns into a group thing.
         g.bully = { lv: g.rng() < (g.status === "mid" ? 0.4 : 0.25) ? 2 : 1, n: 0, sup: 0 };
@@ -540,14 +594,14 @@
       },
     },
     {
-      id: "president", weight: 1, when: (g) => g.grade >= 4 && g.grade <= 11, choices: 2,
+      id: "president", weight: 1, when: (g) => g.grade >= 4 && g.grade <= 11 && !g.dropoutActive(), choices: 2,
       run: (g, i) => {
         if (i === 1) return "r1";
         if (g.rng() < 0.45) { bump(g, { motivation: 8, stress: 4 }); return "r0a"; }
         bump(g, { stress: 5, motivation: -2 }); return "r0b";
       },
     },
-    { id: "career", weight: 100, when: (g) => g.grade === 7 && g.month === 3 && !g.flags.career, run: (g) => { g.flags.career = 1; bump(g, { motivation: 8 }); return "r"; } },
+    { id: "career", weight: 100, when: (g) => g.grade === 7 && g.month === 3 && !g.flags.career && !g.dropoutActive(), run: (g) => { g.flags.career = 1; bump(g, { motivation: 8 }); return "r"; } },
     {
       id: "jung2", weight: 100, when: (g) => g.grade === 8 && !g.flags.jung2, choices: 2,
       run: (g, i) => {
@@ -608,7 +662,7 @@
     { id: "grandma", weight: 1, when: () => true, run: (g) => { g.money += 200000; bump(g, { motivation: 5, stress: -4 }); return "r"; } },
     { id: "insomnia", weight: 1.2, when: (g) => g.grade >= 7 && g.stress > 55, run: (g) => { bump(g, { health: -10 }); return "r"; } },
     {
-      id: "festival", weight: 1, when: (g) => (g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high", choices: 2,
+      id: "festival", weight: 1, when: (g) => !g.dropoutActive() && ((g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high"), choices: 2,
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -14, motivation: 4 }); return "r0"; }
         studyBoost(g, pickWeak(g), 0.025); bump(g, { stress: 4 }); return "r1";
@@ -669,6 +723,10 @@
     return BULLY_BASE * stage * newKid * alone * Math.pow(0.5, g.flags.bullyN || 0);
   }
   const BULLY_BASE = 0.25;
+  // Leaving school: extra blocks a turn, the motivation baseline it costs, and stress a turn spent alone.
+  const DROPOUT_BLOCKS = 2;
+  const DROPOUT_MOTIVATION = 8;
+  const DROPOUT_LONELY = 3;
   // Follow-ups come every turn while you're still at school (grade 12 included).
   function bullyFollowUp(g) { return g.inSchool() || g.status === "hs3"; }
   // Follow-ups in a turn of six months or more (elementary and middle school) give whatever you try
@@ -820,7 +878,35 @@
 
     inSchool() { return !!STATUSES[this.status].school; }
     turnMonths() { return STATUSES[this.status].months; }
-    blocks() { return Math.max(1, STATUSES[this.status].blocks(this.month) - this.lostBlocks); }
+    blocks() { return Math.max(1, this.baseBlocks() - this.lostBlocks); }
+    // Out of school, the hours that went to classes are yours: two more blocks a turn in grades 7–11, and
+    // grade 12 runs on a retaker's month.
+    baseBlocks() {
+      if (this.dropout != null && this.status === "hs3") return STATUSES.selfstudy.blocks(this.month);
+      return STATUSES[this.status].blocks(this.month) + (this.dropoutActive() ? DROPOUT_BLOCKS : 0);
+    }
+
+    // ----- leaving school (자퇴) -----
+    // dropout is the clock when you left (absent in older saves: still at school). The calendar keeps
+    // counting your age group's grades, so grade is still the year you'd be in.
+    dropoutActive() { return this.dropout != null && this.inSchool(); }
+    // Why you can't leave school right now, or null. From middle school on, once.
+    quitBlock() {
+      if (this.dropout != null) return "done";
+      if (!this.inSchool() || this.grade < 7) return "grade";
+      if (this.ending || this.queue.length) return "busy";
+      return null;
+    }
+    quitSchool() {
+      const why = this.quitBlock();
+      if (why) throw new Error("quit." + why);
+      this.dropout = this.clock;
+      this.flags.dropGrade = this.grade;
+      // The parents take it hard.
+      bump(this, { stress: 6, motivation: -4 });
+      this.addLog("log.dropout", { g: this.grade }, "milestone");
+      if (this.bully) { endBully(this); this.addLog("log.bullyEnd", { why: "quit" }, "event"); }
+    }
     activities() { return ACTIVITIES.filter((a) => (a.from || 1) <= this.grade && this.grade <= (a.to || 12)); }
     allowance() {
       const a = FAMILIES[this.family].allowance;
@@ -838,6 +924,8 @@
     ruralQuota() { return this.regionInfo().kind === "rural" && (this.regionFrom || 1) <= 7; }
     // Percentile points taken off a university's cut by the quotas you qualify for, and which applies.
     quotaFor(u) {
+      // 검정고시 holders don't count as having gone to school in the region.
+      if (this.dropout != null) return null;
       const local = this.localQuota() && (u.id === "med" || u.id === this.regionInfo().nat) ? LOCAL_QUOTA : 0;
       const rural = this.ruralQuota() && u.id !== "college" ? RURAL_QUOTA : 0;
       if (!local && !rural) return null;
@@ -978,7 +1066,8 @@
       }
 
       // Condition. Study is stressful; in grade 12 the pressure rises as November gets closer.
-      const pressure = this.status === "elem" ? 0 : school ? 1 : this.month >= 9 ? 4 + (this.month - 9) * 2 : 2;
+      const drop = this.dropoutActive();
+      const pressure = this.status === "elem" || drop ? 0 : school ? 1 : this.month >= 9 ? 4 + (this.month - 9) * 2 : 2;
       // Stress and health also recover on their own toward a baseline, so a steady workload settles
       // at a level instead of spiralling; heavy turns push the level up.
       const d = {
@@ -994,8 +1083,11 @@
       d.health += rk.health;
       d.stress += (plan.job || 0) * 5;
       d.motivation += (plan.friends || 0) * 3 - (plan.games || 0) * 4 + (plan.arts || 0) * 4;
+      // Out of school, nobody sets the pace and nobody's around: a lower baseline, and loneliness
+      // without time for friends.
+      if (drop && !plan.friends) d.stress += DROPOUT_LONELY;
       // Motivation drifts back toward a baseline that sags with every extra year.
-      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation;
+      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
       // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
       // softens the toll on your body.
@@ -1015,7 +1107,7 @@
       }
       this.addLog("log.month", { m: this.month, plan: Object.assign({}, plan), cost, d: deltas }, "month");
       if (this.status === "elem") this.addLog("log.teacher", { lvl: this.classLevel() }, "");
-      if (this.status === "mid") this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
+      if (this.status === "mid" && !drop) this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
       if (school && (this.month === 3 && months === 12 || this.month + months > 12)) {
         const gift = Math.min(300000, 60000 + this.age * 10000);
@@ -1036,7 +1128,7 @@
       }
 
       // Scheduled exams and decisions.
-      if (this.status === "high" && (this.month === 3 || this.month === 9)) this.queue.push({ type: "mock", m: this.month === 3 ? 6 : 11 });
+      if (this.status === "high" && !drop && (this.month === 3 || this.month === 9)) this.queue.push({ type: "mock", m: this.month === 3 ? 6 : 11 });
       if (!school && MOCKS[this.month] && !(this.month === 3 && this.status !== "hs3")) this.queue.push({ type: "mock", m: this.month });
       if (this.status === "high" && this.grade === 10 && this.month === 12) this.queue.push({ type: "track" });
       if (this.status !== "elem" && !school && this.month === 11) {
@@ -1158,7 +1250,7 @@
         this.grade += 1;
         this.age += 1;
         this.status = statusForGrade(this.grade);
-        this.addLog(this.status !== was ? "log.stage" : "log.grade", { g: this.grade, st: this.status, y: this.year }, this.status !== was ? "milestone" : "");
+        this.addLog(this.status !== was ? "log.stage" : "log.grade", { g: this.grade, st: this.status, y: this.year, out: this.dropout != null }, this.status !== was ? "milestone" : "");
         // Korean schools reshuffle every class in March, so a new school year often ends bullying (less
         // often the worse it is), and a new school (middle or high school) usually does. Grade 12 is a new
         // class in the same school.
@@ -1168,6 +1260,7 @@
           if (this.rng() < p) { endBully(this); this.addLog("log.bullyEnd", { why: newSchool ? "stage" : "class" }, "event"); }
           else this.addLog("log.bullyStays", { g: this.grade }, "event");
         }
+        if (this.grade === 11 && this.dropout != null && this.flags.ged != null) this.queue.push({ type: "event", id: "early", choices: 2 });
       }
       // Severe bullying costs a block a turn: days you can't face school, or can't focus when you're there.
       if (this.bully && this.bully.lv >= 3) this.lostBlocks += 1;

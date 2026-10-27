@@ -16,7 +16,7 @@
     sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
-    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"),
+    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"),
     chart: $("chart"), legend: $("legend"), log: $("log"), history: $("history"), newLifeBtn: $("newLifeBtn"),
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
@@ -200,7 +200,8 @@
   function artCtx(extra) {
     const g = game;
     return Object.assign({
-      stage: g.ending ? "uni" : g.status,
+      // Out of school you study at a study café in a hoodie, up to the Suneung.
+      stage: g.ending ? "uni" : g.dropout != null && (g.inSchool() || g.status === "hs3") ? "dropout" : g.status,
       season: Art.seasonOf(g.month),
       look: Art.lookFor(g.seed, g.sex),
       mood: Art.moodOf(g),
@@ -244,7 +245,7 @@
     els.sDday.textContent = g.ending ? T("stat.over") : school ? T("stat.years", { n: 12 - g.grade }) :
       g.month <= 11 ? (d > 0 ? T("stat.dday", { n: d }) : T("stat.examMonth")) : T("stat.results");
     els.sAttempt.textContent = school ? L.schoolGrade(g.grade) : L.att(g.attempt);
-    els.sStatus.textContent = L.status(g.status);
+    els.sStatus.textContent = g.dropout != null && (school || g.status === "hs3") ? T("st.dropout", { ged: g.flags.ged != null }) : L.status(g.status);
     els.sAge.textContent = L.age(g.age);
     els.sName.textContent = g.name + " · " + L.regionShort(g.regionInfo().id) + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
@@ -293,7 +294,7 @@
       bar(T("cond.stress"), g.stress, lvl(g.stress, false), 0, T("cond.stress.tip"), "😣") +
       bar(T("cond.motivation"), g.motivation, lvl(g.motivation, true), 0, T("cond.motivation.tip"), "🔥") +
       bar(T("cond.practice"), g.practice * 100, "var(--accent)", 0, T("cond.practice.tip"), "⏱️") +
-      bullyNote(g);
+      bullyNote(g) + dropoutNote(g);
     if (animate) {
       // Two frames: the first paints the old width, the second lets the CSS transition run.
       requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -307,6 +308,11 @@
     if (!bp) return "";
     return '<p id="bullyNote" class="cond-note" title="' + esc(T("cond.bully.tip")) + '">' +
       esc(T("cond.bully", { lv: bp.lv, pct: Math.round(bp.cut * 100), blk: bp.lostBlock })) + "</p>";
+  }
+
+  function dropoutNote(g) {
+    if (g.dropout == null || !(g.inSchool() || g.status === "hs3")) return "";
+    return '<p class="cond-note drop">' + esc(T("cond.dropout", { ged: g.flags.ged != null })) + "</p>";
   }
 
   function renderPlan() {
@@ -379,6 +385,9 @@
     els.repeatBtn.disabled = done || !g.lastPlan;
     els.clearBtn.disabled = done || !used;
     els.moveBtn.classList.toggle("hidden", done);
+    // Leaving school is offered from grade 7 until you do it.
+    const qb = g.quitBlock();
+    els.quitBtn.classList.toggle("hidden", done || qb === "done" || qb === "grade");
   }
 
   function changePlan(id, d) {
@@ -465,7 +474,7 @@
       const fx = T("move.fx", { hag: k.hagwon, tut: k.tutor, price: k.price, stress: k.stress });
       // The quotas need middle and high school in the region, so moving after grade 7 is too late.
       const inTime = g.inSchool() && g.grade <= 7;
-      const quota = r.capital ? "" : !inTime ? T("move.late") : r.kind === "rural" ? T("move.rural") : T("move.local", { nat: r.nat });
+      const quota = r.capital ? "" : g.dropout != null ? T("move.noQuota") : !inTime ? T("move.late") : r.kind === "rural" ? T("move.rural") : T("move.local", { nat: r.nat });
       // A short status pill on the right; the reason goes under the name so phones keep the name readable.
       const note = here ? T("move.here") : why ? T("move." + why) : "";
       const tag = here ? '<span class="chance ch-safe">' + esc(T("move.hereTag")) + "</span>" : why ? '<span class="chance ch-long">' + esc(T("move.noTag")) + "</span>" : "<span></span>";
@@ -482,6 +491,20 @@
     for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.addEventListener("change", () => { pick.id = inp.value; go.disabled = false; });
   });
 
+  // Leaving school: what it gives and what it takes, then a confirmation.
+  els.quitBtn.addEventListener("click", () => {
+    const g = game;
+    if (!g || g.quitBlock()) return;
+    const list = (k) => "<ul>" + T(k).map((x) => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+    openModal(T("quit.title"), "<p>" + esc(T("quit.text")) + '</p><div class="quit"><div class="pros"><h3>' + esc(T("quit.pros")) + "</h3>" + list("quit.pro") +
+      '</div><div class="cons"><h3>' + esc(T("quit.cons")) + "</h3>" + list("quit.con") + "</div></div>", [
+      { label: T("quit.stay"), run: () => render() },
+      { label: T("quit.go"), primary: true, run: () => { g.quitSchool(); save(); render(); } },
+    ], Art.eventArt(artCtx({ id: "dropout", stage: "dropout" })));
+    // Start on the safe answer: this can't be undone.
+    els.modalButtons.querySelector("button").focus({ preventScroll: true });
+  });
+
   // Confirmation lives in the page's own modal: embedded viewers block confirm() dialogs.
   function startOver() { store.del(SAVE_KEY); game = null; showSetup(); }
   els.newLifeBtn.addEventListener("click", () => {
@@ -496,6 +519,7 @@
   // with your age, and an icon for each kind of entry.
   const LOG_ICON = {
     "log.born": "👶", "log.stage": "🏫", "log.grade": "🎒", "log.teacher": "🍎", "log.report": "📊", "log.sebae": "🧧", "log.track": "🔀",
+    "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩",
     "log.month": "🗓️", "log.mock": "📝", "log.suneung": "🎯", "log.apply": "📮", "log.enroll": "🎓", "log.quit": "🚪", "log.halfpay": "💸", "log.newyear": "🌱",
   };
   function logIcon(l) {
@@ -710,7 +734,7 @@
 
   function eventTitle(ev) {
     if (ev.id === "eve" || ev.id === "lunch") return T("ev." + ev.id + ".title");
-    return game.inSchool() ? L.schoolGrade(game.grade) + " · " + L.date(game.year, game.month) : L.date(game.year, game.month);
+    return game.inSchool() && !game.dropoutActive() ? L.schoolGrade(game.grade) + " · " + L.date(game.year, game.month) : L.date(game.year, game.month);
   }
   // The suffix of an outcome key ("ev.bully.r1a" → "r1a") picks the art's variant.
   const variantOf = (msg) => (msg && msg.key ? msg.key.split(".").pop() : "");

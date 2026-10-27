@@ -283,6 +283,7 @@
     if (stage === "mid") return { age: "teen", outfit: "uniform", scale: 0.92 };
     if (stage === "high" || stage === "hs3") return { age: "teen", outfit: "uniform" };
     if (stage === "academy" || stage === "selfstudy") return { age: "adult", outfit: "hoodie" };
+    if (stage === "dropout") return { age: "teen", outfit: "hoodie" };
     return { age: "adult", outfit: "casual" };
   }
   // sex "m" draws from the two short styles, "f" from long hair and the bob. A save from before the
@@ -510,7 +511,7 @@
     if (ctx.ending) return ctx.label ? "gate" : "road";
     if (ctx.examMonth) return "examhall";
     if (ctx.results) return "home";
-    return { elem: "classroom", mid: "hallway", high: "desk", hs3: "desk", academy: "academy", selfstudy: "cubicle", halfretake: "campus" }[stage] || "desk";
+    return { elem: "classroom", mid: "hallway", high: "desk", hs3: "desk", academy: "academy", selfstudy: "cubicle", halfretake: "campus", dropout: "cubicle" }[stage] || "desk";
   }
   function scene(ctx) {
     VIEW = (ctx && ctx.view) || "city";
@@ -709,6 +710,12 @@
     commute: { bg: "farm", fx: "bus", mood: "tired", x: 220, icon: "🚌", res: { r1: { mood: "ok" } } },
     "quota-news": { bg: "hospital", fx: "doctor", mood: "happy", icon: "📰" },
     "med-move": { bg: "city", fx: "sparkles", icon: "📦", res: { r1: { mood: "ok" } } },
+    // Leaving school: the dialog's picture, 검정고시, the early Suneung, loneliness, Chuseok questions.
+    dropout: { bg: "hall", fx: "door", mood: "ok", x: 220, icon: "🚪" },
+    ged: { bg: "class", fx: "planner", mood: "stressed", icon: "📜", res: { pass0: { mood: "happy", pose: "cheer" }, pass1: { mood: "happy", pose: "cheer" }, fail0: { mood: "tired" }, fail1: { mood: "tired" } } },
+    early: { bg: "cubicle", fx: "bulb", mood: "happy", x: 160, icon: "⏩", res: { r1: { mood: "ok" } } },
+    lonely: { bg: "room", night: true, fx: "polaroids", mood: "tired", prop: "phone", pose: "hold", x: 200, icon: "📷", res: { r0: { mood: "happy", prop: null, pose: null } } },
+    chuseok: { bg: "kitchen", fx: "grandma", mood: "stressed", x: 220, icon: "🌕", res: { r0: { mood: "ok" }, r1: { mood: "happy" } } },
   };
   const KEYWORDS = [
     [/bull|tease|gossip|cyber|threat|victim|gang/, "bully"],
@@ -718,7 +725,7 @@
     [/phone|sns|chat|online/, "smartphone"],
     [/friend|party|trip|camp/, "festival"],
   ];
-  const STAGE_BG = { elem: "class", mid: "hall", high: "room", hs3: "room", academy: "cubicle", selfstudy: "cubicle", halfretake: "campus" };
+  const STAGE_BG = { elem: "class", mid: "hall", high: "room", hs3: "room", academy: "cubicle", selfstudy: "cubicle", halfretake: "campus", dropout: "cubicle" };
   function specFor(id, stage) {
     if (EVENT_ART[id]) return EVENT_ART[id];
     const head = String(id).split(/[-_.:]/)[0];

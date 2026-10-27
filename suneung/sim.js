@@ -138,6 +138,8 @@ function playCareer(seed, bot, opts) {
     const top = g.queue[0];
     if (!top) {
       if (g.grade === 12 && g.month === 3 && g.attempt === 1 && !at12) at12 = Object.assign({}, g.skills);
+      // Dropout bots leave school at the start of their grade.
+      if (opts.quitAt && g.grade >= opts.quitAt && !g.quitBlock()) g.quitSchool();
       const plan = BOTS[bot](g);
       const method = pickMethod(g, plan, opts.method || "self");
       const err = g.validate(plan, method);
@@ -145,7 +147,7 @@ function playCareer(seed, bot, opts) {
       g.advance(plan, method);
       continue;
     }
-    if (top.type === "event") { g.choose(0); continue; }
+    if (top.type === "event") { g.choose(top.id === "early" && !opts.early ? 1 : 0); continue; }
     if (top.type === "birth") { g.dismiss(); continue; }
     if (top.type === "track") { const [t, inq] = pickTrack(g, opts); g.chooseTrack(t, inq); continue; }
     if (top.type === "mock" || top.type === "exam") {
@@ -187,6 +189,9 @@ function strategies() {
     { label: "smart, best affordable method, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college" },
     { label: "smart, best affordable, retakes up to 3", bot: "smart", method: "tutor", maxAttempts: 3, goal: "yonsei" },
     { label: "smart, best affordable, sci, 의대 up to 5", bot: "smart", method: "tutor", maxAttempts: 5, goal: "med", track: "sci", inq: ["bio", "earth"] },
+    // Leaving school (자퇴): from grade 10, and from grade 7 with the Suneung a year early.
+    { label: "smart, best affordable, quits at 10, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", quitAt: 10 },
+    { label: "smart, best affordable, quits at 7, early", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", quitAt: 7, early: true },
   ];
   console.log("Strategy bots (" + seeds + " lives each, families dealt from the real quintiles). 'start' = average ability (0–100) entering grade 12.");
   console.log("strategy".padEnd(42) + "start | 1st: kor math eng  std | last std | tries | SKY+  | med  | in-Seoul+");

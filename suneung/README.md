@@ -24,6 +24,8 @@ This version ends when you enroll at a university. College life and what comes a
    | Retake years | a month | 6 (반수: 2 until June) |
 
    Pick a study method too; it applies to every study block that turn.
+
+   From grade 7 you can also **leave school** (자퇴) with the Leave school button. Out of school you get two more blocks a turn in grades 7–11, and grade 12 runs on a retaker's month (6 blocks). See Leaving school below.
 3. **Handle events.** Most turns bring one: a sports day, a math olympiad, the smartphone debate, a move to Daechi-dong, class elections, 중2, a PC방 invitation, a crush, a slump, a star lecturer's new course. Some only need an OK; others ask you to choose. Some lives also run into bullying (학교폭력), which hangs over every turn until it's dealt with.
 4. **Watch your standing.**
    - The elementary-school teacher leaves a note each year.
@@ -162,6 +164,21 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **How it ends:** a choice that works, the March class reshuffle (60%, 40% or 20% by severity), starting a new school (70%), or leaving high school.
   - **On screen:** the Condition panel shows a red line with the severity and its cost while it lasts. Every step is in the life log.
   - **Cost by grade 12:** in a paired test (the same 200 lives cloned at the start of grade 7 with serious bullying), reporting it costs about 1 point of average ability entering grade 12 and enduring it about 4.
+- **Leaving school (자퇴)**, from grade 7 (middle school) to grade 11. The button opens a list of what you gain and what it costs, and it can't be undone.
+  - **What you gain:**
+    - two more free blocks every turn in grades 7–11 (6 instead of 4), because the hours that went to classes are yours;
+    - grade 12 runs on a self-study retaker's month: 6 blocks, 3 in 수능 month;
+    - no school pressure in the daily stress, no class ranks, and any bullying ends;
+    - pass the GED by grade 11 and you're offered the 수능 a year early, with your age group's year left as a spare.
+  - **What it costs:**
+    - **The GED (검정고시)** must be passed first. It opens six months after you leave and comes round every four months or more. The pass chance is 60% plus up to 30% from your standing among your age group, plus 15% for each retry; cramming adds 25% but costs a block. From August of grade 12 it always passes, so you're never shut out of the 수능.
+    - **No local or rural quotas:** 검정고시 holders don't count as having gone to school in the region.
+    - **Nobody sets the pace:** the motivation baseline is 8 lower until your first 수능, and a turn with no time for friends adds 3 stress.
+    - **Your parents take it hard** (+6 stress, −4 motivation when you leave), and the relatives ask questions at Chuseok.
+    - **No school events:** no olympiad, class elections, festivals or career week, and no grade 10–11 mock exams (you still get grade 12's).
+  - **New events:** the GED (cram or go in as you are), the early 수능 offer, a lonely week when old classmates post trip photos, and the Chuseok questions.
+  - **On screen:** the status reads "Out of school", the Condition panel says what it changes, you study in a hoodie at a study café, and the diary notes it in your age group's terms ("your age group moves up to grade 9").
+  - **In the balance tables:** the smart bot that leaves at grade 10 starts grade 12 a little stronger and gets into in-Seoul schools more often, but reaches SKY slightly less; leaving at grade 7 and sitting a year early gives about the same result a year younger.
 - **Ability chart** across every stage and attempt, a **life log**, and an **exam history** table with every 수능 and the current year's mocks.
 - **Deterministic:** the seed fixes the family, the talent roll, every paper, and the cohort you're graded against. Your choices only change your own answers.
 - **Two complete languages, English and Korean**, never mixed. Switching mid-game re-renders everything, including past log entries.
@@ -280,6 +297,8 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 | smart, best affordable method, 1 try | 67 | 2.1 · 1.9 · 1.9 | 385 | 385 | 1.00 | 16% | 5% | 73% |
 | smart, best affordable, retakes up to 3 tries | 67 | 2.1 · 1.9 · 1.9 | 385 | 409 | 2.48 | 58% | 20% | 94% |
 | smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.1 · 1.9 · 1.9 | 384 | 418 | 3.61 | 94% | 83% | 100% |
+| smart, best affordable, leaves school at grade 10, 1 try | 69 | 2.0 · 1.7 · 1.7 | 387 | 387 | 1.00 | 14% | 3% | 79% |
+| smart, best affordable, leaves at grade 7, 수능 a year early, 1 try | 66 | 2.0 · 1.9 · 1.8 | 385 | 385 | 1.00 | 9% | 3% | 80% |
 
 The smart bot with the best affordable method, first try only, by family:
 
@@ -308,6 +327,7 @@ What the tables show:
 - **Childhood habits decide where you start grade 12:** the same random talents end up anywhere from 29 to 68 on average.
 - **Family income matters, but it isn't destiny:** with the same smart play, the top fifth reaches SKY on the first try about a third of the time and the bottom two fifths rarely do. Retakes close much of the gap.
 - **Where you live matters too:** Gangnam's academies give the strongest start, while local and rural quotas help students outside the capital (the region groups above are small, so treat them as a direction, not exact rates).
+- **Leaving school is a trade, not a shortcut:** the extra hours roughly pay for the lost motivation and the GED, so the totals barely move; what changes is losing the quotas and gaining a spare year if you sit early.
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
 - **Medical school** takes talent, a sciences track and usually several years: the bot chasing it rarely gets in on the first try, but a near-optimal player who keeps retaking usually makes it within five.
 
@@ -322,6 +342,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v3.0:** leaving school (자퇴). From grade 7 to grade 11 a Leave school button lets you drop out, after a list of what you gain and what it costs. You get two more blocks a turn (grade 12 at a retaker's 6), no school pressure or class ranks, and an end to bullying; you can sit the 수능 a year early once the GED is passed by grade 11. In exchange you must pass the GED (검정고시), lose the local and rural quotas, study with a lower motivation baseline and get lonely without friends, upset your parents, and miss the school events and grade 10–11 mocks. Four new events (the GED, the early 수능 offer, loneliness, Chuseok questions), new art, and two dropout bots in the balance table; the other numbers are unchanged. Saves from before still load (you're still at school).
 
 - **v2.9:** more of Seoul and Jeju. The rest of Seoul (outside the Gangnam districts) is now five areas with their own population shares: Nowon (Junggye-dong) and Mokdong, a new Seoul academy-district kind a step below Daechi-dong, plus Mapo, Gwanak and Gangdong. Jeju gets its own entry (outside the capital, so the medical-school local quota applies) with a typhoon event. Seventeen places in all; balance tables regenerated.
 - **v2.8:** your birth region is now drawn purely by population share (2024 registered population, each of the twelve places standing for a group of real areas), and your family is dealt from that place's income mix. A balanced region-by-income table keeps both exact: every place at its population share, every income fifth at 20%. Balance tables regenerated.

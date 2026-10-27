@@ -264,6 +264,15 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .bar .fill { display: block; height: 100%; border-radius: 5px; transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
 /* Shown under the condition bars while the player is being bullied. */
 .cond-note { margin: 2px 0 0; padding: 6px 10px; border-left: 3px solid var(--neg); border-radius: 6px; background: var(--track); color: var(--neg); font-size: 0.8rem; line-height: 1.4; }
+.cond-note.drop { border-left-color: var(--accent); color: var(--text); }
+/* Leaving school: what you gain beside what it costs, stacked on a phone. */
+.quit { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+.quit h3 { margin: 0 0 4px; font-size: 0.9rem; }
+.quit ul { margin: 0; padding-left: 18px; font-size: 0.85rem; line-height: 1.45; }
+.quit li + li { margin-top: 4px; }
+.quit .pros { padding: 8px 10px; border-radius: 8px; background: var(--track); border-left: 3px solid var(--pos); }
+.quit .cons { padding: 8px 10px; border-radius: 8px; background: var(--track); border-left: 3px solid var(--neg); }
+@media (max-width: 560px) { .quit { grid-template-columns: 1fr; } }
 .bar .val { position: relative; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
 .bar .delta { font-size: 0.72rem; font-weight: 600; margin-left: 2px; }
 .up { color: var(--pos); }
