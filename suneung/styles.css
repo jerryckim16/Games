@@ -98,7 +98,12 @@ body {
   line-height: 1.4;
 }
 
-header, main { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+header, main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
 header { padding-top: 24px; }
 h1 { margin: 0 0 4px; font-size: 1.6rem; }
 .ko { color: var(--muted); font-weight: 500; }
@@ -257,7 +262,8 @@ table.grid td.l { text-align: left; }
 /* ---------- modal ---------- */
 .modal {
   position: fixed; inset: 0; background: var(--backdrop);
-  display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 10;
+  display: flex; align-items: center; justify-content: center; z-index: 10;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 }
 .modal-card {
   background: var(--panel); border: 1px solid var(--border); border-radius: 16px;

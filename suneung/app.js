@@ -325,11 +325,14 @@
     save();
     render();
   });
+  // Confirmation lives in the page's own modal: embedded viewers block confirm() dialogs.
+  function startOver() { clearSave(); game = null; showSetup(); }
   els.newLifeBtn.addEventListener("click", () => {
-    if (game && !game.ending && !confirm("Abandon this life and start over?")) return;
-    clearSave();
-    game = null;
-    showSetup();
+    if (!game || game.ending) return startOver();
+    openModal("Start a new life?", "<p>This life and its save will be gone. Your hall of fame stays.</p>", [
+      { label: "Keep playing", run: () => render() },
+      { label: "Start over", primary: true, run: startOver },
+    ]);
   });
 
   function renderLog() {
@@ -561,7 +564,7 @@
       "</div>";
     openModal("정시 applications", body, [
       { label: "Submit applications", primary: true, run: () => {
-        if (!picked.size) { alert("Pick at least one school."); return; }
+        if (!picked.size) return;
         game.apply(Array.from(picked));
         after();
       } },

@@ -2,7 +2,7 @@
 
 A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You start in March of your last year of high school (고3). Every month you split your free time between subjects, rest and friends. Life happens. You sit mock exams and then the real 수능 in November. With your score you apply to universities, then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
 
-Open `index.html` in a browser. There's no build step and no dependencies. Progress autosaves in the browser.
+Open `index.html` in a browser. There's no build step and no dependencies. Progress autosaves in the browser. It's also published as a single-file claude.ai artifact: https://claude.ai/artifact/H8zzP1PqsHVdvEQEARTuFE
 
 This version covers the exam years only. College life and what comes after are planned for later versions.
 
@@ -189,4 +189,5 @@ What the table shows:
 
 ## Changelog
 
+- **v1.1:** "Start a new life" asks for confirmation in the page's own dialog, because embedded viewers block browser `confirm()`. Side gutters respect phone safe areas. Published as a claude.ai artifact.
 - **v1:** first version. One-year 고3 run with monthly plans, study methods, condition, about 20 events, March/June/September mocks, the 수능 with a full score report, 정시 applications, and retakes (재종반, 독학재수, 반수) for as many years as you like. Also adds autosave, the hall of fame, and the calibration and bot script.
