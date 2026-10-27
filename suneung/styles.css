@@ -198,6 +198,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .bar .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bar .track { height: 10px; background: var(--track); border-radius: 5px; overflow: hidden; position: relative; }
 .bar .fill { display: block; height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+/* Shown under the condition bars while the player is being bullied. */
+.cond-note { margin: 2px 0 0; padding: 6px 10px; border-left: 3px solid var(--neg); border-radius: 6px; background: var(--track); color: var(--neg); font-size: 0.8rem; line-height: 1.4; }
 .bar .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
 .bar .delta { font-size: 0.72rem; font-weight: 600; margin-left: 2px; }
 .up { color: var(--pos); }

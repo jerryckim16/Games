@@ -197,7 +197,15 @@
       bar(T("cond.health"), g.health, lvl(g.health, true), 0, T("cond.health.tip")) +
       bar(T("cond.stress"), g.stress, lvl(g.stress, false), 0, T("cond.stress.tip")) +
       bar(T("cond.motivation"), g.motivation, lvl(g.motivation, true), 0, T("cond.motivation.tip")) +
-      bar(T("cond.practice"), g.practice * 100, "var(--accent)", 0, T("cond.practice.tip"));
+      bar(T("cond.practice"), g.practice * 100, "var(--accent)", 0, T("cond.practice.tip")) +
+      bullyNote(g);
+  }
+  // While the player is being bullied, a line under the condition bars says what it costs this turn.
+  function bullyNote(g) {
+    const bp = g.bullyPenalty();
+    if (!bp) return "";
+    return '<p id="bullyNote" class="cond-note" title="' + esc(T("cond.bully.tip")) + '">' +
+      esc(T("cond.bully", { lv: bp.lv, pct: Math.round(bp.cut * 100), blk: bp.lostBlock })) + "</p>";
   }
 
   function renderPlan() {

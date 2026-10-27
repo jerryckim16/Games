@@ -24,7 +24,7 @@ This version ends when you enroll at a university. College life and what comes a
    | Retake years | a month | 6 (반수: 2 until June) |
 
    Pick a study method too; it applies to every study block that turn.
-3. **Handle events.** Most turns bring one: a sports day, a math olympiad, the smartphone debate, a move to Daechi-dong, a bully, class elections, 중2, a PC방 invitation, a crush, a slump, a star lecturer's new course. Some only need an OK; others ask you to choose.
+3. **Handle events.** Most turns bring one: a sports day, a math olympiad, the smartphone debate, a move to Daechi-dong, class elections, 중2, a PC방 invitation, a crush, a slump, a star lecturer's new course. Some only need an OK; others ask you to choose. Some lives also run into bullying (학교폭력), which hangs over every turn until it's dealt with.
 4. **Watch your standing.**
    - The elementary-school teacher leaves a note each year.
    - Middle school shows your class rank each semester.
@@ -100,9 +100,25 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **Health** below 40 slows study.
   - **Stress** above 75 slows study, and 85+ risks burnout (−2 blocks next turn).
   - **Motivation** multiplies study gains. It drifts back toward a baseline that sags with every extra year.
+  - **Being bullied** cuts study efficiency by 10–30% and wears down stress, motivation and health every turn until it's resolved (see above).
   - Stress and health also drift toward a resting level each turn, so a steady workload settles instead of spiralling.
   - High stress or low health on exam day lowers your scores.
 - **About 30 random events** with conditions (by school grade, family, phone ownership, stress, retakers, 반수 students). After an event fires it can't recur for 4 months. Fixed milestones always fire: the free-semester career week (grade 7), 중2 (grade 8) and D-100 (August of each 수능 year).
+- **Bullying (학교폭력)**, a storyline that lasts until it's resolved:
+  - **When:** it can start in grades 3–11, most often in middle school. It's twice as likely for a year after you move (Daechi-dong) or change schools, and 1.4× as likely when your last plan had no time with friends. Each earlier episode halves the chance, and a new episode can't start within a year of the last one ending. About 3 in 10 lives meet it.
+  - **Severity:** mild, serious or severe. It starts mild, or serious (more often in middle school).
+  - **What it costs, every turn it lasts:** study efficiency drops 10% per severity level, so −10%, −20% or −30%. If someone is supporting you (parents who know, the Wee class counselor, friends you've made time for), it drops 30% less. It also adds stress (+4 per level), drains motivation (−3 per level) and health (−2 per level, or −1 with support). Severe bullying costs a block a turn (days you can't face school).
+  - **The first choice:** tell your homeroom teacher, tell your parents (support, but the call can backfire), fight back, or keep quiet.
+  - **Every turn after that:** a follow-up asks what you do now:
+    - report it to the school violence committee (학폭위): stressful, but the likeliest to end it;
+    - talk to the Wee class counselor: gives support and often eases it;
+    - stick close to your friends: works much better if you've been making time for them;
+    - fight back: a gamble that often makes it worse;
+    - endure it in silence: it usually gets worse.
+  - **When it turns severe,** the options are reporting it with your parents (it stops at once 60–70% of the time), changing schools (almost always ends it, at the cost of stress, motivation and a block), the counselor, or enduring.
+  - **How it ends:** a choice that works, the March class reshuffle (60%, 40% or 20% by severity), starting a new school (70%), or leaving high school.
+  - **On screen:** the Condition panel shows a red line with the severity and its cost while it lasts. Every step is in the life log.
+  - **Cost by grade 12:** in a paired test (the same 200 lives cloned at the start of grade 7 with serious bullying), reporting it costs about 1 point of average ability entering grade 12 and enduring it about 4.
 - **Ability chart** across every stage and attempt, a **life log**, and an **exam history** table with every 수능 and the current year's mocks.
 - **Deterministic:** the seed fixes the family, the talent roll, every paper, and the cohort you're graded against. Your choices only change your own answers.
 - **Two complete languages, English and Korean**, never mixed. Switching mid-game re-renders everything, including past log entries.
@@ -125,6 +141,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - random day form, whose spread shrinks with exam stamina.
 - **Learning:**
   - each block on a subject adds 0.24 × subject rate × aptitude × method speed × condition × headroom(θ) × √(months in the turn), times 0.5 during the school years (grades 1–11);
+  - condition = the motivation, health and stress factors, times the bullying factor (1, or 0.9–0.7) while you're being bullied;
   - headroom(θ) = e^(−0.62·max(0, θ + 0.8)) gives diminishing returns: going from average to top 4% is far quicker than from top 4% to a perfect score;
   - a second block on the same subject in one turn counts ×0.77, a third ×0.63, and so on;
   - **no decay:** ability only goes up. A subject you don't study stays where it is;
@@ -180,7 +197,7 @@ Means over 40 sittings.
 
 80 lives each, with families dealt from the real quintiles.
 
-- The bots always pick the first option at events.
+- The bots always pick the first option at events (for bullying, that means telling a teacher and then reporting it).
 - "Best affordable" means the most expensive study method the family's budget covers that turn.
 - "smart" looks after stress and health, reads in elementary school, adds a timed practice exam in October of grade 12, and studies the subject with the most room to grow. It skips English past about the 90-point level and History once it is safe.
 - The bots apply to one reach, one match and one safe school.
@@ -188,28 +205,28 @@ Means over 40 sittings.
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 42 | 2.9 · 2.1 · 2.0 | 329 | 329 | 1.00 | 0% | 0% | 0% |
-| slacker (half games & friends), 1 try | 29 | 3.4 · 2.5 · 8.1 | 307 | 307 | 1.00 | 0% | 0% | 0% |
-| grinder (no rest), self-study, 1 try | 57 | 3.0 · 2.3 · 2.2 | 372 | 372 | 1.00 | 0% | 0% | 46% |
-| smart, online lectures, 1 try | 62 | 2.4 · 2.2 · 2.1 | 377 | 377 | 1.00 | 3% | 0% | 66% |
-| smart, best affordable method, 1 try | 68 | 1.9 · 1.8 · 1.7 | 388 | 388 | 1.00 | 14% | 1% | 79% |
-| smart, best affordable, retakes up to 3 tries | 68 | 1.9 · 1.8 · 1.7 | 388 | 411 | 2.45 | 73% | 13% | 95% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.0 · 1.8 · 1.8 | 387 | 418 | 4.08 | 91% | 60% | 99% |
+| balanced, self-study, 1 try | 42 | 3.0 · 2.3 · 2.2 | 326 | 326 | 1.00 | 0% | 0% | 1% |
+| slacker (half games & friends), 1 try | 29 | 3.4 · 2.7 · 8.2 | 304 | 304 | 1.00 | 0% | 0% | 0% |
+| grinder (no rest), self-study, 1 try | 57 | 3.2 · 2.4 · 2.0 | 369 | 369 | 1.00 | 0% | 0% | 43% |
+| smart, online lectures, 1 try | 62 | 2.5 · 2.2 · 2.2 | 375 | 375 | 1.00 | 3% | 0% | 60% |
+| smart, best affordable method, 1 try | 67 | 2.0 · 1.7 · 1.8 | 388 | 388 | 1.00 | 15% | 0% | 76% |
+| smart, best affordable, retakes up to 3 tries | 67 | 2.0 · 1.7 · 1.8 | 388 | 411 | 2.41 | 74% | 6% | 99% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.1 · 1.7 · 1.8 | 387 | 418 | 4.09 | 90% | 65% | 99% |
 
 The smart bot with the best affordable method, first try only, by family:
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 12 | 60 | 375 | 0% | 75% |
-| Lower-middle income | 11 | 59 | 367 | 0% | 45% |
-| Middle income | 21 | 70 | 394 | 5% | 86% |
-| Upper-middle income | 18 | 70 | 392 | 22% | 89% |
-| High income | 18 | 73 | 398 | 33% | 83% |
+| Low income | 12 | 60 | 372 | 0% | 58% |
+| Lower-middle income | 11 | 59 | 369 | 0% | 45% |
+| Middle income | 21 | 70 | 395 | 0% | 86% |
+| Upper-middle income | 18 | 70 | 394 | 22% | 89% |
+| High income | 18 | 73 | 397 | 44% | 83% |
 
 What the tables show:
 
-- **Childhood habits decide where you start grade 12:** the same random talents end up anywhere from 29 to 68 on average.
-- **Family income matters, but it isn't destiny:** with the same smart play, the top two fifths reach SKY on the first try 22–33% of the time and the bottom two never did. Retakes close much of the gap.
+- **Childhood habits decide where you start grade 12:** the same random talents end up anywhere from 29 to 67 on average.
+- **Family income matters, but it isn't destiny:** with the same smart play, the top two fifths reach SKY on the first try 22–44% of the time and the bottom two never did. Retakes close much of the gap.
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
 - **Medical school** takes talent, a sciences track and usually several years.
 
@@ -224,6 +241,7 @@ What the tables show:
 
 ## Changelog
 
+- **v2.3:** bullying (학교폭력) is now a storyline instead of a one-off event. It can start in grades 3–11 and lasts until it's resolved, with a follow-up choice every turn: report it to the school violence committee, see the Wee class counselor, stick with friends, fight back, endure it, or change schools when it turns severe. While it lasts, study efficiency drops 10–30% and stress, motivation and health suffer; severe bullying costs a block a turn. The Condition panel shows it. Saves from v2.2 still load. Balance tables regenerated.
 - **v2.2:** ages use the international count (만 나이): you start grade 1 at 6, so a grade-12 student is 17. The Korean version writes ages as "만 6세". Gameplay and balance numbers are unchanged.
 - **v2.1:** ability no longer decays. Subjects you don't study stay where they are instead of slipping (no more peer drift in the school years, and no monthly fade in grade 12 or retake years). Ability is now on the 수능 scale from age 7 (50 is the average test taker), so children start around 10 and climb; the starting level and school-year study speed were retuned so top players reach about the same level as before. Balance tables regenerated.
 - **v2:** lives start in elementary school. Turns are a year in elementary school, a semester in middle school and a season in grades 10–11, then monthly from grade 12. Ability is now relative to your year group, with peer drift during the school years. New childhood activities (reading, arts & sports) and about ten new events (sports day, olympiad, smartphone, Daechi-dong, bullying, class elections, career week, 중2). Middle-school class ranks and grade 10–11 mock exams track your standing. The track and inquiry subjects are chosen at the end of grade 10 instead of at the start. Families are no longer chosen: you're born into one of the five household-income fifths at random, with budgets based on the 2024 private-education survey, and there's no talent re-roll. Unspent education budget no longer piles up; your own savings come from New Year's money, gifts and part-time work. Earlier saves don't carry over.

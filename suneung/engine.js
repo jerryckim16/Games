@@ -336,16 +336,76 @@
       run: (g, i) => {
         g.flags.daechi = 1;
         if (i === 1) { bump(g, { stress: -3 }); return "r1"; }
+        g.flags.moved = g.clock; // the new kid at school, which makes bullying likelier for a while
         for (const s of ["kor", "math", "eng"]) studyBoost(g, s, 0.03);
         bump(g, { stress: 8, motivation: 5 }); return "r0";
       },
     },
+    // The one-off bully event from v2. It never rolls any more (bully-start replaced it); it stays so a
+    // save made before v2.3 can still answer one that's waiting in its queue and show its old log lines.
     {
-      id: "bully", weight: 1, when: (g) => g.grade >= 3 && g.grade <= 9, choices: 3,
+      id: "bully", weight: 0, when: () => false, choices: 3,
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -4, motivation: 2 }); return "r0"; }
         if (i === 1) { if (g.rng() < 0.5) { bump(g, { stress: -6, motivation: 4 }); return "r1a"; } bump(g, { stress: 8, health: -6 }); return "r1b"; }
         bump(g, { stress: 10, motivation: -4 }); return "r2";
+      },
+    },
+    // ----- bullying (학교폭력): a condition that lasts until it's resolved -----
+    // bully-start sets g.bully = { lv, n, sup }: severity 1–3, turns it has lasted, and whether someone
+    // is supporting you (parents who know, a counselor, friends). While it lasts, advance() slows study
+    // and wears down stress, motivation and health, and severity 3 costs a block a turn (skipped school
+    // days). Every turn brings a forced follow-up (bully-on, or bully-bad at severity 3) where you pick
+    // what to do; the odds differ by choice. It also ends when classes are reshuffled in March or you
+    // change school stage (see nextTurn), and for good when you leave high school.
+    {
+      id: "bully-start", weight: bullyWeight, choices: 4,
+      when: (g) => !g.bully && g.inSchool() && g.grade >= 3 && g.grade <= 11 && g.clock - (g.flags.bullyEnd == null ? -99 : g.flags.bullyEnd) >= 12,
+      run: (g, i) => {
+        // Middle school is when it most often turns into a group thing.
+        g.bully = { lv: g.rng() < (g.status === "mid" ? 0.4 : 0.25) ? 2 : 1, n: 0, sup: 0 };
+        g.flags.bullyN = (g.flags.bullyN || 0) + 1;
+        let x;
+        // Speaking up rarely ends it overnight, but it starts things moving and an adult knows.
+        if (i === 0) x = bullyStep(g, 0.25, 0.15, 0.1); // tell the homeroom teacher
+        else if (i === 1) { g.bully.sup = 1; bump(g, { stress: -4 }); x = bullyStep(g, 0.25, 0.15, 0.15); } // parents: on your side, but their call can backfire
+        else if (i === 2) { bump(g, { health: -5, stress: 4 }); x = bullyStep(g, 0.3, 0.05, 0.35); } // fight back
+        else { bump(g, { motivation: -3 }); x = bullyStep(g, 0.05, 0.05, 0.35); } // keep quiet
+        return ["r" + i, { x }];
+      },
+    },
+    {
+      id: "bully-on", weight: 100, choices: 5,
+      when: (g) => !!g.bully && g.bully.lv < 3 && bullyFollowUp(g),
+      run: (g, i) => {
+        const friends = !!(g.lastPlan && g.lastPlan.friends);
+        const t = longTurn(g);
+        let x;
+        if (i === 0) { bump(g, { stress: 5 }); x = bullyStep(g, 0.45 + t, 0.25, 0.12); } // report to the school violence committee: draining, but it works
+        else if (i === 1) { g.bully.sup = 1; bump(g, { stress: -10, motivation: 3 }); x = bullyStep(g, 0.15 + t, 0.35, 0.08); } // Wee class counselor
+        else if (i === 2) { if (friends) g.bully.sup = 1; bump(g, { stress: friends ? -8 : -2 }); x = bullyStep(g, (friends ? 0.2 : 0.08) + t, friends ? 0.35 : 0.15, 0.1); }
+        else if (i === 3) { bump(g, { health: -6, stress: 4 }); x = bullyStep(g, 0.3 + t, 0.05, 0.35); } // fight back
+        else { bump(g, { motivation: -4 }); x = bullyStep(g, 0.08 + t, 0.07, 0.35); } // endure: it usually gets worse
+        return ["r" + i, { x, f: friends }];
+      },
+    },
+    {
+      id: "bully-bad", weight: 100, choices: 4,
+      when: (g) => !!g.bully && g.bully.lv >= 3 && bullyFollowUp(g),
+      run: (g, i) => {
+        const t = longTurn(g);
+        let x;
+        if (i === 0) { bump(g, { stress: 6 }); x = bullyStep(g, 0.6 + t, 0.2, 0.05); } // the committee, with your parents and the evidence
+        else if (i === 1) {
+          // Changing schools almost always ends it, at the cost of a fresh start: new classmates, catching up, a lost block.
+          bump(g, { stress: 6, motivation: -6 });
+          g.lostBlocks += 1;
+          g.flags.moved = g.clock;
+          if (g.rng() < 0.85) { endBully(g); x = "stop"; } else { g.bully.lv = 1; x = "ease"; }
+        }
+        else if (i === 2) { g.bully.sup = 1; bump(g, { stress: -10, motivation: 3 }); x = bullyStep(g, 0.15 + t, 0.4, 0.05); }
+        else { bump(g, { motivation: -5, health: -4 }); x = bullyStep(g, 0.05 + t, 0.1, 0); }
+        return ["r" + i, { x }];
       },
     },
     {
@@ -465,6 +525,44 @@
   function studyBoost(g, s, amount) {
     g.skills[s] += amount * headroom(g.skills[s]) * 1.5;
   }
+  // ---------- bullying ----------
+  // How likely bullying is to start this turn, relative to the other events. Per year, middle school
+  // is the peak and high school the low; the stage factor also allows for turn length (a year in
+  // elementary school, a semester in middle school, a season in high school). Being the new kid (a
+  // move, a transfer) doubles it for a year, having no time for friends makes you an easier target,
+  // and each earlier episode halves it. Tuned so roughly a quarter to a third of lives meet it.
+  function bullyWeight(g) {
+    const stage = g.status === "elem" ? 1.4 : g.status === "mid" ? 1 : 0.3;
+    const newKid = g.flags.moved != null && g.clock - g.flags.moved <= 12 ? 2 : 1;
+    const alone = g.lastPlan && !g.lastPlan.friends ? 1.4 : 1;
+    return BULLY_BASE * stage * newKid * alone * Math.pow(0.5, g.flags.bullyN || 0);
+  }
+  const BULLY_BASE = 0.25;
+  // Follow-ups come every turn while you're still at school (grade 12 included).
+  function bullyFollowUp(g) { return g.inSchool() || g.status === "hs3"; }
+  // Follow-ups in a turn of six months or more (elementary and middle school) give whatever you try
+  // time to work, so stopping is a little likelier.
+  function longTurn(g) { return g.turnMonths() >= 6 ? 0.1 : 0; }
+  // One roll of how things go: it stops, eases a level, gets worse a level, or stays the same.
+  // Returns the result key strings.js uses ("stop" | "ease" | "same" | "worse").
+  function bullyStep(g, stop, ease, worse) {
+    const b = g.bully;
+    const r = g.rng();
+    if (r < stop) { endBully(g); return "stop"; }
+    if (r < stop + ease) {
+      if (b.lv <= 1) { endBully(g); return "stop"; }
+      b.lv -= 1; return "ease";
+    }
+    if (r < stop + ease + worse && b.lv < 3) { b.lv += 1; return "worse"; }
+    return "same";
+  }
+  function endBully(g) {
+    g.bully = null;
+    g.flags.bullyEnd = g.clock;
+  }
+  // An event's weight is a number or a function of the game.
+  const weightOf = (e, g) => (typeof e.weight === "function" ? e.weight(g) : e.weight);
+
   function inquiryInfo(id) {
     return INQUIRY.soc.concat(INQUIRY.sci).find((x) => x.id === id);
   }
@@ -530,6 +628,7 @@
       this.enrolled = null; // university id kept while doing 반수
       this.ending = null;
       this.lastPlan = null;
+      this.bully = null; // { lv, n, sup } while being bullied; see bully-start
       this.addLog("log.born", { fam: this.family, y: this.year, inc: FAMILIES[this.family].income }, "milestone");
     }
 
@@ -643,7 +742,9 @@
       const motFactor = Math.pow(0.35 + 0.65 * (this.motivation / 100), m.sens);
       const healthFactor = this.health < 40 ? 0.7 + 0.3 * (this.health / 40) : 1;
       const stressFactor = this.stress > 75 ? 1 - (this.stress - 75) / 60 : 1;
-      const eff = motFactor * healthFactor * stressFactor;
+      // Being bullied makes it hard to think about anything else (see bullyPenalty).
+      const bp = this.bullyPenalty();
+      const eff = motFactor * healthFactor * stressFactor * (bp ? bp.eff : 1);
       let studied = 0;
       for (const s of SUBJECTS) {
         const n = plan[s] || 0;
@@ -682,6 +783,14 @@
       // Motivation drifts back toward a baseline that sags with every extra year.
       const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0);
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
+      // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
+      // softens the toll on your body.
+      if (bp) {
+        d.stress += 4 * bp.lv;
+        d.motivation -= 3 * bp.lv;
+        d.health -= (bp.sup ? 1 : 2) * bp.lv;
+        this.bully.n += 1;
+      }
       bump(this, d);
 
       // Summarize the turn.
@@ -704,8 +813,9 @@
       const roll = rng();
       const n = roll < 0.2 ? 0 : roll < 0.88 ? 1 : 2;
       const seen = new Set();
-      // Fixed milestones (D-100, free-semester career week, 중2) always fire when their time comes.
-      for (const e of EVENTS) if (e.weight >= 100 && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
+      // Fixed milestones (D-100, free-semester career week, 중2) always fire when their time comes, and so
+      // does the bullying follow-up while it lasts.
+      for (const e of EVENTS) if (weightOf(e, this) >= 100 && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
       for (let i = 0; i < n; i++) this.rollEvent(seen);
       if ((plan.friends || 0) > 0 && rng() < 0.35 && !seen.has("pcbang") && this.grade >= 5 && this.clock - (this.flags["ev-pcbang"] || -99) >= 4) {
         this.fireEvent(EVENTS.find((e) => e.id === "pcbang"));
@@ -739,12 +849,12 @@
 
     rollEvent(seen) {
       // An event that just happened waits at least four months before it can happen again.
-      const pool = EVENTS.filter((e) => !seen.has(e.id) && e.weight < 100 && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
+      const pool = EVENTS.filter((e) => !seen.has(e.id) && weightOf(e, this) < 100 && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
       let total = 0;
-      for (const e of pool) total += e.weight;
+      for (const e of pool) total += weightOf(e, this);
       let r = this.rng() * total;
       for (const e of pool) {
-        r -= e.weight;
+        r -= weightOf(e, this);
         if (r <= 0) { seen.add(e.id); this.fireEvent(e); return; }
       }
     }
@@ -835,7 +945,18 @@
         this.age += 1;
         this.status = statusForGrade(this.grade);
         this.addLog(this.status !== was ? "log.stage" : "log.grade", { g: this.grade, st: this.status, y: this.year }, this.status !== was ? "milestone" : "");
+        // Korean schools reshuffle every class in March, so a new school year often ends bullying (less
+        // often the worse it is), and a new school (middle or high school) usually does. Grade 12 is a new
+        // class in the same school.
+        if (this.bully) {
+          const newSchool = this.status !== was && this.status !== "hs3";
+          const p = newSchool ? 0.7 : [0, 0.6, 0.4, 0.2][this.bully.lv];
+          if (this.rng() < p) { endBully(this); this.addLog("log.bullyEnd", { why: newSchool ? "stage" : "class" }, "event"); }
+          else this.addLog("log.bullyStays", { g: this.grade }, "event");
+        }
       }
+      // Severe bullying costs a block a turn: days you can't face school, or can't focus when you're there.
+      if (this.bully && this.bully.lv >= 3) this.lostBlocks += 1;
     }
 
     // Moves past informational screens the engine handles itself (exams, turn rollover).
@@ -946,6 +1067,7 @@
       if ((d.action === "enroll" || d.action === "halfretake") && offers.indexOf(d.uni) < 0) throw new Error("No offer from that school.");
       this.queue.shift();
       if (d.action === "enroll" || d.action === "quit") {
+        this.leaveSchool();
         const uni = d.action === "enroll" ? UNI_BY_ID[d.uni] : null;
         this.ending = { uni: uni && uni.id, attempts: this.attempt, age: this.age + 1, best: this.bestResult() };
         this.month = 3;
@@ -956,6 +1078,7 @@
       if (["academy", "selfstudy", "halfretake"].indexOf(d.action) < 0) throw new Error("Unknown action.");
       const ro = this.retakeOptions(top.score).find((o) => o.id === d.action);
       if (ro.blocked) throw new Error(ro.blocked);
+      this.leaveSchool();
       this.scholarship = !!ro.scholarship;
       this.enrolled = d.action === "halfretake" ? d.uni : this.enrolled;
       this.status = d.action;
@@ -969,6 +1092,21 @@
       if (this.attempt === 4) this.addLog("log.halfpay", null, "event");
       this.addLog("log.newyear", { y: this.year, att: this.attempt, st: d.action, sch: this.scholarship, pays: FAMILIES[this.family].paysAcademy, uni: this.enrolled }, "milestone");
       this.trace.push({ t: this.t(), att: this.attempt, ph: this.phase(), skills: Object.assign({}, this.skills) });
+    }
+
+    // Study efficiency while bullied: severity 1–3 takes 10% a level, 30% less with support. null when not.
+    // Saves from before v2.3 have no `bully` field, which reads as not bullied.
+    bullyPenalty() {
+      const b = this.bully;
+      if (!b) return null;
+      const cut = 0.1 * b.lv * (b.sup ? 0.7 : 1);
+      return { lv: b.lv, eff: 1 - cut, cut, sup: !!b.sup, lostBlock: b.lv >= 3, n: b.n };
+    }
+    // Graduating from high school leaves any bullying behind.
+    leaveSchool() {
+      if (!this.bully) return;
+      endBully(this);
+      this.addLog("log.bullyEnd", { why: "grad" }, "event");
     }
 
     bestResult() {
