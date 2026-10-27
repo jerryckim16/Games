@@ -193,6 +193,9 @@ function strategies() {
   const acc = configs.map(() => ({ start: 0, kor: 0, math: 0, eng: 0, std: 0, lastStd: 0, tries: 0, sky: 0, med: 0, seoul: 0 }));
   const byFam = {};
   for (const f of S.FAMILY_IDS) byFam[f] = { n: 0, start: 0, std: 0, sky: 0, seoul: 0 };
+  // By region kind: the smart bot's first try, and how often the 의대 chaser gets in (local quotas).
+  const byKind = {};
+  for (const k of Object.keys(S.REGION_KINDS)) byKind[k] = { n: 0, start: 0, std: 0, sky: 0, seoul: 0, mn: 0, med: 0 };
   for (let i = 0; i < seeds; i++) {
     configs.forEach((c, ci) => {
       const a = acc[ci];
@@ -208,6 +211,9 @@ function strategies() {
       if (uni === "med") a.med++;
       if (idx >= 0 && idx <= 3) a.sky++;
       if (idx >= 0 && idx <= 19) a.seoul++;
+      const rk = byKind[g.regionInfo().kind];
+      if (ci === 4) { rk.n++; rk.start += avg; rk.std += results[0].total; if (idx >= 0 && idx <= 3) rk.sky++; if (idx >= 0 && idx <= 19) rk.seoul++; }
+      if (ci === 6) { rk.mn++; if (uni === "med") rk.med++; }
       if (ci === 4) {
         const b = byFam[g.family];
         b.n++; b.start += avg; b.std += results[0].total;
@@ -232,6 +238,13 @@ function strategies() {
     const b = byFam[f];
     if (!b.n) continue;
     console.log(f.padEnd(8), String(b.n).padStart(5), "|", (b.start / b.n).toFixed(0).padStart(5), "|", (b.std / b.n).toFixed(0).padStart(7), "|", p(b.sky, b.n), "|", p(b.seoul, b.n));
+  }
+  console.log("\nBy region kind (smart bot, best affordable method, 1 try; 의대 = the 의대 chaser within 5 tries):");
+  console.log("region   lives | start | 1st std | SKY+  | in-Seoul+ | 의대");
+  for (const k of Object.keys(byKind)) {
+    const b = byKind[k];
+    if (!b.n) continue;
+    console.log(k.padEnd(8), String(b.n).padStart(5), "|", (b.start / b.n).toFixed(0).padStart(5), "|", (b.std / b.n).toFixed(0).padStart(7), "|", p(b.sky, b.n), "|", p(b.seoul, b.n).padStart(9), "|", p(b.med, b.mn));
   }
 }
 

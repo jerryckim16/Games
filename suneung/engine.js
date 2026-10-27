@@ -165,6 +165,53 @@
     q5: { income: 1380, allowance: 900000, prior: 0.1, paysAcademy: true },
   };
   const FAMILY_IDS = ["q1", "q2", "q3", "q4", "q5"];
+
+  // ---------- regions ----------
+  // Where you live. The kind sets how good and how dear cram schools and tutors are (multipliers on a
+  // method's speed and price; rural counties have no private tutors to hire), the pressure around you,
+  // and whether you count as outside the capital region for the quotas below.
+  const REGION_KINDS = {
+    gangnam: { hagwon: 1.15, tutor: 1.1, price: 1.4, stress: 2, motivation: 3, health: 0 },
+    seoul: { hagwon: 1.05, tutor: 1.05, price: 1.15, stress: 1, motivation: 1, health: 0 },
+    capital: { hagwon: 1, tutor: 1, price: 1, stress: 0, motivation: 0, health: 0 },
+    metro: { hagwon: 0.97, tutor: 0.97, price: 0.95, stress: 0, motivation: 0, health: 0 },
+    city: { hagwon: 0.9, tutor: 0.9, price: 0.85, stress: -1, motivation: 0, health: 0 },
+    rural: { hagwon: 0.75, tutor: 0, price: 0.7, stress: -2, motivation: -1, health: 1 },
+  };
+  // pop: rough share of people (%), the weights for where you're born. view: what the windows show.
+  // need: the family income fifth it takes to move there (housing). nat: the regional national
+  // university whose local quota you can use.
+  const REGIONS = [
+    { id: "gangnam", kind: "gangnam", capital: true, pop: 3, need: 4 },
+    { id: "nowon", kind: "seoul", capital: true, pop: 15, need: 3 },
+    { id: "suwon", kind: "capital", capital: true, pop: 32 },
+    { id: "busan", kind: "metro", pop: 6.5, view: "sea", nat: "pnu" },
+    { id: "daegu", kind: "metro", pop: 4.5, nat: "knu" },
+    { id: "gwangju", kind: "metro", pop: 3 },
+    { id: "daejeon", kind: "metro", pop: 3 },
+    { id: "pohang", kind: "city", pop: 6, view: "sea", nat: "knu" },
+    { id: "jeonju", kind: "city", pop: 5 },
+    { id: "cheongju", kind: "city", pop: 6 },
+    { id: "pyeongchang", kind: "rural", pop: 4.5, view: "country" },
+    { id: "haenam", kind: "rural", pop: 4.5, view: "sea" },
+  ];
+  const REGION_BY_ID = Object.fromEntries(REGIONS.map((r) => [r.id, r]));
+  // Where a family of each income fifth is likely to live, relative to population: Gangnam is mostly
+  // the top fifths, rural counties mostly the bottom ones. Families stay 20% each; the region follows.
+  const REGION_AFFINITY = {
+    gangnam: [0.15, 0.35, 0.8, 1.5, 2.7],
+    seoul: [0.8, 0.9, 1, 1.1, 1.2],
+    capital: [1, 1, 1, 1, 1],
+    metro: [1, 1, 1, 1, 1],
+    city: [1.1, 1.1, 1, 0.95, 0.85],
+    rural: [1.8, 1.3, 0.9, 0.6, 0.4],
+  };
+  // Admission quotas, as cut reductions in percentile points. 지역인재 (regional talent): medical schools
+  // outside Seoul and the regional national universities reserve seats for students who did middle and
+  // high school in the region. 농어촌 (rural students): a separate quota at most universities.
+  const LOCAL_QUOTA = 0.6, RURAL_QUOTA = 0.8;
+  const MOVE_COOLDOWN = 12; // months between moves
+
   // 수능-year mocks (month → true); grades 10–11 sit 학력평가 in June and November instead.
   const MOCKS = { 3: true, 6: true, 9: true };
 
@@ -340,13 +387,51 @@
       },
     },
     {
-      id: "daechi", weight: 2, when: (g) => g.grade >= 3 && g.grade <= 8 && (g.family === "q4" || g.family === "q5") && !g.flags.daechi, choices: 2,
+      id: "daechi", weight: 2, when: (g) => g.grade >= 3 && g.grade <= 8 && (g.family === "q4" || g.family === "q5") && !g.flags.daechi && g.region !== "gangnam", choices: 2,
       run: (g, i) => {
         g.flags.daechi = 1;
         if (i === 1) { bump(g, { stress: -3 }); return "r1"; }
-        g.flags.moved = g.clock; // the new kid at school, which makes bullying likelier for a while
+        g.relocate("gangnam"); // the new kid at school, which makes bullying likelier for a while
         for (const s of ["kor", "math", "eng"]) studyBoost(g, s, 0.03);
         bump(g, { stress: 8, motivation: 5 }); return "r0";
+      },
+    },
+    // ----- regions -----
+    // 2017: the Pohang earthquake cracked school buildings and pushed that year's 수능 back a week.
+    {
+      id: "quake", weight: 1, when: (g) => g.region === "pohang" && !g.flags.quake,
+      run: (g) => { g.flags.quake = 1; bump(g, { stress: 10 }); g.lostBlocks += 1; return "r"; },
+    },
+    { id: "beach", weight: 1, when: (g) => (REGION_BY_ID[g.region] || {}).view === "sea", run: (g) => { bump(g, { stress: -10, health: 4 }); return "r"; } },
+    { id: "country", weight: 1, when: (g) => regionKind(g) === "rural", run: (g) => { bump(g, { stress: -8, health: 6 }); return "r"; } },
+    {
+      // 선행학습: studying years ahead of the school curriculum, the norm in Gangnam's academies.
+      id: "ahead", weight: 1.5, when: (g) => (regionKind(g) === "gangnam" || regionKind(g) === "seoul") && g.grade >= 4 && g.grade <= 9, choices: 2,
+      run: (g, i) => {
+        if (i === 0) { studyBoost(g, "math", 0.05); bump(g, { stress: 7, motivation: -2 }); return "r0"; }
+        bump(g, { stress: -3 }); return "r1";
+      },
+    },
+    {
+      id: "commute", weight: 1.5, when: (g) => regionKind(g) === "rural" && g.grade >= 7 && g.inSchool(), choices: 2,
+      run: (g, i) => {
+        if (i === 0) { studyBoost(g, pickWeak(g), 0.04); bump(g, { health: -6, stress: 3 }); return "r0"; }
+        bump(g, { motivation: -2 }); return "r1";
+      },
+    },
+    {
+      id: "quota-news", weight: 100, when: (g) => g.grade === 9 && g.localQuota() && !g.flags.quotaNews,
+      run: (g) => { g.flags.quotaNews = 1; bump(g, { motivation: 4 }); return "r"; },
+    },
+    {
+      // 의대 지방 유학: capital-region families moving out so their child qualifies for a regional
+      // medical school's local quota, which needs middle and high school in the region.
+      id: "med-move", weight: 1.5, choices: 2,
+      when: (g) => (REGION_BY_ID[g.region] || {}).capital && (g.family === "q4" || g.family === "q5") && g.grade >= 4 && g.grade <= 6 && !g.flags.medMove && g.skills.math > g.skills.kor,
+      run: (g, i) => {
+        g.flags.medMove = 1;
+        if (i === 0) { g.relocate("daegu"); bump(g, { stress: 6, motivation: 4 }); return "r0"; }
+        return "r1";
       },
     },
     // The one-off bully event from v2. It never rolls any more (bully-start replaced it); it stays so a
@@ -568,6 +653,8 @@
     g.bully = null;
     g.flags.bullyEnd = g.clock;
   }
+  // Saves from before regions existed have none; they play as the capital-region suburbs.
+  function regionKind(g) { return (REGION_BY_ID[g.region] || REGION_BY_ID.suwon).kind; }
   // An event's weight is a number or a function of the game.
   const weightOf = (e, g) => (typeof e.weight === "function" ? e.weight(g) : e.weight);
 
@@ -640,9 +727,20 @@
       this.ending = null;
       this.lastPlan = null;
       this.bully = null; // { lv, n, sup } while being bullied; see bully-start
-      this.addLog("log.born", { fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex }, "milestone");
+      // Where you're born is dealt with the family (opts.region exists for sim.js only). regionFrom is
+      // the school grade you arrived in: the local quotas need middle and high school there (from grade 7).
+      this.region = REGION_BY_ID[opts.region] ? opts.region : Game.rollRegion(seed, this.family);
+      this.regionFrom = 1;
+      this.addLog("log.born", { fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex, reg: this.region }, "milestone");
     }
 
+    static rollRegion(seed, family) {
+      const fi = Math.max(0, FAMILY_IDS.indexOf(family));
+      const w = REGIONS.map((r) => r.pop * REGION_AFFINITY[r.kind][fi]);
+      let x = makeRng(hashSeed(seed, "region"))() * w.reduce((a, b) => a + b, 0);
+      for (let i = 0; i < REGIONS.length; i++) { x -= w[i]; if (x <= 0) return REGIONS[i].id; }
+      return REGIONS[REGIONS.length - 1].id;
+    }
     static rollFamily(seed) {
       return FAMILY_IDS[Math.floor(makeRng(hashSeed(seed, "family"))() * FAMILY_IDS.length)];
     }
@@ -684,6 +782,60 @@
     // The parents' education money for this turn. Whatever isn't spent stays with them.
     budget() { return this.allowance() * this.turnMonths(); }
     methodFixed() { return STATUSES[this.status].method || null; }
+
+    // ----- regions -----
+    regionInfo() { return REGION_BY_ID[this.region] || REGION_BY_ID.suwon; }
+    regionKindInfo() { return REGION_KINDS[this.regionInfo().kind]; }
+    // 지역인재: outside the capital region, with middle and high school there (arrived by grade 7).
+    localQuota() { const r = this.regionInfo(); return !r.capital && (this.regionFrom || 1) <= 7; }
+    ruralQuota() { return this.regionInfo().kind === "rural" && (this.regionFrom || 1) <= 7; }
+    // Percentile points taken off a university's cut by the quotas you qualify for, and which applies.
+    quotaFor(u) {
+      const local = this.localQuota() && (u.id === "med" || u.id === this.regionInfo().nat) ? LOCAL_QUOTA : 0;
+      const rural = this.ruralQuota() && u.id !== "college" ? RURAL_QUOTA : 0;
+      if (!local && !rural) return null;
+      return local >= rural ? { kind: "local", pts: local } : { kind: "rural", pts: rural };
+    }
+    // Cram schools and tutors are stronger and dearer in Gangnam and Seoul; rural counties have no tutors.
+    methodAvailable(id) { return id !== "tutor" || this.regionKindInfo().tutor > 0; }
+    methodMult(id) {
+      const k = this.regionKindInfo();
+      return METHODS[id].mult * (id === "hagwon" ? k.hagwon : id === "tutor" ? k.tutor : 1);
+    }
+    methodCost(id) {
+      const c = METHODS[id].cost;
+      return id === "hagwon" || id === "tutor" ? Math.round(c * this.regionKindInfo().price / 1000) * 1000 : c;
+    }
+    // Why you can't move to a region right now, or null. Moving waits a year after the last move, and
+    // Seoul and Gangnam housing takes a family in the matching income fifth or above.
+    moveBlock(id) {
+      const r = REGION_BY_ID[id];
+      if (!r || id === this.region) return "same";
+      if (this.ending || this.queue.length) return "busy";
+      if (this.flags.lastMove != null && this.clock - this.flags.lastMove < MOVE_COOLDOWN) return "cooldown";
+      if (r.need && FAMILY_IDS.indexOf(this.family) + 1 < r.need) return "cost";
+      return null;
+    }
+    // The player's move: a new home and a new school. It costs a block of packing next turn, the stress
+    // of starting over, and the new-kid risk of bullying; it can also end bullying at the old school.
+    move(id) {
+      const why = this.moveBlock(id);
+      if (why) throw new Error("move." + why);
+      this.relocate(id);
+      bump(this, { stress: 8, motivation: -3 });
+      this.lostBlocks += 1;
+      if (this.bully && this.rng() < 0.7) { endBully(this); this.addLog("log.bullyEnd", { why: "move" }, "event"); }
+    }
+    // The move itself, shared with events that move the family (Daechi-dong, 의대 지방 유학).
+    relocate(id) {
+      const from = this.region;
+      this.region = id;
+      // In school, the quotas count from the grade you arrive in; after school, you're past them.
+      this.regionFrom = this.inSchool() ? this.grade : 13;
+      this.flags.moved = this.clock;
+      this.flags.lastMove = this.clock;
+      this.addLog("log.move", { from, to: id }, "milestone");
+    }
     // Retake options after the latest 수능, with the reason any of them is closed. The parents pay a
     // retake academy if they can; otherwise only a scholarship gets you in.
     retakeOptions(score) {
@@ -699,9 +851,9 @@
       let studyBlocks = 0, cost = 0;
       for (const a of ACTIVITIES) {
         if (a.kind === "study") studyBlocks += plan[a.id] || 0;
-        else if (a.cost) cost += (plan[a.id] || 0) * a.cost;
+        else if (a.cost) cost += (plan[a.id] || 0) * Math.round(a.cost * this.regionKindInfo().price / 1000) * 1000;
       }
-      if (!this.methodFixed()) cost += studyBlocks * METHODS[method].cost;
+      if (!this.methodFixed()) cost += studyBlocks * this.methodCost(method);
       return cost * this.turnMonths();
     }
     income(plan) { return (plan.job || 0) * JOB_PAY * this.turnMonths(); }
@@ -722,7 +874,7 @@
         total += n;
       }
       if (total !== this.blocks()) return "err.blocks";
-      if (!this.methodFixed() && !METHODS[method]) return "err.method";
+      if (!this.methodFixed() && (!METHODS[method] || !this.methodAvailable(method))) return "err.method";
       if (this.planCost(plan, method) > this.budget() + this.money + this.income(plan)) return "err.money";
       return null;
     }
@@ -763,7 +915,7 @@
         if (!n) continue;
         let g = 0;
         for (let i = 0; i < n; i++) g += 1 / (1 + 0.3 * i);
-        const rate = 0.24 * SUBJECT_INFO[s].rate * this.aptitude[s] * m.mult * eff;
+        const rate = 0.24 * SUBJECT_INFO[s].rate * this.aptitude[s] * this.methodMult(method) * eff;
         this.skills[s] += g * rate * headroom(this.skills[s]) * (0.85 + 0.3 * rng()) * k;
       }
       // Reading: free, and it feeds Korean most, with a little social studies and history on the side.
@@ -789,10 +941,14 @@
       };
       d.stress -= (plan.rest || 0) * 9 + (plan.exercise || 0) * 6 + (plan.friends || 0) * 14 + (plan.games || 0) * 10 + (plan.arts || 0) * 8 + reading * 3;
       d.health += (plan.rest || 0) * 7 + (plan.exercise || 0) * 11 + (plan.arts || 0) * 8 - (plan.job || 0) * 4;
+      // Where you live: Gangnam's pressure, the countryside's quiet.
+      const rk = this.regionKindInfo();
+      d.stress += rk.stress;
+      d.health += rk.health;
       d.stress += (plan.job || 0) * 5;
       d.motivation += (plan.friends || 0) * 3 - (plan.games || 0) * 4 + (plan.arts || 0) * 4;
       // Motivation drifts back toward a baseline that sags with every extra year.
-      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0);
+      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation;
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
       // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
       // softens the toll on your body.
@@ -1047,8 +1203,9 @@
       const top = this.queue[0];
       if (!top || top.type !== "apply") return [];
       return UNIVERSITIES.map((u) => {
-        const p = admitChance(top.score, u, this.track);
-        return { id: u.id, p, label: chanceLabel(p), blocked: u.sci && this.track !== "sci" };
+        const q = this.quotaFor(u);
+        const p = admitChance(top.score + (q ? q.pts : 0), u, this.track);
+        return { id: u.id, p, label: chanceLabel(p), blocked: u.sci && this.track !== "sci", quota: q ? q.kind : null };
       });
     }
     // Apply to up to three schools (가/나/다군). Returns the offers.
@@ -1058,8 +1215,9 @@
       ids = Array.from(new Set(ids)).slice(0, 3);
       const results = ids.map((id) => {
         const u = UNI_BY_ID[id];
-        const p = admitChance(top.score, u, this.track);
-        return { id, p, admitted: this.rng() < p };
+        const q = this.quotaFor(u);
+        const p = admitChance(top.score + (q ? q.pts : 0), u, this.track);
+        return { id, p, admitted: this.rng() < p, quota: q ? q.kind : null };
       });
       this.queue.shift();
       const offers = results.filter((r) => r.admitted).map((r) => r.id);
@@ -1163,7 +1321,7 @@
   }
 
   const api = {
-    Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
+    Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
     inquiryInfo, admissionScore, admitChance, chanceLabel, gradeSubject, makeRng, hashSeed,
     skillScore: (theta) => clamp(Math.round(50 + theta * 16.67), 0, 100),
   };

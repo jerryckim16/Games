@@ -28,7 +28,7 @@
   /* Artwork (art.js): scenes, the avatar and event illustrations. Dark mode turns day to dusk. */
   --a-sky: #a9dcff; --a-sky2: #e8f6ff; --a-night: #16224a; --a-night2: #34457e; --a-moon: #fff3c4;
   --a-star: #fff7d6; --a-sun: #ffcf4a; --a-cloud: #ffffff; --a-dusk: #ff9e7a; --a-dusk2: #ffd9a0;
-  --a-hill: #9fc78a; --a-city: #9fb3cc; --a-wall: #f6ecda; --a-wall2: #ead9bb; --a-floor: #d9b083;
+  --a-sea: #5fb3d9; --a-sea2: #3d8fbd; --a-hill: #9fc78a; --a-city: #9fb3cc; --a-wall: #f6ecda; --a-wall2: #ead9bb; --a-floor: #d9b083;
   --a-floor2: #c49568; --a-tile: #e3e7ee; --a-tile2: #cfd5df; --a-nightwall: #3a3d5c;
   --a-nightfloor: #4a3a34; --a-dark: #2a2e3b; --a-dark2: #3a3f52; --a-locker: #8fb3d9;
   --a-locker2: #6f93ba; --a-cork: #d9a86b; --a-frame: #ffffff; --a-board: #2f6b4f;
@@ -79,7 +79,7 @@
     --g6: #ff6b6b;
     --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
     --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
-    --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
+    --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
     --a-floor2: #4a382c; --a-tile: #343a48; --a-tile2: #2b303c; --a-nightwall: #24263a;
     --a-nightfloor: #33282a; --a-dark: #171a22; --a-dark2: #222634; --a-locker: #3d5578;
     --a-locker2: #2f4462; --a-cork: #8a6440; --a-frame: #c8cad6; --a-board: #1f4a37;
@@ -130,7 +130,7 @@
   --g6: #ff6b6b;
   --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
   --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
-  --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
+  --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
   --a-floor2: #4a382c; --a-tile: #343a48; --a-tile2: #2b303c; --a-nightwall: #24263a;
   --a-nightfloor: #33282a; --a-dark: #171a22; --a-dark2: #222634; --a-locker: #3d5578;
   --a-locker2: #2f4462; --a-cork: #8a6440; --a-frame: #c8cad6; --a-board: #1f4a37;
@@ -325,6 +325,8 @@ table.grid td.l { text-align: left; }
 .unis { display: flex; flex-direction: column; margin: 8px 0; }
 .uni { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--border); font-size: 0.88rem; cursor: pointer; }
 .uni.off { opacity: 0.45; cursor: not-allowed; }
+.uni .nm small.why { color: var(--neg); }
+.uni.region .nm { min-width: 0; }
 .uni .nm small { color: var(--muted); display: block; font-size: 0.75rem; }
 .chance { font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; color: var(--panel); }
 .ch-safe { background: var(--g1); } .ch-match { background: var(--g3); } .ch-reach { background: var(--g5); } .ch-long { background: var(--g6); }
@@ -379,6 +381,8 @@ table.grid td.l { text-align: left; }
 .art .drift.slow { animation-duration: 22s; }
 .art .float { animation: float 3.6s ease-in-out infinite; animation-delay: var(--del, 0s); }
 .art .bounce { animation: bounce 1.6s ease-in-out infinite; }
+/* The Pohang earthquake: cracks that shudder a few times, then stop. */
+.art .shake { animation: shake 0.35s ease-in-out 4; }
 .art .hop { animation: hop 1.4s ease-in-out infinite; animation-delay: var(--del, 0s); }
 .art .wave { animation: wave 1.2s ease-in-out infinite; transform-box: view-box; }
 .art .wave.slow { animation-duration: 1.8s; }
@@ -394,6 +398,7 @@ table.grid td.l { text-align: left; }
 @keyframes sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
 @keyframes drift { from { transform: translateX(-14px); } to { transform: translateX(14px); } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
 @keyframes bounce { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-8px) scale(1.06); } }
 @keyframes hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-16deg); } }

@@ -90,7 +90,11 @@
     return G(x, y, b, s || 1);
   }
   // A window onto the season: sky, sun or moon, a tree, maybe the city, and falling particles.
+  // What you see outside: "city", "sea" (Busan, Pohang, Haenam) or "country" (rural counties). Set
+  // once per drawing from ctx.view by scene/eventArt/screenArt, so every window in a picture agrees.
+  let VIEW = "city";
   function windowView(x, y, w, h, o) {
+    const view = o.view || VIEW;
     const id = nid("win"), gid = nid("sky");
     const night = o.night, season = o.season;
     let inner = grad(gid, night ? "night" : "sky", night ? "night2" : "sky2") + R(x, y, w, h, null, 0, null, 0, "fill:url(#" + gid + ")");
@@ -102,7 +106,15 @@
       inner += O(x + w * 0.78, y + h * 0.22, season === "summer" ? 13 : 10, "sun");
       inner += G(x + w * 0.25, y + h * 0.3, A("drift", E(0, 0, 16, 6, "cloud") + E(10, -4, 10, 6, "cloud")));
     }
-    if (o.city) {
+    if (view === "country") {
+      // Hills and a field instead of buildings.
+      inner += P("M" + x + " " + (y + h * 0.7) + " Q" + (x + w * 0.25) + " " + (y + h * 0.42) + " " + (x + w * 0.5) + " " + (y + h * 0.66) + " T" + (x + w) + " " + (y + h * 0.6) + " L" + (x + w) + " " + (y + h) + " L" + x + " " + (y + h) + " Z", "hill");
+      inner += R(x, y + h * 0.8, w, h * 0.2, "grass");
+    } else if (view === "sea") {
+      // The sea along the bottom, with a small headland when the scene wants a city.
+      inner += R(x, y + h * 0.66, w, h * 0.34, "sea") + P("M" + x + " " + (y + h * 0.74) + " q" + (w / 8) + " -4 " + (w / 4) + " 0 t" + (w / 4) + " 0 t" + (w / 4) + " 0 t" + (w / 4) + " 0", null, "sea2", 2);
+      if (o.city) inner += R(x + w * 0.66, y + h * 0.5, w * 0.14, h * 0.17, "city") + R(x + w * 0.82, y + h * 0.44, w * 0.12, h * 0.23, "city");
+    } else if (o.city) {
       inner += R(x, y + h * 0.62, w * 0.18, h * 0.4, "city") + R(x + w * 0.2, y + h * 0.5, w * 0.16, h * 0.5, "city") + R(x + w * 0.62, y + h * 0.56, w * 0.2, h * 0.5, "city");
       if (night) for (let i = 0; i < 5; i++) inner += R((x + w * (0.04 + i * 0.17)).toFixed(0), (y + h * (0.7 + (i % 2) * 0.1)).toFixed(0), 3, 3, "lamp");
     }
@@ -501,6 +513,7 @@
     return { elem: "classroom", mid: "hallway", high: "desk", hs3: "desk", academy: "academy", selfstudy: "cubicle", halfretake: "campus" }[stage] || "desk";
   }
   function scene(ctx) {
+    VIEW = (ctx && ctx.view) || "city";
     const name = ctx.scene || sceneName(ctx.stage, ctx);
     return svg("0 0 " + W + " " + H, SCENES[name](ctx), "scene scene-" + name, ctx.aria);
   }
@@ -560,6 +573,16 @@
       return '<defs>' + glow(gid, "lamp") + "</defs>" + R(0, 0, EW, EH, "dark2") + R(250, 50, 300, 128, "cubicle", 2) + R(250, 50, 8, 128, "cubicle2") + R(542, 50, 8, 128, "cubicle2") + R(258, 130, 284, 8, "wood") +
         O(300, 120, 50, null, null, 0, "fill:url(#" + gid + ")") + R(280, 114, 34, 6, "lamp", 2) + R(0, EF, EW, EH - EF, "nightfloor");
     },
+    // Region backgrounds: the coast (Busan, Pohang, Haenam) and the countryside (rural counties).
+    beach(ctx) {
+      return outdoorSky(EW, EH, { season: ctx.season, seed: 77 }) + R(0, 120, EW, 50, "sea") + P("M0 130 q40 -5 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0", null, "sea2", 2) +
+        R(0, 166, EW, EH - 166, "path") + O(520, 60, 18, "sun");
+    },
+    farm(ctx) {
+      let s = outdoorSky(EW, EH, { season: ctx.season, seed: 78 }) + P("M0 140 Q150 80 300 130 T600 110 L600 220 L0 220 Z", "hill") + R(0, 160, EW, 60, "grass");
+      for (let i = 0; i < 6; i++) s += L(0, 168 + i * 9, EW, 168 + i * 9, "hill", 2);
+      return s + tree(60, 162, ctx.season, 0.9) + tree(540, 160, ctx.season, 1);
+    },
     bath() {
       let s = R(0, 0, EW, EH, "tile");
       for (let x = 0; x < EW; x += 30) s += L(x, 0, x, EH, "tile2", 1);
@@ -579,6 +602,10 @@
   // Foreground pieces per event. Each returns SVG drawn over the backdrop; v is the outcome suffix
   // (r0a, r1 ...) when the art illustrates a result rather than the question.
   const FX = {
+    cracks: () => A("shake", P("M380 20 L392 50 L380 70 L398 100 L386 128", null, "ink", 2.5) + P("M120 30 L132 56 L122 76 L136 104", null, "ink", 2)) +
+      R(330, 150, 10, 8, "stone", 1) + R(352, 160, 8, 6, "stone", 1) + R(110, 156, 9, 7, "stone", 1),
+    bus: () => G(420, 150, R(-60, -34, 140, 46, "c3", 8) + R(-52, -28, 30, 16, "screen", 2) + R(-16, -28, 30, 16, "screen", 2) + R(20, -28, 30, 16, "screen", 2) +
+      R(56, -28, 18, 30, "screen", 2) + O(-34, 14, 9, "dark") + O(54, 14, 9, "dark")),
     finish: () => L(470, 120, 470, 204, "metal", 4) + L(580, 120, 580, 204, "metal", 4) + A("sway", P("M470 140 Q525 152 580 140", null, "c1", 4)) + bunting(20, 660, 26, 2) +
       G(300, EFEET, avatar({ age: "child", outfit: "kid", look: { hair: 3, shirt: 1 }, mood: "happy" }), 0.85),
     dragon: () => G(420, 90, A("drift", P("M0 0 q20 -30 50 -12 q16 -22 30 0 q-10 2 -14 10 q22 6 30 26 q-26 -8 -40 0 q-20 14 -50 -6 q-12 10 -24 4 q10 -8 18 -22 Z", "c4", null, 0, "opacity:0.85") + O(60, -6, 2.5, "gold"))) +
@@ -674,6 +701,13 @@
     insight: { bg: "room", fx: "bulb", mood: "happy", x: 300, icon: "💡" },
     eve: { bg: "room", night: true, fx: "examEve", mood: "stressed", icon: "🌙" },
     lunch: { bg: "kitchen", fx: "lunchbox", mood: "ok", icon: "🍱" },
+    quake: { bg: "class", fx: "cracks", mood: "stressed", icon: "⚠️" },
+    beach: { bg: "beach", mood: "happy", pose: "wave", icon: "🏖️" },
+    country: { bg: "farm", mood: "happy", icon: "🌾" },
+    ahead: { bg: "class", fx: "mathsyms", mood: "stressed", icon: "📐", res: { r1: { mood: "ok" } } },
+    commute: { bg: "farm", fx: "bus", mood: "tired", x: 220, icon: "🚌", res: { r1: { mood: "ok" } } },
+    "quota-news": { bg: "hospital", fx: "doctor", mood: "happy", icon: "📰" },
+    "med-move": { bg: "city", fx: "sparkles", icon: "📦", res: { r1: { mood: "ok" } } },
   };
   const KEYWORDS = [
     [/bull|tease|gossip|cyber|threat|victim|gang/, "bully"],
@@ -693,6 +727,7 @@
   }
   // ctx: { id, variant, stage, look, mood, season }
   function eventArt(ctx) {
+    VIEW = (ctx && ctx.view) || "city";
     const spec = specFor(ctx.id, ctx.stage);
     const res = (spec.res && ctx.variant && (spec.res[ctx.variant] || spec.res[ctx.variant.slice(0, 2)])) || {};
     const c = Object.assign({}, ctx);
@@ -759,6 +794,7 @@
     },
   };
   function screenArt(name, ctx) {
+    VIEW = (ctx && ctx.view) || "city";
     if (name === "offers" || name === "ending") return svg("0 0 " + W + " " + H, SCENES[ctx.label ? "gate" : name === "ending" ? "road" : "home"](ctx), "event-art wide");
     return svg("0 0 " + EW + " " + EH, SCREENS[name](ctx), "event-art");
   }

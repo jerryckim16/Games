@@ -16,7 +16,7 @@
     sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
-    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"),
+    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"),
     chart: $("chart"), legend: $("legend"), log: $("log"), history: $("history"), newLifeBtn: $("newLifeBtn"),
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
@@ -205,6 +205,7 @@
       look: Art.lookFor(g.seed, g.sex),
       mood: Art.moodOf(g),
       family: g.family,
+      view: g.regionInfo().view || "city",
     }, extra || {});
   }
   let sceneKey = "";
@@ -245,7 +246,7 @@
     els.sAttempt.textContent = school ? L.schoolGrade(g.grade) : L.att(g.attempt);
     els.sStatus.textContent = L.status(g.status);
     els.sAge.textContent = L.age(g.age);
-    els.sName.textContent = g.name + (g.track ? " · " + L.track(g.track) : "");
+    els.sName.textContent = g.name + " · " + L.regionShort(g.regionInfo().id) + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
     els.sAllowance.textContent = T("stat.allowance", { a: L.wonShort(g.allowance()) });
   }
@@ -322,12 +323,18 @@
     els.blocksLeft.classList.toggle("hidden", done);
 
     const fixed = g.methodFixed();
+    // After a move to the countryside there may be no tutor to keep: fall back to online lectures.
+    if (!fixed && !g.methodAvailable(method)) method = "online";
     els.method.innerHTML = Object.keys(METHODS).map((id) => {
       const on = (fixed || method) === id;
-      return '<button type="button" data-v="' + id + '" class="' + (on ? "on" : "") + '"' + (fixed || done ? " disabled" : "") + '><span aria-hidden="true">' + METHOD_ICON[id] + " </span>" + esc(L.method(id)) + "</button>";
+      const off = fixed || done || !g.methodAvailable(id);
+      return '<button type="button" data-v="' + id + '" class="' + (on ? "on" : "") + '"' + (off ? " disabled" : "") + (g.methodAvailable(id) ? "" : ' title="' + esc(T("plan.noTutor")) + '"') +
+        '><span aria-hidden="true">' + METHOD_ICON[id] + " </span>" + esc(L.method(id)) + "</button>";
     }).join("");
-    const m = METHODS[fixed || method];
-    els.methodNote.textContent = fixed ? T("plan.methodFixed", { x: m.mult }) : T("plan.methodNote", { x: m.mult, cost: m.cost, sens: m.sens });
+    // Speed and price depend on where you live (Gangnam's academies are better and dearer).
+    const mid = fixed || method, m = METHODS[mid], mx = Math.round(g.methodMult(mid) * 100) / 100;
+    els.methodNote.textContent = (fixed ? T("plan.methodFixed", { x: mx }) : T("plan.methodNote", { x: mx, cost: g.methodCost(mid), sens: m.sens })) +
+      (g.methodAvailable("tutor") ? "" : " · " + T("plan.noTutor"));
 
     // Activities are cards: tap the card (or +) to give it a block, − to take one back.
     const acts = g.activities();
@@ -371,6 +378,7 @@
     els.nextBtn.textContent = !g.inSchool() && g.month === 11 ? T("plan.sit") : T("plan.next", { st: g.status });
     els.repeatBtn.disabled = done || !g.lastPlan;
     els.clearBtn.disabled = done || !used;
+    els.moveBtn.classList.toggle("hidden", done);
   }
 
   function changePlan(id, d) {
@@ -445,6 +453,35 @@
     }
   }
   let holdTimer = 0;
+  // Moving: every region with what it changes, why you can't go there, and the quotas it would bring.
+  els.moveBtn.addEventListener("click", () => {
+    const g = game;
+    if (!g || g.ending || g.queue.length) return;
+    const pick = { id: null };
+    const rows = S.REGIONS.map((r) => {
+      const k = S.REGION_KINDS[r.kind];
+      const here = r.id === g.region;
+      const why = here ? null : g.moveBlock(r.id);
+      const fx = T("move.fx", { hag: k.hagwon, tut: k.tutor, price: k.price, stress: k.stress });
+      // The quotas need middle and high school in the region, so moving after grade 7 is too late.
+      const inTime = g.inSchool() && g.grade <= 7;
+      const quota = r.capital ? "" : !inTime ? T("move.late") : r.kind === "rural" ? T("move.rural") : T("move.local", { nat: r.nat });
+      // A short status pill on the right; the reason goes under the name so phones keep the name readable.
+      const note = here ? T("move.here") : why ? T("move." + why) : "";
+      const tag = here ? '<span class="chance ch-safe">' + esc(T("move.hereTag")) + "</span>" : why ? '<span class="chance ch-long">' + esc(T("move.noTag")) + "</span>" : "<span></span>";
+      return '<label class="uni region' + (here || why ? " off" : "") + '"><input type="radio" name="moveTo" value="' + r.id + '"' + (here || why ? " disabled" : "") + ">" +
+        '<span class="nm">' + esc(L.region(r.id)) + "<small>" + esc(L.regionKind(r.kind) + " · " + fx) + "</small>" + (quota ? "<small>" + esc(quota) + "</small>" : "") +
+        (note ? "<small" + (why ? ' class="why"' : "") + ">" + esc(note) + "</small>" : "") + "</span>" + tag + "</label>";
+    }).join("");
+    openModal(T("move.title"), "<p>" + esc(T("move.text")) + '</p><div class="unis">' + rows + "</div>", [
+      { label: T("move.stay"), run: () => render() },
+      { label: T("move.go"), primary: true, run: () => { if (!pick.id) return; g.move(pick.id); save(); render(); } },
+    ]);
+    const go = els.modalButtons.querySelector("button.primary");
+    go.disabled = true;
+    for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.addEventListener("change", () => { pick.id = inp.value; go.disabled = false; });
+  });
+
   // Confirmation lives in the page's own modal: embedded viewers block confirm() dialogs.
   function startOver() { store.del(SAVE_KEY); game = null; showSetup(); }
   els.newLifeBtn.addEventListener("click", () => {
@@ -638,7 +675,7 @@
   function showBirth() {
     const g = game;
     openModal(T("birth.title"),
-      "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex })) + "</p>" +
+      "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region })) + "</p>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",
       [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }],
       Art.screenArt("birth", artCtx({ stage: "elem" })));
@@ -788,7 +825,8 @@
       "<p>" + esc(T("apply.text", { s: top.score.toFixed(1) })) + "</p>" +
       '<div class="unis">' + opts.map((o) =>
         '<label class="uni' + (o.blocked ? " off" : "") + '"><input type="checkbox" value="' + o.id + '"' + (o.blocked ? " disabled" : "") + '><span class="nm">' + esc(L.uni(o.id)) +
-        "<small>" + esc(o.blocked ? T("apply.sciOnly") : T("apply.chance", { p: Math.round(o.p * 100) })) + '</small></span><span class="chance ' + chanceClass(o.p) + '">' + esc(L.chance(o.label)) + "</span></label>").join("") +
+        "<small>" + esc(o.blocked ? T("apply.sciOnly") : T("apply.chance", { p: Math.round(o.p * 100) }) + (o.quota ? " · " + T("apply.quota." + o.quota) : "")) +
+        '</small></span><span class="chance ' + chanceClass(o.p) + '">' + esc(L.chance(o.label)) + "</span></label>").join("") +
       "</div>";
     openModal(T("apply.title"), body, [
       { label: T("apply.submit", { n: 0 }), primary: true, run: () => {

@@ -48,6 +48,16 @@
         gachon: "Gachon University", regional: "Regional private university", college: "Junior college",
       },
       chance: { safe: "safe", match: "match", reach: "reach", long: "long shot" },
+      region: {
+        gangnam: "Gangnam, Seoul (Daechi-dong)", nowon: "Nowon, Seoul", suwon: "Suwon, Gyeonggi", busan: "Busan", daegu: "Daegu",
+        gwangju: "Gwangju", daejeon: "Daejeon", pohang: "Pohang, North Gyeongsang", jeonju: "Jeonju, North Jeolla",
+        cheongju: "Cheongju, North Chungcheong", pyeongchang: "Pyeongchang County, Gangwon", haenam: "Haenam County, South Jeolla",
+      },
+      regionShort: {
+        gangnam: "Gangnam", nowon: "Nowon", suwon: "Suwon", busan: "Busan", daegu: "Daegu", gwangju: "Gwangju", daejeon: "Daejeon",
+        pohang: "Pohang", jeonju: "Jeonju", cheongju: "Cheongju", pyeongchang: "Pyeongchang", haenam: "Haenam",
+      },
+      regionKind: { gangnam: "Seoul's cram-school capital", seoul: "Seoul", capital: "Capital-region city", metro: "Big city", city: "Mid-sized city", rural: "Rural county" },
       months: ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
       monthsLong: ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
       mock: { 3: "March mock exam", 6: "June mock exam", 9: "September mock exam", 11: "November mock exam" },
@@ -88,6 +98,16 @@
         regional: "지방 사립대", college: "전문대",
       },
       chance: { safe: "안정", match: "적정", reach: "소신", long: "상향" },
+      region: {
+        gangnam: "서울 강남구(대치동)", nowon: "서울 노원구", suwon: "경기 수원시", busan: "부산", daegu: "대구",
+        gwangju: "광주", daejeon: "대전", pohang: "경북 포항시", jeonju: "전북 전주시",
+        cheongju: "충북 청주시", pyeongchang: "강원 평창군", haenam: "전남 해남군",
+      },
+      regionShort: {
+        gangnam: "강남", nowon: "노원", suwon: "수원", busan: "부산", daegu: "대구", gwangju: "광주", daejeon: "대전",
+        pohang: "포항", jeonju: "전주", cheongju: "청주", pyeongchang: "평창", haenam: "해남",
+      },
+      regionKind: { gangnam: "서울 학원 1번지", seoul: "서울", capital: "수도권 도시", metro: "광역시", city: "지방 중소도시", rural: "농어촌(군 지역)" },
       months: ["", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
       monthsLong: ["", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
       mock: { 3: "3월 학력평가", 6: "6월 모의평가", 9: "9월 모의평가", 11: "11월 학력평가" },
@@ -126,6 +146,14 @@
     return /[136780lmnr]$/i.test(word) || /Ⅰ$/.test(word);
   }
   const josa = (word, withB, without) => word + (hasBatchim(word) ? withB : without);
+  // 으로/로: words ending in ㄹ take 로 too (서울로, 포항으로).
+  function ro(word) {
+    // A parenthetical ("강남구(대치동)") doesn't change the particle: it follows the word before it.
+    const base = word.replace(/\([^)]*\)$/, "");
+    const c = base.charCodeAt(base.length - 1);
+    if (c >= 0xac00 && c <= 0xd7a3) { const j = (c - 0xac00) % 28; return word + (j === 0 || j === 8 ? "로" : "으로"); }
+    return word + "로";
+  }
   const ordinal = (n) => n + (n % 10 === 1 && n % 100 !== 11 ? "st" : n % 10 === 2 && n % 100 !== 12 ? "nd" : n % 10 === 3 && n % 100 !== 13 ? "rd" : "th");
 
   // ---------- messages ----------
@@ -207,9 +235,25 @@
       "newLife.title": "Start a new life?",
       "newLife.text": "This life and its save will be gone. Your hall of fame stays.",
       "newLife.keep": "Keep playing", "newLife.go": "Start over",
+      "move.btn": "Move house",
+      "move.title": "Move to another region",
+      "move.text": "A new home means a new school: a block of packing next turn, some stress, and the risk of being the new kid. You can move once a year.",
+      "move.here": "You live here",
+      "move.hereTag": "Home",
+      "move.noTag": "Can't move",
+      "move.go": "Move here",
+      "move.stay": "Stay",
+      "move.cost": "Your family can't afford housing here.",
+      "move.cooldown": "You moved less than a year ago.",
+      "move.fx": (p) => "Cram school ×" + p.hag.toFixed(2) + (p.tut ? " · tutors ×" + p.tut.toFixed(2) : " · no private tutors") + " · prices ×" + p.price.toFixed(2) +
+        (p.stress > 0 ? " · more pressure" : p.stress < 0 ? " · a calmer life" : ""),
+      "move.local": (p, h) => "Regional quota for medical school" + (p.nat ? " and " + h.uni(p.nat) : "") + " if you do middle and high school here.",
+      "move.rural": "Rural-student quota at most universities if you do middle and high school here.",
+      "move.late": "Too late for the local quotas here: they need middle and high school in the region.",
+      "plan.noTutor": "There are no private tutors to hire out here.",
 
       // Log lines.
-      "log.born": (p, h) => "Born " + (p.sex ? (p.sex === "f" ? "a girl " : "a boy ") : "") + "into a " + h.familyAdj(p.fam) + " family (household income about " + h.wonShort(p.inc * 10000) + " a month). March " + p.y + ": you start elementary school.",
+      "log.born": (p, h) => "Born " + (p.sex ? (p.sex === "f" ? "a girl " : "a boy ") : "") + "into a " + h.familyAdj(p.fam) + " family" + (p.reg ? " in " + h.regionShort(p.reg) : "") + " (household income about " + h.wonShort(p.inc * 10000) + " a month). March " + p.y + ": you start elementary school.",
       "log.grade": (p) => "March " + p.y + ": you start grade " + p.g + ".",
       "log.stage": (p) => "March " + p.y + ": " + ({ mid: "you start middle school.", high: "you start high school.", hs3: "your final year of high school. The Suneung is in November." })[p.st],
       "log.teacher": (p) => "Teacher's note: " + ["", "\"Needs more support at home.\"", "\"Steady, careful work.\"", "\"Outstanding. One of the best in the class.\""][p.lvl],
@@ -232,6 +276,7 @@
       "log.apply": (p, h) => "Applications: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "admitted ✓" : "rejected ✗")).join(", "),
       "log.enroll": (p, h) => "March " + p.y + ": you enroll at " + h.uni(p.uni) + ". Exam life is over.",
       "log.quit": "You close the workbooks for good.",
+      "log.move": (p, h) => "The family moves from " + h.regionShort(p.from) + " to " + h.region(p.to) + ". New home, new school.",
       "log.dropUni": (p, h) => "You leave " + h.uni(p.uni) + " to retake the exam full time.",
       "offers.leave": (p, h) => " You'll leave " + h.uni(p.uni) + ".",
       "log.halfpay": "Your parents sit you down: from now on, they can only pay half.",
@@ -262,6 +307,22 @@
       "ev.crush.r0a": "You quiz each other on vocabulary at the café. Weirdly productive.",
       "ev.crush.r0b": "Long phone calls every night. Your past-exam workbook gathers dust.",
       "ev.crush.r1": "\"After the exam\" becomes your new favorite phrase.",
+      "ev.quake.r": "An earthquake shakes Pohang. Cracks run up the school walls, and classes move into the gym for weeks (−1 block next turn).",
+      "ev.beach.r": "A summer evening at the beach with friends. The sea wind blows the stress away.",
+      "ev.country.r": "A weekend helping with the harvest and walking the hills. Fresh air, clear head.",
+      "ev.ahead.text": "Your classmates' academy is already teaching high-school math. Everyone here studies years ahead of school.",
+      "ev.ahead.c": ["Join the advanced class", "Keep your own pace"],
+      "ev.ahead.r0": "You keep up, barely. The math sticks, and so does the pressure.",
+      "ev.ahead.r1": "You stay on your own schedule. Some days that feels brave, some days reckless.",
+      "ev.commute.text": "The nearest real cram school is an hour away by bus.",
+      "ev.commute.c": ["Make the trip twice a week", "Stick to online lectures at home"],
+      "ev.commute.r0": "Long rides, cold bus stops, but the lessons help.",
+      "ev.commute.r1": "You stay home. It's easier, and a little lonely.",
+      "ev.quota-news.r": "In the news: regional medical schools must pick more local students. Doing middle and high school here could count.",
+      "ev.med-move.text": "Your parents read that regional medical schools save seats for local students. They're thinking of moving to Daegu before middle school.",
+      "ev.med-move.c": ["Move to Daegu", "Stay where we are"],
+      "ev.med-move.r0": "Boxes, a new apartment, a new school. Your parents say it's for your future.",
+      "ev.med-move.r1": "You stay. Your parents still mention it at dinner.",
       "ev.rival.r": "Your rival posted their exam scores in the class group chat: perfect marks. You're fired up.",
       "ev.sportsday.r": "Sports day: you run the last leg of the class relay and win. Your mom films the whole thing.",
       "ev.bookworm.r": "You discover a fantasy series and read all seven books in a month.",
@@ -313,6 +374,7 @@
         class: "New school year, new classes: the kids who bullied you end up in another class, and it finally stops.",
         stage: "New school, fresh start. The bullying is behind you.",
         grad: "You leave high school, and the bullying, behind.",
+        move: "The move means a new school, and the bullying stays behind.",
       })[p.why],
       "log.bullyStays": "A new school year, but the same faces. The bullying follows you into grade {g}.",
       "cond.bully": (p) => "Being bullied (" + ["", "mild", "serious", "severe"][p.lv] + "): study efficiency −" + p.pct + "%. Every turn it raises stress and drains motivation and health" +
@@ -375,7 +437,7 @@
       "report.subject": (p, h) => h.sub(p.s) + (p.el ? " (" + p.el + ")" : ""),
       "mock.title": "{name} results",
       "birth.title": "You're born!",
-      "birth.text": (p, h) => p.name + " is born" + (p.sex ? ", a baby " + (p.sex === "f" ? "girl" : "boy") + "," : "") + " into a " + h.familyAdj(p.fam) + " family. Household income is about " + h.wonShort(p.inc * 10000) +
+      "birth.text": (p, h) => p.name + " is born" + (p.sex ? ", a baby " + (p.sex === "f" ? "girl" : "boy") + "," : "") + " into a " + h.familyAdj(p.fam) + " family" + (p.reg ? " in " + h.region(p.reg) : "") + ". Household income is about " + h.wonShort(p.inc * 10000) +
         " a month, in " + h.fifth(p.fam) + " of Korean households, and your parents can spend about " + h.won(p.a) + " a month on your education.",
       "birth.talent": "Your talents at age 6",
       "birth.note": "Stars show aptitude: how fast you learn a subject. Ability is measured on the Suneung scale, where 50 is the average test taker, so every child starts low and climbs. What you learn stays learned.",
@@ -415,6 +477,8 @@
       "apply.text": "Your admission score is {s}. Pick up to three schools, one per application group (A, B and C). Chances are rough estimates from recent years.",
       "apply.chance": "{p}% chance",
       "apply.sciOnly": "Sciences track only",
+      "apply.quota.local": "local quota",
+      "apply.quota.rural": "rural quota",
       "apply.submit": "Submit {n} of 3 applications",
 
       "offers.title": "Admission results",
@@ -545,8 +609,24 @@
       "newLife.title": "새 인생을 시작할까요?",
       "newLife.text": "지금의 인생과 저장 기록이 사라집니다. 명예의 전당은 남습니다.",
       "newLife.keep": "계속하기", "newLife.go": "새로 시작",
+      "move.btn": "이사하기",
+      "move.title": "다른 지역으로 이사",
+      "move.text": "새 집은 곧 새 학교입니다. 다음 턴에 이삿짐 싸느라 1칸이 줄고, 스트레스가 오르고, 전학생이 되는 위험도 있습니다. 이사는 1년에 한 번만 할 수 있습니다.",
+      "move.here": "현재 사는 곳",
+      "move.hereTag": "현재 거주",
+      "move.noTag": "불가",
+      "move.go": "이사",
+      "move.stay": "그대로 있기",
+      "move.cost": "집값이 너무 비싸 이사할 수 없습니다.",
+      "move.cooldown": "이사한 지 1년이 지나지 않았습니다.",
+      "move.fx": (p) => "학원 ×" + p.hag.toFixed(2) + (p.tut ? " · 과외 ×" + p.tut.toFixed(2) : " · 과외 선생님 없음") + " · 물가 ×" + p.price.toFixed(2) +
+        (p.stress > 0 ? " · 경쟁 압박 큼" : p.stress < 0 ? " · 여유로운 생활" : ""),
+      "move.local": (p, h) => "여기서 중·고등학교를 다니면 의대" + (p.nat ? "와 " + h.uni(p.nat) : "") + " 지역인재 전형에 지원할 수 있습니다.",
+      "move.rural": "여기서 중·고등학교를 다니면 대부분 대학의 농어촌 전형에 지원할 수 있습니다.",
+      "move.late": "이곳의 지역 전형을 받기엔 늦었습니다. 중·고등학교를 모두 이 지역에서 다녀야 합니다.",
+      "plan.noTutor": "이 지역에서는 과외 선생님을 구할 수 없습니다.",
 
-      "log.born": (p, h) => h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + p.y + "년 3월, 초등학교에 입학했다.",
+      "log.born": (p, h) => (p.reg ? h.regionShort(p.reg) + "의 " : "") + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + p.y + "년 3월, 초등학교에 입학했다.",
       "log.grade": (p, h) => p.y + "년 3월, " + josa(h.schoolGrade(p.g), "이", "가") + " 되었다.",
       "log.stage": (p) => p.y + "년 3월, " + ({ mid: "중학교에 입학했다.", high: "고등학교에 입학했다.", hs3: "고3이 되었다. 수능은 11월이다." })[p.st],
       "log.teacher": (p) => "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl],
@@ -569,6 +649,7 @@
       "log.apply": (p, h) => "정시 지원: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "합격 ✓" : "불합격 ✗")).join(", "),
       "log.enroll": (p, h) => p.y + "년 3월, " + josa(h.uni(p.uni), "에", "에") + " 입학했다. 수험 생활 끝.",
       "log.quit": "문제집을 영영 덮었다.",
+      "log.move": (p, h) => h.regionShort(p.from) + "에서 " + ro(h.region(p.to)) + " 이사했다. 새 집, 새 학교.",
       "log.dropUni": (p, h) => josa(h.uni(p.uni), "을", "를") + " 그만두고 수능에 전념하기로 했다.",
       "offers.leave": (p, h) => " " + josa(h.uni(p.uni), "은", "는") + " 그만둡니다.",
       "log.halfpay": "부모님이 조용히 말씀하신다. 이제부터는 절반만 지원해 줄 수 있다고.",
@@ -598,6 +679,22 @@
       "ev.crush.r0a": "카페에서 서로 영단어 시험을 내 준다. 의외로 효율적이다.",
       "ev.crush.r0b": "매일 밤 긴 통화. 기출 문제집에는 먼지가 쌓인다.",
       "ev.crush.r1": "\"수능 끝나고\"가 요즘 제일 좋아하는 말이 됐다.",
+      "ev.quake.r": "포항에 지진이 났다. 학교 벽에 금이 가서 몇 주 동안 체육관에서 수업을 들었다(다음 턴 1칸 감소).",
+      "ev.beach.r": "친구들과 여름 저녁 바닷가에 갔다. 바닷바람에 스트레스가 날아간다.",
+      "ev.country.r": "주말에 추수를 돕고 뒷산을 걸었다. 공기가 맑으니 머리도 맑다.",
+      "ev.ahead.text": "반 친구들 학원은 벌써 고등학교 수학을 가르친다. 여기선 다들 몇 년씩 선행학습을 한다.",
+      "ev.ahead.c": ["선행반에 들어간다", "내 속도대로 간다"],
+      "ev.ahead.r0": "겨우 따라간다. 수학은 남지만 부담도 남는다.",
+      "ev.ahead.r1": "내 속도를 지키기로 했다. 어떤 날은 용감하게, 어떤 날은 무모하게 느껴진다.",
+      "ev.commute.text": "제대로 된 학원은 버스로 한 시간 거리에 있다.",
+      "ev.commute.c": ["일주일에 두 번 다닌다", "집에서 인강으로 버틴다"],
+      "ev.commute.r0": "긴 버스 길에 추운 정류장이지만, 수업은 도움이 된다.",
+      "ev.commute.r1": "집에 있기로 했다. 편하지만 조금 외롭다.",
+      "ev.quota-news.r": "뉴스: 지방 의대가 지역인재를 더 많이 뽑아야 한다고 한다. 이 지역에서 중·고등학교를 다니면 해당될 수 있다.",
+      "ev.med-move.text": "지방 의대가 지역 학생을 따로 뽑는다는 기사를 본 부모님이 중학교 입학 전에 대구로 이사할까 고민하신다.",
+      "ev.med-move.c": ["대구로 이사한다", "지금 사는 곳에 남는다"],
+      "ev.med-move.r0": "이삿짐, 새 아파트, 새 학교. 부모님은 다 네 미래를 위해서라고 하신다.",
+      "ev.med-move.r1": "남기로 했다. 부모님은 아직도 저녁마다 그 얘기를 하신다.",
       "ev.rival.r": "라이벌이 반 단톡방에 시험 점수를 올렸다. 전 과목 만점. 승부욕이 불탄다.",
       "ev.sportsday.r": "운동회 날, 반 대표 계주 마지막 주자로 뛰어 1등을 했다. 엄마가 처음부터 끝까지 영상으로 찍었다.",
       "ev.bookworm.r": "판타지 시리즈에 빠져 한 달 만에 일곱 권을 다 읽었다.",
@@ -648,6 +745,7 @@
         class: "새 학년, 새 반. 괴롭히던 아이들과 다른 반이 되면서 드디어 끝났다.",
         stage: "새 학교, 새 출발. 괴롭힘은 이제 지난 일이다.",
         grad: "고등학교를 졸업하면서 괴롭힘도 뒤에 두고 왔다.",
+        move: "이사하면서 학교를 옮겼고, 괴롭힘도 거기서 끝났다.",
       })[p.why],
       "log.bullyStays": (p, h) => "새 학년이 됐지만 얼굴들은 그대로다. " + josa(h.schoolGrade(p.g), "이", "가") + " 되어서도 괴롭힘이 계속된다.",
       "cond.bully": (p) => "학교폭력 피해 중(" + ["", "가벼움", "심각", "매우 심각"][p.lv] + "): 공부 효율 −" + p.pct + "%. 매 턴 스트레스가 쌓이고 의지와 체력이 떨어집니다" +
@@ -709,7 +807,7 @@
       "report.subject": (p, h) => h.sub(p.s) + (p.el ? " (" + p.el + ")" : ""),
       "mock.title": "{name} 결과",
       "birth.title": "태어났습니다!",
-      "birth.text": (p, h) => p.name + "은(는) " + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
+      "birth.text": (p, h) => p.name + "은(는) " + (p.reg ? h.region(p.reg) + "의 " : "") + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
         "으로 한국 가구 중 " + h.fifth(p.fam) + "에 속하고, 부모님은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
       "birth.talent": "만 6세 때의 재능",
       "birth.note": "별은 적성, 즉 그 과목을 얼마나 빨리 익히는지를 뜻합니다. 실력은 수능 기준이라 50이 수능 응시자 평균입니다. 그래서 모든 아이는 낮은 곳에서 출발해 올라갑니다. 한 번 익힌 실력은 줄어들지 않습니다.",
@@ -749,6 +847,8 @@
       "apply.text": "정시 환산 점수는 {s}점입니다. 가·나·다군에서 한 곳씩, 최대 세 곳을 고르세요. 합격 가능성은 최근 입시를 바탕으로 한 대략적인 추정입니다.",
       "apply.chance": "합격 가능성 {p}%",
       "apply.sciOnly": "이과만 지원 가능",
+      "apply.quota.local": "지역인재",
+      "apply.quota.rural": "농어촌 전형",
       "apply.submit": "원서 제출 ({n}/3)",
 
       "offers.title": "합격자 발표",
@@ -861,6 +961,9 @@
       },
       track: (id) => D.track[id],
       uni: (id) => D.uni[id] || id,
+      region: (id) => D.region[id] || id,
+      regionShort: (id) => D.regionShort[id] || id,
+      regionKind: (k) => D.regionKind[k] || k,
       chance: (k) => D.chance[k],
       month: (m) => D.months[m],
       monthLong: (m) => D.monthsLong[m],
