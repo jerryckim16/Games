@@ -57,3 +57,11 @@ To update it after a change, bundle the files into one HTML file:
 - `engine.js`, `planners.js` and `app.js` inline, in that order.
 
 Then republish to the same URL.
+
+## suneung (Suneung Simulator)
+
+A month-by-month life-sim of the Korean 수능. See `suneung/README.md` for features, the exam model and balance numbers.
+
+- `engine.js`: no DOM, so it runs in Node. `Game` keeps a queue of screens (events, mocks, the exam, applications, offers); the app shows `queue[0]` and answers it with `choose` / `dismiss` / `apply` / `decide`.
+- The seeded RNG state lives in the game object, so saves (localStorage JSON) resume exactly. Exam papers and the cohort depend only on the seed and the sitting, never on the player's choices.
+- After changing the exam or learning model, run `node suneung/sim.js --seeds 80`: calibration must stay inside the printed real-world targets, and the README tables must be regenerated from its output.
