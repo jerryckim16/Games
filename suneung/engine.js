@@ -776,7 +776,14 @@
   // SCHOOL_GAIN scales study during grades 1–11, so that childhood habits move you about as far as a
   // year of 고3 studying does at the top end. Both are tuned with sim.js.
   const START_GAP = 2.4;
-  const SCHOOL_GAIN = 0.5;
+  const SCHOOL_GAIN = 0.32;
+  // Lessons: what a year of classes adds to a subject on its own (before aptitude, how far behind
+  // the class you are, attention and headroom). See advance(). Tuned with sim.js.
+  const CLASS_YEAR = 0.4;
+  const CLASS_FLOOR = 0.4;
+  // How far a typical child climbs per school year (sim.js's balanced bot, lessons included): the line
+  // class ranks, the GED and how far behind the class you are are measured against.
+  const TYPICAL_CLIMB = 0.28;
 
   // ---------- the game ----------
   class Game {
@@ -879,10 +886,9 @@
     inSchool() { return !!STATUSES[this.status].school; }
     turnMonths() { return STATUSES[this.status].months; }
     blocks() { return Math.max(1, this.baseBlocks() - this.lostBlocks); }
-    // Out of school, the hours that went to classes are yours: two more blocks a turn in grades 7–11, and
-    // grade 12 runs on a retaker's month.
+    // Out of school, the hours that went to classes are yours: two more blocks a turn in grades 7–11. Grade
+    // 12 gains nothing, since most of a 고3's school day is self-study already.
     baseBlocks() {
-      if (this.dropout != null && this.status === "hs3") return STATUSES.selfstudy.blocks(this.month);
       return STATUSES[this.status].blocks(this.month) + (this.dropoutActive() ? DROPOUT_BLOCKS : 0);
     }
 
@@ -1059,6 +1065,21 @@
         const share = { kor: 0.6, hist: 0.25, inq1: 0.25 };
         for (const s in share) this.skills[s] += reading * 0.24 * share[s] * this.aptitude[s] * eff * headroom(this.skills[s]) * k;
       }
+      // Lessons: being at school teaches every subject a little each turn, whatever you do with your
+      // free blocks. Classes are pitched at the grade, so they help most when you're behind the class
+      // and little once you're well ahead; how much sticks depends on attention (motivation, health,
+      // bullying). Dropouts miss all of it.
+      let lessons = 0;
+      if (this.inClass()) {
+        const typical = this.typicalLevel();
+        const attend = (0.6 + 0.4 * this.motivation / 100) * healthFactor * (bp ? bp.eff : 1);
+        for (const s of SUBJECTS) {
+          const behind = clamp(0.5 + 0.5 * (typical - this.skills[s]), CLASS_FLOOR, 1);
+          const g = CLASS_YEAR * (months / 12) * SUBJECT_INFO[s].rate * this.aptitude[s] * behind * attend * headroom(this.skills[s]);
+          this.skills[s] += g;
+          lessons += g;
+        }
+      }
       const mock = plan.mock || 0;
       if (mock) {
         this.practice = clamp(this.practice + 0.09 * mock * (1 - this.practice), 0, 1);
@@ -1105,7 +1126,7 @@
         const dd = this.skills[s] - before[s];
         if (Math.abs(dd) >= 0.004) deltas[s] = Math.round(dd * 16.67 * 10) / 10;
       }
-      this.addLog("log.month", { m: this.month, plan: Object.assign({}, plan), cost, d: deltas }, "month");
+      this.addLog("log.month", { m: this.month, plan: Object.assign({}, plan), cost, d: deltas, cls: Math.round(lessons * 16.67 * 10) / 10 }, "month");
       if (this.status === "elem") this.addLog("log.teacher", { lvl: this.classLevel() }, "");
       if (this.status === "mid" && !drop) this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
@@ -1143,13 +1164,15 @@
     }
 
     // Average standing over the main subjects, as a share of the year group below you. A typical child
-    // climbs about 0.22 a school year from −START_GAP at grade 1 to the test-taker average by grade 12
-    // (measured with sim.js's balanced bot), so classmates are compared against that line.
+    // climbs TYPICAL_CLIMB a school year from −START_GAP at grade 1, so classmates are compared against
+    // that line.
     standing() {
       const avg = (this.skills.kor + this.skills.math + this.skills.eng + this.skills.inq1 + this.skills.inq2) / 5;
-      const typical = -START_GAP + 0.22 * (this.grade - 1);
-      return phi((avg - typical) / 0.8);
+      return phi((avg - this.typicalLevel()) / 0.8);
     }
+    typicalLevel() { return -START_GAP + TYPICAL_CLIMB * (this.grade - 1); }
+    // Sitting in classes this turn: school years and grade 12, unless you've left school.
+    inClass() { return (this.inSchool() || this.status === "hs3") && this.dropout == null; }
     classRank() { return clamp(Math.round((1 - this.standing()) * 30) + 1, 1, 30); }
     classLevel() { const s = this.standing(); return s > 0.8 ? 3 : s > 0.4 ? 2 : 1; }
 

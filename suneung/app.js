@@ -16,7 +16,7 @@
     sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
-    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"),
+    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"),
     chart: $("chart"), legend: $("legend"), log: $("log"), history: $("history"), newLifeBtn: $("newLifeBtn"),
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
@@ -385,6 +385,9 @@
     els.repeatBtn.disabled = done || !g.lastPlan;
     els.clearBtn.disabled = done || !used;
     els.moveBtn.classList.toggle("hidden", done);
+    // School lessons add to every subject on their own; say so, and say when they're gone.
+    els.lessonNote.textContent = done ? "" : g.inClass() ? T("plan.lessons") : g.dropout != null && (g.inSchool() || g.status === "hs3") ? T("plan.noLessons") : "";
+    els.lessonNote.classList.toggle("hidden", !els.lessonNote.textContent);
     // Leaving school is offered from grade 7 until you do it.
     const qb = g.quitBlock();
     els.quitBtn.classList.toggle("hidden", done || qb === "done" || qb === "grade");

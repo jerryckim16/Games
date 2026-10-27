@@ -253,6 +253,8 @@
       "move.rural": "Rural-student quota at most universities if you do middle and high school here.",
       "move.late": "Too late for the local quotas here: they need middle and high school in the region.",
       "plan.noTutor": "There are no private tutors to hire out here.",
+      "plan.lessons": "🏫 School lessons raise every subject a little each turn on their own, most when you're behind the class.",
+      "plan.noLessons": "Out of school: no lessons, so only your own study raises your ability.",
       "move.noQuota": "Out of school, you can't use the local quotas anywhere.",
       "quit.btn": "Leave school",
       "quit.title": "Leave school?",
@@ -261,11 +263,12 @@
       "quit.pro": [
         "Two more free blocks every turn: the hours that went to classes are yours.",
         "No school pressure, no class rankings, no bullying.",
-        "Grade 12 runs on a retaker's month: six blocks from March.",
+        "One more block a month in grade 12.",
         "Pass the GED by grade 11 and you can sit the Suneung a year early.",
       ],
       "quit.cons": "What it costs",
       "quit.con": [
+        "No school lessons: they raise every subject a little each turn, most for students behind the class.",
         "You must pass the GED, the school-equivalency exam, before the Suneung. It opens six months after you leave.",
         "No regional or rural-student quotas: they need a school record.",
         "Nobody sets the pace: motivation settles lower, and days without friends get lonely.",
@@ -310,7 +313,7 @@
       "log.month": (p, h) => {
         const plan = h.planList(p.plan).join(", ");
         const d = Object.keys(p.d).map((s) => h.sub(s) + " " + (p.d[s] > 0 ? "+" : "") + p.d[s].toFixed(1));
-        return plan + (p.cost ? " · spent " + h.won(p.cost) : "") + (d.length ? " · " + d.join(", ") : "");
+        return plan + (p.cost ? " · spent " + h.won(p.cost) : "") + (p.cls >= 0.1 ? " · lessons +" + p.cls.toFixed(1) + " in all" : "") + (d.length ? " · " + d.join(", ") : "");
       },
       "log.event": (p, h) => {
         if (p.id === "eve") return "The night before the exam: " + h.t(p.r.key, p.r.p);
@@ -674,6 +677,8 @@
       "move.rural": "여기서 중·고등학교를 다니면 대부분 대학의 농어촌 전형에 지원할 수 있습니다.",
       "move.late": "이곳의 지역 전형을 받기엔 늦었습니다. 중·고등학교를 모두 이 지역에서 다녀야 합니다.",
       "plan.noTutor": "이 지역에서는 과외 선생님을 구할 수 없습니다.",
+      "plan.lessons": "🏫 학교 수업만으로도 매 턴 모든 과목 실력이 조금씩 오릅니다. 반 평균보다 뒤처질수록 더 많이 오릅니다.",
+      "plan.noLessons": "자퇴: 학교 수업이 없어 직접 공부한 만큼만 실력이 오릅니다.",
       "move.noQuota": "자퇴했으므로 어느 지역에서도 지역 전형을 받을 수 없습니다.",
       "quit.btn": "자퇴하기",
       "quit.title": "학교를 그만둘까요?",
@@ -682,11 +687,12 @@
       "quit.pro": [
         "매 턴 자유 시간이 2칸 늘어납니다. 수업 듣던 시간이 모두 내 시간입니다.",
         "학교 스트레스, 내신 등수, 학교폭력이 없습니다.",
-        "고3 때는 재수생처럼 매달 6칸으로 공부합니다.",
+        "고3 때도 매달 1칸이 더 생깁니다.",
         "고2까지 검정고시에 합격하면 수능을 1년 일찍 볼 수 있습니다.",
       ],
       "quit.cons": "잃는 것",
       "quit.con": [
+        "학교 수업이 없습니다. 수업은 매 턴 모든 과목을 조금씩 올려 주고, 뒤처진 학생일수록 효과가 큽니다.",
         "수능 전에 검정고시에 합격해야 합니다. 자퇴 후 6개월이 지나야 응시할 수 있습니다.",
         "지역인재·농어촌 전형을 받을 수 없습니다. 학교생활기록부가 필요하기 때문입니다.",
         "아무도 진도를 잡아 주지 않아 의지가 낮게 유지되고, 친구를 안 만나면 외로워집니다.",
@@ -730,7 +736,7 @@
       "log.month": (p, h) => {
         const plan = h.planList(p.plan).join(", ");
         const d = Object.keys(p.d).map((s) => h.sub(s) + " " + (p.d[s] > 0 ? "+" : "") + p.d[s].toFixed(1));
-        return plan + (p.cost ? " · 지출 " + h.won(p.cost) : "") + (d.length ? " · " + d.join(", ") : "");
+        return plan + (p.cost ? " · 지출 " + h.won(p.cost) : "") + (p.cls >= 0.1 ? " · 학교 수업 합계 +" + p.cls.toFixed(1) : "") + (d.length ? " · " + d.join(", ") : "");
       },
       "log.event": (p, h) => {
         if (p.id === "eve") return "수능 전날 밤: " + h.t(p.r.key, p.r.p);

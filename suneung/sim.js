@@ -190,6 +190,7 @@ function strategies() {
     { label: "smart, best affordable, retakes up to 3", bot: "smart", method: "tutor", maxAttempts: 3, goal: "yonsei" },
     { label: "smart, best affordable, sci, 의대 up to 5", bot: "smart", method: "tutor", maxAttempts: 5, goal: "med", track: "sci", inq: ["bio", "earth"] },
     // Leaving school (자퇴): from grade 10, and from grade 7 with the Suneung a year early.
+    { label: "balanced, self-study, quits at 10, 1 try", bot: "balanced", method: "self", maxAttempts: 1, goal: "college", quitAt: 10 },
     { label: "smart, best affordable, quits at 10, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", quitAt: 10 },
     { label: "smart, best affordable, quits at 7, early", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", quitAt: 7, early: true },
   ];
