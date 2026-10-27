@@ -106,8 +106,6 @@ header, main {
 }
 header { padding-top: 24px; }
 h1 { margin: 0 0 4px; font-size: 1.6rem; }
-.ko { color: var(--muted); font-weight: 500; }
-h1 .ko { font-size: 1.1rem; }
 h2 { font-size: 1rem; margin: 0 0 12px; }
 h2.gap { margin-top: 18px; }
 h3 { font-size: 0.9rem; margin: 18px 0 8px; }
@@ -167,8 +165,6 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .seg button { flex: 1; border: 0; border-radius: 0; padding: 8px 6px; font-size: 0.85rem; background: var(--bg); }
 .seg button + button { border-left: 1px solid var(--border); }
 .seg button.on { background: var(--accent); color: var(--accent-text); }
-.seg button.on .ko { color: inherit; opacity: 0.8; }
-.seg .ko { display: block; font-size: 0.78rem; }
 .seg.wrap { flex-wrap: wrap; }
 .seg.wrap button { min-width: 45%; }
 
@@ -301,3 +297,9 @@ table.grid td.l { text-align: left; }
 .chart-head.gap { margin-top: 18px; }
 /* After the last exam the plan panel only shows its title. */
 .ended .field, .ended .acts, .ended .plan-foot, .ended .buttons { display: none; }
+
+/* ---------- language switch ---------- */
+.top { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 4px; }
+.top h1 { margin: 0; }
+.seg.lang { flex: 0 0 auto; }
+.seg.lang button { flex: 0 0 auto; padding: 6px 12px; }

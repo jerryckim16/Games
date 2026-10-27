@@ -8,56 +8,62 @@
 </head>
 <body>
   <header>
-    <h1>Suneung Simulator <span class="ko">수능 시뮬레이터</span></h1>
-    <p class="sub">Live your exam years month by month. Study, rest, make choices, sit the 수능, and retake it as many times as it takes to get into the school you want.</p>
+    <div class="top">
+      <h1 data-t="app.title">Suneung Simulator</h1>
+      <div class="seg lang" id="lang" role="group" aria-label="Language / 언어">
+        <button type="button" data-v="en" lang="en">English</button>
+        <button type="button" data-v="ko" lang="ko">한국어</button>
+      </div>
+    </div>
+    <p class="sub" data-t="app.sub"></p>
   </header>
 
   <main>
     <!-- ---------- new life ---------- -->
     <section id="setup" class="hidden">
       <div class="panel">
-        <h2>A new life</h2>
+        <h2 data-t="setup.title"></h2>
         <div class="setup-grid">
           <div class="field">
-            <label for="name">Name</label>
-            <input id="name" type="text" maxlength="20" placeholder="김수능">
+            <label for="name" data-t="setup.name"></label>
+            <input id="name" type="text" maxlength="20">
           </div>
           <div class="field">
-            <span class="flabel">Track</span>
+            <span class="flabel" data-t="setup.track"></span>
             <div class="seg" id="track">
-              <button type="button" data-v="soc">Humanities <span class="ko">문과</span></button>
-              <button type="button" data-v="sci">Sciences <span class="ko">이과</span></button>
+              <button type="button" data-v="soc"></button>
+              <button type="button" data-v="sci"></button>
             </div>
             <small id="trackNote"></small>
           </div>
           <div class="field">
-            <label for="inq1">Inquiry subjects <span class="ko">탐구</span></label>
+            <label for="inq1" data-t="setup.inq"></label>
             <div class="two">
               <select id="inq1"></select>
-              <select id="inq2"></select>
+              <select id="inq2" aria-labelledby="inq1"></select>
             </div>
-            <small>Scores are relative to everyone who sits the same subject, so a strong pool is harder to top.</small>
+            <small data-t="setup.inqNote"></small>
           </div>
           <div class="field">
-            <span class="flabel">Family</span>
+            <span class="flabel" data-t="setup.family"></span>
             <div class="seg" id="family">
-              <button type="button" data-v="tight">Tight <span class="ko">흙수저</span></button>
-              <button type="button" data-v="middle">Middle <span class="ko">평범</span></button>
-              <button type="button" data-v="wealthy">Wealthy <span class="ko">금수저</span></button>
+              <button type="button" data-v="tight"></button>
+              <button type="button" data-v="middle"></button>
+              <button type="button" data-v="wealthy"></button>
             </div>
             <small id="familyNote"></small>
           </div>
         </div>
-        <h3>Your starting point</h3>
+        <h3 data-t="setup.start"></h3>
         <div id="talent" class="talent"></div>
         <div class="buttons">
-          <button id="rerollBtn" type="button">🎲 Re-roll talent</button>
-          <button id="startBtn" type="button" class="primary">Start 고3 →</button>
-          <button id="resumeBtn" type="button" class="hidden">Continue saved life</button>
+          <button id="rerollBtn" type="button" data-t="setup.reroll"></button>
+          <button id="startBtn" type="button" class="primary" data-t="setup.go"></button>
+          <button id="resumeBtn" type="button" class="hidden" data-t="setup.resume"></button>
         </div>
       </div>
       <div class="panel">
-        <h2>Hall of fame <span class="muted">best 수능 on this device</span></h2>
+        <h2><span data-t="fame.title"></span> <span class="muted" data-t="fame.sub"></span></h2>
         <div class="table-wrap"><table class="grid" id="fame"></table></div>
       </div>
     </section>
@@ -65,20 +71,20 @@
     <!-- ---------- the game ---------- -->
     <section id="game" class="hidden">
       <section class="stats">
-        <div class="stat"><span class="k">Date</span><span class="v" id="sDate"></span><span class="s" id="sDday"></span></div>
-        <div class="stat"><span class="k">Attempt</span><span class="v" id="sAttempt"></span><span class="s" id="sStatus"></span></div>
-        <div class="stat"><span class="k">Age</span><span class="v" id="sAge"></span><span class="s" id="sName"></span></div>
-        <div class="stat"><span class="k">Money</span><span class="v" id="sMoney"></span><span class="s" id="sAllowance"></span></div>
+        <div class="stat"><span class="k" data-t="stat.date"></span><span class="v" id="sDate"></span><span class="s" id="sDday"></span></div>
+        <div class="stat"><span class="k" data-t="stat.attempt"></span><span class="v" id="sAttempt"></span><span class="s" id="sStatus"></span></div>
+        <div class="stat"><span class="k" data-t="stat.age"></span><span class="v" id="sAge"></span><span class="s" id="sName"></span></div>
+        <div class="stat"><span class="k" data-t="stat.money"></span><span class="v" id="sMoney"></span><span class="s" id="sAllowance"></span></div>
       </section>
 
       <div class="row">
         <section class="panel">
-          <h2>Ability <span class="muted">0–100; 50 is the average test taker</span></h2>
+          <h2><span data-t="ability.title"></span> <span class="muted" data-t="ability.sub"></span></h2>
           <div id="skills" class="bars"></div>
-          <h2 class="gap">Condition</h2>
+          <h2 class="gap" data-t="cond.title"></h2>
           <div id="condition" class="bars"></div>
           <div class="chart-head gap">
-            <h2>Ability over time</h2>
+            <h2 data-t="chart.title"></h2>
             <div class="legend" id="legend"></div>
           </div>
           <canvas id="chart"></canvas>
@@ -86,11 +92,11 @@
 
         <section class="panel">
           <div class="plan-head">
-            <h2 id="planTitle">Plan this month</h2>
+            <h2 id="planTitle"></h2>
             <span id="blocksLeft" class="pill"></span>
           </div>
           <div class="field">
-            <span class="flabel">Study method <span class="ko">공부 방법</span></span>
+            <span class="flabel" data-t="plan.method"></span>
             <div class="seg wrap" id="method"></div>
             <small id="methodNote"></small>
           </div>
@@ -100,23 +106,23 @@
             <span id="planErr" class="err"></span>
           </div>
           <div class="buttons">
-            <button id="repeatBtn" type="button">Same as last month</button>
-            <button id="clearBtn" type="button">Clear</button>
-            <button id="nextBtn" type="button" class="primary">Next month →</button>
+            <button id="repeatBtn" type="button" data-t="plan.repeat"></button>
+            <button id="clearBtn" type="button" data-t="plan.clear"></button>
+            <button id="nextBtn" type="button" class="primary"></button>
           </div>
         </section>
       </div>
 
       <div class="row">
         <section class="panel">
-          <h2>Life log</h2>
+          <h2 data-t="log.title"></h2>
           <ul id="log" class="log"></ul>
         </section>
         <section class="panel">
-          <h2>Exam history</h2>
+          <h2 data-t="history.title"></h2>
           <div class="table-wrap"><table class="grid" id="history"></table></div>
           <div class="buttons end">
-            <button id="newLifeBtn" type="button">Start a new life</button>
+            <button id="newLifeBtn" type="button" data-t="newLife"></button>
           </div>
         </section>
       </div>
@@ -132,6 +138,7 @@
   </div>
 
   <script src="engine.js"></script>
+  <script src="strings.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

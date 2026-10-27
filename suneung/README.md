@@ -4,6 +4,8 @@ A life-sim about the Korean college entrance exam, 대학수학능력시험 (수
 
 Open `index.html` in a browser. There's no build step and no dependencies. Progress autosaves in the browser. It's also published as a single-file claude.ai artifact: https://claude.ai/artifact/H8zzP1PqsHVdvEQEARTuFE
 
+**Play it in English or Korean.** The switch in the top corner changes every word on the page, including the life log of a game in progress, and the choice is remembered. The first visit follows the browser's language.
+
 This version covers the exam years only. College life and what comes after are planned for later versions.
 
 ## How to play
@@ -83,6 +85,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **About 20 random events** with conditions (some only for retakers, 반수 students, or stressed students). After an event fires it can't recur for 4 months. D-100 always fires in August.
 - **Ability chart** across all attempts, a **life log**, and an **exam history** table with every 수능 and this year's mocks.
 - **Deterministic:** the seed fixes the talent roll, every paper, and the cohort you're graded against. Your choices only change your own answers.
+- **Two complete languages, English and Korean**, never mixed. Switching mid-game re-renders everything, including past log entries.
 - Light and dark themes; works at phone width.
 
 ## How the exam is simulated
@@ -181,13 +184,15 @@ What the table shows:
 
 ## Files
 
-- `engine.js`: the game, with no DOM, so it runs in Node.
+- `engine.js`: the game, with no DOM, so it runs in Node. It holds no display text: log entries, events and outcomes are message keys with values.
   - `Game` holds the state and the screen queue: `advance(plan, method)`, `choose(i)`, `dismiss()`, `apply(ids)`, `decide(d)`.
   - It also holds the exam simulation (`gradeSubject`), events, universities and constants.
+- `strings.js`: every piece of text, as an English and a Korean dictionary with the same keys. `make(lang, ctx)` returns the translator, including Korean money (만/억) and particle (이/가) handling.
 - `app.js`: UI only. It renders the state and whatever screen is first in `game.queue`.
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
 
+- **v1.2:** full English and Korean versions with a language switch, instead of mixed English and Korean text. The engine now emits message keys; all text lives in `strings.js`. Saves from earlier versions don't carry over (the save format changed). Game behavior and balance numbers are unchanged.
 - **v1.1:** "Start a new life" asks for confirmation in the page's own dialog, because embedded viewers block browser `confirm()`. Side gutters respect phone safe areas. Published as a claude.ai artifact.
 - **v1:** first version. One-year 고3 run with monthly plans, study methods, condition, about 20 events, March/June/September mocks, the 수능 with a full score report, 정시 applications, and retakes (재종반, 독학재수, 반수) for as many years as you like. Also adds autosave, the hall of fame, and the calibration and bot script.
