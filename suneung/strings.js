@@ -157,7 +157,7 @@
       "stat.over": "Exam life over",
       "stat.allowance": "Education budget {a}/month",
 
-      "ability.title": "Ability", "ability.sub": "0–100; 50 is the average student your age",
+      "ability.title": "Ability", "ability.sub": "0–100; 50 is the average Suneung test taker",
       "ability.tip": "Aptitude ×{a}",
       "cond.title": "Condition",
       "cond.health": "Health", "cond.stress": "Stress", "cond.motivation": "Motivation", "cond.practice": "Exam stamina",
@@ -337,7 +337,7 @@
       "birth.text": (p, h) => p.name + " is born into a " + h.familyAdj(p.fam) + " family. Household income is about " + h.wonShort(p.inc * 10000) +
         " a month, in " + h.fifth(p.fam) + " of Korean households, and your parents can spend about " + h.won(p.a) + " a month on your education.",
       "birth.talent": "Your talents at age 7",
-      "birth.note": "Stars show aptitude: how fast you learn a subject. Ability is measured against your own year group, and classmates keep studying too, so standing still means slipping.",
+      "birth.note": "Stars show aptitude: how fast you learn a subject. Ability is measured on the Suneung scale, where 50 is the average test taker, so every child starts low and climbs. What you learn stays learned.",
       "birth.go": "Start elementary school →",
       "track.title": "Choose your track",
       "track.text": "Grade 10 is ending. Choose humanities or sciences for grades 11 and 12, and your two inquiry subjects. Your social-studies ability carries over into humanities subjects, your science ability into science subjects.",
@@ -434,7 +434,7 @@
       "stat.over": "수험 생활 끝",
       "stat.allowance": "교육비 월 {a}",
 
-      "ability.title": "실력", "ability.sub": "0–100, 50이 또래 평균",
+      "ability.title": "실력", "ability.sub": "0–100, 50이 수능 응시자 평균",
       "ability.tip": "적성 ×{a}",
       "cond.title": "컨디션",
       "cond.health": "체력", "cond.stress": "스트레스", "cond.motivation": "의지", "cond.practice": "실전력",
@@ -611,7 +611,7 @@
       "birth.text": (p, h) => p.name + "은(는) " + h.familyAdj(p.fam) + " 가정에서 태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
         "으로 한국 가구 중 " + h.fifth(p.fam) + "에 속하고, 부모님은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
       "birth.talent": "일곱 살 때의 재능",
-      "birth.note": "별은 적성, 즉 그 과목을 얼마나 빨리 익히는지를 뜻합니다. 실력은 같은 학년 친구들과 비교한 값이고, 친구들도 계속 공부하므로 제자리걸음은 곧 뒤처지는 것입니다.",
+      "birth.note": "별은 적성, 즉 그 과목을 얼마나 빨리 익히는지를 뜻합니다. 실력은 수능 기준이라 50이 수능 응시자 평균입니다. 그래서 모든 아이는 낮은 곳에서 출발해 올라갑니다. 한 번 익힌 실력은 줄어들지 않습니다.",
       "birth.go": "초등학교 입학 →",
       "track.title": "계열 선택",
       "track.text": "고1이 끝나 갑니다. 고2·고3을 문과로 갈지 이과로 갈지, 그리고 탐구 두 과목을 고르세요. 사회 실력은 사회탐구로, 과학 실력은 과학탐구로 이어집니다.",

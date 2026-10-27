@@ -185,7 +185,8 @@
     const g = game;
     const prev = g.trace.length > 1 ? g.trace[g.trace.length - 2].skills : null;
     els.skills.innerHTML = SUBJECTS.map((s) => {
-      const delta = prev ? (g.skills[s] - prev[s]) * 16.67 : 0;
+      const fresh = g.trace[g.trace.length - 1].track && (s === "inq1" || s === "inq2");
+      const delta = prev && !fresh ? (g.skills[s] - prev[s]) * 16.67 : 0;
       return bar(L.sub(s), S.skillScore(g.skills[s]), "var(" + subColor[s] + ")", delta, T("ability.tip", { a: g.aptitude[s] }));
     }).join("");
     const lvl = (v, goodHigh) => {

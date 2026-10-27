@@ -481,9 +481,13 @@
     return Math.exp(-0.62 * Math.max(0, theta + 0.8));
   }
 
-  // Ability is relative to your own year group. Classmates keep studying too, so during the school
-  // years every subject slips by PEER_DRIFT per month-equivalent of a turn unless you keep up.
-  const PEER_DRIFT = 0.07;
+  // Ability is on the 수능 scale from day one (0 = the average test taker), and it never decays: a
+  // subject you don't study simply stops growing. A 7-year-old starts START_GAP below where an average
+  // child of the same talent will be at the exam, and the school years close that gap.
+  // SCHOOL_GAIN scales study during grades 1–11, so that childhood habits move you about as far as a
+  // year of 고3 studying does at the top end. Both are tuned with sim.js.
+  const START_GAP = 2.4;
+  const SCHOOL_GAIN = 0.5;
 
   // ---------- the game ----------
   class Game {
@@ -539,7 +543,7 @@
       const skills = {}, aptitude = {};
       for (const s of SUBJECTS) {
         const quirk = r.normal() * 0.45;
-        skills[s] = Math.round((general + quirk + prior) * 100) / 100;
+        skills[s] = Math.round((general + quirk + prior - START_GAP) * 100) / 100;
         aptitude[s] = Math.round(clamp(1 + general * 0.25 + r.normal() * 0.18, 0.6, 1.5) * 100) / 100;
       }
       return { skills, aptitude };
@@ -623,7 +627,7 @@
       const months = this.turnMonths();
       const school = this.inSchool();
       // A long turn moves ability further, but not twelve times as far: habits matter more than hours.
-      const k = Math.sqrt(months);
+      const k = Math.sqrt(months) * (school ? SCHOOL_GAIN : 1);
       this.clock += months;
       const rng = this.rng;
       const before = Object.assign({}, this.skills);
@@ -643,12 +647,7 @@
       for (const s of SUBJECTS) {
         const n = plan[s] || 0;
         studied += n;
-        if (school) this.skills[s] -= PEER_DRIFT * k;
-        if (!n) {
-          // Untouched subjects fade a little; retakers feel it most because they have a year to forget in.
-          if (!school && this.skills[s] > -1.5) this.skills[s] -= 0.012;
-          continue;
-        }
+        if (!n) continue;
         let g = 0;
         for (let i = 0; i < n; i++) g += 1 / (1 + 0.3 * i);
         const rate = 0.24 * SUBJECT_INFO[s].rate * this.aptitude[s] * m.mult * eff;
@@ -726,10 +725,13 @@
       this.flush();
     }
 
-    // Average standing over the main subjects, as a share of the year group below you.
+    // Average standing over the main subjects, as a share of the year group below you. A typical child
+    // climbs about 0.22 a school year from −START_GAP at grade 1 to the test-taker average by grade 12
+    // (measured with sim.js's balanced bot), so classmates are compared against that line.
     standing() {
       const avg = (this.skills.kor + this.skills.math + this.skills.eng + this.skills.inq1 + this.skills.inq2) / 5;
-      return phi(avg / 0.8);
+      const typical = -START_GAP + 0.22 * (this.grade - 1);
+      return phi((avg - typical) / 0.8);
     }
     classRank() { return clamp(Math.round((1 - this.standing()) * 30) + 1, 1, 30); }
     classLevel() { const s = this.standing(); return s > 0.8 ? 3 : s > 0.4 ? 2 : 1; }
@@ -815,6 +817,8 @@
       this.aptitude.inq2 = apt;
       this.track = track;
       this.inq = inq.slice();
+      // The subjects themselves changed, so the app shouldn't show this as a gain or a loss.
+      this.trace[this.trace.length - 1].track = true;
       this.addLog("log.track", { track, inq: this.inq }, "milestone");
       this.queue.shift();
       this.flush();

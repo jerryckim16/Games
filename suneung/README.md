@@ -44,7 +44,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 
 ## Features
 
-- **A whole childhood.** Ability is measured against your own year group (50 is the average student your age), and classmates keep studying too. Every school-year turn, each subject slips unless you keep up, so early habits compound.
+- **A whole childhood.** Ability is on the 수능 scale from the start (50 is the average test taker), so a 7-year-old begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
 - **Families from real income data:**
   - You're born into one of the five national household-income fifths, each with a 20% chance.
   - The family sets your education budget. Money the parents don't spend on you that turn stays with them.
@@ -60,7 +60,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 
   - **Incomes:** from the 2024 household finance survey (가계금융복지조사). The top fifth averages ₩166M a year and all households ₩71.85M; the middle fifths are interpolated.
   - **Budgets:** follow the 2024 private-education survey (초중고 사교육비조사), which found ₩205,000 a month per student in households under ₩3M and ₩676,000 in households at ₩8M and above. The top fifth's figure is extrapolated above that bracket.
-  - **Head start** is in ability units (sd of the year group): books at home and parents' schooling.
+  - **Head start** is in ability units (sd of 수능 takers): books at home and parents' schooling.
   - From the 4th attempt on, parents pay only half.
 - **Six exam sections, scored the way the real 수능 is** (2022–2027 format):
   - 국어 and 수학: raw /100, 표준점수 (mean 100, sd 20), 백분위, and 등급 1–9 by the 4/11/23/40/60/77/89/96% cut-offs;
@@ -110,7 +110,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 
 ## How the exam is simulated
 
-- **Ability:** each subject has a latent ability θ on the scale of your year group (mean 0, sd 1). The bars show it as 0–100, where 50 + 16.7·θ, so 50 is average and 100 is θ = 3.
+- **Ability:** each subject has a latent ability θ on the scale of the 수능 test takers (mean 0, sd 1). The bars show it as 0–100, where 50 + 16.7·θ, so 50 is average and 100 is θ = 3. At age 7, θ is your talent minus 2.4, so a child of average talent starts around 10.
 - **Questions** follow the real layouts: 국어 and 영어 have 45 questions, 수학 has 30 (some short-answer), 한국사 and each 탐구 have 20, with 2-, 3- and 4-point items.
   - Each question has an item-response curve: P(correct) = c + (1 − c) / (1 + e^(−1.7·a·(θ − b))).
   - Guessing c is 0.2 for multiple choice and 0 for short answer.
@@ -123,10 +123,10 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - the night-before and lunch-box choices;
   - random day form, whose spread shrinks with exam stamina.
 - **Learning:**
-  - each block on a subject adds 0.24 × subject rate × aptitude × method speed × condition × headroom(θ) × √(months in the turn);
+  - each block on a subject adds 0.24 × subject rate × aptitude × method speed × condition × headroom(θ) × √(months in the turn), times 0.5 during the school years (grades 1–11);
   - headroom(θ) = e^(−0.62·max(0, θ + 0.8)) gives diminishing returns: going from average to top 4% is far quicker than from top 4% to a perfect score;
   - a second block on the same subject in one turn counts ×0.77, a third ×0.63, and so on;
-  - **peer drift:** during the school years (grades 1–11) every subject loses 0.07 × √(months in the turn) each turn, because classmates keep studying. In grade 12 and retake years, only subjects you skip for a month fade slightly;
+  - **no decay:** ability only goes up. A subject you don't study stays where it is;
   - subject rates are 국어 0.8, 수학 1.0, 영어 0.95, 한국사 1.6, 탐구 1.3.
 
 ### University admission (rough)
@@ -187,28 +187,28 @@ Means over 40 sittings.
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 38 | 2.9 · 2.2 · 1.9 | 325 | 325 | 1.00 | 0% | 0% | 1% |
-| slacker (half games & friends), 1 try | 22 | 3.4 · 2.7 · 8.6 | 303 | 303 | 1.00 | 0% | 0% | 0% |
-| grinder (no rest), self-study, 1 try | 55 | 3.2 · 2.6 · 2.3 | 367 | 367 | 1.00 | 0% | 0% | 35% |
-| smart, online lectures, 1 try | 64 | 2.4 · 2.3 · 1.8 | 376 | 376 | 1.00 | 3% | 0% | 64% |
-| smart, best affordable method, 1 try | 68 | 1.9 · 1.8 · 1.8 | 387 | 387 | 1.00 | 8% | 1% | 75% |
-| smart, best affordable, retakes up to 3 tries | 68 | 1.9 · 1.8 · 1.8 | 387 | 409 | 2.55 | 74% | 14% | 99% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.0 · 1.8 · 1.9 | 387 | 420 | 4.22 | 91% | 63% | 100% |
+| balanced, self-study, 1 try | 42 | 2.9 · 2.1 · 2.0 | 329 | 329 | 1.00 | 0% | 0% | 0% |
+| slacker (half games & friends), 1 try | 29 | 3.4 · 2.5 · 8.1 | 307 | 307 | 1.00 | 0% | 0% | 0% |
+| grinder (no rest), self-study, 1 try | 57 | 3.0 · 2.3 · 2.2 | 372 | 372 | 1.00 | 0% | 0% | 46% |
+| smart, online lectures, 1 try | 62 | 2.4 · 2.2 · 2.1 | 377 | 377 | 1.00 | 3% | 0% | 66% |
+| smart, best affordable method, 1 try | 68 | 1.9 · 1.8 · 1.7 | 388 | 388 | 1.00 | 14% | 1% | 79% |
+| smart, best affordable, retakes up to 3 tries | 68 | 1.9 · 1.8 · 1.7 | 388 | 411 | 2.45 | 73% | 13% | 95% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.0 · 1.8 · 1.8 | 387 | 418 | 4.08 | 91% | 60% | 99% |
 
 The smart bot with the best affordable method, first try only, by family:
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 12 | 62 | 375 | 0% | 50% |
-| Lower-middle income | 11 | 62 | 377 | 0% | 55% |
-| Middle income | 21 | 69 | 391 | 0% | 90% |
-| Upper-middle income | 18 | 70 | 390 | 17% | 78% |
-| High income | 18 | 73 | 395 | 17% | 83% |
+| Low income | 12 | 60 | 375 | 0% | 75% |
+| Lower-middle income | 11 | 59 | 367 | 0% | 45% |
+| Middle income | 21 | 70 | 394 | 5% | 86% |
+| Upper-middle income | 18 | 70 | 392 | 22% | 89% |
+| High income | 18 | 73 | 398 | 33% | 83% |
 
 What the tables show:
 
-- **Childhood habits decide where you start grade 12:** the same random talents end up anywhere from 22 to 68 on average.
-- **Family income matters, but it isn't destiny:** with the same smart play, the top two fifths reach SKY on the first try about 17% of the time and the bottom two never did. Retakes close much of the gap.
+- **Childhood habits decide where you start grade 12:** the same random talents end up anywhere from 29 to 68 on average.
+- **Family income matters, but it isn't destiny:** with the same smart play, the top two fifths reach SKY on the first try 22–33% of the time and the bottom two never did. Retakes close much of the gap.
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
 - **Medical school** takes talent, a sciences track and usually several years.
 
@@ -223,6 +223,7 @@ What the tables show:
 
 ## Changelog
 
+- **v2.1:** ability no longer decays. Subjects you don't study stay where they are instead of slipping (no more peer drift in the school years, and no monthly fade in grade 12 or retake years). Ability is now on the 수능 scale from age 7 (50 is the average test taker), so children start around 10 and climb; the starting level and school-year study speed were retuned so top players reach about the same level as before. Balance tables regenerated.
 - **v2:** lives start in elementary school. Turns are a year in elementary school, a semester in middle school and a season in grades 10–11, then monthly from grade 12. Ability is now relative to your year group, with peer drift during the school years. New childhood activities (reading, arts & sports) and about ten new events (sports day, olympiad, smartphone, Daechi-dong, bullying, class elections, career week, 중2). Middle-school class ranks and grade 10–11 mock exams track your standing. The track and inquiry subjects are chosen at the end of grade 10 instead of at the start. Families are no longer chosen: you're born into one of the five household-income fifths at random, with budgets based on the 2024 private-education survey, and there's no talent re-roll. Unspent education budget no longer piles up; your own savings come from New Year's money, gifts and part-time work. Earlier saves don't carry over.
 - **v1.2:** full English and Korean versions with a language switch, instead of mixed English and Korean text. The engine now emits message keys; all text lives in `strings.js`. Saves from earlier versions don't carry over (the save format changed). Game behavior and balance numbers are unchanged.
 - **v1.1:** "Start a new life" asks for confirmation in the page's own dialog, because embedded viewers block browser `confirm()`. Side gutters respect phone safe areas. Published as a claude.ai artifact.
