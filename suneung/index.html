@@ -23,41 +23,12 @@
     <section id="setup" class="hidden">
       <div class="panel">
         <h2 data-t="setup.title"></h2>
-        <div class="setup-grid">
-          <div class="field">
-            <label for="name" data-t="setup.name"></label>
-            <input id="name" type="text" maxlength="20">
-          </div>
-          <div class="field">
-            <span class="flabel" data-t="setup.track"></span>
-            <div class="seg" id="track">
-              <button type="button" data-v="soc"></button>
-              <button type="button" data-v="sci"></button>
-            </div>
-            <small id="trackNote"></small>
-          </div>
-          <div class="field">
-            <label for="inq1" data-t="setup.inq"></label>
-            <div class="two">
-              <select id="inq1"></select>
-              <select id="inq2" aria-labelledby="inq1"></select>
-            </div>
-            <small data-t="setup.inqNote"></small>
-          </div>
-          <div class="field">
-            <span class="flabel" data-t="setup.family"></span>
-            <div class="seg" id="family">
-              <button type="button" data-v="tight"></button>
-              <button type="button" data-v="middle"></button>
-              <button type="button" data-v="wealthy"></button>
-            </div>
-            <small id="familyNote"></small>
-          </div>
+        <p class="intro" data-t="setup.intro"></p>
+        <div class="field name-field">
+          <label for="name" data-t="setup.name"></label>
+          <input id="name" type="text" maxlength="20">
         </div>
-        <h3 data-t="setup.start"></h3>
-        <div id="talent" class="talent"></div>
         <div class="buttons">
-          <button id="rerollBtn" type="button" data-t="setup.reroll"></button>
           <button id="startBtn" type="button" class="primary" data-t="setup.go"></button>
           <button id="resumeBtn" type="button" class="hidden" data-t="setup.resume"></button>
         </div>

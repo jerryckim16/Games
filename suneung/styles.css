@@ -303,3 +303,9 @@ table.grid td.l { text-align: left; }
 .top h1 { margin: 0; }
 .seg.lang { flex: 0 0 auto; }
 .seg.lang button { flex: 0 0 auto; padding: 6px 12px; }
+
+/* ---------- setup, birth and track screens ---------- */
+.intro { margin: 0 0 14px; max-width: 65ch; }
+.name-field { max-width: 320px; }
+.modal-card .talent { margin: 6px 0 10px; }
+.modal-card .field { margin-top: 12px; }

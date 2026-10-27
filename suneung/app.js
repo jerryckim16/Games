@@ -2,18 +2,16 @@
   "use strict";
 
   const S = window.Suneung;
-  const { Game, ACTIVITIES, METHODS, FAMILIES, SUBJECTS, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY } = S;
-  // v2: log entries are message keys rather than text, so v1 saves don't carry over.
-  const SAVE_KEY = "suneung.save.v2";
+  const { Game, ACTIVITIES, METHODS, FAMILIES, SUBJECTS, INQUIRY, UNIVERSITIES, MOCKS } = S;
+  // v3: lives start in elementary school, so earlier saves (which start in grade 12) don't carry over.
+  const SAVE_KEY = "suneung.save.v3";
   const FAME_KEY = "suneung.fame.v2";
   const LANG_KEY = "suneung.lang";
 
   const $ = (id) => document.getElementById(id);
   const els = {
     lang: $("lang"),
-    setup: $("setup"), game: $("game"), name: $("name"), track: $("track"), trackNote: $("trackNote"),
-    inq1: $("inq1"), inq2: $("inq2"), family: $("family"), familyNote: $("familyNote"), talent: $("talent"),
-    rerollBtn: $("rerollBtn"), startBtn: $("startBtn"), resumeBtn: $("resumeBtn"), fame: $("fame"),
+    setup: $("setup"), game: $("game"), name: $("name"), startBtn: $("startBtn"), resumeBtn: $("resumeBtn"), fame: $("fame"),
     sDate: $("sDate"), sDday: $("sDday"), sAttempt: $("sAttempt"), sStatus: $("sStatus"), sAge: $("sAge"),
     sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
@@ -47,12 +45,8 @@
   }
 
   // ---------- language ----------
-  // The setup screen's choices stand in for a game until one starts, so subject names follow them.
-  const setup = { track: "soc", family: "middle", seed: newSeed() };
-  function ctx() {
-    if (game) return { inq: game.inq, track: game.track };
-    return { inq: [els.inq1.value, els.inq2.value], track: setup.track };
-  }
+  // Subject names follow the game being shown: before the track choice there is none.
+  function ctx() { return game ? { inq: game.inq, track: game.track } : { inq: null, track: null }; }
   let lang = store.get(LANG_KEY);
   if (lang !== "en" && lang !== "ko") lang = /^ko\b/i.test(navigator.language || "") ? "ko" : "en";
   let L = window.SuneungText.make(lang, ctx);
@@ -73,48 +67,12 @@
     L = window.SuneungText.make(lang, ctx);
     applyStatic();
     if (els.setup.classList.contains("hidden")) render();
-    else { fillInquiry(true); renderSetup(); }
+    else renderSetup();
   });
 
   // ---------- setup screen ----------
-  function newSeed() { return (Math.random() * 2 ** 31) | 0; }
-  function segPick(seg, v) {
-    for (const b of seg.querySelectorAll("button")) b.classList.toggle("on", b.dataset.v === v);
-  }
-  function fillInquiry(keep) {
-    const pool = INQUIRY[setup.track];
-    const prev = [els.inq1.value, els.inq2.value];
-    const opts = pool.map((x) => '<option value="' + x.id + '">' + esc(L.inq(x.id)) + "</option>").join("");
-    els.inq1.innerHTML = opts;
-    els.inq2.innerHTML = opts;
-    const ok = keep && prev.every((id) => pool.some((x) => x.id === id));
-    els.inq1.value = ok ? prev[0] : pool[0].id;
-    els.inq2.value = ok ? prev[1] : pool[1].id;
-  }
-  function fixInquiryPair(changed) {
-    // The two inquiry subjects must differ.
-    if (els.inq1.value !== els.inq2.value) return;
-    const other = changed === els.inq1 ? els.inq2 : els.inq1;
-    other.value = INQUIRY[setup.track].map((x) => x.id).find((id) => id !== changed.value);
-  }
-  function renderSetup() {
-    for (const b of els.track.querySelectorAll("button")) b.textContent = L.track(b.dataset.v);
-    for (const b of els.family.querySelectorAll("button")) b.textContent = L.family(b.dataset.v);
-    segPick(els.track, setup.track);
-    segPick(els.family, setup.family);
-    els.trackNote.textContent = T("setup.trackNote." + setup.track);
-    const f = FAMILIES[setup.family];
-    els.familyNote.textContent = T("setup.familyNote", { a: f.allowance, s: f.start, f: setup.family });
-    const t = Game.rollTalent(setup.seed, setup.family);
-    els.talent.innerHTML = SUBJECTS.map((s) => {
-      const v = S.skillScore(t.skills[s]);
-      const apt = t.aptitude[s];
-      const stars = apt >= 1.25 ? "★★★" : apt >= 1.05 ? "★★" : apt >= 0.88 ? "★" : "·";
-      return '<div class="bar"><span class="name">' + esc(L.sub(s)) + '</span><span class="track"><span class="fill" style="width:' + v +
-        "%;background:var(" + subColor[s] + ')"></span></span><span class="val">' + v + '</span><span class="apt" title="' + esc(T("setup.apt")) + '">' + stars + "</span></div>";
-    }).join("");
-    renderFame();
-  }
+  // Only a name: family and talent are dealt at birth.
+  function renderSetup() { renderFame(); }
   function renderFame() {
     const list = loadFame();
     if (!list.length) {
@@ -135,29 +93,10 @@
     renderSetup();
   }
 
-  els.track.addEventListener("click", (e) => {
-    const b = e.target.closest("button");
-    if (!b) return;
-    setup.track = b.dataset.v;
-    fillInquiry(false);
-    renderSetup();
-  });
-  els.family.addEventListener("click", (e) => {
-    const b = e.target.closest("button");
-    if (!b) return;
-    setup.family = b.dataset.v;
-    renderSetup();
-  });
-  for (const sel of [els.inq1, els.inq2]) sel.addEventListener("change", () => { fixInquiryPair(sel); renderSetup(); });
-  els.rerollBtn.addEventListener("click", () => { setup.seed = newSeed(); renderSetup(); });
   els.resumeBtn.addEventListener("click", () => showGame());
   els.startBtn.addEventListener("click", () => {
-    game = new Game({
-      seed: setup.seed, name: els.name.value.trim() || T("setup.namePh"), track: setup.track,
-      inq: [els.inq1.value, els.inq2.value], family: setup.family, startYear: new Date().getFullYear(),
-    });
+    game = new Game({ name: els.name.value.trim() || T("setup.namePh"), startYear: new Date().getFullYear() });
     plan = {};
-    setup.seed = newSeed();
     save();
     showGame();
   });
@@ -179,9 +118,13 @@
 
   function planTotal() { let n = 0; for (const k in plan) n += plan[k]; return n; }
   // Last month's plan stretched or trimmed to this month's block count.
+  // Activities that stopped being offered (arts after grade 9, reading in grade 12) are dropped.
   function defaultPlan() {
     if (!game.lastPlan) return {};
-    return fitPlan(Object.assign({}, game.lastPlan), game.blocks());
+    const offered = new Set(game.activities().map((a) => a.id));
+    const p = {};
+    for (const k in game.lastPlan) if (offered.has(k) && game.lastPlan[k]) p[k] = game.lastPlan[k];
+    return fitPlan(p, game.blocks());
   }
   function fitPlan(p, n) {
     let total = 0;
@@ -220,11 +163,13 @@
     const g = game;
     els.sDate.textContent = L.date(g.year, g.month);
     const d = g.daysToExam();
-    els.sDday.textContent = g.ending ? T("stat.over") : g.month <= 11 ? (d > 0 ? T("stat.dday", { n: d }) : T("stat.examMonth")) : T("stat.results");
-    els.sAttempt.textContent = L.att(g.attempt);
+    const school = g.inSchool();
+    els.sDday.textContent = g.ending ? T("stat.over") : school ? T("stat.years", { n: 12 - g.grade }) :
+      g.month <= 11 ? (d > 0 ? T("stat.dday", { n: d }) : T("stat.examMonth")) : T("stat.results");
+    els.sAttempt.textContent = school ? L.schoolGrade(g.grade) : L.att(g.attempt);
     els.sStatus.textContent = L.status(g.status);
     els.sAge.textContent = g.age;
-    els.sName.textContent = g.name + " · " + L.track(g.track);
+    els.sName.textContent = g.name + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
     els.sAllowance.textContent = T("stat.allowance", { a: L.wonShort(g.allowance()) });
   }
@@ -261,7 +206,8 @@
     const done = !!g.ending;
     els.planTitle.parentElement.parentElement.classList.toggle("ended", done);
     const mock = MOCKS[g.month] && !(g.month === 3 && g.status !== "hs3");
-    els.planTitle.textContent = done ? T("plan.done") : T("plan.title", { m: g.month, mock, exam: g.month === 11 });
+    els.planTitle.textContent = done ? T("plan.done") :
+      T("plan.title", { m: g.month, mock, exam: g.month === 11, st: g.status, g: g.grade, track: g.grade === 10 && g.month === 12 });
     els.blocksLeft.textContent = done ? "" : T("plan.left", { l: n - used, n });
     els.blocksLeft.classList.toggle("done", used === n);
     els.blocksLeft.classList.toggle("hidden", done);
@@ -274,7 +220,7 @@
     const m = METHODS[fixed || method];
     els.methodNote.textContent = fixed ? T("plan.methodFixed", { x: m.mult }) : T("plan.methodNote", { x: m.mult, cost: m.cost, sens: m.sens });
 
-    els.activities.innerHTML = ACTIVITIES.map((a) => {
+    els.activities.innerHTML = g.activities().map((a) => {
       const k = plan[a.id] || 0;
       const study = a.kind === "study";
       const name = study ? L.sub(a.subject) : L.actLong(a.id);
@@ -287,12 +233,14 @@
     }).join("");
 
     const cost = g.planCost(plan, method);
-    const income = (plan.job || 0) * JOB_PAY;
-    els.planCost.textContent = done ? "" : T("plan.cost", { c: cost, e: income, m: g.money + g.allowance() + income - cost });
+    const income = g.income(plan);
+    const budget = g.budget();
+    const over = Math.max(0, cost - budget);
+    els.planCost.textContent = done ? "" : T("plan.cost", { c: cost, b: budget, o: over, e: income, m: g.money + income - over });
     const err = used === n ? g.validate(plan, method) : null;
     els.planErr.textContent = err ? T(err, { n }) : "";
     els.nextBtn.disabled = done || used !== n || !!err || g.queue.length > 0;
-    els.nextBtn.textContent = T(g.month === 11 ? "plan.sit" : "plan.next");
+    els.nextBtn.textContent = !g.inSchool() && g.month === 11 ? T("plan.sit") : T("plan.next", { st: g.status });
     els.repeatBtn.disabled = done || !g.lastPlan;
     els.clearBtn.disabled = done || !used;
   }
@@ -344,6 +292,7 @@
   }
   function renderHistory() {
     const g = game;
+    // Every 수능, plus the mocks since the last one (grade 10–11 mocks stay until the first 수능).
     const rows = g.history.concat(g.mocks.filter((m) => m.attempt === g.attempt && g.history.every((h) => h.attempt !== g.attempt)));
     if (!rows.length) {
       els.history.innerHTML = '<tr><td class="muted">' + esc(T("history.empty")) + "</td></tr>";
@@ -353,7 +302,8 @@
       "<th>" + esc(T("history.total")) + "</th></tr></thead><tbody>" +
       rows.map((r) => {
         const label = r.kind === "suneung" ? "<b>" + esc(T("history.suneung", { y: r.year + 1 })) + "</b>" : esc(T("history.mock", { m: L.month(r.month) }));
-        return '<tr><td class="l">' + label + '<br><span class="muted">' + esc(L.att(r.attempt)) + "</span></td>" +
+        const who = r.school && r.school < 12 ? L.schoolGrade(r.school) : L.att(r.attempt);
+        return '<tr><td class="l">' + label + '<br><span class="muted">' + esc(who) + "</span></td>" +
           SUBJECTS.map((s) => "<td>" + cell(r.subjects[s]) + "</td>").join("") + "<td><b>" + r.total + "</b></td></tr>";
       }).join("") + "</tbody>";
   }
@@ -400,16 +350,15 @@
       c2.textAlign = "right"; c2.textBaseline = "middle";
       c2.fillText(String(v), padL - 6, y(v));
     }
-    // A dashed line where each new attempt starts.
     c2.setLineDash([4, 4]);
     c2.textAlign = "left"; c2.textBaseline = "alphabetic";
+    // A dashed line where each school stage and each attempt starts.
     for (let i = 0; i < tr.length; i++) {
-      const att = tr[i].att || 1;
-      if (i === 0 || (tr[i - 1].att || 1) !== att) {
+      if (i === 0 || tr[i - 1].ph !== tr[i].ph) {
         c2.strokeStyle = col.border;
         c2.beginPath(); c2.moveTo(x(i), padT); c2.lineTo(x(i), h - padB); c2.stroke();
         c2.fillStyle = col.muted;
-        c2.fillText(L.attShort(att), x(i) + 4, h - 6);
+        c2.fillText(L.phase(tr[i].ph), x(i) + 4, h - 6);
       }
     }
     c2.setLineDash([]);
@@ -461,6 +410,8 @@
       closeModal();
       return;
     }
+    if (top.type === "birth") return showBirth();
+    if (top.type === "track") return showTrack();
     if (top.type === "event") return showEvent(top);
     if (top.type === "mock") return showMock(top);
     if (top.type === "exam") return examStep === 0 ? showExamDay(top) : showReport(top);
@@ -469,8 +420,51 @@
     closeModal();
   }
 
+  function talentBars(g) {
+    return '<div class="talent">' + SUBJECTS.map((s) => {
+      const v = S.skillScore(g.skills[s]);
+      const apt = g.aptitude[s];
+      const stars = apt >= 1.25 ? "★★★" : apt >= 1.05 ? "★★" : apt >= 0.88 ? "★" : "·";
+      return '<div class="bar"><span class="name">' + esc(L.sub(s)) + '</span><span class="track"><span class="fill" style="width:' + v +
+        "%;background:var(" + subColor[s] + ')"></span></span><span class="val">' + v + '</span><span class="apt" title="' + esc(T("setup.apt")) + '">' + stars + "</span></div>";
+    }).join("") + "</div>";
+  }
+  function showBirth() {
+    const g = game;
+    openModal(T("birth.title"),
+      '<div class="big-emoji">👶</div><p>' + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance() })) + "</p>" +
+      "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",
+      [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }]);
+  }
+  function showTrack() {
+    const g = game;
+    let track = g.skills.math + g.skills.inq2 > g.skills.kor + g.skills.inq1 ? "sci" : "soc";
+    openModal(T("track.title"),
+      "<p>" + esc(T("track.text")) + "</p>" +
+      '<div class="seg" id="trackSeg"><button type="button" data-v="soc">' + esc(L.track("soc")) + '</button><button type="button" data-v="sci">' + esc(L.track("sci")) + "</button></div>" +
+      '<small class="muted" id="trackNote"></small>' +
+      '<div class="field"><div class="two"><select id="inqA" aria-label="' + esc(L.subShort("inq1")) + '"></select><select id="inqB" aria-label="' + esc(L.subShort("inq2")) + '"></select></div>' +
+      "<small>" + esc(T("track.inqNote")) + "</small></div>",
+      [{ label: T("track.go"), primary: true, run: () => { game.chooseTrack(track, [$("inqA").value, $("inqB").value]); plan = {}; after(); } }]);
+    const seg = $("trackSeg"), a = $("inqA"), b = $("inqB");
+    const fill = () => {
+      for (const btn of seg.querySelectorAll("button")) btn.classList.toggle("on", btn.dataset.v === track);
+      $("trackNote").textContent = T("track.note." + track);
+      const opts = INQUIRY[track].map((x) => '<option value="' + x.id + '">' + esc(L.inq(x.id)) + "</option>").join("");
+      a.innerHTML = opts; b.innerHTML = opts;
+      a.value = INQUIRY[track][0].id; b.value = INQUIRY[track][1].id;
+    };
+    seg.addEventListener("click", (e) => { const btn = e.target.closest("button[data-v]"); if (btn) { track = btn.dataset.v; fill(); } });
+    // The two inquiry subjects must differ.
+    const fix = (changed, other) => { if (changed.value === other.value) other.value = INQUIRY[track].map((x) => x.id).find((id) => id !== changed.value); };
+    a.addEventListener("change", () => fix(a, b));
+    b.addEventListener("change", () => fix(b, a));
+    fill();
+  }
+
   function eventTitle(ev) {
-    return ev.id === "eve" || ev.id === "lunch" ? T("ev." + ev.id + ".title") : L.date(game.year, game.month);
+    if (ev.id === "eve" || ev.id === "lunch") return T("ev." + ev.id + ".title");
+    return game.inSchool() ? L.schoolGrade(game.grade) + " · " + L.date(game.year, game.month) : L.date(game.year, game.month);
   }
   function showEvent(ev) {
     const title = eventTitle(ev);
@@ -507,7 +501,7 @@
 
   function showMock(top) {
     const r = top.result;
-    openModal(T("mock.title", { name: L.mock(r.month) }),
+    openModal(T("mock.title", { name: L.mock(r.month, r.school) }),
       "<p>" + esc(T("mock.text")) + "</p>" + reportTable(r) +
       '<p class="muted" style="margin-top:10px">' + esc(T("mock.total", { n: r.total })) + "</p>",
       [{ label: T("mock.back"), primary: true, run: () => { game.dismiss(); after(); } }]);
@@ -643,7 +637,6 @@
 
   // ---------- boot ----------
   applyStatic();
-  fillInquiry(false);
   game = loadSave();
   if (game && !game.ending) showGame();
   else showSetup();

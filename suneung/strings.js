@@ -10,28 +10,34 @@
   // ---------- names and units ----------
   const DATA = {
     en: {
-      subj: { kor: "Korean", math: "Math", eng: "English", hist: "Korean History", inq1: "Inquiry 1", inq2: "Inquiry 2" },
-      subjShort: { kor: "Kor", math: "Math", eng: "Eng", hist: "Hist", inq1: "Inq 1", inq2: "Inq 2" },
+      // Before the track choice the two inquiry slots are the social-studies and science foundations.
+      subj: { kor: "Korean", math: "Math", eng: "English", hist: "Korean History", inq1: "Social studies", inq2: "Science" },
+      subjShort: { kor: "Kor", math: "Math", eng: "Eng", hist: "Hist", inq1: "Soc", inq2: "Sci" },
+      inqShort: { inq1: "Inq 1", inq2: "Inq 2" },
       inq: {
         ethics: "Ethics & Life", society: "Society & Culture", ideas: "Ethics & Ideas", kgeo: "Korean Geography",
         wgeo: "World Geography", eahist: "East Asian History", whist: "World History", law: "Politics & Law", econ: "Economics",
         phys: "Physics I", chem: "Chemistry I", bio: "Life Science I", earth: "Earth Science I",
       },
       elective: { kor: "Speech & Writing", soc: "Probability & Statistics", sci: "Calculus" },
-      act: { mock: "Practice exams", rest: "Rest", exercise: "Exercise", friends: "Friends", games: "Games", job: "Part-time job" },
-      actLong: { mock: "Timed practice exams", rest: "Rest & sleep", exercise: "Exercise", friends: "Hang out with friends", games: "Games & YouTube", job: "Part-time job" },
+      act: { reading: "Reading", arts: "Arts & sports", mock: "Practice exams", rest: "Rest", exercise: "Exercise", friends: "Friends", games: "Games", job: "Part-time job" },
+      actLong: { reading: "Read books", arts: "Piano, taekwondo & co.", mock: "Timed practice exams", rest: "Rest & sleep", exercise: "Exercise", friends: "Hang out with friends", games: "Games & YouTube", job: "Part-time job" },
       actHint: {
+        reading: "Free. Builds Korean, with a little social studies and history.",
+        arts: "₩150,000 a month. +Health, −Stress, +Motivation",
         mock: "Builds exam stamina: steadier scores on the day. Small gains everywhere, stressful.",
         rest: "−Stress, +Health",
         exercise: "+Health, −Stress",
         friends: "Big −Stress, +Motivation, things happen",
         games: "−Stress but −Motivation",
-        job: "+₩250,000, +Stress, −Health",
+        job: "+₩250,000 a month, +Stress, −Health",
       },
       method: { self: "Self-study", online: "Online lectures", hagwon: "Cram school", tutor: "Private tutor" },
-      status: { hs3: "High school senior", academy: "Retake academy", selfstudy: "Self-study retake", halfretake: "Half-retake at university" },
-      family: { tight: "Tight budget", middle: "Middle class", wealthy: "Wealthy" },
-      familyAdj: { tight: "tight-budget", middle: "middle-class", wealthy: "wealthy" },
+      status: { elem: "Elementary school", mid: "Middle school", high: "High school", hs3: "High school senior", academy: "Retake academy", selfstudy: "Self-study retake", halfretake: "Half-retake at university" },
+      family: { q1: "Low income", q2: "Lower-middle income", q3: "Middle income", q4: "Upper-middle income", q5: "High income" },
+      familyAdj: { q1: "low-income", q2: "lower-middle-income", q3: "middle-income", q4: "upper-middle-income", q5: "high-income" },
+      fifth: { q1: "the bottom fifth", q2: "the second fifth", q3: "the middle fifth", q4: "the fourth fifth", q5: "the top fifth" },
+      season: { 3: "spring term", 6: "summer break", 9: "fall term", 12: "winter break" },
       track: { soc: "Humanities", sci: "Sciences" },
       uni: {
         med: "Medical school", snu: "Seoul National University", yonsei: "Yonsei University", korea: "Korea University",
@@ -44,31 +50,36 @@
       chance: { safe: "safe", match: "match", reach: "reach", long: "long shot" },
       months: ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
       monthsLong: ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-      mock: { 3: "March mock exam", 6: "June mock exam", 9: "September mock exam" },
+      mock: { 3: "March mock exam", 6: "June mock exam", 9: "September mock exam", 11: "November mock exam" },
     },
     ko: {
-      subj: { kor: "국어", math: "수학", eng: "영어", hist: "한국사", inq1: "탐구1", inq2: "탐구2" },
-      subjShort: { kor: "국", math: "수", eng: "영", hist: "한", inq1: "탐1", inq2: "탐2" },
+      subj: { kor: "국어", math: "수학", eng: "영어", hist: "한국사", inq1: "사회", inq2: "과학" },
+      subjShort: { kor: "국", math: "수", eng: "영", hist: "한", inq1: "사", inq2: "과" },
+      inqShort: { inq1: "탐1", inq2: "탐2" },
       inq: {
         ethics: "생활과 윤리", society: "사회·문화", ideas: "윤리와 사상", kgeo: "한국지리", wgeo: "세계지리",
         eahist: "동아시아사", whist: "세계사", law: "정치와 법", econ: "경제",
         phys: "물리학Ⅰ", chem: "화학Ⅰ", bio: "생명과학Ⅰ", earth: "지구과학Ⅰ",
       },
       elective: { kor: "화법과 작문", soc: "확률과 통계", sci: "미적분" },
-      act: { mock: "실전 모의고사", rest: "휴식", exercise: "운동", friends: "친구", games: "게임", job: "알바" },
-      actLong: { mock: "실전 모의고사", rest: "휴식·수면", exercise: "운동", friends: "친구 만나기", games: "게임·유튜브", job: "아르바이트" },
+      act: { reading: "독서", arts: "예체능", mock: "실전 모의고사", rest: "휴식", exercise: "운동", friends: "친구", games: "게임", job: "알바" },
+      actLong: { reading: "책 읽기", arts: "피아노·태권도 학원", mock: "실전 모의고사", rest: "휴식·수면", exercise: "운동", friends: "친구 만나기", games: "게임·유튜브", job: "아르바이트" },
       actHint: {
+        reading: "무료. 국어 실력이 오르고 사회·역사도 조금 오릅니다.",
+        arts: "월 15만원. 체력 +, 스트레스 −, 의지 +",
         mock: "실전 감각이 붙어 시험 날 점수가 안정됩니다. 모든 과목이 조금씩 오르지만 스트레스가 큽니다.",
         rest: "스트레스 −, 체력 +",
         exercise: "체력 +, 스트레스 −",
         friends: "스트레스 크게 −, 의지 +, 무슨 일이 생길지도",
         games: "스트레스 − 대신 의지 −",
-        job: "+25만원, 스트레스 +, 체력 −",
+        job: "월 +25만원, 스트레스 +, 체력 −",
       },
       method: { self: "독학", online: "인강", hagwon: "학원", tutor: "과외" },
-      status: { hs3: "고3 현역", academy: "재종반", selfstudy: "독학재수", halfretake: "반수" },
-      family: { tight: "흙수저", middle: "평범", wealthy: "금수저" },
-      familyAdj: { tight: "흙수저", middle: "평범한", wealthy: "금수저" },
+      status: { elem: "초등학교", mid: "중학교", high: "고등학교", hs3: "고3 현역", academy: "재종반", selfstudy: "독학재수", halfretake: "반수" },
+      family: { q1: "저소득층", q2: "서민층", q3: "중산층", q4: "중상류층", q5: "고소득층" },
+      familyAdj: { q1: "저소득층", q2: "서민층", q3: "중산층", q4: "중상류층", q5: "고소득층" },
+      fifth: { q1: "하위 20%", q2: "하위 20–40%", q3: "중간 20%", q4: "상위 20–40%", q5: "상위 20%" },
+      season: { 3: "봄 학기", 6: "여름방학", 9: "가을 학기", 12: "겨울방학" },
       track: { soc: "문과", sci: "이과" },
       uni: {
         med: "의대", snu: "서울대", yonsei: "연세대", korea: "고려대", skku: "성균관대", sogang: "서강대", hanyang: "한양대",
@@ -79,7 +90,7 @@
       chance: { safe: "안정", match: "적정", reach: "소신", long: "상향" },
       months: ["", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
       monthsLong: ["", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
-      mock: { 3: "3월 학력평가", 6: "6월 모의평가", 9: "9월 모의평가" },
+      mock: { 3: "3월 학력평가", 6: "6월 모의평가", 9: "9월 모의평가", 11: "11월 학력평가" },
     },
   };
 
@@ -123,23 +134,14 @@
     en: {
       "lang.html": "en",
       "app.title": "Suneung Simulator",
-      "app.sub": "Live your exam years month by month. Study, rest, make choices, sit Korea's college entrance exam (the Suneung), and retake it as many times as it takes to get into the school you want.",
+      "app.sub": "Grow up from age 7 to Korea's college entrance exam (the Suneung). Study, rest, make choices, sit the exam, and retake it as many times as it takes to get into the school you want.",
 
       "setup.title": "A new life",
       "setup.name": "Name",
       "setup.namePh": "Minjun Kim",
-      "setup.track": "Track",
-      "setup.trackNote.soc": "Math elective: Probability & Statistics, plus two social-studies subjects.",
-      "setup.trackNote.sci": "Math elective: Calculus, plus two science subjects. Only this track can apply to medical school.",
-      "setup.inq": "Inquiry subjects",
-      "setup.inqNote": "Scores are relative to everyone who sits the same subject, so a strong pool is harder to top.",
-      "setup.family": "Family",
-      "setup.familyNote": (p, h) => "Monthly education budget " + h.won(p.a) + ", savings " + h.won(p.s) + "." +
-        (p.f === "tight" ? " Retake academies are only possible on a scholarship." : p.f === "wealthy" ? " Years of cram school already: a head start." : ""),
-      "setup.start": "Your starting point",
+      "setup.intro": "You start at age 7, on your first day of elementary school, and play all the way to the Suneung in grade 12. Your family and your talents are dealt at random when you're born, the way life does it: each of Korea's five household-income fifths is equally likely.",
       "setup.apt": "Aptitude: how fast you learn this subject",
-      "setup.reroll": "🎲 Re-roll talent",
-      "setup.go": "Start senior year →",
+      "setup.go": "Be born →",
       "setup.resume": "Continue saved life",
       "fame.title": "Hall of fame",
       "fame.sub": "best results on this device",
@@ -147,14 +149,15 @@
       "fame.h": ["#", "Name", "Total", "Kor·Math·Eng", "Ended at", "Tries"],
       "fame.none": "No university",
 
-      "stat.date": "Date", "stat.attempt": "Attempt", "stat.age": "Age", "stat.money": "Money",
+      "stat.date": "Date", "stat.attempt": "Stage", "stat.age": "Age", "stat.money": "Savings",
+      "stat.years": (p) => "Suneung in " + p.n + (p.n === 1 ? " year" : " years"),
       "stat.dday": "{n} days to the exam",
       "stat.examMonth": "Exam this month",
       "stat.results": "Results season",
       "stat.over": "Exam life over",
-      "stat.allowance": "+{a}/month from parents",
+      "stat.allowance": "Education budget {a}/month",
 
-      "ability.title": "Ability", "ability.sub": "0–100; 50 is the average test taker",
+      "ability.title": "Ability", "ability.sub": "0–100; 50 is the average student your age",
       "ability.tip": "Aptitude ×{a}",
       "cond.title": "Condition",
       "cond.health": "Health", "cond.stress": "Stress", "cond.motivation": "Motivation", "cond.practice": "Exam stamina",
@@ -164,17 +167,25 @@
       "cond.practice.tip": "From timed practice and mock exams: steadier scores on the day",
       "chart.title": "Ability over time",
 
-      "plan.title": (p, h) => "Plan " + h.monthLong(p.m) + (p.mock ? " · " + h.mock(p.m) + " at month end" : p.exam ? " · the exam at month end" : ""),
+      "plan.title": (p, h) => {
+        if (p.st === "elem") return "Plan grade " + p.g + " (the whole school year)";
+        if (p.st === "mid") return "Plan grade " + p.g + ", " + (p.m === 3 ? "spring" : "fall") + " semester";
+        if (p.st === "high") return "Plan grade " + p.g + ", " + h.season(p.m) +
+          (p.m === 3 ? " · June mock exam at the end" : p.m === 9 ? " · November mock exam at the end" : p.track ? " · choose your track at the end" : "");
+        return "Plan " + h.monthLong(p.m) + (p.mock ? " · " + h.mock(p.m) + " at month end" : p.exam ? " · the exam at month end" : "");
+      },
       "plan.done": "Your exam years are over. Look back at the log, or start a new life below.",
       "plan.left": "{l} of {n} blocks left",
       "plan.method": "Study method",
       "plan.methodFixed": "The academy teaches every subject (×{x} study speed); you only choose the hours.",
-      "plan.methodNote": (p, h) => "×" + p.x + " study speed · " + (p.cost ? h.won(p.cost) + " per study block" : "free") + " · " +
+      "plan.methodNote": (p, h) => "×" + p.x + " study speed · " + (p.cost ? h.won(p.cost) + " per study block a month" : "free") + " · " +
         (p.sens >= 1 ? "only as good as your motivation" : p.sens >= 0.6 ? "keeps you on task" : "barely depends on motivation"),
       "plan.studyHint": (p) => "Ability " + p.v + (p.s === "eng" ? " · absolute grading: 90+ is grade 1" : p.s === "hist" ? " · absolute grading: 40+ is grade 1" : ""),
-      "plan.cost": (p, h) => "Costs " + h.won(p.c) + (p.e ? " · earns " + h.won(p.e) : "") + " · after this month: " + h.wonShort(p.m),
+      "plan.cost": (p, h) => "Costs " + h.won(p.c) + " of the " + h.won(p.b) + " education budget" + (p.o ? " (" + h.won(p.o) + " from your savings)" : "") +
+        (p.e ? " · earns " + h.won(p.e) : "") + " · savings after: " + h.wonShort(p.m),
       "plan.less": "Less {a}", "plan.more": "More {a}",
-      "plan.repeat": "Same as last month", "plan.clear": "Clear", "plan.next": "Next month →", "plan.sit": "Sit the exam →",
+      "plan.repeat": "Same as last time", "plan.clear": "Clear", "plan.sit": "Sit the exam →",
+      "plan.next": (p) => ({ elem: "Next year →", mid: "Next semester →", high: "Next season →" })[p.st] || "Next month →",
       "err.count": "Each activity needs a whole number of blocks.",
       "err.blocks": "Use exactly {n} blocks.",
       "err.method": "Pick a study method.",
@@ -182,7 +193,7 @@
 
       "log.title": "Life log",
       "history.title": "Exam history",
-      "history.empty": "Mock exams (March, June, September) and your Suneung results show up here.",
+      "history.empty": "Mock exams (from grade 10) and your Suneung results show up here.",
       "history.exam": "Exam", "history.total": "Total",
       "history.suneung": "{y} Suneung", "history.mock": "{m} mock",
       "newLife": "Start a new life",
@@ -193,7 +204,13 @@
       "newLife.keep": "Keep playing", "newLife.go": "Start over",
 
       // Log lines.
-      "log.born": (p, h) => "Born into a " + h.familyAdj(p.fam) + " family. March " + p.y + ": you start your last year of high school. The Suneung is in November.",
+      "log.born": (p, h) => "Born into a " + h.familyAdj(p.fam) + " family (household income about " + h.wonShort(p.inc * 10000) + " a month). March " + p.y + ": you start elementary school.",
+      "log.grade": (p) => "March " + p.y + ": you start grade " + p.g + ".",
+      "log.stage": (p) => "March " + p.y + ": " + ({ mid: "you start middle school.", high: "you start high school.", hs3: "your final year of high school. The Suneung is in November." })[p.st],
+      "log.teacher": (p) => "Teacher's note: " + ["", "\"Needs more support at home.\"", "\"Steady, careful work.\"", "\"Outstanding. One of the best in the class.\""][p.lvl],
+      "log.report": (p) => "Semester " + p.sem + " exams: ranked " + p.rank + " of " + p.of + " in your class.",
+      "log.sebae": (p, h) => "New Year's money from relatives: +" + h.won(p.a) + ".",
+      "log.track": (p, h) => "You choose the " + h.track(p.track).toLowerCase() + " track: " + h.inq(p.inq[0]) + " and " + h.inq(p.inq[1]) + ".",
       "log.month": (p, h) => {
         const plan = h.planList(p.plan).join(", ");
         const d = Object.keys(p.d).map((s) => h.sub(s) + " " + (p.d[s] > 0 ? "+" : "") + p.d[s].toFixed(1));
@@ -205,14 +222,14 @@
         const res = h.t(p.r.key, p.r.p);
         return p.c == null ? res : h.t("ev." + p.id + ".text") + " → " + h.t("ev." + p.id + ".c")[p.c] + ". " + res;
       },
-      "log.mock": (p, h) => h.mock(p.m) + ": " + h.grades(p.g),
+      "log.mock": (p, h) => h.mock(p.m, p.sch) + ": " + h.grades(p.g, p.pre),
       "log.suneung": (p, h) => (p.y + 1) + " Suneung: " + h.grades(p.g) + " · standard-score total " + p.total,
       "log.apply": (p, h) => "Applications: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "admitted ✓" : "rejected ✗")).join(", "),
       "log.enroll": (p, h) => "March " + p.y + ": you enroll at " + h.uni(p.uni) + ". Exam life is over.",
       "log.quit": "You close the workbooks for good.",
       "log.halfpay": "Your parents sit you down: from now on, they can only pay half.",
       "log.newyear": (p, h) => "March " + p.y + ": " + h.att(p.att) + ". " + ({
-        academy: "You sign up for a retake academy: 7am to 10pm, phones collected at the door." + (p.sch ? " Your score earned a full scholarship." : p.fam === "tight" ? "" : " Your parents pay the ₩2.9M a month."),
+        academy: "You sign up for a retake academy: 7am to 10pm, phones collected at the door." + (p.sch ? " Your score earned a full scholarship." : p.pays ? " Your parents pay the ₩2.9M a month." : ""),
         selfstudy: "You rent a desk at a study café and plan the year yourself.",
         halfretake: "You start at " + h.uni(p.uni) + ", but keep studying for the Suneung in secret.",
       })[p.st],
@@ -228,6 +245,7 @@
       "ev.star.c": ["Buy it (₩300,000)", "Pass"],
       "ev.star.r0": "Half of it is jokes, but the other half genuinely changes how you see 4-point questions.",
       "ev.star.r1": "You watch the free preview three times instead.",
+      "ev.star.r0x": "By the time you go to sign up, your savings have already gone elsewhere. You watch the free preview instead.",
       "ev.nag.text": "Your mother finds your phone screen time: 6 hours a day. \"Her friend's son studies 14 hours!\"",
       "ev.nag.c": ["Apologize and lock the phone in a timer box", "Argue back"],
       "ev.nag.r0": "The box clicks shut. You feel lighter, and also like a prisoner.",
@@ -237,7 +255,38 @@
       "ev.crush.r0a": "You quiz each other on vocabulary at the café. Weirdly productive.",
       "ev.crush.r0b": "Long phone calls every night. Your past-exam workbook gathers dust.",
       "ev.crush.r1": "\"After the exam\" becomes your new favorite phrase.",
-      "ev.rival.r": "Your rival posted their mock-exam grades in the class group chat: all 1s. You're fired up.",
+      "ev.rival.r": "Your rival posted their exam scores in the class group chat: perfect marks. You're fired up.",
+      "ev.sportsday.r": "Sports day: you run the last leg of the class relay and win. Your mom films the whole thing.",
+      "ev.bookworm.r": "You discover a fantasy series and read all seven books in a month.",
+      "ev.olympiad.text": "Your teacher suggests entering the regional math olympiad.",
+      "ev.olympiad.c": ["Enter", "Not this year"],
+      "ev.olympiad.r0a": "You win a silver medal. Math is officially your thing.",
+      "ev.olympiad.r0b": "The last two problems beat you. No medal, but you know what to work on.",
+      "ev.olympiad.r1": "You spend the weekend playing instead.",
+      "ev.smartphone.text": "Everyone in your class has a smartphone. You beg your parents for one.",
+      "ev.smartphone.c": ["Get one now", "Agree to wait until middle school"],
+      "ev.smartphone.r0": "It's amazing. You also learn what a short-video feed does to an evening.",
+      "ev.smartphone.r1": "Your parents are impressed. You read more, and they buy you one later anyway.",
+      "ev.daechi.text": "Your parents are thinking of moving to Daechi-dong, Seoul's famous cram-school district.",
+      "ev.daechi.c": ["Move", "Stay where your friends are"],
+      "ev.daechi.r0": "New school, new friends, and academies on every corner. Everyone studies here.",
+      "ev.daechi.r1": "You stay. Your best friend still lives across the street.",
+      "ev.bully.text": "A bigger kid keeps picking on you at school.",
+      "ev.bully.c": ["Tell the teacher", "Stand up to them", "Keep your head down"],
+      "ev.bully.r0": "The teacher calls both families in. It stops.",
+      "ev.bully.r1a": "You stand your ground, and they leave you alone after that.",
+      "ev.bully.r1b": "It turns into a scuffle. You come home with a scraped knee and no win.",
+      "ev.bully.r2": "It goes on for months. School stops feeling safe.",
+      "ev.president.text": "Class president elections are next week.",
+      "ev.president.c": ["Run for president", "Vote for a friend"],
+      "ev.president.r0a": "You win! You give a speech with your knees shaking.",
+      "ev.president.r0b": "You lose by three votes. It stings for a week.",
+      "ev.president.r1": "Your friend wins and owes you one.",
+      "ev.career.r": "Free semester career week: you shadow a doctor at the local hospital. You want that white coat.",
+      "ev.jung2.text": "Grade 8. Suddenly your parents don't understand anything, and you say so.",
+      "ev.jung2.c": ["Rebel", "Talk it out at dinner"],
+      "ev.jung2.r0": "Headphones on, door closed. Studying can wait.",
+      "ev.jung2.r1": "It's awkward, but they listen. You feel a bit more grown-up.",
       "ev.slump.text": "You stare at the same passage for an hour. Nothing goes in. A slump.",
       "ev.slump.c": ["Take a weekend trip to the sea", "Push through"],
       "ev.slump.r0": "Wind, waves and tteokbokki. You come back human again.",
@@ -284,6 +333,18 @@
       "report.h": ["Section", "Raw", "Standard", "Percentile", "Grade", "Grade-1 cut"],
       "report.subject": (p, h) => h.sub(p.s) + (p.el ? " (" + p.el + ")" : ""),
       "mock.title": "{name} results",
+      "birth.title": "You're born!",
+      "birth.text": (p, h) => p.name + " is born into a " + h.familyAdj(p.fam) + " family. Household income is about " + h.wonShort(p.inc * 10000) +
+        " a month, in " + h.fifth(p.fam) + " of Korean households, and your parents can spend about " + h.won(p.a) + " a month on your education.",
+      "birth.talent": "Your talents at age 7",
+      "birth.note": "Stars show aptitude: how fast you learn a subject. Ability is measured against your own year group, and classmates keep studying too, so standing still means slipping.",
+      "birth.go": "Start elementary school →",
+      "track.title": "Choose your track",
+      "track.text": "Grade 10 is ending. Choose humanities or sciences for grades 11 and 12, and your two inquiry subjects. Your social-studies ability carries over into humanities subjects, your science ability into science subjects.",
+      "track.note.soc": "Math elective: Probability & Statistics.",
+      "track.note.sci": "Math elective: Calculus. Only this track can apply to medical school.",
+      "track.inqNote": "Scores are relative to everyone who sits the same subject, so a strong pool is harder to top.",
+      "track.go": "Confirm",
       "mock.text": "A practice run at the real thing, graded against the whole country.",
       "mock.total": "Standard-score total: {n}",
       "mock.back": "Back to studying",
@@ -350,23 +411,14 @@
     ko: {
       "lang.html": "ko",
       "app.title": "수능 시뮬레이터",
-      "app.sub": "수험 생활을 한 달씩 살아 보세요. 공부하고, 쉬고, 선택하고, 수능을 치르고, 원하는 대학에 갈 때까지 몇 번이든 다시 도전하세요.",
+      "app.sub": "일곱 살부터 수능까지 자라 보세요. 공부하고, 쉬고, 선택하고, 수능을 치르고, 원하는 대학에 갈 때까지 몇 번이든 다시 도전하세요.",
 
       "setup.title": "새로운 인생",
       "setup.name": "이름",
       "setup.namePh": "김민준",
-      "setup.track": "계열",
-      "setup.trackNote.soc": "수학 선택과목은 확률과 통계, 탐구는 사회탐구 두 과목입니다.",
-      "setup.trackNote.sci": "수학 선택과목은 미적분, 탐구는 과학탐구 두 과목입니다. 의대는 이과만 지원할 수 있습니다.",
-      "setup.inq": "탐구 과목",
-      "setup.inqNote": "점수는 같은 과목 응시자끼리 비교되므로, 잘하는 학생이 많은 과목일수록 상위권이 어렵습니다.",
-      "setup.family": "가정 형편",
-      "setup.familyNote": (p, h) => "매달 교육비 " + h.won(p.a) + ", 저축 " + h.won(p.s) + "." +
-        (p.f === "tight" ? " 재종반은 장학생으로만 다닐 수 있습니다." : p.f === "wealthy" ? " 이미 학원을 오래 다녀 출발점이 앞서 있습니다." : ""),
-      "setup.start": "출발점",
+      "setup.intro": "일곱 살, 초등학교 입학 첫날부터 고3 수능까지 살아 봅니다. 가정 형편과 재능은 태어날 때 무작위로 정해집니다. 인생이 그렇듯이요. 한국 가구 소득 5분위 가운데 어느 가정에 태어날지는 모두 같은 확률입니다.",
       "setup.apt": "적성: 이 과목을 얼마나 빨리 익히는지",
-      "setup.reroll": "🎲 재능 다시 뽑기",
-      "setup.go": "고3 시작 →",
+      "setup.go": "태어나기 →",
       "setup.resume": "저장된 인생 이어 하기",
       "fame.title": "명예의 전당",
       "fame.sub": "이 기기에서의 최고 기록",
@@ -374,14 +426,15 @@
       "fame.h": ["#", "이름", "합계", "국·수·영", "진학", "도전"],
       "fame.none": "진학 안 함",
 
-      "stat.date": "날짜", "stat.attempt": "도전", "stat.age": "나이", "stat.money": "돈",
+      "stat.date": "날짜", "stat.attempt": "단계", "stat.age": "나이", "stat.money": "용돈 저축",
+      "stat.years": "수능까지 {n}년",
       "stat.dday": "수능 D-{n}",
       "stat.examMonth": "이번 달 수능",
       "stat.results": "결과 발표 시즌",
       "stat.over": "수험 생활 끝",
-      "stat.allowance": "부모님 지원 월 {a}",
+      "stat.allowance": "교육비 월 {a}",
 
-      "ability.title": "실력", "ability.sub": "0–100, 50이 평균 수험생",
+      "ability.title": "실력", "ability.sub": "0–100, 50이 또래 평균",
       "ability.tip": "적성 ×{a}",
       "cond.title": "컨디션",
       "cond.health": "체력", "cond.stress": "스트레스", "cond.motivation": "의지", "cond.practice": "실전력",
@@ -391,17 +444,25 @@
       "cond.practice.tip": "실전 연습과 모의고사로 쌓이며, 시험 날 점수가 안정됩니다",
       "chart.title": "실력 변화",
 
-      "plan.title": (p, h) => h.monthLong(p.m) + " 계획" + (p.mock ? " · 월말 " + h.mock(p.m) : p.exam ? " · 월말 수능" : ""),
+      "plan.title": (p, h) => {
+        if (p.st === "elem") return h.schoolGrade(p.g) + " 1년 계획";
+        if (p.st === "mid") return h.schoolGrade(p.g) + " " + (p.m === 3 ? "1학기" : "2학기") + " 계획";
+        if (p.st === "high") return h.schoolGrade(p.g) + " " + h.season(p.m) + " 계획" +
+          (p.m === 3 ? " · 끝에 6월 학력평가" : p.m === 9 ? " · 끝에 11월 학력평가" : p.track ? " · 끝에 계열 선택" : "");
+        return h.monthLong(p.m) + " 계획" + (p.mock ? " · 월말 " + h.mock(p.m) : p.exam ? " · 월말 수능" : "");
+      },
       "plan.done": "수험 생활이 끝났습니다. 기록을 돌아보거나 아래에서 새 인생을 시작하세요.",
       "plan.left": "{n}칸 중 {l}칸 남음",
       "plan.method": "공부 방법",
       "plan.methodFixed": "재종반이 모든 과목을 가르칩니다(학습 속도 ×{x}). 시간 배분만 정하면 됩니다.",
-      "plan.methodNote": (p, h) => "학습 속도 ×" + p.x + " · " + (p.cost ? "공부 한 칸당 " + h.won(p.cost) : "무료") + " · " +
+      "plan.methodNote": (p, h) => "학습 속도 ×" + p.x + " · " + (p.cost ? "공부 한 칸당 월 " + h.won(p.cost) : "무료") + " · " +
         (p.sens >= 1 ? "의지가 약하면 효과도 약함" : p.sens >= 0.6 ? "공부를 붙잡아 줌" : "의지와 거의 상관없음"),
       "plan.studyHint": (p) => "실력 " + p.v + (p.s === "eng" ? " · 절대평가: 90점 이상 1등급" : p.s === "hist" ? " · 절대평가: 40점 이상 1등급" : ""),
-      "plan.cost": (p, h) => "지출 " + h.won(p.c) + (p.e ? " · 수입 " + h.won(p.e) : "") + " · 이번 달 후 잔액 " + h.wonShort(p.m),
+      "plan.cost": (p, h) => "교육비 " + h.won(p.b) + " 중 " + h.won(p.c) + " 사용" + (p.o ? " (" + h.won(p.o) + "은 용돈에서)" : "") +
+        (p.e ? " · 수입 " + h.won(p.e) : "") + " · 남는 용돈 " + h.wonShort(p.m),
       "plan.less": "{a} 줄이기", "plan.more": "{a} 늘리기",
-      "plan.repeat": "지난달과 같게", "plan.clear": "비우기", "plan.next": "다음 달 →", "plan.sit": "수능 보러 가기 →",
+      "plan.repeat": "지난번과 같게", "plan.clear": "비우기", "plan.sit": "수능 보러 가기 →",
+      "plan.next": (p) => ({ elem: "다음 해 →", mid: "다음 학기 →", high: "다음 계절 →" })[p.st] || "다음 달 →",
       "err.count": "칸 수는 정수여야 합니다.",
       "err.blocks": "{n}칸을 모두 배정하세요.",
       "err.method": "공부 방법을 고르세요.",
@@ -409,7 +470,7 @@
 
       "log.title": "인생 기록",
       "history.title": "시험 기록",
-      "history.empty": "3월·6월·9월 모의고사와 수능 결과가 여기에 쌓입니다.",
+      "history.empty": "고1부터 보는 모의고사와 수능 결과가 여기에 쌓입니다.",
       "history.exam": "시험", "history.total": "합계",
       "history.suneung": "{y}학년도 수능", "history.mock": "{m} 모의",
       "newLife": "새 인생 시작",
@@ -419,7 +480,13 @@
       "newLife.text": "지금의 인생과 저장 기록이 사라집니다. 명예의 전당은 남습니다.",
       "newLife.keep": "계속하기", "newLife.go": "새로 시작",
 
-      "log.born": (p, h) => h.familyAdj(p.fam) + " 집안에서 태어났다. " + p.y + "년 3월, 고3이 되었다. 수능은 11월이다.",
+      "log.born": (p, h) => h.familyAdj(p.fam) + " 가정에서 태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + p.y + "년 3월, 초등학교에 입학했다.",
+      "log.grade": (p, h) => p.y + "년 3월, " + h.schoolGrade(p.g) + "이 되었다.",
+      "log.stage": (p) => p.y + "년 3월, " + ({ mid: "중학교에 입학했다.", high: "고등학교에 입학했다.", hs3: "고3이 되었다. 수능은 11월이다." })[p.st],
+      "log.teacher": (p) => "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl],
+      "log.report": (p) => p.sem + "학기 시험: 반 " + p.of + "명 중 " + p.rank + "등.",
+      "log.sebae": (p, h) => "설날 세뱃돈: +" + h.won(p.a) + ".",
+      "log.track": (p, h) => h.track(p.track) + "를 선택했다. 탐구 과목은 " + h.inq(p.inq[0]) + ", " + h.inq(p.inq[1]) + ".",
       "log.month": (p, h) => {
         const plan = h.planList(p.plan).join(", ");
         const d = Object.keys(p.d).map((s) => h.sub(s) + " " + (p.d[s] > 0 ? "+" : "") + p.d[s].toFixed(1));
@@ -431,14 +498,14 @@
         const res = h.t(p.r.key, p.r.p);
         return p.c == null ? res : h.t("ev." + p.id + ".text") + " → " + h.t("ev." + p.id + ".c")[p.c] + ". " + res;
       },
-      "log.mock": (p, h) => h.mock(p.m) + ": " + h.grades(p.g),
+      "log.mock": (p, h) => h.mock(p.m, p.sch) + ": " + h.grades(p.g, p.pre),
       "log.suneung": (p, h) => (p.y + 1) + "학년도 수능: " + h.grades(p.g) + " · 국수탐 표준점수 합 " + p.total,
       "log.apply": (p, h) => "정시 지원: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "합격 ✓" : "불합격 ✗")).join(", "),
       "log.enroll": (p, h) => p.y + "년 3월, " + josa(h.uni(p.uni), "에", "에") + " 입학했다. 수험 생활 끝.",
       "log.quit": "문제집을 영영 덮었다.",
       "log.halfpay": "부모님이 조용히 말씀하신다. 이제부터는 절반만 지원해 줄 수 있다고.",
       "log.newyear": (p, h) => p.y + "년 3월, " + h.att(p.att) + ". " + ({
-        academy: "재수종합학원에 등록했다. 아침 7시부터 밤 10시까지, 휴대폰은 입구에서 걷는다." + (p.sch ? " 성적 장학생이라 학원비는 무료다." : p.fam === "tight" ? "" : " 월 290만원은 부모님이 내신다."),
+        academy: "재수종합학원에 등록했다. 아침 7시부터 밤 10시까지, 휴대폰은 입구에서 걷는다." + (p.sch ? " 성적 장학생이라 학원비는 무료다." : p.pays ? " 월 290만원은 부모님이 내신다." : ""),
         selfstudy: "독서실 자리를 끊고 혼자 1년 계획을 세웠다.",
         halfretake: h.uni(p.uni) + "에 다니면서 몰래 수능을 다시 준비한다(반수).",
       })[p.st],
@@ -453,6 +520,7 @@
       "ev.star.c": ["산다 (30만원)", "넘긴다"],
       "ev.star.r0": "절반은 농담이지만, 나머지 절반이 4점짜리 문제를 보는 눈을 바꿔 놓았다.",
       "ev.star.r1": "대신 무료 맛보기 강의를 세 번 돌려 봤다.",
+      "ev.star.r0x": "결제하려고 보니 용돈이 이미 다른 데 나가 있었다. 대신 무료 맛보기 강의를 봤다.",
       "ev.nag.text": "엄마가 휴대폰 사용 시간을 봤다. 하루 6시간. \"엄친아는 14시간 공부한대!\"",
       "ev.nag.c": ["사과하고 휴대폰을 타임락 상자에 넣는다", "말대꾸한다"],
       "ev.nag.r0": "상자가 딸깍 잠긴다. 홀가분하면서도 감옥에 갇힌 기분이다.",
@@ -462,7 +530,38 @@
       "ev.crush.r0a": "카페에서 서로 영단어 시험을 내 준다. 의외로 효율적이다.",
       "ev.crush.r0b": "매일 밤 긴 통화. 기출 문제집에는 먼지가 쌓인다.",
       "ev.crush.r1": "\"수능 끝나고\"가 요즘 제일 좋아하는 말이 됐다.",
-      "ev.rival.r": "라이벌이 반 단톡방에 모의고사 성적을 올렸다. 올 1등급. 승부욕이 불탄다.",
+      "ev.rival.r": "라이벌이 반 단톡방에 시험 점수를 올렸다. 전 과목 만점. 승부욕이 불탄다.",
+      "ev.sportsday.r": "운동회 날, 반 대표 계주 마지막 주자로 뛰어 1등을 했다. 엄마가 처음부터 끝까지 영상으로 찍었다.",
+      "ev.bookworm.r": "판타지 시리즈에 빠져 한 달 만에 일곱 권을 다 읽었다.",
+      "ev.olympiad.text": "담임 선생님이 수학 경시대회에 나가 보라고 권하신다.",
+      "ev.olympiad.c": ["나간다", "올해는 안 나간다"],
+      "ev.olympiad.r0a": "은상을 받았다. 이제 수학은 공식적으로 내 과목이다.",
+      "ev.olympiad.r0b": "마지막 두 문제에서 막혔다. 상은 못 받았지만 무엇을 공부해야 할지 알게 됐다.",
+      "ev.olympiad.r1": "대신 주말 내내 놀았다.",
+      "ev.smartphone.text": "반 친구들은 다 스마트폰이 있다. 부모님께 사 달라고 조른다.",
+      "ev.smartphone.c": ["지금 산다", "중학교 때까지 기다리기로 한다"],
+      "ev.smartphone.r0": "신세계다. 숏폼 영상이 저녁 시간을 어떻게 삼키는지도 배웠다.",
+      "ev.smartphone.r1": "부모님이 감동하셨다. 책을 더 읽게 됐고, 결국 휴대폰은 나중에 생겼다.",
+      "ev.daechi.text": "부모님이 학원가로 유명한 대치동으로 이사할지 고민하신다.",
+      "ev.daechi.c": ["이사한다", "친구들이 있는 곳에 남는다"],
+      "ev.daechi.r0": "새 학교, 새 친구, 골목마다 학원. 여기서는 모두가 공부한다.",
+      "ev.daechi.r1": "남기로 했다. 단짝 친구는 여전히 길 건너에 산다.",
+      "ev.bully.text": "덩치 큰 아이가 학교에서 계속 괴롭힌다.",
+      "ev.bully.c": ["선생님께 말씀드린다", "맞선다", "참고 지낸다"],
+      "ev.bully.r0": "선생님이 양쪽 부모님을 부르셨다. 괴롭힘이 멈췄다.",
+      "ev.bully.r1a": "물러서지 않았더니 그 뒤로는 건드리지 않는다.",
+      "ev.bully.r1b": "몸싸움이 됐다. 무릎만 까진 채 집에 왔다.",
+      "ev.bully.r2": "몇 달째 계속된다. 학교가 더 이상 편하지 않다.",
+      "ev.president.text": "다음 주에 반장 선거가 있다.",
+      "ev.president.c": ["반장 선거에 나간다", "친구에게 표를 준다"],
+      "ev.president.r0a": "당선됐다! 무릎을 떨며 당선 소감을 말했다.",
+      "ev.president.r0b": "세 표 차이로 떨어졌다. 일주일 동안 속이 쓰리다.",
+      "ev.president.r1": "친구가 당선됐다. 하나 빚진 셈이다.",
+      "ev.career.r": "자유학기제 진로 체험 주간: 동네 병원에서 의사 선생님을 따라다녔다. 흰 가운을 입고 싶어졌다.",
+      "ev.jung2.text": "중2가 됐다. 갑자기 부모님이 아무것도 이해 못 하는 것 같고, 그 말을 입 밖으로 낸다.",
+      "ev.jung2.c": ["반항한다", "저녁 식탁에서 털어놓는다"],
+      "ev.jung2.r0": "이어폰을 꽂고 방문을 닫는다. 공부는 나중에.",
+      "ev.jung2.r1": "어색했지만 부모님이 들어 주셨다. 조금 어른이 된 기분이다.",
       "ev.slump.text": "한 시간째 같은 지문만 보고 있다. 아무것도 머리에 안 들어온다. 슬럼프다.",
       "ev.slump.c": ["주말에 바다를 보러 간다", "버틴다"],
       "ev.slump.r0": "바람, 파도, 떡볶이. 다시 사람이 되어 돌아왔다.",
@@ -508,6 +607,18 @@
       "report.h": ["영역", "원점수", "표준점수", "백분위", "등급", "1등급 컷"],
       "report.subject": (p, h) => h.sub(p.s) + (p.el ? " (" + p.el + ")" : ""),
       "mock.title": "{name} 결과",
+      "birth.title": "태어났습니다!",
+      "birth.text": (p, h) => p.name + "은(는) " + h.familyAdj(p.fam) + " 가정에서 태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
+        "으로 한국 가구 중 " + h.fifth(p.fam) + "에 속하고, 부모님은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
+      "birth.talent": "일곱 살 때의 재능",
+      "birth.note": "별은 적성, 즉 그 과목을 얼마나 빨리 익히는지를 뜻합니다. 실력은 같은 학년 친구들과 비교한 값이고, 친구들도 계속 공부하므로 제자리걸음은 곧 뒤처지는 것입니다.",
+      "birth.go": "초등학교 입학 →",
+      "track.title": "계열 선택",
+      "track.text": "고1이 끝나 갑니다. 고2·고3을 문과로 갈지 이과로 갈지, 그리고 탐구 두 과목을 고르세요. 사회 실력은 사회탐구로, 과학 실력은 과학탐구로 이어집니다.",
+      "track.note.soc": "수학 선택과목은 확률과 통계입니다.",
+      "track.note.sci": "수학 선택과목은 미적분입니다. 의대는 이과만 지원할 수 있습니다.",
+      "track.inqNote": "점수는 같은 과목 응시자끼리 비교되므로, 잘하는 학생이 많은 과목일수록 상위권이 어렵습니다.",
+      "track.go": "확정",
       "mock.text": "전국 수험생과 함께 치르는 실전 연습입니다.",
       "mock.total": "국수탐 표준점수 합: {n}",
       "mock.back": "다시 공부하러",
@@ -596,11 +707,15 @@
         }
         return D.subj[s];
       },
-      subShort: (s) => D.subjShort[s],
+      // After the track choice the short labels name the slot (Inq 1/2); before it, the foundation.
+      subShort(s) {
+        const c = ctx();
+        return (s === "inq1" || s === "inq2") && c && c.inq ? D.inqShort[s] : D.subjShort[s];
+      },
       inq: (id) => D.inq[id],
       elective(s) {
         if (s === "kor") return D.elective.kor;
-        if (s === "math") { const c = ctx(); return D.elective[c && c.track === "sci" ? "sci" : "soc"]; }
+        if (s === "math") { const c = ctx(); return c && c.track ? D.elective[c.track] : ""; }
         return "";
       },
       act: (id) => D.act[id] || D.subj[id],
@@ -610,12 +725,26 @@
       status: (id) => D.status[id],
       family: (id) => D.family[id],
       familyAdj: (id) => D.familyAdj[id],
+      fifth: (id) => D.fifth[id],
+      season: (m) => D.season[m],
+      // School grade 1–12 as people say it: "Grade 8" / "중2".
+      schoolGrade(g) {
+        if (en) return "Grade " + g;
+        return g <= 6 ? "초" + g : g <= 9 ? "중" + (g - 6) : "고" + (g - 9);
+      },
+      phase(ph) {
+        const names = en ? { elem: "Elem", mid: "Middle", high: "High" } : { elem: "초등", mid: "중학교", high: "고1·2" };
+        if (names[ph]) return names[ph];
+        const n = Number(ph.slice(1));
+        return n === 1 ? (en ? "Grade 12" : "고3") : h.attShort(n);
+      },
       track: (id) => D.track[id],
       uni: (id) => D.uni[id] || id,
       chance: (k) => D.chance[k],
       month: (m) => D.months[m],
       monthLong: (m) => D.monthsLong[m],
-      mock: (m) => D.mock[m],
+      // Grades 10–11 sit 학력평가 in June too, where grade 12 sits the 모의평가.
+      mock: (m, sch) => (!en && sch && sch < 12 ? m + "월 학력평가" : D.mock[m]),
       won: (n) => (en ? wonEn(n) : wonKo(n)),
       wonShort: (n) => (en ? wonShortEn(n) : wonShortKo(n)),
       date: (y, m) => (en ? D.months[m] + " " + y : y + "년 " + m + "월"),
@@ -629,13 +758,14 @@
         return ["", "현역", "재수", "삼수", "사수"][n] || n + "수";
       },
       attShort(n) { return en ? ordinal(n) : ["", "현역", "재수", "삼수", "사수"][n] || n + "수"; },
-      grades(g) {
+      // pre: before the track choice, when the last two are social studies and science.
+      grades(g, pre) {
         const s = (k) => D.subjShort[k];
         return s("kor") + " " + g.kor + " · " + s("math") + " " + g.math + " · " + s("eng") + " " + g.eng + " · " + s("hist") + " " + g.hist +
-          " · " + (en ? "Inq" : "탐") + " " + g.inq1 + "/" + g.inq2;
+          " · " + (pre ? s("inq1") + " " + g.inq1 + " · " + s("inq2") + " " + g.inq2 : (en ? "Inq" : "탐") + " " + g.inq1 + "/" + g.inq2);
       },
       planList(plan) {
-        const order = ["kor", "math", "eng", "hist", "inq1", "inq2", "mock", "rest", "exercise", "friends", "games", "job"];
+        const order = ["kor", "math", "eng", "hist", "inq1", "inq2", "reading", "arts", "mock", "rest", "exercise", "friends", "games", "job"];
         return order.filter((id) => plan[id]).map((id) => {
           const name = D.act[id] || h.sub(id);
           return name + (plan[id] > 1 ? (en ? " ×" : "×") + plan[id] : "");

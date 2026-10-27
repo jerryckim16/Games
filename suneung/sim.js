@@ -41,22 +41,20 @@ function calibration() {
 }
 
 // ---------- 2. strategy bots ----------
-// Each bot returns a plan for the month. They don't read events; choices are always option 0.
+// Each bot returns a plan for the turn from the activities on offer. Events always get option 0.
 const BOTS = {
-  balanced: (g) => spread(g, ["kor", "math", "eng", "inq1", "inq2", "kor", "math", "hist"], 1),
-  grinder: (g) => spread(g, ["math", "kor", "inq1", "inq2", "eng", "math", "kor", "hist"], 0),
+  balanced: (g) => spread(g, ["kor", "math", "eng", "friends", "inq1", "inq2", "reading", "hist", "math", "exercise"]),
+  slacker: (g) => spread(g, ["games", "friends", "math", "kor"]),
+  grinder: (g) => spread(g, ["math", "kor", "eng", "inq1", "inq2", "math", "kor", "hist"]),
   smart: (g) => smartPlan(g),
-  slacker: (g) => spread(g, ["games", "friends", "math", "kor"], 0),
 };
-function spread(g, order, restEvery) {
+function offered(g) { return new Set(g.activities().map((a) => a.id)); }
+function spread(g, order) {
+  const ok = offered(g);
+  order = order.filter((id) => ok.has(id));
   const n = g.blocks();
   const plan = {};
-  let i = 0;
-  for (let k = 0; k < n; k++) {
-    let id = order[i++ % order.length];
-    if (restEvery && (k + 1) % 4 === 0) id = g.stress > 55 ? "rest" : "exercise";
-    plan[id] = (plan[id] || 0) + 1;
-  }
+  for (let k = 0; k < n; k++) { const id = order[k % order.length]; plan[id] = (plan[id] || 0) + 1; }
   return plan;
 }
 // Looks after stress and health first, then studies the subject with the most to gain,
@@ -67,7 +65,8 @@ function smartPlan(g) {
   let left = n;
   if (g.stress > 62 && left > 1) { plan.friends = 1; left--; }
   if (g.health < 50 && left > 1) { plan.exercise = 1; left--; }
-  if (g.month === 10 && left > 2) { plan.mock = 1; left--; }
+  if (g.status === "elem" && left > 2) { plan.reading = 1; left--; }
+  if (g.month === 10 && g.grade >= 12 && left > 2) { plan.mock = 1; left--; }
   const want = ["kor", "math", "inq1", "inq2", "eng", "hist"].map((s) => {
     let v = 3 - g.skills[s];
     if (s === "eng" && g.skills.eng > 1.6) v -= 2;
@@ -82,24 +81,37 @@ function smartPlan(g) {
   }
   return plan;
 }
+// The best study method from the bot's preference down that the family can afford this turn.
+function pickMethod(g, plan, pref) {
+  const order = ["tutor", "hagwon", "online", "self"];
+  for (const m of order.slice(order.indexOf(pref))) if (!g.validate(plan, m)) return m;
+  return "self";
+}
+function pickTrack(g, opts) {
+  const track = opts.track || (g.skills.math + g.skills.inq2 > g.skills.kor + g.skills.inq1 ? "sci" : "soc");
+  const inq = opts.inq || S.INQUIRY[track].slice().sort((a, b) => a.pop - b.pop).slice(0, 2).map((x) => x.id);
+  return [track, inq];
+}
 
 function playCareer(seed, bot, opts) {
-  const g = new S.Game({ seed, family: opts.family, track: opts.track, inq: opts.inq });
+  const g = new S.Game({ seed, family: opts.family });
   const results = [];
+  let at12 = null;
   let guard = 0;
-  while (!g.ending && guard++ < 400) {
+  while (!g.ending && guard++ < 600) {
     const top = g.queue[0];
     if (!top) {
+      if (g.grade === 12 && g.month === 3 && g.attempt === 1 && !at12) at12 = Object.assign({}, g.skills);
       const plan = BOTS[bot](g);
-      let method = opts.method || "self";
-      if (g.validate(plan, method)) method = "self";
-      if (g.validate(plan, method)) { plan.job = 0; }
+      const method = pickMethod(g, plan, opts.method || "self");
       const err = g.validate(plan, method);
       if (err) throw new Error(err + " " + JSON.stringify(plan));
       g.advance(plan, method);
       continue;
     }
-    if (top.type === "event") { g.choose(top.choices ? 0 : 0); continue; }
+    if (top.type === "event") { g.choose(0); continue; }
+    if (top.type === "birth") { g.dismiss(); continue; }
+    if (top.type === "track") { const [t, inq] = pickTrack(g, opts); g.chooseTrack(t, inq); continue; }
     if (top.type === "mock" || top.type === "exam") {
       if (top.type === "exam") results.push(top.result);
       g.dismiss();
@@ -116,8 +128,7 @@ function playCareer(seed, bot, opts) {
     }
     if (top.type === "offers") {
       const best = top.offers.map((id) => S.UNIVERSITIES.findIndex((u) => u.id === id)).sort((a, b) => a - b)[0];
-      const goal = opts.goal;
-      const goalIdx = S.UNIVERSITIES.findIndex((u) => u.id === goal);
+      const goalIdx = S.UNIVERSITIES.findIndex((u) => u.id === opts.goal);
       if (best != null && (best <= goalIdx || g.attempt >= opts.maxAttempts)) g.decide({ action: "enroll", uni: S.UNIVERSITIES[best].id });
       else if (g.attempt >= opts.maxAttempts) g.decide({ action: "quit" });
       else {
@@ -128,29 +139,30 @@ function playCareer(seed, bot, opts) {
     }
     throw new Error("Unexpected screen " + top.type);
   }
-  return { g, results };
+  return { g, results, at12 };
 }
 
 function strategies() {
   const configs = [
-    { label: "balanced, self-study, 1 try", bot: "balanced", family: "middle", method: "self", maxAttempts: 1, goal: "college" },
-    { label: "slacker, 1 try", bot: "slacker", family: "middle", method: "self", maxAttempts: 1, goal: "college" },
-    { label: "grinder (no rest), self-study, 1 try", bot: "grinder", family: "middle", method: "self", maxAttempts: 1, goal: "college" },
-    { label: "smart, online lectures, 1 try", bot: "smart", family: "middle", method: "online", maxAttempts: 1, goal: "college" },
-    { label: "smart, cram school, wealthy, 1 try", bot: "smart", family: "wealthy", method: "hagwon", maxAttempts: 1, goal: "college" },
-    { label: "smart, tutor, wealthy, 1 try", bot: "smart", family: "wealthy", method: "tutor", maxAttempts: 1, goal: "college" },
-    { label: "smart, online, retake (academy) up to 3", bot: "smart", family: "middle", method: "online", maxAttempts: 3, goal: "yonsei" },
-    { label: "smart, online, self-study retakes up to 3", bot: "smart", family: "middle", method: "online", maxAttempts: 3, goal: "yonsei", retake: "selfstudy" },
-    { label: "smart, tutor, wealthy, sci, chase 의대 up to 5", bot: "smart", family: "wealthy", method: "tutor", maxAttempts: 5, goal: "med", track: "sci", inq: ["bio", "earth"] },
+    { label: "balanced, self-study, 1 try", bot: "balanced", method: "self", maxAttempts: 1, goal: "college" },
+    { label: "slacker, 1 try", bot: "slacker", method: "self", maxAttempts: 1, goal: "college" },
+    { label: "grinder (no rest), self-study, 1 try", bot: "grinder", method: "self", maxAttempts: 1, goal: "college" },
+    { label: "smart, online lectures, 1 try", bot: "smart", method: "online", maxAttempts: 1, goal: "college" },
+    { label: "smart, best affordable method, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college" },
+    { label: "smart, best affordable, retakes up to 3", bot: "smart", method: "tutor", maxAttempts: 3, goal: "yonsei" },
+    { label: "smart, best affordable, sci, 의대 up to 5", bot: "smart", method: "tutor", maxAttempts: 5, goal: "med", track: "sci", inq: ["bio", "earth"] },
   ];
-  console.log("Strategy bots (" + seeds + " seeds each). Grades are the first and last 수능; 'SKY' = SNU, Yonsei or Korea; std = 국수탐 standard total.");
-  console.log("strategy".padEnd(46) + "first: kor math eng  avg std | last std | tries | SKY+  | med  | in-Seoul+");
-  // Seeds on the outside, so every bot reuses the cached cohorts of the same sittings.
-  const acc = configs.map(() => ({ kor: 0, math: 0, eng: 0, std: 0, lastStd: 0, tries: 0, sky: 0, med: 0, seoul: 0 }));
+  console.log("Strategy bots (" + seeds + " lives each, families dealt from the real quintiles). 'start' = average ability (0–100) entering grade 12.");
+  console.log("strategy".padEnd(42) + "start | 1st: kor math eng  std | last std | tries | SKY+  | med  | in-Seoul+");
+  const acc = configs.map(() => ({ start: 0, kor: 0, math: 0, eng: 0, std: 0, lastStd: 0, tries: 0, sky: 0, med: 0, seoul: 0 }));
+  const byFam = {};
+  for (const f of S.FAMILY_IDS) byFam[f] = { n: 0, start: 0, std: 0, sky: 0, seoul: 0 };
   for (let i = 0; i < seeds; i++) {
     configs.forEach((c, ci) => {
       const a = acc[ci];
-      const { g, results } = playCareer(1000 + i, c.bot, c);
+      const { g, results, at12 } = playCareer(1000 + i, c.bot, c);
+      const avg = S.SUBJECTS.reduce((t, s) => t + S.skillScore(at12[s]), 0) / S.SUBJECTS.length;
+      a.start += avg;
       const f = results[0].subjects;
       a.kor += f.kor.grade; a.math += f.math.grade; a.eng += f.eng.grade; a.std += results[0].total;
       a.lastStd += results[results.length - 1].total;
@@ -160,18 +172,31 @@ function strategies() {
       if (uni === "med") a.med++;
       if (idx >= 0 && idx <= 3) a.sky++;
       if (idx >= 0 && idx <= 19) a.seoul++;
+      if (ci === 4) {
+        const b = byFam[g.family];
+        b.n++; b.start += avg; b.std += results[0].total;
+        if (idx >= 0 && idx <= 3) b.sky++;
+        if (idx >= 0 && idx <= 19) b.seoul++;
+      }
     });
   }
-  const p = (v) => ((100 * v) / seeds).toFixed(0).padStart(4) + "%";
+  const p = (v, n) => ((100 * v) / (n || seeds)).toFixed(0).padStart(4) + "%";
   configs.forEach((c, ci) => {
     const a = acc[ci];
     console.log(
-      c.label.padEnd(46),
-      (a.kor / seeds).toFixed(1).padStart(4), (a.math / seeds).toFixed(1).padStart(5), (a.eng / seeds).toFixed(1).padStart(4),
-      (a.std / seeds).toFixed(0).padStart(7), "|", (a.lastStd / seeds).toFixed(0).padStart(8), "|", (a.tries / seeds).toFixed(2).padStart(5),
+      c.label.padEnd(42), (a.start / seeds).toFixed(0).padStart(5), "|",
+      (a.kor / seeds).toFixed(1).padStart(8), (a.math / seeds).toFixed(1).padStart(4), (a.eng / seeds).toFixed(1).padStart(4),
+      (a.std / seeds).toFixed(0).padStart(5), "|", (a.lastStd / seeds).toFixed(0).padStart(8), "|", (a.tries / seeds).toFixed(2).padStart(5),
       "|", p(a.sky), "|", p(a.med), "|", p(a.seoul)
     );
   });
+  console.log("\nBy family (smart bot, best affordable method, 1 try):");
+  console.log("family   lives | start | 1st std | SKY+  | in-Seoul+");
+  for (const f of S.FAMILY_IDS) {
+    const b = byFam[f];
+    if (!b.n) continue;
+    console.log(f.padEnd(8), String(b.n).padStart(5), "|", (b.start / b.n).toFixed(0).padStart(5), "|", (b.std / b.n).toFixed(0).padStart(7), "|", p(b.sky, b.n), "|", p(b.seoul, b.n));
+  }
 }
 
 const t0 = Date.now();

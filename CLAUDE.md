@@ -60,10 +60,11 @@ Then republish to the same URL.
 
 ## suneung (Suneung Simulator)
 
-A month-by-month life-sim of the Korean 수능. See `suneung/README.md` for features, the exam model and balance numbers.
+A life-sim from elementary school to the Korean 수능 and retakes. See `suneung/README.md` for features, the exam model and balance numbers.
 
 - `engine.js`: no DOM, so it runs in Node, and no display text. `Game` keeps a queue of screens (events, mocks, the exam, applications, offers); the app shows `queue[0]` and answers it with `choose` / `dismiss` / `apply` / `decide`.
 - All text lives in `strings.js`, as complete `en` and `ko` dictionaries with identical keys; the engine emits `{ key, p }` messages. Never mix languages: English strings contain no Hangul, Korean strings use Korean terms. Add every new string to both dictionaries.
+- Turns are a year (elementary), a semester (middle school), a season (grades 10–11), then a month from grade 12 (`STATUSES[*].months`). Ability is relative to the year group; `PEER_DRIFT` pulls it down each school-year turn. Families are dealt from `FAMILY_IDS` at birth and never chosen by the player (only `sim.js` may force one).
 - The seeded RNG state lives in the game object, so saves (localStorage JSON) resume exactly. Exam papers and the cohort depend only on the seed and the sitting, never on the player's choices.
 - After changing the exam or learning model, run `node suneung/sim.js --seeds 80`: calibration must stay inside the printed real-world targets, and the README tables must be regenerated from its output.
 - Published artifact: https://claude.ai/artifact/H8zzP1PqsHVdvEQEARTuFE . To update it, bundle the same way as robotsim (a `<title>` and the `claude:viewport-fit-sides` meta, `styles.css` inline, `index.html` from `<header>` through `</main>` plus the `#modal` div, then `engine.js`, `strings.js` and `app.js` inline) and republish to the same URL. Don't use `alert()` / `confirm()`: the artifact viewer blocks them.
