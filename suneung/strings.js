@@ -515,7 +515,7 @@
       "newLife.keep": "계속하기", "newLife.go": "새로 시작",
 
       "log.born": (p, h) => h.familyAdj(p.fam) + " 가정에서 태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + p.y + "년 3월, 초등학교에 입학했다.",
-      "log.grade": (p, h) => p.y + "년 3월, " + h.schoolGrade(p.g) + "이 되었다.",
+      "log.grade": (p, h) => p.y + "년 3월, " + josa(h.schoolGrade(p.g), "이", "가") + " 되었다.",
       "log.stage": (p) => p.y + "년 3월, " + ({ mid: "중학교에 입학했다.", high: "고등학교에 입학했다.", hs3: "고3이 되었다. 수능은 11월이다." })[p.st],
       "log.teacher": (p) => "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl],
       "log.report": (p) => p.sem + "학기 시험: 반 " + p.of + "명 중 " + p.rank + "등.",

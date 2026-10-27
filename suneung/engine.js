@@ -87,7 +87,10 @@
     math: { base: -0.25, spread: 1.0, killer: 2.0, killers: 4, a: 1.35 },
     eng: { base: -0.08, spread: 1.0, killer: 2.0, killers: 3, a: 1.3 },
     hist: { base: -0.6, spread: 0.9, killer: 1.0, killers: 2, a: 1.2 },
-    inq: { base: -0.65, spread: 1.0, killer: 1.7, killers: 3, a: 1.4 },
+    // Inquiry killers sit high enough that only about 0.5–2% of a pool scores 50/50, as in real years.
+    // With softer killers 3–9% of a strong pool tied at a perfect score, so a flawless paper was worth
+    // only the 91st–98th percentile and a perfect exam could fall short of the top cuts.
+    inq: { base: -0.65, spread: 1.0, killer: 2.3, killers: 3, a: 1.4 },
   };
 
   const SUBJECTS = ["kor", "math", "eng", "hist", "inq1", "inq2"];
@@ -168,9 +171,11 @@
   // ---------- universities (정시, rough) ----------
   // cut: the 국수탐 percentile average (after the English/History deductions below) where an
   // application is about a coin flip. Ballpark 2025-era 정시 numbers, simplified to one per school.
+  // SNU and med sit where roughly the top 0.3% and 0.15% of simulated test takers land, so a player
+  // at ability 100 (θ ≈ 3, top 0.13%) is a likely but not certain SNU admit and about a coin flip for med.
   const UNIVERSITIES = [
-    { id: "med", cut: 99.3, sci: true },
-    { id: "snu", cut: 98.7 },
+    { id: "med", cut: 98.8, sci: true },
+    { id: "snu", cut: 98.0 },
     { id: "yonsei", cut: 97.6 },
     { id: "korea", cut: 97.4 },
     { id: "skku", cut: 96.1 },
@@ -205,7 +210,10 @@
   }
   function admitChance(score, uni, track) {
     if (uni.sci && track !== "sci") return 0;
-    return 1 / (1 + Math.exp(-(score - uni.cut) / UNI_SLOPE));
+    // Near the ceiling the band narrows: med's cut leaves only 1.2 points above it, and with the full
+    // 0.7-point slope even a perfect exam would be turned down a quarter of the time.
+    const slope = Math.min(UNI_SLOPE, (100 - uni.cut) / 3);
+    return 1 / (1 + Math.exp(-(score - uni.cut) / slope));
   }
   function chanceLabel(p) {
     return p >= 0.85 ? "safe" : p >= 0.55 ? "match" : p >= 0.25 ? "reach" : "long";
@@ -427,7 +435,7 @@
     },
     // ----- school years and beyond -----
     {
-      id: "pcbang", weight: 3, when: (g) => g.grade >= 5 && g.status !== "academy", choices: 2,
+      id: "pcbang", weight: 3, when: (g) => g.grade >= 7 && g.status !== "academy", choices: 2,
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -12, motivation: -4 }); return "r0"; }
         bump(g, { stress: 4, motivation: 3 }); studyBoost(g, pickWeak(g), 0.03); return "r1";
@@ -471,7 +479,7 @@
     },
     { id: "notes", weight: 1.5, when: (g) => g.grade >= 10, run: (g) => { const s = pickStrong(g); studyBoost(g, s, 0.03); return ["r", { s }]; } },
     {
-      id: "family-money", weight: 1, when: (g) => g.family === "q1" || g.family === "q2",
+      id: "family-money", weight: 1, when: (g) => g.grade >= 4 && (g.family === "q1" || g.family === "q2"),
       run: (g) => { bump(g, { stress: 6 }); g.money = Math.max(0, g.money - 200000); return "r"; },
     },
     { id: "grandma", weight: 1, when: () => true, run: (g) => { g.money += 200000; bump(g, { motivation: 5, stress: -4 }); return "r"; } },
@@ -817,7 +825,7 @@
       // does the bullying follow-up while it lasts.
       for (const e of EVENTS) if (weightOf(e, this) >= 100 && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
       for (let i = 0; i < n; i++) this.rollEvent(seen);
-      if ((plan.friends || 0) > 0 && rng() < 0.35 && !seen.has("pcbang") && this.grade >= 5 && this.clock - (this.flags["ev-pcbang"] || -99) >= 4) {
+      if ((plan.friends || 0) > 0 && rng() < 0.35 && !seen.has("pcbang") && this.grade >= 7 && this.clock - (this.flags["ev-pcbang"] || -99) >= 4) {
         this.fireEvent(EVENTS.find((e) => e.id === "pcbang"));
       }
 

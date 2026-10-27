@@ -131,7 +131,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **Questions** follow the real layouts: 국어 and 영어 have 45 questions, 수학 has 30 (some short-answer), 한국사 and each 탐구 have 20, with 2-, 3- and 4-point items.
   - Each question has an item-response curve: P(correct) = c + (1 − c) / (1 + e^(−1.7·a·(θ − b))).
   - Guessing c is 0.2 for multiple choice and 0 for short answer.
-  - Each paper places a few "killer" questions among the high-point items.
+  - Each paper places a few "killer" questions among the high-point items. In the 탐구 papers they are hard enough that only about 0.5–2% of a subject's takers score 50/50, so a perfect inquiry paper is worth a 99–100 percentile, as in real years.
 - **Year-to-year difficulty:** each paper gets a random shift, which makes 불수능 and 물수능 years. The score report's headline names an unusually hard or easy section.
 - **The cohort:** each sitting simulates 3,000 test takers per subject. Your standard score, percentile and grade come from your place among them. Inquiry pools differ in strength (Physics I takers are stronger than Earth Science I takers), so the subject choice matters.
 - **Exam day:** your ability on the day is θ plus:
@@ -152,15 +152,16 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **Admission score** = average 백분위 of 국어, 수학 and the two 탐구 (counted as one), minus:
   - an English deduction by grade: 0, 0, 0.8, 2, 3.5, 5.5, 8, 11, 14 for grades 1–9;
   - 0.5 for History grade 4, or 2 for grade 5 and worse.
-- **Each school has a cut** where an application is a coin flip. The chance of admission follows a logistic curve with a 0.7-point slope.
+- **Each school has a cut** where an application is a coin flip. The chance of admission follows a logistic curve with a 0.7-point slope, narrowed near the top to a third of the room left above the cut (0.4 points for 의대), so a perfect exam is a near-certain admit everywhere.
+- **The top end:** with every bar at 100 (θ = 3, the top 0.13% of test takers) and a good exam day, you are a likely SNU admit (about 70–80%) and roughly a coin flip for 의대 (about 45–65%, depending on how strong your inquiry subjects' pools are). A flawless exam gets you into 의대 85–90% of the time.
 - **Labels:** 안정 (safe, 85%+), 적정 (match, 55%+), 소신 (reach, 25%+), 상향 (long shot).
 
 The cuts are ballpark figures from recent 정시 years, simplified to one per school. They are not an admissions predictor.
 
 | School | Cut | School | Cut |
 |---|---|---|---|
-| 의대 (Medical school, 이과 only) | 99.3 | 중앙대 | 94.2 |
-| 서울대 | 98.7 | 서울시립대 | 93.8 |
+| 의대 (Medical school, 이과 only) | 98.8 | 중앙대 | 94.2 |
+| 서울대 | 98.0 | 서울시립대 | 93.8 |
 | 연세대 | 97.6 | 경희대 | 93.6 |
 | 고려대 | 97.4 | 한국외대 | 93.3 |
 | 성균관대 | 96.1 | 건국대 | 91.0 |
@@ -174,9 +175,10 @@ The cuts are ballpark figures from recent 정시 years, simplified to one per sc
 
 ## Calibration and balance
 
-`node suneung/sim.js` runs two checks:
+`node suneung/sim.js` runs three checks:
 
 - **Calibration** compares the simulated cohort with real 수능 numbers.
+- **The top end** checks that a perfect 탐구 paper earns a 99–100 percentile and what a player with every bar at 100 can get into.
 - **Balance** plays whole lives, from birth, with simple bots and reports the results.
 
 Run it after any change to the exam or learning model. The tables below come from `node suneung/sim.js --seeds 80`.
@@ -191,7 +193,20 @@ Means over 40 sittings.
 | 수학 | 45.8 | 88.2 | 147.1 | | cut 84–88, top 135–148 |
 | 영어 | 57.7 | | | 8.9% | 4–10% grade 1 |
 | 한국사 | 32.1 | | | 33.2% | 15–35% grade 1 |
-| 탐구 | 31.1 | 47.2 | 67.6 | | cut 44–50, top 63–77 |
+| 탐구 | 30.7 | 45.8 | 68.7 | | cut 44–50, top 63–77 |
+
+### The top end
+
+A player whose every bar is at 100, and one who gets every answer right, sitting 150 papers on the sciences track with no exam-day noise:
+
+| Player | Percentile of a perfect 탐구 paper | Admission score | SNU | 의대 |
+|---|---|---|---|---|
+| All bars at 100, Physics I + Chemistry I | 98.7 | 98.55 | 68% | 46% |
+| All bars at 100, Life Science I + Earth Science I | 99.5 | 99.05 | 80% | 65% |
+| Every answer right, Physics I + Chemistry I | 99.0 | 99.56 | 91% | 85% |
+| Every answer right, Life Science I + Earth Science I | 99.6 | 99.78 | 93% | 91% |
+
+Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a strong pool tied at 50/50, so a perfect 탐구 paper could be worth as little as the 91st percentile.
 
 ### Strategy bots
 
@@ -205,30 +220,30 @@ Means over 40 sittings.
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 42 | 3.0 · 2.3 · 2.2 | 326 | 326 | 1.00 | 0% | 0% | 1% |
-| slacker (half games & friends), 1 try | 29 | 3.4 · 2.7 · 8.2 | 304 | 304 | 1.00 | 0% | 0% | 0% |
-| grinder (no rest), self-study, 1 try | 57 | 3.2 · 2.4 · 2.0 | 369 | 369 | 1.00 | 0% | 0% | 43% |
-| smart, online lectures, 1 try | 62 | 2.5 · 2.2 · 2.2 | 375 | 375 | 1.00 | 3% | 0% | 60% |
-| smart, best affordable method, 1 try | 67 | 2.0 · 1.7 · 1.8 | 388 | 388 | 1.00 | 15% | 0% | 76% |
-| smart, best affordable, retakes up to 3 tries | 67 | 2.0 · 1.7 · 1.8 | 388 | 411 | 2.41 | 74% | 6% | 99% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.1 · 1.7 · 1.8 | 387 | 418 | 4.09 | 90% | 65% | 99% |
+| balanced, self-study, 1 try | 42 | 3.0 · 2.2 · 1.9 | 326 | 326 | 1.00 | 0% | 0% | 0% |
+| slacker (half games & friends), 1 try | 29 | 3.4 · 2.8 · 8.2 | 304 | 304 | 1.00 | 0% | 0% | 0% |
+| grinder (no rest), self-study, 1 try | 57 | 3.0 · 2.4 · 2.2 | 369 | 369 | 1.00 | 0% | 0% | 43% |
+| smart, online lectures, 1 try | 62 | 2.7 · 2.2 · 2.2 | 374 | 374 | 1.00 | 4% | 1% | 58% |
+| smart, best affordable method, 1 try | 68 | 2.0 · 1.7 · 1.8 | 387 | 387 | 1.00 | 10% | 1% | 73% |
+| smart, best affordable, retakes up to 3 tries | 68 | 2.0 · 1.7 · 1.8 | 387 | 410 | 2.55 | 60% | 18% | 96% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.0 · 1.8 · 1.9 | 386 | 420 | 3.83 | 95% | 88% | 100% |
 
 The smart bot with the best affordable method, first try only, by family:
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 12 | 60 | 372 | 0% | 58% |
-| Lower-middle income | 11 | 59 | 369 | 0% | 45% |
-| Middle income | 21 | 70 | 395 | 0% | 86% |
-| Upper-middle income | 18 | 70 | 394 | 22% | 89% |
-| High income | 18 | 73 | 397 | 44% | 83% |
+| Low income | 12 | 60 | 376 | 0% | 58% |
+| Lower-middle income | 11 | 59 | 365 | 0% | 45% |
+| Middle income | 21 | 70 | 394 | 5% | 81% |
+| Upper-middle income | 18 | 70 | 392 | 17% | 89% |
+| High income | 18 | 73 | 394 | 22% | 72% |
 
 What the tables show:
 
-- **Childhood habits decide where you start grade 12:** the same random talents end up anywhere from 29 to 67 on average.
-- **Family income matters, but it isn't destiny:** with the same smart play, the top two fifths reach SKY on the first try 22–44% of the time and the bottom two never did. Retakes close much of the gap.
+- **Childhood habits decide where you start grade 12:** the same random talents end up anywhere from 29 to 68 on average.
+- **Family income matters, but it isn't destiny:** with the same smart play, the top two fifths reach SKY on the first try 17–22% of the time and the bottom two never did. Retakes close much of the gap.
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
-- **Medical school** takes talent, a sciences track and usually several years.
+- **Medical school** takes talent, a sciences track and usually several years: the bot chasing it rarely gets in on the first try, but a near-optimal player who keeps retaking usually makes it within five.
 
 ## Files
 
@@ -241,6 +256,7 @@ What the tables show:
 
 ## Changelog
 
+- **v2.4:** SNU and medical school are reachable at the top. A perfect 탐구 paper used to be worth only the 91st–98th percentile, because 3–9% of a subject's takers tied at 50/50; with every bar at 100 you had about a 40–60% shot at SNU and 25–40% at 의대, and even a flawless exam was turned down by 의대 almost half the time. The inquiry papers' killer questions are now harder (only 0.5–2% score 50/50, so a perfect paper is worth 99–100), the SNU and 의대 cuts moved to where the top 0.3% and 0.15% of simulated test takers land (98.0 and 98.8), and the admission curve narrows near the ceiling. A player with every bar at 100 is now a likely SNU admit and about a coin flip for 의대. `sim.js` prints a new top-end check. Balance tables regenerated. Also: the PC방 event starts in grade 7 instead of grade 5, the family-money event no longer fires before grade 4, and the Korean grade line uses the right particle ("중2가 되었다").
 - **v2.3:** bullying (학교폭력) is now a storyline instead of a one-off event. It can start in grades 3–11 and lasts until it's resolved, with a follow-up choice every turn: report it to the school violence committee, see the Wee class counselor, stick with friends, fight back, endure it, or change schools when it turns severe. While it lasts, study efficiency drops 10–30% and stress, motivation and health suffer; severe bullying costs a block a turn. The Condition panel shows it. Saves from v2.2 still load. Balance tables regenerated.
 - **v2.2:** ages use the international count (만 나이): you start grade 1 at 6, so a grade-12 student is 17. The Korean version writes ages as "만 6세". Gameplay and balance numbers are unchanged.
 - **v2.1:** ability no longer decays. Subjects you don't study stay where they are instead of slipping (no more peer drift in the school years, and no monthly fade in grade 12 or retake years). Ability is now on the 수능 scale from age 7 (50 is the average test taker), so children start around 10 and climb; the starting level and school-year study speed were retuned so top players reach about the same level as before. Balance tables regenerated.
