@@ -21,7 +21,8 @@
   <main>
     <!-- ---------- new life ---------- -->
     <section id="setup" class="hidden">
-      <div class="panel">
+      <div class="panel setup-panel">
+        <div class="hero" id="setupArt"></div>
         <h2 data-t="setup.title"></h2>
         <p class="intro" data-t="setup.intro"></p>
         <div class="field name-field">
@@ -41,11 +42,18 @@
 
     <!-- ---------- the game ---------- -->
     <section id="game" class="hidden">
-      <section class="stats">
-        <div class="stat"><span class="k" data-t="stat.date"></span><span class="v" id="sDate"></span><span class="s" id="sDday"></span></div>
-        <div class="stat"><span class="k" data-t="stat.attempt"></span><span class="v" id="sAttempt"></span><span class="s" id="sStatus"></span></div>
-        <div class="stat"><span class="k" data-t="stat.age"></span><span class="v" id="sAge"></span><span class="s" id="sName"></span></div>
-        <div class="stat"><span class="k" data-t="stat.money"></span><span class="v" id="sMoney"></span><span class="s" id="sAllowance"></span></div>
+      <!-- Your life right now: an illustrated scene with you in it, your mood, and the basics. -->
+      <section class="life">
+        <div class="scene-wrap">
+          <div id="scene" class="scene-box"></div>
+          <div id="mood" class="bubble" aria-live="polite"><b id="moodName"></b><span id="moodText"></span></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span class="ic" aria-hidden="true">📅</span><span class="k" data-t="stat.date"></span><span class="v" id="sDate"></span><span class="s" id="sDday"></span></div>
+          <div class="stat"><span class="ic" aria-hidden="true">🎒</span><span class="k" data-t="stat.attempt"></span><span class="v" id="sAttempt"></span><span class="s" id="sStatus"></span></div>
+          <div class="stat"><span class="ic" aria-hidden="true">🎂</span><span class="k" data-t="stat.age"></span><span class="v" id="sAge"></span><span class="s" id="sName"></span></div>
+          <div class="stat"><span class="ic" aria-hidden="true">💰</span><span class="k" data-t="stat.money"></span><span class="v" id="sMoney"></span><span class="s" id="sAllowance"></span></div>
+        </div>
       </section>
 
       <div class="row">
@@ -61,11 +69,13 @@
           <canvas id="chart"></canvas>
         </section>
 
-        <section class="panel">
+        <section class="panel plan">
           <div class="plan-head">
             <h2 id="planTitle"></h2>
             <span id="blocksLeft" class="pill"></span>
           </div>
+          <div id="slots" class="slots"></div>
+          <small class="tap-hint" data-t="plan.tap"></small>
           <div class="field">
             <span class="flabel" data-t="plan.method"></span>
             <div class="seg wrap" id="method"></div>
@@ -85,8 +95,8 @@
       </div>
 
       <div class="row">
-        <section class="panel">
-          <h2 data-t="log.title"></h2>
+        <section class="panel diary">
+          <h2><span aria-hidden="true">📔 </span><span data-t="log.title"></span></h2>
           <ul id="log" class="log"></ul>
         </section>
         <section class="panel">
@@ -98,10 +108,17 @@
         </section>
       </div>
     </section>
+
+    <!-- "A year goes by": a calendar page between turns. Purely visual, so it never blocks clicks. -->
+    <div id="turn" class="turn hidden" aria-hidden="true">
+      <div class="turn-card"><span class="turn-cap" id="turnCap"></span><span class="turn-date" id="turnDate"></span><span class="turn-age" id="turnAge"></span></div>
+    </div>
+    <div id="confetti" class="confetti" aria-hidden="true"></div>
   </main>
 
   <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-card">
+      <div id="modalArt" class="modal-art hidden"></div>
       <h2 id="modalTitle"></h2>
       <div id="modalBody"></div>
       <div id="modalButtons" class="buttons"></div>
@@ -110,6 +127,7 @@
 
   <script src="engine.js"></script>
   <script src="strings.js"></script>
+  <script src="art.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
