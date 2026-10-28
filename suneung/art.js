@@ -710,6 +710,14 @@
     commute: { bg: "farm", fx: "bus", mood: "tired", x: 220, icon: "🚌", res: { r1: { mood: "ok" } } },
     "quota-news": { bg: "hospital", fx: "doctor", mood: "happy", icon: "📰" },
     "med-move": { bg: "city", fx: "sparkles", icon: "📦", res: { r1: { mood: "ok" } } },
+    // Schools: the choice screen (and its result), then the events at special schools.
+    school: { bg: "class", fx: "notes", mood: "ok", icon: "🏫", res: { in: { mood: "happy", pose: "cheer" }, out: { mood: "tired" }, def: { mood: "ok" } } },
+    dorm: { bg: "room", night: true, fx: "sheep", mood: "tired", icon: "🛏️", res: { r1: { mood: "ok" } } },
+    rne: { bg: "class", fx: "mathsyms", mood: "happy", icon: "🔬", res: { r1: { mood: "ok" } } },
+    recital: { bg: "field", fx: "podium", mood: "happy", pose: "cheer", icon: "🎻", res: { r1: { mood: "ok", pose: null } } },
+    intern: { bg: "street", fx: "shop", mood: "happy", x: 420, icon: "🔧" },
+    rankshock: { bg: "class", fx: "raincloud", mood: "stressed", icon: "📉" },
+    immersion: { bg: "class", fx: "chat", mood: "happy", icon: "🗣️" },
     // Leaving school: the dialog's picture, 검정고시, the early Suneung, loneliness, Chuseok questions.
     dropout: { bg: "hall", fx: "door", mood: "ok", x: 220, icon: "🚪" },
     ged: { bg: "class", fx: "planner", mood: "stressed", icon: "📜", res: { pass0: { mood: "happy", pose: "cheer" }, pass1: { mood: "happy", pose: "cheer" }, fail0: { mood: "tired" }, fail1: { mood: "tired" } } },

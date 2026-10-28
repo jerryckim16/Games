@@ -211,6 +211,50 @@
     { id: "haenam", kind: "rural", pop: 2.5, view: "sea" },
   ];
   const REGION_BY_ID = Object.fromEntries(REGIONS.map((r) => [r.id, r]));
+
+  // ---------- schools ----------
+  // Which school you go to, picked on a screen at the start of elementary, middle and high school.
+  // The first school of each stage is the public school you're assigned by default; picking it never
+  // rolls anything, so a life that always takes it plays exactly as before schools existed.
+  // fee: what the parents pay a month, taken out of their education budget (so it competes with cram
+  // school), and you can only pick a school whose fee the budget covers. Ordinary middle and high
+  // schools charge the same whether public or private (평준화), so only the special ones have fees.
+  // lessons: multipliers on the school-lesson gain, per subject or for all. stress / motivation: added
+  // each turn and to the motivation baseline. admit(g): the chance of getting in (lottery or selection).
+  // track: the only track that school teaches (science and foreign-language high schools).
+  // blocks: free blocks a turn the school takes (workshop hours, practice rooms).
+  // where: region kinds that have one (private elementary schools are a big-city thing).
+  // board: boarding or commuter schools you keep when the family moves; others are swapped for the
+  // local public school.
+  const SCHOOLS = [
+    { id: "pubElem", stage: "elem", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
+    // 사립초: ₩10M a year or so, small classes and English immersion, by lottery (about 2 applicants a seat).
+    { id: "privElem", stage: "elem", fee: 800000, lessons: { all: 1.15, eng: 1.5 }, stress: 1, motivation: 2, admit: () => 0.5, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
+    { id: "pubMid", stage: "mid", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
+    // Private middle schools are assigned by the same lottery; you can list a preference.
+    { id: "privMid", stage: "mid", fee: 0, lessons: { all: 1.08 }, stress: 1, motivation: 1, admit: () => 0.6 },
+    // 국제중: document screening, then a lottery among those who pass.
+    { id: "intlMid", stage: "mid", fee: 700000, lessons: { all: 1.1, eng: 1.6 }, stress: 3, motivation: 3, board: true, admit: (g) => (zOf(g, ["kor", "math", "eng"]) > 0.6 ? 0.3 : 0) },
+    { id: "pubHigh", stage: "high", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
+    { id: "privHigh", stage: "high", fee: 0, lessons: { all: 1.08 }, stress: 1, motivation: 1, admit: () => 0.6 },
+    // 자사고: selection on middle-school grades and an interview; a Suneung-minded curriculum.
+    { id: "autoHigh", stage: "high", fee: 550000, lessons: { all: 1.1, kor: 1.25, math: 1.25, eng: 1.25 }, stress: 3, motivation: 3, board: true, admit: (g) => clamp((zOf(g, ["kor", "math", "eng", "inq1", "inq2"]) - 0.3) * 0.6, 0, 0.85) },
+    // 과학고·영재학교: math and science well ahead of your year; sciences only, and intense.
+    { id: "sciHigh", stage: "high", fee: 150000, lessons: { math: 1.6, inq2: 1.6, kor: 0.9 }, stress: 5, motivation: 3, track: "sci", board: true, admit: (g) => clamp((zOf(g, ["math", "inq2"]) - 0.9) * 0.7, 0, 0.7) },
+    // 외고·국제고: English first; humanities only.
+    { id: "langHigh", stage: "high", fee: 500000, lessons: { eng: 1.6, kor: 1.25, inq1: 1.15, math: 0.95 }, stress: 3, motivation: 2, track: "soc", board: true, admit: (g) => clamp((zOf(g, ["eng", "kor"]) - 0.8) * 0.6, 0, 0.75) },
+    // 예고·체고: an audition, so it needs years of arts & sports lessons; little academic teaching.
+    { id: "artsHigh", stage: "high", fee: 400000, lessons: { all: 0.7 }, blocks: -1, stress: -3, motivation: 3, admit: (g) => clamp(((g.flags.artsN || 0) - 3) * 0.12, 0, 0.8) },
+    // 특성화고·마이스터고: a trade, paid placements, and few academic lessons.
+    { id: "vocHigh", stage: "high", fee: 0, lessons: { all: 0.4 }, blocks: -1, stress: -3, motivation: -2, job: 1.5, admit: () => 0.95 },
+  ];
+  const SCHOOL_BY_ID = Object.fromEntries(SCHOOLS.map((x) => [x.id, x]));
+  const DEFAULT_SCHOOL = { elem: "pubElem", mid: "pubMid", high: "pubHigh" };
+  // How far ahead of your year group you are in these subjects, in the units standing() uses.
+  function zOf(g, subs) {
+    const avg = subs.reduce((a, x) => a + g.skills[x], 0) / subs.length;
+    return (avg - g.typicalLevel()) / 0.8;
+  }
   // How likely each income fifth is in each kind of place, relative to the national mix: Gangnam is
   // mostly the top fifths, rural counties mostly the bottom ones. These are only the shape; JOINT below
   // rescales them so the totals come out exact.
@@ -526,6 +570,36 @@
         bump(g, { stress: -2, motivation: -2 }); g.money += 100000; return "r1";
       },
     },
+    // ----- school types -----
+    {
+      id: "dorm", weight: 1.5, when: (g) => g.atSchool("intlMid", "autoHigh", "sciHigh", "langHigh"), choices: 2,
+      run: (g, i) => {
+        if (i === 0) { bump(g, { stress: -8, motivation: -2 }); return "r0"; }
+        studyBoost(g, pickWeak(g), 0.03); bump(g, { stress: 3 }); return "r1";
+      },
+    },
+    {
+      id: "rne", weight: 2, when: (g) => g.atSchool("sciHigh") && !g.flags.rne, choices: 2,
+      run: (g, i) => {
+        g.flags.rne = 1;
+        if (i === 0) { studyBoost(g, "math", 0.04); studyBoost(g, "inq2", 0.04); bump(g, { stress: 5, motivation: 4 }); return "r0"; }
+        bump(g, { stress: -3 }); return "r1";
+      },
+    },
+    {
+      id: "recital", weight: 2, when: (g) => g.atSchool("artsHigh"), choices: 2,
+      run: (g, i) => {
+        if (i === 0) { bump(g, { motivation: 10, stress: -4 }); g.lostBlocks += 1; return "r0"; }
+        bump(g, { motivation: 2 }); return "r1";
+      },
+    },
+    { id: "intern", weight: 2, when: (g) => g.atSchool("vocHigh") && g.grade >= 11, run: (g) => { g.money += 600000; bump(g, { motivation: 4, stress: -2 }); return "r"; } },
+    // Everyone at an elite high school was top of their class; the first exams sort that out.
+    {
+      id: "rankshock", weight: 100, when: (g) => g.atSchool("autoHigh", "sciHigh", "langHigh") && g.grade === 10 && !g.flags.rankShock,
+      run: (g) => { g.flags.rankShock = 1; bump(g, { motivation: -6, stress: 6 }); return ["r", { id: g.schoolInfo().id }]; },
+    },
+    { id: "immersion", weight: 2, when: (g) => g.atSchool("privElem"), run: (g) => { studyBoost(g, "eng", 0.03); bump(g, { motivation: 3 }); return "r"; } },
     // The one-off bully event from v2. It never rolls any more (bully-start replaced it); it stays so a
     // save made before v2.3 can still answer one that's waiting in its queue and show its old log lines.
     {
@@ -826,12 +900,13 @@
       this.history = []; // finished 수능 results
       this.mocks = []; // mock exam results
       this.trace = [{ t: this.t(), att: 1, ph: "elem", skills: Object.assign({}, this.skills) }];
-      this.queue = [{ type: "birth" }];
+      this.queue = [{ type: "birth" }, { type: "school", stage: "elem" }];
       this.examMods = { shift: 0 };
       this.enrolled = null; // university id kept while doing 반수
       this.ending = null;
       this.lastPlan = null;
       this.bully = null; // { lv, n, sup } while being bullied; see bully-start
+      this.school = null; // school id, picked on the "school" screen; absent reads as the public school
       // regionFrom is the school grade you arrived in: the local quotas need middle and high school
       // there (from grade 7).
       this.region = bornIn;
@@ -889,7 +964,7 @@
     // Out of school, the hours that went to classes are yours: two more blocks a turn in grades 7–11. Grade
     // 12 gains nothing, since most of a 고3's school day is self-study already.
     baseBlocks() {
-      return STATUSES[this.status].blocks(this.month) + (this.dropoutActive() ? DROPOUT_BLOCKS : 0);
+      return STATUSES[this.status].blocks(this.month) + (this.dropoutActive() ? DROPOUT_BLOCKS : 0) + (this.inClass() ? this.schoolInfo().blocks || 0 : 0);
     }
 
     // ----- leaving school (자퇴) -----
@@ -916,7 +991,43 @@
     activities() { return ACTIVITIES.filter((a) => (a.from || 1) <= this.grade && this.grade <= (a.to || 12)); }
     allowance() {
       const a = FAMILIES[this.family].allowance;
-      return this.attempt >= 4 ? Math.round(a / 2) : a;
+      // School fees come out of the same education budget while you're there.
+      return (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() ? this.schoolInfo().fee : 0);
+    }
+
+    // ----- schools -----
+    // At one of these schools right now (and still going to classes).
+    atSchool(...ids) { return this.inClass() && ids.indexOf(this.schoolInfo().id) >= 0; }
+    // The school you're at. Saves from before schools existed have none: the public one for the stage.
+    schoolInfo() {
+      const st = this.status === "hs3" ? "high" : this.status;
+      const x = SCHOOL_BY_ID[this.school];
+      return x && x.stage === st ? x : SCHOOL_BY_ID[DEFAULT_SCHOOL[st] || "pubHigh"];
+    }
+    // Every school for the stage on the current school screen, with its chance and why it's closed.
+    schoolOptions() {
+      const top = this.queue[0];
+      if (!top || top.type !== "school") return [];
+      const kind = this.regionInfo().kind;
+      const can = FAMILIES[this.family].allowance;
+      return SCHOOLS.filter((x) => x.stage === top.stage).map((x) => {
+        const blocked = x.where && x.where.indexOf(kind) < 0 ? "region" : x.fee > can ? "cost" : x.admit(this) <= 0 ? "admit" : null;
+        return { id: x.id, fee: x.fee, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def: x.id === DEFAULT_SCHOOL[top.stage] };
+      });
+    }
+    // Apply to a school. Anything but the default public school is a lottery or a selection; missing
+    // out means the public school. Returns the outcome message { key, p }.
+    pickSchool(id) {
+      const top = this.queue[0];
+      if (!top || top.type !== "school") throw new Error("Not time to pick a school.");
+      const o = this.schoolOptions().find((x) => x.id === id);
+      if (!o || o.blocked) throw new Error("school.closed");
+      const got = o.def || this.rng() < o.p;
+      this.school = got ? id : DEFAULT_SCHOOL[top.stage];
+      this.queue.shift();
+      this.addLog("log.school", { id: this.school, want: id, got }, "milestone");
+      this.flush();
+      return { key: o.def ? "school.r.def" : got ? "school.r.in" : "school.r.out", p: { id, def: DEFAULT_SCHOOL[top.stage] } };
     }
     // The parents' education money for this turn. Whatever isn't spent stays with them.
     budget() { return this.allowance() * this.turnMonths(); }
@@ -971,6 +1082,11 @@
     relocate(id) {
       const from = this.region;
       this.region = id;
+      // A new home means the local public school, unless yours is a boarding or commuter school.
+      if (this.inClass() && !this.schoolInfo().board && this.schoolInfo().id !== DEFAULT_SCHOOL[this.status === "hs3" ? "high" : this.status]) {
+        this.school = DEFAULT_SCHOOL[this.status === "hs3" ? "high" : this.status];
+        this.addLog("log.schoolMove", { id: this.school }, "event");
+      }
       // In school, the quotas count from the grade you arrive in; after school, you're past them.
       this.regionFrom = this.inSchool() ? this.grade : 13;
       this.flags.moved = this.clock;
@@ -997,7 +1113,8 @@
       if (!this.methodFixed()) cost += studyBlocks * this.methodCost(method);
       return cost * this.turnMonths();
     }
-    income(plan) { return (plan.job || 0) * JOB_PAY * this.turnMonths(); }
+    // Vocational high schools place you in paid work at a better rate.
+    income(plan) { return Math.round((plan.job || 0) * JOB_PAY * this.turnMonths() * (this.inClass() ? this.schoolInfo().job || 1 : 1)); }
     daysToExam() {
       // 수능 is the third Thursday of November, roughly the 15th.
       const now = new Date(Date.UTC(this.year, this.month - 1, 1));
@@ -1073,9 +1190,10 @@
       if (this.inClass()) {
         const typical = this.typicalLevel();
         const attend = (0.6 + 0.4 * this.motivation / 100) * healthFactor * (bp ? bp.eff : 1);
+        const sl = this.schoolInfo().lessons;
         for (const s of SUBJECTS) {
           const behind = clamp(0.5 + 0.5 * (typical - this.skills[s]), CLASS_FLOOR, 1);
-          const g = CLASS_YEAR * (months / 12) * SUBJECT_INFO[s].rate * this.aptitude[s] * behind * attend * headroom(this.skills[s]);
+          const g = CLASS_YEAR * (months / 12) * SUBJECT_INFO[s].rate * this.aptitude[s] * behind * attend * headroom(this.skills[s]) * (sl[s] || sl.all || 1);
           this.skills[s] += g;
           lessons += g;
         }
@@ -1102,13 +1220,18 @@
       const rk = this.regionKindInfo();
       d.stress += rk.stress;
       d.health += rk.health;
+      // The school you're at: a special school's pace, or an arts school's breathing room.
+      const sch = this.inClass() ? this.schoolInfo() : null;
+      if (sch) d.stress += sch.stress;
+      // Arts & sports lessons over the years are what an arts high school audition looks at.
+      if (plan.arts) this.flags.artsN = (this.flags.artsN || 0) + plan.arts * months / 12 * 2;
       d.stress += (plan.job || 0) * 5;
       d.motivation += (plan.friends || 0) * 3 - (plan.games || 0) * 4 + (plan.arts || 0) * 4;
       // Out of school, nobody sets the pace and nobody's around: a lower baseline, and loneliness
       // without time for friends.
       if (drop && !plan.friends) d.stress += DROPOUT_LONELY;
       // Motivation drifts back toward a baseline that sags with every extra year.
-      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
+      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
       // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
       // softens the toll on your body.
@@ -1246,6 +1369,8 @@
       const top = this.queue[0];
       if (!top || top.type !== "track") throw new Error("Not time to choose a track.");
       if (!INQUIRY[track]) throw new Error("Unknown track.");
+      const only = this.dropout == null ? this.schoolInfo().track : null;
+      if (only && track !== only) throw new Error("track.school");
       const ids = INQUIRY[track].map((x) => x.id);
       if (!inq || inq.length !== 2 || inq[0] === inq[1] || ids.indexOf(inq[0]) < 0 || ids.indexOf(inq[1]) < 0) throw new Error("Pick two different inquiry subjects.");
       const from = track === "soc" ? "inq1" : "inq2";
@@ -1283,6 +1408,7 @@
           if (this.rng() < p) { endBully(this); this.addLog("log.bullyEnd", { why: newSchool ? "stage" : "class" }, "event"); }
           else this.addLog("log.bullyStays", { g: this.grade }, "event");
         }
+        if (this.status !== was && (this.status === "mid" || this.status === "high") && this.dropout == null) this.queue.push({ type: "school", stage: this.status });
         if (this.grade === 11 && this.dropout != null && this.flags.ged != null) this.queue.push({ type: "event", id: "early", choices: 2 });
       }
       // Severe bullying costs a block a turn: days you can't face school, or can't focus when you're there.
@@ -1484,7 +1610,7 @@
   }
 
   const api = {
-    Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
+    Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SCHOOLS, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
     inquiryInfo, admissionScore, admitChance, chanceLabel, gradeSubject, makeRng, hashSeed,
     skillScore: (theta) => clamp(Math.round(50 + theta * 16.67), 0, 100),
   };

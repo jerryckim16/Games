@@ -1,6 +1,6 @@
 # Suneung Simulator (수능 시뮬레이터)
 
-A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You're born at random into one of Korea's five household-income fifths. You start elementary school at 6 and grow up through middle school and high school, deciding each turn how to spend your time: which subjects to study, whether your family pays for cram school, when to read, rest, play or see friends. Life happens along the way. At the end of grade 10 you choose humanities or sciences. In grade 12 you play month by month and sit the real 수능 in November. With your score you apply to universities, then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
+A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You're born at random into one of Korea's five household-income fifths. You start elementary school at 6 and grow up through middle school and high school, deciding each turn how to spend your time: which subjects to study, whether your family pays for cram school, when to read, rest, play or see friends. Life happens along the way. At the end of High 1 you choose humanities or sciences. In High 3 you play month by month and sit the real 수능 in November. With your score you apply to universities, then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
 
 Open `index.html` in a browser. There's no build step and no dependencies. Progress autosaves in the browser. It's also published as a single-file claude.ai artifact: https://claude.ai/artifact/H8zzP1PqsHVdvEQEARTuFE
 
@@ -10,33 +10,36 @@ This version ends when you enroll at a university. College life and what comes a
 
 ## How to play
 
+School years are counted the Korean way, with each school numbering its own years: Elementary 1–6 (초1–6), Middle 1–3 (중1–3) and High 1–3 (고1–3). High 3 (고3) is the 수능 year.
+
 1. **Be born.** Choose boy or girl and type a name. Your family and your talents are dealt at random; you can't pick or re-roll them.
    - The birth screen shows where you're born, your family's household income, which fifth of Korean households it's in, and what your parents can spend on your education each month.
    - Stars show aptitude, which is how fast you learn each subject.
-2. **Grow up.** Each turn you assign blocks of free time. You can also **move house** to another region (once a year) with the Move house button:
+2. **Pick a school** at the start of elementary, middle and high school. The local public school is always open; private and special schools have fees, lotteries or entry requirements (see Schools below).
+3. **Grow up.** Each turn you assign blocks of free time. You can also **move house** to another region (once a year) with the Move house button:
 
    | Stage | One turn is | Blocks |
    |---|---|---|
-   | Elementary school (grades 1–6, age 6–11) | a school year | 4 |
-   | Middle school (grades 7–9) | a semester | 4 |
-   | High school (grades 10–11) | a season: spring term, summer break, fall term, winter break | 4, or 5 in the breaks |
-   | Grade 12 | a month (March to November) | 4, 6 in July–August, 2 in 수능 month |
+   | Elementary school (초1–6, Elementary 1–6, age 6–11) | a school year | 4 |
+   | Middle school (중1–3, Middle 1–3) | a semester | 4 |
+   | High school (고1–2, High 1–2) | a season: spring term, summer break, fall term, winter break | 4, or 5 in the breaks |
+   | Final year (고3, High 3) | a month (March to November) | 4, 6 in July–August, 2 in 수능 month |
    | Retake years | a month | 6 (반수: 2 until June) |
 
    Pick a study method too; it applies to every study block that turn.
 
-   From grade 7 you can also **leave school** (자퇴) with the Leave school button. Out of school you get two more blocks a turn in grades 7–11 but lose the school lessons, which otherwise raise every subject a little each turn on their own. See Leaving school below.
-3. **Handle events.** Most turns bring one: a sports day, a math olympiad, the smartphone debate, a move to Daechi-dong, class elections, 중2, a PC방 invitation, a crush, a slump, a star lecturer's new course. Some only need an OK; others ask you to choose. Some lives also run into bullying (학교폭력), which hangs over every turn until it's dealt with.
-4. **Watch your standing.**
+   From Middle 1 you can also **leave school** (자퇴) with the Leave school button. Out of school you get two more blocks a turn in Middle 1 to High 2 but lose the school lessons, which otherwise raise every subject a little each turn on their own. See Leaving school below.
+4. **Handle events.** Most turns bring one: a sports day, a math olympiad, the smartphone debate, a move to Daechi-dong, class elections, 중2, a PC방 invitation, a crush, a slump, a star lecturer's new course. Some only need an OK; others ask you to choose. Some lives also run into bullying (학교폭력), which hangs over every turn until it's dealt with.
+5. **Watch your standing.**
    - The elementary-school teacher leaves a note each year.
    - Middle school shows your class rank each semester.
-   - Grades 10 and 11 sit mock exams (학력평가) in June and November.
-5. **Choose a track** at the end of grade 10: humanities (확률과 통계 + two social-studies subjects) or sciences (미적분 + two science subjects; the only track that can apply to medical school). Your social-studies ability carries into the humanities subjects, your science ability into the science ones.
-6. **Sit the exams.**
-   - Grade 12 has mock exams in March, June and September, with full score reports.
+   - High 1 and 2 sit mock exams (학력평가) in June and November.
+6. **Choose a track** at the end of High 1: humanities (확률과 통계 + two social-studies subjects) or sciences (미적분 + two science subjects; the only track that can apply to medical school). Your social-studies ability carries into the humanities subjects, your science ability into the science ones.
+7. **Sit the exams.**
+   - High 3 has mock exams in March, June and September, with full score reports.
    - In November you make two last choices: how you spend the night before, and what's in your 수능 lunch box. Then you sit the 수능 period by period.
    - The score report comes in December.
-7. **Apply and decide.** Apply to up to three universities (정시, one per 가·나·다 group). Then:
+8. **Apply and decide.** Apply to up to three universities (정시, one per 가·나·다 group). Then:
    - enroll;
    - enroll but secretly retake (반수);
    - retake at a 재수종합학원 or by self-study (독학재수);
@@ -50,7 +53,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **Families from real income data:**
   - You're born into one of the five national household-income fifths, each with a 20% chance.
   - The family sets your education budget. Money the parents don't spend on you that turn stays with them.
-  - Your own savings (New Year's money from relatives, gifts, a part-time job from grade 10) cover anything over the budget.
+  - Your own savings (New Year's money from relatives, gifts, a part-time job from High 1) cover anything over the budget.
 
   | Family | Household income (a month) | Education budget (a month) | Head start at age 6 | Pays for a retake academy |
   |---|---|---|---|---|
@@ -69,21 +72,21 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - 탐구 ×2: raw /50, 표준점수 (mean 50, sd 10), 백분위, 등급;
   - 영어: absolute grading, 90+ is grade 1 and every 10 points is a grade;
   - 한국사: absolute grading, 40+ is grade 1 and every 5 points is a grade.
-  - The score report also shows each section's grade-1 cut.
+  - The score report also shows each section's Elementary 1 cut.
   - Before the track choice, the two inquiry slots are social studies and science.
 - **Activities (one block each):**
 
   | Activity | When | Effect |
   |---|---|---|
   | Study a subject (×6) | always | Raises that subject's ability |
-  | Read books 독서 | grades 1–11 | Free. Builds Korean, with a little social studies and history |
-  | Piano, taekwondo & co. 예체능 | grades 1–9 | ₩150,000 a month. +Health, −Stress, +Motivation |
-  | Timed practice exams 실전 모의고사 | grade 10 on | Builds exam stamina (steadier scores on the day); small gains in every subject; stressful |
+  | Read books 독서 | Elementary 1 to High 2 | Free. Builds Korean, with a little social studies and history |
+  | Piano, taekwondo & co. 예체능 | Elementary 1 to Middle 3 | ₩150,000 a month. +Health, −Stress, +Motivation |
+  | Timed practice exams 실전 모의고사 | High 1 on | Builds exam stamina (steadier scores on the day); small gains in every subject; stressful |
   | Rest & sleep 휴식 | always | −Stress, +Health |
   | Exercise 운동 | always | +Health, −Stress |
-  | Hang out with friends 친구 | always | Big −Stress, +Motivation; sometimes leads to a PC방 invitation (from grade 5) |
+  | Hang out with friends 친구 | always | Big −Stress, +Motivation; sometimes leads to a PC방 invitation (from Elementary 5) |
   | Games & YouTube 게임 | always | −Stress, −Motivation |
-  | Part-time job 알바 | grade 10 on | +₩250,000 a month, +Stress, −Health |
+  | Part-time job 알바 | High 1 on | +₩250,000 a month, +Stress, −Health |
 
 - **Regions.** You're born in one of seventeen real places, and you can move:
 
@@ -122,7 +125,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
     Shares are approximate (district and sub-provincial splits and the rural-county total of about 4.4 million are estimates). Moving to Gangnam or Mokdong takes an upper-middle-income family, to Nowon, Mapo or Gangdong a middle-income one, and to Gwanak a lower-middle-income one.
   - **Your family is dealt next, from that place's mix of incomes.** The region-by-income table is balanced (iterative proportional fitting) so every place keeps exactly its population share and every income fifth stays exactly 20% overall, while a child born in Gangnam is in the top fifth half the time (3% in the bottom fifth), and a rural child is in the bottom fifth 36% of the time (8% in the top).
   - **Cram school and tutor** multipliers apply to the method's study speed and price. A retake academy's speed follows its region too.
-  - **Quotas** (real 정시 practice, simplified as points off a university's cut; both need middle and high school in the region, so you must arrive by grade 7):
+  - **Quotas** (real 정시 practice, simplified as points off a university's cut; both need middle and high school in the region, so you must arrive by Middle 1):
     - 지역인재 (local quota): 0.6 points at medical school, and at the local national university (Pusan National for Busan, Kyungpook National for Daegu and Pohang), for students outside the capital region;
     - 농어촌 전형 (rural quota): 0.8 points at most universities for rural students.
   - **Moving** is the family's decision: a block of packing next turn, +8 stress, −3 motivation, and the new-kid risk of bullying (moving can also end bullying at the old school, 70%). You can move once every 12 months; Seoul takes a middle-income family or above, Gangnam an upper-middle one.
@@ -148,9 +151,9 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **Being bullied** cuts study efficiency by 10–30% and wears down stress, motivation and health every turn until it's resolved (see above).
   - Stress and health also drift toward a resting level each turn, so a steady workload settles instead of spiralling.
   - High stress or low health on exam day lowers your scores.
-- **About 30 random events** with conditions (by school grade, family, phone ownership, stress, retakers, 반수 students). After an event fires it can't recur for 4 months. Fixed milestones always fire: the free-semester career week (grade 7), 중2 (grade 8) and D-100 (August of each 수능 year).
+- **About 30 random events** with conditions (by school grade, family, phone ownership, stress, retakers, 반수 students). After an event fires it can't recur for 4 months. Fixed milestones always fire: the free-semester career week (Middle 1), 중2 (Middle 2) and D-100 (August of each 수능 year).
 - **Bullying (학교폭력)**, a storyline that lasts until it's resolved:
-  - **When:** it can start in grades 3–11, most often in middle school. It's twice as likely for a year after you move (Daechi-dong) or change schools, and 1.4× as likely when your last plan had no time with friends. Each earlier episode halves the chance, and a new episode can't start within a year of the last one ending. About 3 in 10 lives meet it.
+  - **When:** it can start in Elementary 3 to High 2, most often in middle school. It's twice as likely for a year after you move (Daechi-dong) or change schools, and 1.4× as likely when your last plan had no time with friends. Each earlier episode halves the chance, and a new episode can't start within a year of the last one ending. About 3 in 10 lives meet it.
   - **Severity:** mild, serious or severe. It starts mild, or serious (more often in middle school).
   - **What it costs, every turn it lasts:** study efficiency drops 10% per severity level, so −10%, −20% or −30%. If someone is supporting you (parents who know, the Wee class counselor, friends you've made time for), it drops 30% less. It also adds stress (+4 per level), drains motivation (−3 per level) and health (−2 per level, or −1 with support). Severe bullying costs a block a turn (days you can't face school).
   - **The first choice:** tell your homeroom teacher, tell your parents (support, but the call can backfire), fight back, or keep quiet.
@@ -163,28 +166,50 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **When it turns severe,** the options are reporting it with your parents (it stops at once 60–70% of the time), changing schools (almost always ends it, at the cost of stress, motivation and a block), the counselor, or enduring.
   - **How it ends:** a choice that works, the March class reshuffle (60%, 40% or 20% by severity), starting a new school (70%), or leaving high school.
   - **On screen:** the Condition panel shows a red line with the severity and its cost while it lasts. Every step is in the life log.
-  - **Cost by grade 12:** in a paired test (the same 200 lives cloned at the start of grade 7 with serious bullying), reporting it costs about 1 point of average ability entering grade 12 and enduring it about 4.
-- **Leaving school (자퇴)**, from grade 7 (middle school) to grade 11. The button opens a list of what you gain and what it costs, and it can't be undone.
+  - **Cost by High 3:** in a paired test (the same 200 lives cloned at the start of Middle 1 with serious bullying), reporting it costs about 1 point of average ability entering High 3 and enduring it about 4.
+- **Schools.** At the start of each school stage a screen lists the schools you could go to, with what each does, its fees and your chance of getting in. The public school is the default and is always open. Fees come out of your parents' monthly education budget, so they compete with cram school and tutors, and a school is closed if the budget can't cover them. Missing out on a lottery or selection means the public school.
+
+  | Stage | School | Fee a month | Getting in | What it does |
+  |---|---|---|---|---|
+  | Elementary | Public (공립초) | – | assigned | standard lessons |
+  | | Private (사립초) | ₩800,000 | lottery, 50%; big cities only | lessons ×1.15, English ×1.5, +2 motivation, +1 stress |
+  | Middle | Public (공립중) | – | assigned | standard lessons |
+  | | Private (사립중) | – | lottery honours your preference 60% | lessons ×1.08, +1 motivation, +1 stress |
+  | | International (국제중) | ₩700,000 | screening (grades well ahead of your year), then a 30% lottery | lessons ×1.1, English ×1.6, +3 motivation, +3 stress; boarding |
+  | High | Public 일반고 | – | assigned | standard lessons |
+  | | Private 일반고 | – | preference honoured 60% | lessons ×1.08, +1 motivation, +1 stress |
+  | | Autonomous private (자사고) | ₩550,000 | selection on how far ahead you are, up to 85% | Korean, math, English lessons ×1.25, others ×1.1, +3 motivation, +3 stress |
+  | | Science / gifted (과학고·영재학교) | ₩150,000 | math and science far ahead of your year, up to 70% | math and science lessons ×1.6, Korean ×0.9, sciences track only, +3 motivation, +5 stress |
+  | | Foreign language / international (외고·국제고) | ₩500,000 | English and Korean well ahead, up to 75% | English ×1.6, Korean ×1.25, social studies ×1.15, math ×0.95, humanities track only |
+  | | Arts / sports (예고·체고) | ₩400,000 | audition on years of arts & sports lessons, up to 80% | practice takes a block a turn, academic lessons ×0.7, +3 motivation, −3 stress |
+  | | Vocational (특성화고·마이스터고) | – | 95% | workshop hours take a block a turn, academic lessons ×0.4, part-time pay ×1.5, −2 motivation, −3 stress |
+
+  - "How far ahead" is your ability in those subjects against the typical level for your year (the line class ranks use), so selective schools reward studying ahead in childhood; a science school takes a real math-and-science focus.
+  - The multipliers apply to school lessons (see Learning), not to your own study.
+  - Moving house swaps a day school for the local public school; boarding schools (international middle, 자사고, science and foreign language schools) stay.
+  - New events at special schools: dorm nights, the science school's R&E research project, the arts school showcase, paid placements at vocational schools, English week at a private elementary school, and the first-exam shock at an elite high school (for once you're in the bottom half).
+  - The status card names your school.
+- **Leaving school (자퇴)**, from Middle 1 (middle school) to High 2. The button opens a list of what you gain and what it costs, and it can't be undone.
   - **What you gain:**
-    - two more free blocks every turn in grades 7–11 (6 instead of 4), because the hours that went to classes are yours (grade 12 gains nothing, since a 고3's school day is mostly self-study already);
+    - two more free blocks every turn in Middle 1 to High 2 (6 instead of 4), because the hours that went to classes are yours (High 3 gains nothing, since a 고3's school day is mostly self-study already);
     - no school pressure in the daily stress, no class ranks, and any bullying ends;
-    - pass the GED by grade 11 and you're offered the 수능 a year early, with your age group's year left as a spare.
+    - pass the GED by High 2 and you're offered the 수능 a year early, with your age group's year left as a spare.
   - **What it costs:**
     - **No school lessons:** the passive gain in every subject (see Learning) stops, so only your own study moves you;
-    - **The GED (검정고시)** must be passed first. It opens six months after you leave and comes round every four months or more. The pass chance is 60% plus up to 30% from your standing among your age group, plus 15% for each retry; cramming adds 25% but costs a block. From August of grade 12 it always passes, so you're never shut out of the 수능.
+    - **The GED (검정고시)** must be passed first. It opens six months after you leave and comes round every four months or more. The pass chance is 60% plus up to 30% from your standing among your age group, plus 15% for each retry; cramming adds 25% but costs a block. From August of High 3 it always passes, so you're never shut out of the 수능.
     - **No local or rural quotas:** 검정고시 holders don't count as having gone to school in the region.
     - **Nobody sets the pace:** the motivation baseline is 8 lower until your first 수능, and a turn with no time for friends adds 3 stress.
     - **Your parents take it hard** (+6 stress, −4 motivation when you leave), and the relatives ask questions at Chuseok.
-    - **No school events:** no olympiad, class elections, festivals or career week, and no grade 10–11 mock exams (you still get grade 12's).
+    - **No school events:** no olympiad, class elections, festivals or career week, and no High 1–2 mock exams (you still get High 3's).
   - **New events:** the GED (cram or go in as you are), the early 수능 offer, a lonely week when old classmates post trip photos, and the Chuseok questions.
-  - **On screen:** the status reads "Out of school", the plan panel says lessons have stopped, the Condition panel says what it changes, you study in a hoodie at a study café, and the diary notes it in your age group's terms ("your age group moves up to grade 9").
-  - **In the balance tables:** leaving at grade 10 does a little worse than staying, for the balanced bot and for the smart one: the extra blocks don't quite make up for the lessons. Leaving at grade 7 and sitting a year early costs more, since you sit with a year less of growth, but leaves you a spare year.
+  - **On screen:** the status reads "Out of school", the plan panel says lessons have stopped, the Condition panel says what it changes, you study in a hoodie at a study café, and the diary notes it in your age group's terms ("your age group moves up to Middle 3").
+  - **In the balance tables:** leaving at High 1 does a little worse than staying, for the balanced bot and for the smart one: the extra blocks don't quite make up for the lessons. Leaving at Middle 1 and sitting a year early costs more, since you sit with a year less of growth, but leaves you a spare year.
 - **Ability chart** across every stage and attempt, a **life log**, and an **exam history** table with every 수능 and the current year's mocks.
 - **Deterministic:** the seed fixes the family, the talent roll, every paper, and the cohort you're graded against. Your choices only change your own answers.
 - **Two complete languages, English and Korean**, never mixed. Switching mid-game re-renders everything, including past log entries.
-- **Ages are international (만 나이):** grade 1 starts at 6 and grade 12 at 17; the Korean version writes "만 17세".
+- **Ages are international (만 나이):** Elementary 1 starts at 6 and High 3 at 17; the Korean version writes "만 17세".
 - **An illustrated life.** All the artwork is original inline SVG drawn by `art.js` (no image files), and it follows the light and dark themes (dark mode turns day into dusk):
-  - **A scene of where you are**, with you standing in it: an elementary classroom with drawings on the cork board, the middle-school hallway, your desk late at night in high school (with a D-day calendar in grade 12), the retake academy's lecture room, a study-café cubicle, the university campus during 반수, the exam hall in November, home on results night, and the university gate (with its name) or an open road at the end. Windows show the season: cherry blossoms in spring, sun in summer, falling maple leaves in fall, snow in winter.
+  - **A scene of where you are**, with you standing in it: an elementary classroom with drawings on the cork board, the middle-school hallway, your desk late at night in high school (with a D-day calendar in High 3), the retake academy's lecture room, a study-café cubicle, the university campus during 반수, the exam hall in November, home on results night, and the university gate (with its name) or an open road at the end. Windows show the season: cherry blossoms in spring, sun in summer, falling maple leaves in fall, snow in winter.
   - **An avatar that grows up:** a child with a yellow backpack, a teenager in school uniform, a retaker in a hoodie, a student in casual clothes. Hair, skin tone and shirt colour come from the seed. The face shows your mood (happy, okay, drained, stressed or sick, from the condition bars), it blinks and breathes, and a thought bubble says what's on your mind.
   - **A picture for every event** (sports day, the olympiad medal, the smartphone, Daechi-dong's neon academies, the bully, class elections, 중2's slammed door, the PC방, a cold, the star lecturer, the crush's note, the D-100 banner, grandma's envelope, insomnia sheep and more), redrawn for how it turned out. Events the art doesn't know yet fall back to a matching picture by id prefix or keyword, then to one for your life stage.
   - Illustrated birth (your family's home, from a rooftop room to a riverside tower), track choice, mock exams, exam day, score report and applications.
@@ -209,8 +234,8 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - the night-before and lunch-box choices;
   - random day form, whose spread shrinks with exam stamina.
 - **Learning:**
-  - each block on a subject adds 0.24 × subject rate × aptitude × method speed × condition × headroom(θ) × √(months in the turn), times 0.32 during the school years (grades 1–11);
-  - **school lessons** add to every subject each turn on their own, whatever you do with your blocks, from grade 1 through grade 12 (not after leaving school): 0.4 a year × the months in the turn / 12 × subject rate × aptitude × how far behind the class you are × attention × headroom(θ). "Behind" is 0.5 + 0.5 × (the typical level for your grade − your θ), kept between 0.4 and 1, so lessons help most when you're behind and a little even when you're far ahead. Attention is 0.6 + 0.4 × motivation/100, times the health and bullying factors. The typical level climbs 0.28 a school year from −2.4 at grade 1 (the balanced bot's path); class ranks and the GED use the same line. For an average child, lessons add up to about a third of the climb to grade 12. The diary shows each turn's lesson total;
+  - each block on a subject adds 0.24 × subject rate × aptitude × method speed × condition × headroom(θ) × √(months in the turn), times 0.32 during the school years (Elementary 1 to High 2);
+  - **school lessons** add to every subject each turn on their own, whatever you do with your blocks, from Elementary 1 through High 3 (not after leaving school): 0.4 a year × the months in the turn / 12 × subject rate × aptitude × how far behind the class you are × attention × headroom(θ). "Behind" is 0.5 + 0.5 × (the typical level for your grade − your θ), kept between 0.4 and 1, so lessons help most when you're behind and a little even when you're far ahead. Attention is 0.6 + 0.4 × motivation/100, times the health and bullying factors. The typical level climbs 0.28 a school year from −2.4 at Elementary 1 (the balanced bot's path); class ranks and the GED use the same line. For an average child, lessons add up to about a third of the climb to High 3. The diary shows each turn's lesson total;
   - condition = the motivation, health and stress factors, times the bullying factor (1, or 0.9–0.7) while you're being bullied;
   - headroom(θ) = e^(−0.62·max(0, θ + 0.8)) gives diminishing returns: going from average to top 4% is far quicker than from top 4% to a perfect score;
   - a second block on the same subject in one turn counts ×0.77, a third ×0.63, and so on;
@@ -258,7 +283,7 @@ Run it after any change to the exam or learning model. The tables below come fro
 
 Means over 40 sittings.
 
-| Section | Mean raw | Grade-1 cut | Top 표준점수 | Grade-1 share | Real target |
+| Section | Mean raw | Elementary 1 cut | Top 표준점수 | Elementary 1 share | Real target |
 |---|---|---|---|---|---|
 | 국어 | 59.2 | 90.0 | 141.3 | | cut 84–92, top 135–150 |
 | 수학 | 45.8 | 88.2 | 147.1 | | cut 84–88, top 135–148 |
@@ -285,9 +310,9 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 - The bots always pick the first option at events (for bullying, that means telling a teacher and then reporting it).
 - "Best affordable" means the most expensive study method the family's budget covers that turn.
-- "smart" looks after stress and health, reads in elementary school, adds a timed practice exam in October of grade 12, and studies the subject with the most room to grow. It skips English past about the 90-point level and History once it is safe.
+- "smart" looks after stress and health, reads in elementary school, adds a timed practice exam in October of High 3, and studies the subject with the most room to grow. It skips English past about the 90-point level and History once it is safe.
 - The bots apply to one reach, one match and one safe school.
-- "Start" is the average ability (0–100) entering grade 12.
+- "Start" is the average ability (0–100) entering High 3.
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
@@ -298,9 +323,12 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 | smart, best affordable method, 1 try | 67 | 2.1 · 1.7 · 1.6 | 386 | 386 | 1.00 | 8% | 1% | 76% |
 | smart, best affordable, retakes up to 3 tries | 67 | 2.1 · 1.7 · 1.6 | 386 | 410 | 2.51 | 71% | 19% | 100% |
 | smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.2 · 1.8 · 1.6 | 385 | 419 | 3.70 | 94% | 89% | 99% |
-| balanced, self-study, leaves school at grade 10, 1 try | 60 | 2.9 · 2.4 · 2.1 | 363 | 363 | 1.00 | 0% | 0% | 25% |
-| smart, best affordable, leaves school at grade 10, 1 try | 67 | 2.1 · 2.0 · 1.7 | 383 | 383 | 1.00 | 5% | 0% | 73% |
-| smart, best affordable, leaves at grade 7, 수능 a year early, 1 try | 62 | 2.4 · 2.2 · 2.2 | 377 | 377 | 1.00 | 4% | 0% | 63% |
+| smart, best affordable, tries for selective schools, 1 try | 67 | 2.0 · 1.8 · 1.8 | 386 | 386 | 1.00 | 8% | 0% | 80% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 67 | 2.2 · 1.8 · 1.6 | 384 | 420 | 3.70 | 94% | 88% | 99% |
+| balanced, self-study, vocational high school, 1 try | 58 | 2.8 · 2.4 · 1.9 | 356 | 356 | 1.00 | 0% | 0% | 20% |
+| balanced, self-study, leaves school at High 1, 1 try | 60 | 2.9 · 2.4 · 2.1 | 363 | 363 | 1.00 | 0% | 0% | 25% |
+| smart, best affordable, leaves school at High 1, 1 try | 67 | 2.1 · 2.0 · 1.7 | 383 | 383 | 1.00 | 5% | 0% | 73% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 62 | 2.4 · 2.2 · 2.2 | 377 | 377 | 1.00 | 4% | 0% | 63% |
 
 The smart bot with the best affordable method, first try only, by family:
 
@@ -326,9 +354,10 @@ By region kind, where the life ended up (the same smart bot, first try; 의대 i
 
 What the tables show:
 
-- **School lifts everyone, habits decide the rest:** lessons carry even the slacker to 56 by grade 12, and the same random talents end up anywhere from 56 to 67 on average depending on how you spend your free time.
+- **School lifts everyone, habits decide the rest:** lessons carry even the slacker to 56 by High 3, and the same random talents end up anywhere from 56 to 67 on average depending on how you spend your free time.
 - **Family income matters, but it isn't destiny:** with the same smart play, the top fifth reaches SKY on the first try about a fifth of the time and the bottom two fifths rarely do. Retakes close much of the gap.
 - **Where you live matters too:** Gangnam's academies give the strongest start, while local and rural quotas help students outside the capital (the region groups above are small, so treat them as a direction, not exact rates).
+- **School choice nudges rather than decides:** the bot that tries for selective schools mostly lands in private ones by lottery (a few get into 자사고 or an international middle school) and does slightly better; the smart bot rarely studies far enough ahead in math and science for a science school; a vocational school costs a 수능 candidate about 9 points of total and a block a turn.
 - **Leaving school is a trade, not a shortcut:** the extra hours almost make up for the lost lessons, motivation and the GED, but not quite, and you lose the quotas; what you gain is freedom from school (and bullying) and a spare year if you sit early.
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
 - **Medical school** takes talent, a sciences track and usually several years: the bot chasing it rarely gets in on the first try, but a near-optimal player who keeps retaking usually makes it within five.
@@ -344,6 +373,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v3.2:** schools, and Korean grade names. At the start of elementary, middle and high school you pick a school: public or private at every stage, a private elementary school in big cities, an international middle school, and at high school 자사고, science and gifted schools, foreign language schools, arts and sports schools, and vocational schools. Each has its own fees (out of the education budget), lottery or entry requirement, lesson strengths, pressure and track limits, plus a few events of its own. Picking the public school changes nothing, so the earlier balance numbers are unchanged; three new bots show the school paths. The English version now counts school years the Korean way (Elementary 1–6, Middle 1–3, High 1–3) instead of grades 1–12, everywhere from the plan title to the diary and the chart.
 
 - **v3.1:** school lessons. Being at school now raises every subject a little each turn on its own, whatever you do with your free blocks, from grade 1 to grade 12. Lessons help most when you're behind the class and less when you're far ahead, and they depend on attention (motivation, health, bullying). The plan panel says so, and the diary shows each turn's lesson total. Leaving school stops them. To keep the top end where it was, study during the school years counts a little less (×0.32 instead of ×0.5), and dropouts no longer get extra blocks in grade 12. Average and lazy players now reach grade 12 much stronger (the balanced bot starts at 61 instead of 42), the smart bot's start is unchanged, and staying in school now beats leaving. Balance tables regenerated.
 

@@ -245,7 +245,7 @@
     els.sDday.textContent = g.ending ? T("stat.over") : school ? T("stat.years", { n: 12 - g.grade }) :
       g.month <= 11 ? (d > 0 ? T("stat.dday", { n: d }) : T("stat.examMonth")) : T("stat.results");
     els.sAttempt.textContent = school ? L.schoolGrade(g.grade) : L.att(g.attempt);
-    els.sStatus.textContent = g.dropout != null && (school || g.status === "hs3") ? T("st.dropout", { ged: g.flags.ged != null }) : L.status(g.status);
+    els.sStatus.textContent = g.dropout != null && (school || g.status === "hs3") ? T("st.dropout", { ged: g.flags.ged != null }) : g.inClass() ? L.school(g.schoolInfo().id) : L.status(g.status);
     els.sAge.textContent = L.age(g.age);
     els.sName.textContent = g.name + " · " + L.regionShort(g.regionInfo().id) + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
@@ -485,7 +485,10 @@
         '<span class="nm">' + esc(L.region(r.id)) + "<small>" + esc(L.regionKind(r.kind) + " · " + fx) + "</small>" + (quota ? "<small>" + esc(quota) + "</small>" : "") +
         (note ? "<small" + (why ? ' class="why"' : "") + ">" + esc(note) + "</small>" : "") + "</span>" + tag + "</label>";
     }).join("");
-    openModal(T("move.title"), "<p>" + esc(T("move.text")) + '</p><div class="unis">' + rows + "</div>", [
+    // Leaving a private day school behind is worth a warning.
+    const sch = g.inClass() ? g.schoolInfo() : null;
+    const warn = sch && !sch.board && !/^pub/.test(sch.id) ? '<p class="muted">' + esc(T("move.school")) + "</p>" : "";
+    openModal(T("move.title"), "<p>" + esc(T("move.text")) + "</p>" + warn + '<div class="unis">' + rows + "</div>", [
       { label: T("move.stay"), run: () => render() },
       { label: T("move.go"), primary: true, run: () => { if (!pick.id) return; g.move(pick.id); save(); render(); } },
     ]);
@@ -522,7 +525,7 @@
   // with your age, and an icon for each kind of entry.
   const LOG_ICON = {
     "log.born": "👶", "log.stage": "🏫", "log.grade": "🎒", "log.teacher": "🍎", "log.report": "📊", "log.sebae": "🧧", "log.track": "🔀",
-    "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩",
+    "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩", "log.school": "🏫", "log.schoolMove": "🏫",
     "log.month": "🗓️", "log.mock": "📝", "log.suneung": "🎯", "log.apply": "📮", "log.enroll": "🎓", "log.quit": "🚪", "log.halfpay": "💸", "log.newyear": "🌱",
   };
   function logIcon(l) {
@@ -682,6 +685,7 @@
     }
     if (top.type === "birth") return showBirth();
     if (top.type === "track") return showTrack();
+    if (top.type === "school") return showSchool(top);
     if (top.type === "event") return showEvent(top);
     if (top.type === "mock") return showMock(top);
     if (top.type === "exam") return examStep === 0 ? showExamDay(top) : showReport(top);
@@ -707,9 +711,38 @@
       [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }],
       Art.screenArt("birth", artCtx({ stage: "elem" })));
   }
+  // Picking a school: every option for the stage with what it does, what it costs, the chance of
+  // getting in, and why it's closed. The default public school is always open.
+  function showSchool(top) {
+    const g = game;
+    const opts = g.schoolOptions();
+    const pick = { id: opts.find((o) => o.def).id };
+    const desc = T("school.desc");
+    const rows = opts.map((o) => {
+      const why = o.blocked ? T("school.no." + (o.blocked === "admit" && o.id === "artsHigh" ? "arts" : o.blocked)) : "";
+      const cls = o.def ? "ch-safe" : o.blocked ? "ch-long" : o.p >= 0.55 ? "ch-match" : o.p >= 0.25 ? "ch-reach" : "ch-long";
+      const tag = '<span class="chance ' + cls + '" title="' + esc(T("school.chance", { p: o.p, def: o.def })) + '">' + esc(o.def ? T("school.tag.def") : o.blocked ? T("school.tag.no") : Math.round(o.p * 100) + "%") + "</span>";
+      const facts = [T("school.fee", { fee: o.fee }), o.track ? T("school.track", { t: o.track }) : ""].filter(Boolean).join(" · ");
+      return '<label class="uni region' + (o.blocked ? " off" : "") + '"><input type="radio" name="schoolPick" value="' + o.id + '"' + (o.blocked ? " disabled" : "") + (o.def ? " checked" : "") + ">" +
+        '<span class="nm">' + esc(L.school(o.id)) + "<small>" + esc(desc[o.id]) + "</small><small>" + esc(facts) + "</small>" +
+        (why ? '<small class="why">' + esc(why) + "</small>" : "") + "</span>" + tag + "</label>";
+    }).join("");
+    const t = T("school.title"), x = T("school.text");
+    openModal(t[top.stage], "<p>" + esc(x[top.stage]) + '</p><div class="unis">' + rows + "</div>", [
+      { label: T("school.go"), primary: true, run: () => {
+        const msg = game.pickSchool(pick.id);
+        outcome = { title: t[top.stage], msg, id: "school", variant: msg.key.split(".").pop() };
+        after();
+      } },
+    ], Art.eventArt(artCtx({ id: "school", stage: top.stage })));
+    for (const inp of els.modalBody.querySelectorAll("input[name=schoolPick]")) inp.addEventListener("change", () => { pick.id = inp.value; });
+  }
+
   function showTrack() {
     const g = game;
-    let track = g.skills.math + g.skills.inq2 > g.skills.kor + g.skills.inq1 ? "sci" : "soc";
+    // Science and foreign-language high schools only teach one track.
+    const only = g.dropout == null ? g.schoolInfo().track : null;
+    let track = only || (g.skills.math + g.skills.inq2 > g.skills.kor + g.skills.inq1 ? "sci" : "soc");
     openModal(T("track.title"),
       "<p>" + esc(T("track.text")) + "</p>" +
       '<div class="seg track-seg" id="trackSeg"><button type="button" data-v="soc"><span aria-hidden="true">🌏 </span>' + esc(L.track("soc")) +
@@ -721,13 +754,13 @@
       Art.screenArt("track", artCtx()));
     const seg = $("trackSeg"), a = $("inqA"), b = $("inqB");
     const fill = () => {
-      for (const btn of seg.querySelectorAll("button")) btn.classList.toggle("on", btn.dataset.v === track);
-      $("trackNote").textContent = T("track.note." + track);
+      for (const btn of seg.querySelectorAll("button")) { btn.classList.toggle("on", btn.dataset.v === track); btn.disabled = !!only && btn.dataset.v !== only; }
+      $("trackNote").textContent = (only ? T("track.forced", { t: only }) + " " : "") + T("track.note." + track);
       const opts = INQUIRY[track].map((x) => '<option value="' + x.id + '">' + esc(L.inq(x.id)) + "</option>").join("");
       a.innerHTML = opts; b.innerHTML = opts;
       a.value = INQUIRY[track][0].id; b.value = INQUIRY[track][1].id;
     };
-    seg.addEventListener("click", (e) => { const btn = e.target.closest("button[data-v]"); if (btn) { track = btn.dataset.v; fill(); } });
+    seg.addEventListener("click", (e) => { const btn = e.target.closest("button[data-v]"); if (btn && !btn.disabled) { track = btn.dataset.v; fill(); } });
     // The two inquiry subjects must differ.
     const fix = (changed, other) => { if (changed.value === other.value) other.value = INQUIRY[track].map((x) => x.id).find((id) => id !== changed.value); };
     a.addEventListener("change", () => fix(a, b));

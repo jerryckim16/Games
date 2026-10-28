@@ -124,7 +124,9 @@ function pickMethod(g, plan, pref) {
   return "self";
 }
 function pickTrack(g, opts) {
-  const track = opts.track || (g.skills.math + g.skills.inq2 > g.skills.kor + g.skills.inq1 ? "sci" : "soc");
+  // Science and foreign-language high schools only teach one track.
+  const only = g.dropout == null && g.schoolInfo().track;
+  const track = only || opts.track || (g.skills.math + g.skills.inq2 > g.skills.kor + g.skills.inq1 ? "sci" : "soc");
   const inq = opts.inq || S.INQUIRY[track].slice().sort((a, b) => a.pop - b.pop).slice(0, 2).map((x) => x.id);
   return [track, inq];
 }
@@ -149,6 +151,14 @@ function playCareer(seed, bot, opts) {
     }
     if (top.type === "event") { g.choose(top.id === "early" && !opts.early ? 1 : 0); continue; }
     if (top.type === "birth") { g.dismiss(); continue; }
+    // Schools: the public one unless the bot has a list of schools it tries for (first open one with
+    // a fair chance).
+    if (top.type === "school") {
+      const o = g.schoolOptions();
+      const want = (opts.schools || []).map((id) => o.find((x) => x.id === id)).find((x) => x && !x.blocked && x.p >= 0.2);
+      g.pickSchool(want ? want.id : o.find((x) => x.def).id);
+      continue;
+    }
     if (top.type === "track") { const [t, inq] = pickTrack(g, opts); g.chooseTrack(t, inq); continue; }
     if (top.type === "mock" || top.type === "exam") {
       if (top.type === "exam") results.push(top.result);
@@ -189,6 +199,10 @@ function strategies() {
     { label: "smart, best affordable method, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college" },
     { label: "smart, best affordable, retakes up to 3", bot: "smart", method: "tutor", maxAttempts: 3, goal: "yonsei" },
     { label: "smart, best affordable, sci, 의대 up to 5", bot: "smart", method: "tutor", maxAttempts: 5, goal: "med", track: "sci", inq: ["bio", "earth"] },
+    // Schools: aiming for the selective ones, a science school for a 의대 chaser, a vocational school.
+    { label: "smart, best affordable, selective schools, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", schools: ["intlMid", "sciHigh", "autoHigh", "langHigh", "privElem", "privMid", "privHigh"] },
+    { label: "smart, sci, science high, 의대 up to 5", bot: "smart", method: "tutor", maxAttempts: 5, goal: "med", track: "sci", inq: ["bio", "earth"], schools: ["sciHigh"] },
+    { label: "balanced, vocational high, 1 try", bot: "balanced", method: "self", maxAttempts: 1, goal: "college", schools: ["vocHigh"] },
     // Leaving school (자퇴): from grade 10, and from grade 7 with the Suneung a year early.
     { label: "balanced, self-study, quits at 10, 1 try", bot: "balanced", method: "self", maxAttempts: 1, goal: "college", quitAt: 10 },
     { label: "smart, best affordable, quits at 10, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", quitAt: 10 },
