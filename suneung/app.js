@@ -21,6 +21,7 @@
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
     slots: $("slots"), turn: $("turn"), turnCap: $("turnCap"), turnDate: $("turnDate"), turnAge: $("turnAge"), confetti: $("confetti"),
+    cut: $("cut"), cutFrame: $("cutFrame"), cutCap: $("cutCap"), cutProg: $("cutProg"), cutSkip: $("cutSkip"), cutHint: $("cutHint"), cutToggle: $("cutToggle"),
   };
   const Art = window.SuneungArt;
   // Animations are decoration: with reduced motion the page skips the turn page, confetti and count-ups
@@ -94,6 +95,8 @@
     for (const el of document.querySelectorAll("[data-t]")) el.textContent = T(el.dataset.t);
     els.name.placeholder = T("setup.namePh." + sex);
     for (const b of els.lang.querySelectorAll("button")) b.classList.toggle("on", b.dataset.v === lang);
+    els.cutToggle.textContent = T(cutsOn ? "cut.toggle.on" : "cut.toggle.off");
+    els.cutToggle.setAttribute("aria-pressed", cutsOn ? "true" : "false");
   }
   els.lang.addEventListener("click", (e) => {
     const b = e.target.closest("button[data-v]");
@@ -148,6 +151,7 @@
   els.startBtn.addEventListener("click", () => {
     // Born this year, so elementary school starts six years on.
     game = new Game({ name: els.name.value.trim() || T("setup.namePh." + sex), sex, startYear: new Date().getFullYear() + 6 });
+    game.seenCuts = [];
     plan = {};
     save();
     showGame();
@@ -697,6 +701,15 @@
 
   function renderModal() {
     const g = game;
+    // A milestone plays its cutscene first; the screen it belongs to opens when the film ends.
+    if (cut) return;
+    const c = cutsOn ? pendingCut() : null;
+    if (c) {
+      g.seenCuts.push(c.id);
+      save();
+      playCut(c);
+      return;
+    }
     if (outcome) {
       // The outcome keeps the event's picture, redrawn with how things turned out.
       const art = outcome.id ? Art.eventArt(artCtx({ id: outcome.id, variant: outcome.variant })) : "";
@@ -1023,9 +1036,123 @@
       Art.screenArt("ending", artCtx({ stage: "uni", label: u ? L.uni(u.id) : "", mood: u ? "happy" : "ok" })));
   }
 
+  // ---------- cutscenes ----------
+  // Short animated films (art.js draws the shots) for life's milestones. Which have played is kept on
+  // the save as game.seenCuts, so a reload never replays one; the engine never reads it. The header
+  // button turns them off, remembered per browser.
+  const CUTS_KEY = "suneung.cuts";
+  let cutsOn = store.get(CUTS_KEY) !== "off";
+  let cut = null; // { name, shots, i, timer } while one plays
+  els.cutToggle.addEventListener("click", () => {
+    cutsOn = !cutsOn;
+    store.set(CUTS_KEY, cutsOn ? "on" : "off");
+    applyStatic();
+  });
+  // The milestone the current screen belongs to, if its film hasn't played: { id, name, ctx, p }.
+  function pendingCut() {
+    const g = game;
+    if (!g || !Array.isArray(g.seenCuts)) return null;
+    const top = g.queue[0];
+    // cap: the caption set, when it differs from the id's first part.
+    const film = (id, name, extra, p, cap) => (g.seenCuts.indexOf(id) < 0 ? { id, name, ctx: artCtx(extra || {}), p: p || {}, cap: cap || id.split("-")[0] } : null);
+    if (top && top.type === "birth") return film("birth", "birth", { stage: "baby" }, { y: g.year, name: g.name, region: L.region(g.region) });
+    if (outcome && outcome.id === "doljabi") {
+      const items = (g.traits || []).filter((t) => S.DOLJABI[t]);
+      return film("dol", "dol", { stage: "baby", items }, { a: L.trait(items[0] || "pencil"), b: items[1] ? L.trait(items[1]) : "", two: items.length > 1 });
+    }
+    if (outcome) return null;
+    if (top && top.type === "exam") {
+      const r = top.result;
+      // A 수능 test site is some other school, numbered on its gate.
+      if (examStep === 0) return film("exam-" + r.year, "exam", { label: T("cut.site", { n: 3 + (Math.abs(g.seed + r.year) % 27) }) }, { y: r.year });
+      const gr = [r.subjects.kor.grade, r.subjects.math.grade, r.subjects.inq1.grade, r.subjects.inq2.grade];
+      const avg = gr.reduce((a, b) => a + b, 0) / 4;
+      return film("results-" + r.year, "results", { grades: gr, react: avg <= 2.5 ? "happy" : avg <= 4.5 ? "ok" : "tired" }, { t: r.total });
+    }
+    if (top && top.type === "offers" && top.offers.length) {
+      const best = top.offers.slice().sort((a, b) => UNIVERSITIES.findIndex((u) => u.id === a) - UNIVERSITIES.findIndex((u) => u.id === b))[0];
+      return film("offers-" + g.year + "-" + g.attempt, "offers", {}, { uni: L.uni(best) });
+    }
+    if (top) return null;
+    if (g.ending) {
+      if (g.endingSeen) return null;
+      const uni = g.ending.uni ? L.uni(g.ending.uni) : "";
+      return film("end", "end", { stage: "uni", label: uni }, { uni, name: g.name, age: L.age(g.ending.age) }, uni ? "end" : "endroad");
+    }
+    // Moving house (by choice or by an event) this turn.
+    if (g.flags.lastMove != null && g.flags.lastMove === g.clock) return film("move-" + g.clock, "move", {}, { region: L.region(g.region) });
+    // The first plan screen of each school stage.
+    const school = g.inClass() ? L.school(g.schoolInfo().id) : "";
+    if (g.status === "elem" && g.grade === 1) return film("elem", "elem", { label: school }, { school });
+    if (g.status === "mid" && g.grade === 7 && g.dropout == null) return film("mid", "school", { label: school }, { school, st: "mid" });
+    if (g.status === "high" && g.grade === 10 && g.dropout == null) return film("high", "school", { label: school }, { school, st: "high" });
+    return null;
+  }
+  function playCut(c) {
+    const shots = Art.cutscene(c.name, c.ctx);
+    if (!shots.length) return;
+    cut = { c, shots, i: -1, timer: 0, capKey: c.cap };
+    els.cutFrame.innerHTML = "";
+    els.cutProg.innerHTML = shots.map(() => "<i><b></b></i>").join("");
+    els.cutSkip.textContent = T("cut.skip");
+    els.cutHint.textContent = T("cut.next");
+    els.cut.setAttribute("aria-label", T("cut.label"));
+    els.cut.classList.remove("hidden");
+    document.body.classList.add("cutting");
+    els.cutSkip.focus({ preventScroll: true });
+    nextShot();
+  }
+  function nextShot() {
+    if (!cut) return;
+    clearTimeout(cut.timer);
+    cut.i++;
+    if (cut.i >= cut.shots.length) return endCut();
+    const shot = cut.shots[cut.i];
+    // The new shot fades in over the last one (a cross-dissolve), which then goes.
+    const layer = document.createElement("div");
+    layer.className = "cut-shot";
+    layer.innerHTML = shot.svg;
+    els.cutFrame.appendChild(layer);
+    while (els.cutFrame.children.length > 2) els.cutFrame.firstChild.remove();
+    const cap = els.cutCap;
+    cap.textContent = T("cut." + cut.capKey + "." + cut.i, cut.c.p);
+    cap.classList.remove("in");
+    void cap.offsetWidth;
+    cap.classList.add("in");
+    els.cutProg.querySelectorAll("i").forEach((el, k) => {
+      el.className = k < cut.i ? "done" : k === cut.i ? "now" : "";
+      el.style.setProperty("--t", shot.t + "s");
+    });
+    // Still frames (reduced motion) stay up a little longer, to be read.
+    cut.timer = setTimeout(nextShot, shot.t * 1000 + (calm() ? 1600 : 250));
+  }
+  function endCut() {
+    if (!cut) return;
+    clearTimeout(cut.timer);
+    cut = null;
+    els.cut.classList.add("hidden");
+    els.cutFrame.innerHTML = "";
+    document.body.classList.remove("cutting");
+    render();
+  }
+  els.cutSkip.addEventListener("click", (e) => { e.stopPropagation(); endCut(); });
+  els.cut.addEventListener("click", () => nextShot());
+  document.addEventListener("keydown", (e) => {
+    if (!cut) return;
+    if (e.key === "Escape") { e.preventDefault(); endCut(); }
+    else if ((e.key === "Enter" || e.key === " ") && e.target !== els.cutSkip) { e.preventDefault(); nextShot(); }
+  });
+
   // ---------- boot ----------
   applyStatic();
   game = loadSave();
+  // Saves from before cutscenes start with none seen, except the one the save is sitting on, so loading
+  // an old game doesn't open with a film.
+  if (game && !Array.isArray(game.seenCuts)) {
+    game.seenCuts = [];
+    const c = pendingCut();
+    if (c) game.seenCuts.push(c.id);
+  }
   // A finished life reopens on its ending (or the look-back view), not the new-life screen; "Start a
   // new life" is right there on the page.
   if (game) showGame();

@@ -629,23 +629,27 @@
     },
   };
 
+  // 돌잡이 items, drawn standing on a table top at y ≈ 170 around x (shared by the event art and the
+  // first-birthday cutscene).
+  const DOL_ITEMS = {
+    pencil: (x) => R(x - 3, 140, 6, 28, "c5", 1) + P("M" + (x - 3) + " 140 L" + x + " 132 L" + (x + 3) + " 140 Z", "skin"),
+    book: (x) => R(x - 14, 148, 28, 20, "c1", 2) + R(x - 12, 150, 24, 3, "paper", 1),
+    mouse: (x) => E(x, 160, 10, 13, "paper", "line", 1.5) + L(x, 148, x, 156, "line", 1.5),
+    stethoscope: (x) => P("M" + (x - 10) + " 146 Q" + (x - 12) + " 166 " + x + " 166 Q" + (x + 12) + " 166 " + (x + 10) + " 146", null, "dark", 2.5) + O(x, 166, 5, "metal"),
+    mic: (x) => R(x - 3, 150, 6, 18, "dark", 2) + O(x, 147, 7, "metal"),
+    gavel: (x) => R(x - 14, 148, 28, 10, "wood2", 3) + R(x - 2, 156, 4, 14, "wood", 1),
+    ball: (x) => O(x, 158, 11, "c2") + P("M" + (x - 11) + " 158 Q" + x + " 150 " + (x + 11) + " 158", null, "paper", 1.5),
+    thread: (x) => R(x - 9, 150, 18, 18, "paper", 3, "line", 1) + L(x - 9, 155, x + 9, 155, "c1", 2) + L(x - 9, 161, x + 9, 161, "c1", 2),
+    money: (x) => R(x - 14, 154, 28, 14, "leaf", 2) + R(x - 10, 150, 28, 14, "leaf", 2, "paper", 1) + O(x + 4, 157, 3, "paper"),
+    brush: (x) => R(x - 2, 140, 4, 24, "wood", 1) + P("M" + (x - 4) + " 164 L" + (x + 4) + " 164 L" + x + " 174 Z", "dark"),
+  };
+
   // Foreground pieces per event. Each returns SVG drawn over the backdrop; v is the outcome suffix
   // (r0a, r1 ...) when the art illustrates a result rather than the question.
   const FX = {
     // 돌잡이: a low table laid with objects; the grabbed one (the outcome's suffix) sparkles.
     doljabi: (v) => {
-      const items = {
-        pencil: (x) => R(x - 3, 140, 6, 28, "c5", 1) + P("M" + (x - 3) + " 140 L" + x + " 132 L" + (x + 3) + " 140 Z", "skin"),
-        book: (x) => R(x - 14, 148, 28, 20, "c1", 2) + R(x - 12, 150, 24, 3, "paper", 1),
-        mouse: (x) => E(x, 160, 10, 13, "paper", "line", 1.5) + L(x, 148, x, 156, "line", 1.5),
-        stethoscope: (x) => P("M" + (x - 10) + " 146 Q" + (x - 12) + " 166 " + x + " 166 Q" + (x + 12) + " 166 " + (x + 10) + " 146", null, "dark", 2.5) + O(x, 166, 5, "metal"),
-        mic: (x) => R(x - 3, 150, 6, 18, "dark", 2) + O(x, 147, 7, "metal"),
-        gavel: (x) => R(x - 14, 148, 28, 10, "wood2", 3) + R(x - 2, 156, 4, 14, "wood", 1),
-        ball: (x) => O(x, 158, 11, "c2") + P("M" + (x - 11) + " 158 Q" + x + " 150 " + (x + 11) + " 158", null, "paper", 1.5),
-        thread: (x) => R(x - 9, 150, 18, 18, "paper", 3, "line", 1) + L(x - 9, 155, x + 9, 155, "c1", 2) + L(x - 9, 161, x + 9, 161, "c1", 2),
-        money: (x) => R(x - 14, 154, 28, 14, "leaf", 2) + R(x - 10, 150, 28, 14, "leaf", 2, "paper", 1) + O(x + 4, 157, 3, "paper"),
-        brush: (x) => R(x - 2, 140, 4, 24, "wood", 1) + P("M" + (x - 4) + " 164 L" + (x + 4) + " 164 L" + x + " 174 Z", "dark"),
-      };
+      const items = DOL_ITEMS;
       const ids = Object.keys(items);
       let s = R(300, 166, 290, 14, "wood", 4) + R(310, 180, 10, 24, "wood2", 2) + R(570, 180, 10, 24, "wood2", 2) + R(296, 160, 298, 8, "c1", 3, null, 0, "opacity:0.6");
       ids.forEach((id, i) => {
@@ -895,5 +899,305 @@
     return svg("0 0 " + EW + " " + EH, SCREENS[name](ctx), "event-art");
   }
 
-  root.SuneungArt = { scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar };
+
+  // ---------- cutscenes ----------
+  // Short animated films for life's milestones. A cutscene is a list of shots; each shot is one SVG on
+  // an 800 × 450 stage whose camera (the outer .cam group) pans and zooms over the shot while things
+  // inside walk, drop, pop, ring and grow. All motion is CSS keyframes in styles.css (.cut-art), timed
+  // with custom properties, so app.js only swaps shots. Content is drawn where it ends up and the
+  // animations start from offsets, so with prefers-reduced-motion each shot is a sensible still frame.
+  const CW = 800, CH = 450, CG = 370, CF = 418; // stage, ground line, feet line
+  // cam: { s0, s1 } scale, { ox, oy } the point it zooms on, { x0, x1, y0, y1 } a pan, over t seconds.
+  function cutShot(t, body, cam) {
+    const c = cam || {};
+    const v = (k, d) => (c[k] != null ? c[k] : d);
+    const style = "--t:" + t + "s;--s0:" + v("s0", 1) + ";--s1:" + v("s1", 1.06) + ";--ox:" + v("ox", 400) + "px;--oy:" + v("oy", 260) + "px;--x0:" + v("x0", 0) + "px;--x1:" + v("x1", 0) +
+      "px;--y0:" + v("y0", 0) + "px;--y1:" + v("y1", 0) + "px";
+    return { t, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + CW + " " + CH + '" preserveAspectRatio="xMidYMid slice" class="art cut-art" aria-hidden="true" focusable="false"><g class="cam" style="' + style + '">' + body + "</g></svg>" };
+  }
+  // Slide from dx0 to dx1 (px), starting at `at` seconds and taking d seconds: walking, driving, parallax.
+  const walk = (dx0, dx1, at, d, body) => '<g class="c-walk" style="--wx0:' + dx0 + "px;--wx1:" + dx1 + "px;--at:" + at + "s;--d:" + d + 's">' + body + "</g>";
+  // A one-shot effect (c-pop, c-fade, c-out, c-stamp, c-ring, c-grow, c-flash, c-thud) at `at` seconds.
+  const fx = (cls, at, body) => '<g class="' + cls + '" style="--at:' + at + 's">' + body + "</g>";
+  // Family and classmates. Parents share your skin tone; everyone else gets a seeded look.
+  const mom = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, skin: ctx.look.skin, shirt: 0, sex: "f" }, mood: "happy" }, extra || {})), s || 1);
+  const dad = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 1, skin: ctx.look.skin, shirt: 2, sex: "m" }, mood: "happy" }, extra || {})), s || 1);
+  const me = (ctx, stage, x, y, s, extra) => person(Object.assign({}, ctx, { stage }), x, y, s, extra);
+  function other(seed, x, y, s, o) {
+    return G(x, y, avatar(Object.assign({ age: "teen", outfit: "uniform", look: lookFor(seed, seed % 2 ? "m" : "f"), mood: "happy" }, o || {})), s || 1);
+  }
+  const kid = (seed, x, y, s, o) => other(seed, x, y, s, Object.assign({ age: "child", outfit: "kid", backpack: true }, o || {}));
+  // A newborn wrapped in a blanket.
+  const bundle = (x, y, s) => G(x, y, E(0, 0, 26, 15, "c5") + E(-6, -2, 20, 11, "paper", null, 0, "opacity:0.5") + O(20, -8, 11, "skin") + P("M15 -6 q3 2 6 0", null, "ink", 1.2) + O(21, -12, 1.2, "ink"), s || 1);
+  function confettiRain(n, seed) {
+    const r = rand(seed || 9);
+    let s = "";
+    for (let i = 0; i < n; i++) {
+      const style = "--d:" + (2.2 + r() * 2).toFixed(1) + "s;--del:-" + (r() * 3).toFixed(1) + "s;--dx:" + (r() * 60 - 30).toFixed(0) + "px;--fy:" + (CH + 40) + "px";
+      s += G((r() * CW).toFixed(0), -10, A("fall", R(-4, -6, 8, 12, ["c1", "c2", "c3", "c4", "c5", "gold"][i % 6], 2), style));
+    }
+    return s;
+  }
+  const petals = (seed, n) => particles("spring", 0, 0, CW, CH - 40, false, n || 22, seed || 5);
+  // A street that scrolls past behind someone walking in place: far city, near trees and a fence.
+  function streetPan(t, season) {
+    const r = rand(77);
+    let far = "", near = "";
+    for (let i = 0; i < 14; i++) {
+      const x = i * 90, h = 90 + r() * 90;
+      far += R(x, CG - 40 - h, 80, h + 40, "city") + R(x + 12, CG - 30 - h, 14, 12, "lamp", 0, null, 0, "opacity:0.35");
+    }
+    for (let i = 0; i < 40; i++) near += R(i * 32, CG - 30, 4, 34, "paper", 1, null, 0, "opacity:0.8");
+    for (let i = 0; i < 8; i++) near += tree(80 + i * 170, CG + 6, season, 1.25);
+    return outdoorSky(CW, CH, { season, seed: 31 }) + walk(0, -260, 0, t, far) + R(0, CG - 4, CW, CH, "path") +
+      walk(0, -620, 0, t, near + R(0, CG - 30, 1360, 4, "paper", 0, null, 0, "opacity:0.8")) + R(0, CG + 34, CW, 8, "stone2") + (season === "spring" ? petals(12, 18) : "");
+  }
+  // A school (or university) gate: a building, two pillars and a name plate the app passes in as text.
+  function gateShot(label, floors, season) {
+    let s = outdoorSky(CW, CH, { season, seed: 19 }) + R(0, CG, CW, CH - CG, "grass") + P("M330 450 L370 " + CG + " L430 " + CG + " L470 450 Z", "path");
+    const top = CG - 40 - floors * 34;
+    s += R(150, top, 500, CG - top, "stone", 4) + R(140, top - 12, 520, 14, "stone2", 3);
+    for (let f = 0; f < floors; f++) for (let i = 0; i < 9; i++) s += R(172 + i * 52, top + 14 + f * 34, 30, 20, "glass", 2);
+    s += tree(90, CG + 4, season, 1.6) + tree(720, CG + 4, season, 1.7);
+    s += R(230, 180, 46, CG - 180, "stone2", 3) + R(524, 180, 46, CG - 180, "stone2", 3) + R(218, 170, 70, 16, "stone", 3) + R(512, 170, 70, 16, "stone", 3);
+    s += R(270, 116, 260, 44, "paper", 6, "gold", 3) + (label ? T(400, 145, label, "ink", label.length > 20 ? 12 : label.length > 13 ? 15 : 19) : "");
+    return s;
+  }
+  // The 돌잡이 table seen from the front, scaled up from the event art's coordinates.
+  const DOL_ORDER = ["pencil", "book", "mouse", "stethoscope", "mic", "gavel", "ball", "thread", "money", "brush"];
+  function dolTable() {
+    let s = R(300, 166, 290, 14, "wood", 4) + R(310, 180, 10, 24, "wood2", 2) + R(570, 180, 10, 24, "wood2", 2) + R(296, 160, 298, 8, "c1", 3, null, 0, "opacity:0.6");
+    DOL_ORDER.forEach((id, i) => { s += DOL_ITEMS[id](320 + i * 28); });
+    return G(-314, 64, s, 1.6);
+  }
+  const dolX = (id) => (320 + Math.max(0, DOL_ORDER.indexOf(id)) * 28) * 1.6 - 314;
+  const homeOf = (ctx) => G(40, 112, (HOMES[ctx.family] || HOMES.q3)(), 1.45);
+
+  const CUTS = {
+    birth(ctx) {
+      // 1. A city at night, one lit window in the hospital; the camera pushes in.
+      let a = outdoorSky(CW, CH, { night: true, seed: 7 });
+      const r = rand(23);
+      for (let i = 0; i < 10; i++) { const h = 80 + r() * 120; a += R(i * 84 - 10, CG - h, 76, h + 10, "city"); }
+      a += R(270, 110, 260, CG - 110, "stone", 4) + R(258, 98, 284, 16, "stone2", 3) + R(370, 46, 60, 46, "paper", 6) + R(392, 52, 16, 34, "c1", 2) + R(383, 61, 34, 16, "c1", 2);
+      for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) a += R(292 + i * 46, 132 + j * 44, 26, 28, i === 3 && j === 1 ? "lamp" : "night2", 2);
+      a += G(431, 190, A("pulse", O(0, 0, 40, "lamp", null, 0, "opacity:0.35")));
+      a += R(0, CG, CW, CH - CG, "road") + R(0, CG, CW, 6, "stone2");
+      // 2. The delivery room: a first cry over the bassinet, your parents leaning in.
+      let b = R(0, 0, CW, CG, "tile") + R(0, CG, CW, CH - CG, "tile2") + windowView(560, 60, 170, 130, { night: true, season: ctx.season, city: true, seed: 8 });
+      b += R(40, 300, 200, 56, "paper", 10, "line", 2) + R(40, 282, 56, 28, "paper", 8) + R(46, 356, 8, 62, "metal") + R(226, 356, 8, 62, "metal");
+      b += mom(ctx, 290, CF, 1.45, { pose: "hold" }) + dad(ctx, 540, CF, 1.5, { pose: "hold" });
+      b += R(350, 330, 110, 46, "c5", 10) + R(362, 376, 8, 42, "metal") + R(440, 376, 8, 42, "metal") + bundle(390, 326, 1.4);
+      b += fx("c-fade", 0.5, G(450, 300, A("pulse", P("M0 0 q10 -10 0 -20 M10 4 q16 -14 0 -30 M20 8 q22 -18 0 -40", null, "c1", 3)))) + heart(380, 260, 1.6, "c1", 0.6) + heart(430, 240, 1.2, "blossom", 1.4);
+      // 3. Coming home: the family's home in the spring, your parents walking up with you.
+      let c = outdoorSky(CW, CH, { season: "spring", seed: 4 }) + homeOf(ctx) + R(0, CG + 30, CW, CH, "grass") + tree(700, CG + 34, "spring", 1.7);
+      c += walk(360, 0, 0.1, 3.0, dad(ctx, 610, CF + 6, 1.5, { pose: "wave" }) + mom(ctx, 490, CF + 10, 1.45, { pose: "hold" }) + bundle(526, CF - 118, 1.1));
+      c += petals(5, 20);
+      return [
+        cutShot(3.2, a, { s0: 1, s1: 2.1, ox: 431, oy: 186 }),
+        cutShot(3.6, b, { s0: 1.05, s1: 1.3, ox: 410, oy: 320 }),
+        cutShot(3.6, c, { s0: 1.08, s1: 1.0, ox: 420, oy: 300, x0: -20, x1: 10 }),
+      ];
+    },
+    dol(ctx) {
+      const items = (ctx.items || []).filter((id) => DOL_ITEMS[id]);
+      if (!items.length) items.push("pencil");
+      // 1. The first-birthday party: a folding screen, balloons, a rice-cake tower, the whole family.
+      let a = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor");
+      for (let i = 0; i < 8; i++) a += R(120 + i * 70, 70, 66, 220, i % 2 ? "c3" : "c5", 3, null, 0, "opacity:0.55") + R(128 + i * 70, 82, 50, 196, "paper2", 2, null, 0, "opacity:0.7");
+      a += bunting(60, 740, 40, 2);
+      [[90, "c1"], [150, "c2"], [650, "c4"], [710, "c5"]].forEach(([x, col], i) => { a += G(x, 120, A("float", O(0, 0, 22, col) + L(0, 22, 0, 90, "line", 1.2), "--del:-" + i * 0.6 + "s")); });
+      a += R(300, 300, 200, 16, "wood", 3) + R(312, 316, 8, 60, "wood2") + R(480, 316, 8, 60, "wood2");
+      ["c1", "paper", "c2", "blossom", "c3", "paper2"].forEach((col, i) => { a += R(340 + i * 6, 278 - i * 22, 120 - i * 12, 22, col, 4); });
+      a += mom(ctx, 150, CF, 1.35, { pose: "cheer" }) + dad(ctx, 250, CF, 1.4, { pose: "wave" });
+      a += G(560, CF, avatar({ age: "adult", outfit: "casual", look: { hair: 2, skin: ctx.look.skin, shirt: 3, sex: "f" }, mood: "happy", pose: "cheer" }), 1.25);
+      a += G(660, CF, avatar({ age: "adult", outfit: "casual", look: { hair: 0, skin: ctx.look.skin, shirt: 1 }, mood: "happy", pose: "wave" }), 1.3);
+      // 2. The table of objects; you toddle up to the one you'll grab.
+      let b = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor");
+      for (let i = 0; i < 8; i++) b += R(80 + i * 84, 50, 80, 230, i % 2 ? "c3" : "c5", 3, null, 0, "opacity:0.45");
+      b += dolTable();
+      const tx = dolX(items[0]);
+      b += walk(-300, 0, 0.3, 2.4, me(ctx, "baby", tx - 18, 446, 1.7, { mood: "happy" }));
+      b += fx("c-fade", 2.7, sparkle(tx, 270, 1.2) + sparkle(tx + 18, 290, 0.7, "c5"));
+      // 3. The grab, up close: the item (or both) held high, confetti.
+      let c = R(0, 0, CW, CH, "wall") + G(400, 225, A("pulse", O(0, 0, 230, "lamp", null, 0, "opacity:0.35")));
+      const one = items.length === 1;
+      items.slice(0, 2).forEach((id, i) => {
+        const x = one ? 400 : 290 + i * 220, sc = one ? 4.2 : 3.4;
+        c += G(x, 225, fx("c-pop", 0.2 + i * 0.35, G(0, -150 * sc, DOL_ITEMS[id](0), sc)));
+        c += sparkle(x - 90, 120, 1.4) + sparkle(x + 80, 300, 1) + sparkle(x + 60, 100, 0.8, "c5");
+      });
+      c += confettiRain(40, 3);
+      return [
+        cutShot(3.0, a, { s0: 1.12, s1: 1.12, x0: 50, x1: -50 }),
+        cutShot(3.6, b, { s0: 1, s1: 1.35, ox: tx, oy: 330 }),
+        cutShot(3.2, c, { s0: 0.92, s1: 1.04 }),
+      ];
+    },
+    // First day of elementary school: out of the door, the walk, the gate.
+    elem(ctx) {
+      let a = outdoorSky(CW, CH, { season: "spring", seed: 6 }) + homeOf(ctx) + R(0, CG + 30, CW, CH, "grass") + tree(720, CG + 34, "spring", 1.6);
+      a += mom(ctx, 250, CF + 10, 1.45, { pose: "wave" });
+      a += walk(-220, 0, 0.2, 2.6, me(ctx, "elem", 520, CF + 12, 1.6, { mood: "happy" }));
+      a += petals(8, 16);
+      let b = streetPan(3.4, "spring");
+      b += walk(0, -120, 0, 3.4, kid(41, 600, CF, 1.3) + kid(42, 680, CF, 1.3));
+      b += me(ctx, "elem", 360, CF, 1.6, { mood: "happy" });
+      let c = gateShot(ctx.label, 3, "spring");
+      [[110, 51], [180, 52], [620, 53], [690, 54]].forEach(([x, sd]) => { c += G(x, CF, A("hop", kid(sd, 0, 0, 1), "--del:-" + (sd % 3) * 0.4 + "s"), 1.25); });
+      c += mom(ctx, 280, CF + 10, 1.45, { pose: "wave" }) + me(ctx, "elem", 430, CF + 14, 1.65, { pose: "wave", mood: "happy" }) + petals(9, 18);
+      return [
+        cutShot(3.0, a, { s0: 1.05, s1: 1.1, x0: 10, x1: -30 }),
+        cutShot(3.4, b, { s0: 1.05, s1: 1.05 }),
+        cutShot(3.4, c, { s0: 1.35, s1: 1.0, ox: 420, oy: 330 }),
+      ];
+    },
+    // A new school in a new uniform (middle or high school): the mirror, the walk, the gate.
+    school(ctx) {
+      const st = ctx.stage, high = st === "high";
+      let a = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor") + windowView(80, 70, 200, 160, { season: "spring", city: true, seed: 12 });
+      a += R(520, 60, 120, 300, "frame", 8) + R(532, 72, 96, 276, "glass", 4, null, 0, "opacity:0.75") + P("M548 90 L600 70 M548 130 L620 90", null, "paper", 3, "opacity:0.6");
+      a += R(620, 300, 160, 70, "c4", 10) + R(620, 280, 60, 30, "paper", 8);
+      a += me(ctx, st, 400, CF, 1.6, { mood: "happy" }) + fx("c-fade", 1.0, sparkle(380, 250, 1.1) + sparkle(430, 300, 0.8) + sparkle(370, 330, 0.6, "c5"));
+      let b = streetPan(3.2, "spring");
+      b += walk(0, -100, 0, 3.2, other(61, 590, CF, 1.25) + other(62, 670, CF, 1.25));
+      b += me(ctx, st, 360, CF, 1.45, { mood: "happy" });
+      let c = gateShot(ctx.label, high ? 5 : 4, "spring");
+      [[120, 71], [190, 72], [640, 73], [700, 74]].forEach(([x, sd]) => { c += other(sd, x, CF, 1.2); });
+      c += walk(-260, 0, 0.2, 2.4, me(ctx, st, 400, CF + 14, 1.5, { mood: "happy" })) + petals(10, 18);
+      return [
+        cutShot(2.8, a, { s0: 1, s1: 1.25, ox: 410, oy: 300 }),
+        cutShot(3.2, b, { s0: 1.05, s1: 1.05 }),
+        cutShot(3.4, c, { s0: 1.2, s1: 1.0, ox: 400, oy: 320 }),
+      ];
+    },
+    // 수능 morning: a cold dawn walk, a police escort, the gate, the bell.
+    exam(ctx) {
+      const st = ctx.stage;
+      let a = outdoorSky(CW, CH, { night: true, seed: 3 }) + R(0, 220, CW, 160, "dusk", 0, null, 0, "opacity:0.35") + R(0, CG, CW, CH - CG, "road");
+      for (let i = 0; i < 4; i++) a += G(80 + i * 220, CG, R(-3, -170, 6, 170, "metal") + R(-14, -176, 28, 8, "metal", 3) + A("pulse", O(0, -160, 34, "lamp", null, 0, "opacity:0.3")) + O(0, -168, 7, "lamp"));
+      a += particles("fall", 0, 0, CW, CG, false, 10, 4);
+      let pair = mom(ctx, 330, CF, 1.45, { pose: "hold", mood: "ok" }) + me(ctx, st, 440, CF, 1.5, { mood: "ok" });
+      for (let i = 0; i < 3; i++) pair += G(466, 214, A("rise", E(0, 0, 10, 6, "steam", null, 0, "opacity:0.8"), "--del:" + (i * 0.9) + "s"));
+      a += walk(-200, 0, 0, 3.0, pair);
+      let b = outdoorSky(CW, CH, { season: "fall", seed: 21 }) + R(0, CG - 160, CW, 160, "city") + R(0, CG, CW, CH - CG, "road") + R(0, CG + 30, CW, 6, "paper", 0, null, 0, "opacity:0.6");
+      // Riders first, sitting down into the bodywork drawn over their legs; the officer wears a helmet.
+      let bike = G(-46, -18, avatar({ age: "teen", outfit: "uniform", look: lookFor(88, "f"), mood: "stressed" }), 0.85);
+      bike += G(-6, -22, avatar({ age: "adult", outfit: "casual", look: { hair: 0, skin: 0, shirt: 2 }, mood: "ok" }) + P("M-22 -128 Q-22 -158 0 -158 Q22 -158 22 -128 Z", "paper", "line", 2) + R(-22, -134, 44, 6, "c5", 2), 0.9);
+      bike += O(-56, -22, 24, "dark") + O(60, -22, 24, "dark") + O(-56, -22, 9, "metal") + O(60, -22, 9, "metal") + P("M-74 -36 L-60 -64 L-10 -76 L60 -66 L84 -36 Z", "paper", "line", 2) + R(-50, -60, 100, 10, "c5", 3);
+      bike += R(-78, -110, 4, 50, "metal") + G(-76, -114, A("pulse", O(0, 0, 9, "c1")) + A("pulse", O(12, 0, 9, "c5"), "--del:-1.2s"));
+      for (let i = 0; i < 5; i++) bike += L(100 + i * 10, -100 + i * 18, 190 + i * 30, -100 + i * 18, "paper", 3, "opacity:0.7");
+      b += walk(820, -820, 0.2, 3.0, G(400, CF, bike, 1.2));
+      let c = gateShot(ctx.label, 4, "fall");
+      [[70, 81, "c2"], [150, 82, "c3"], [230, 83, "c1"]].forEach(([x, sd, col], i) => {
+        c += G(x, CF, A("hop", R(-34, -230, 68, 46, col, 6) + R(-2, -186, 4, 60, "wood2") + avatar({ age: "teen", outfit: "uniform", look: lookFor(sd, sd % 2 ? "m" : "f"), mood: "happy", pose: "cheer" }), "--del:-" + i * 0.35 + "s"), 1.15);
+      });
+      c += G(310, CF - 20, R(-26, -34, 52, 40, "c1", 8) + E(0, -34, 26, 8, "paper") + L(-30, -60, -8, -38, "wood", 3));
+      c += mom(ctx, 470, CF + 8, 1.4, { pose: "hold" }) + walk(0, 170, 1.4, 1.8, me(ctx, st, 560, CF + 12, 1.45, { mood: "ok" }));
+      let d = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor") + R(180, 50, 360, 130, "board", 4, "wood", 7) + clock(640, 90, 30, 8);
+      for (let i = 0; i < 4; i++) d += G(110 + i * 190, CG + 10, R(-50, -14, 100, 10, "wood", 2) + R(-46, -4, 6, 40, "metal") + R(40, -4, 6, 40, "metal") + R(-22, -20, 44, 7, "omr", 1) + O(-20, -46, 16, "hair") + R(-40, -32, 40, 26, "hoodie", 10));
+      d += me(ctx, st, 400, CF + 30, 1.4, { mood: "stressed" }) + G(400, CF - 10, R(-70, -14, 140, 12, "wood", 2) + R(-30, -22, 60, 9, "omr", 1));
+      d += G(690, 200, fx("c-ring", 0.4, P("M-24 20 Q-24 -24 0 -26 Q24 -24 24 20 Z", "gold", "gold2", 2) + O(0, 24, 6, "gold2")));
+      d += fx("c-fade", 0.5, G(690, 190, A("pulse", P("M34 -20 q14 16 0 34 M48 -30 q22 26 0 54 M-34 -20 q-14 16 0 34 M-48 -30 q-22 26 0 54", null, "gold", 3))));
+      return [
+        cutShot(3.0, a, { s0: 1.05, s1: 1.12 }),
+        cutShot(3.2, b, { s0: 1.0, s1: 1.04 }),
+        cutShot(3.4, c, { s0: 1.12, s1: 1.12, x0: 40, x1: -40 }),
+        cutShot(3.0, d, { s0: 1.0, s1: 1.3, ox: 420, oy: 320 }),
+      ];
+    },
+    // Results day: the phone buzzes, the score report fills in, your face.
+    results(ctx) {
+      const st = ctx.stage, mood = ctx.react || "ok";
+      let a = R(0, 0, CW, CG, "nightwall") + R(0, CG, CW, CH - CG, "nightfloor") + windowView(90, 70, 190, 150, { night: true, season: "winter", city: true, seed: 33 });
+      a += R(470, 280, 260, 16, "wood", 3) + R(484, 296, 10, 120, "wood2") + R(706, 296, 10, 120, "wood2");
+      a += G(600, 270, A("pulse", O(0, 0, 60, "screen", null, 0, "opacity:0.35")) + fx("c-ring", 0.5, R(-22, -12, 44, 14, "dark", 4) + R(-18, -10, 36, 10, "screen", 2)));
+      a += walk(-260, 0, 0.3, 2.2, me(ctx, st, 380, CF, 1.5, { mood: "stressed" }));
+      let b = R(0, 0, CW, CH, "night");
+      b += R(260, 20, 280, 420, "dark", 34) + R(276, 60, 248, 340, "paper", 8) + R(276, 60, 248, 40, "c5", 8) + O(400, 40, 5, "metal");
+      const cols = ["c1", "c5", "c4", "c3"];
+      (ctx.grades || [3, 3, 3, 3]).slice(0, 4).forEach((gr, i) => {
+        const h = Math.max(14, ((10 - gr) / 9) * 230), x = 300 + i * 56;
+        b += R(x, 140, 40, 240, "tile", 4) + fx("c-grow", 0.4 + i * 0.4, R(x, 380 - h, 40, h, cols[i], 4));
+        b += fx("c-pop", 0.9 + i * 0.4, O(x + 20, 370 - h - 16, 12, gr <= 1 ? "gold" : gr <= 3 ? "c3" : "gray"));
+      });
+      let c = R(0, 0, CW, CG, "nightwall") + R(0, CG, CW, CH - CG, "nightfloor");
+      const yay = mood === "happy";
+      c += mom(ctx, 190, CF, 1.6, { pose: yay ? "cheer" : "hold" }) + dad(ctx, 620, CF, 1.65, { pose: yay ? "cheer" : "hold" });
+      c += me(ctx, st, 400, CF + 160, 2.5, { mood, pose: yay ? "cheer" : "stand" }) + (yay ? confettiRain(30, 7) : "");
+      return [
+        cutShot(2.8, a, { s0: 1, s1: 1.3, ox: 600, oy: 290 }),
+        cutShot(3.4, b, { s0: 0.96, s1: 1.06 }),
+        cutShot(3.0, c, { s0: 1.12, s1: 1.0, ox: 400, oy: 260 }),
+      ];
+    },
+    // Admission: the family at the laptop, the stamp, the cheer.
+    offers(ctx) {
+      const st = ctx.stage;
+      const gid = nid("glow");
+      let a = "<defs>" + glow(gid, "screen") + "</defs>" + R(0, 0, CW, CG, "nightwall") + R(0, CG, CW, CH - CG, "nightfloor");
+      a += R(180, 300, 440, 70, "sofa", 16) + R(190, 270, 420, 50, "sofa2", 14);
+      a += mom(ctx, 250, CF, 1.4, { pose: "hold", mood: "ok" }) + dad(ctx, 560, CF, 1.45, { pose: "hold", mood: "ok" }) + me(ctx, st, 400, CF + 20, 1.5, { mood: "stressed" });
+      a += O(400, 300, 120, null, null, 0, "fill:url(#" + gid + ")") + G(400, 330, R(-60, -50, 120, 70, "dark", 6) + R(-52, -44, 104, 58, "screen", 3) + R(-76, 20, 152, 8, "metal", 3));
+      let b = R(0, 0, CW, CH, "wood2");
+      b += fx("c-thud", 0.95, G(400, 225, R(-170, -200, 340, 400, "paper", 6, "line", 2) + O(0, -150, 30, "gold", "gold2", 3) + R(-120, -90, 240, 10, "line", 3) + R(-120, -60, 200, 10, "line", 3) + R(-120, -30, 220, 10, "line", 3) + R(-120, 0, 160, 10, "line", 3)));
+      b += G(470, 300, fx("c-stamp", 0.8, O(0, 0, 66, null, "c1", 9) + O(0, 0, 52, "c1", null, 0, "opacity:0.15") + P("M-30 2 L-8 26 L34 -24", null, "c1", 11)));
+      b += fx("c-flash", 0.95, R(0, 0, CW, CH, "paper"));
+      let c = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor") + bunting(40, 760, 50, 3);
+      c += G(170, CF, A("hop", avatar({ age: "adult", outfit: "casual", look: { hair: 3, skin: ctx.look.skin, shirt: 0, sex: "f" }, mood: "happy", pose: "cheer" })), 1.5);
+      c += G(640, CF, A("hop", avatar({ age: "adult", outfit: "casual", look: { hair: 1, skin: ctx.look.skin, shirt: 2, sex: "m" }, mood: "happy", pose: "cheer" }), "--del:-0.5s"), 1.55);
+      c += G(400, CF + 10, A("hop", me(ctx, st, 0, 0, 1.7, { mood: "happy", pose: "cheer" }), "--del:-0.25s"));
+      c += confettiRain(46, 11);
+      return [
+        cutShot(3.0, a, { s0: 1, s1: 1.45, ox: 400, oy: 320 }),
+        cutShot(2.6, b, { s0: 1.06, s1: 1.0 }),
+        cutShot(3.2, c, { s0: 1.0, s1: 1.08 }),
+      ];
+    },
+    // The ending: a suitcase on a spring road, then through the university gate. No offer: a dusk road.
+    end(ctx) {
+      const suitcase = (x) => G(x, CF, R(-22, -60, 44, 56, "c4", 6) + R(-8, -70, 16, 12, null, 3, "c4", 3) + O(-12, -2, 4, "dark") + O(12, -2, 4, "dark"));
+      if (!ctx.label) {
+        const gid = nid("dusk");
+        let a = grad(gid, "dusk", "dusk2") + R(0, 0, CW, CH, null, 0, null, 0, "fill:url(#" + gid + ")") + O(560, 250, 60, "sun", null, 0, "opacity:0.9");
+        a += P("M0 300 Q200 240 400 296 T800 270 L800 450 L0 450 Z", "hill") + P("M0 350 Q240 310 520 344 T800 336 L800 450 L0 450 Z", "grass") + P("M330 450 Q380 380 520 344 L540 344 Q440 390 450 450 Z", "path");
+        a += walk(0, 150, 0.2, 3.0, me(ctx, "uni", 360, CF, 1.4, { mood: "tired" }));
+        const b = outdoorSky(CW, CH, { night: true, seed: 44 }) + P("M0 330 Q300 280 800 320 L800 450 L0 450 Z", "hill") + me(ctx, "uni", 400, CF, 1.5, { mood: "ok" });
+        return [cutShot(3.2, a, { s0: 1.0, s1: 1.1, ox: 450, oy: 340 }), cutShot(3.0, b, { s0: 1.2, s1: 1.0, ox: 400, oy: 260 })];
+      }
+      let a = outdoorSky(CW, CH, { season: "spring", seed: 14 });
+      let road = "";
+      for (let i = 0; i < 9; i++) road += tree(60 + i * 160, CG + 4, "spring", 1.5);
+      a += walk(0, -480, 0, 3.0, road) + R(0, CG, CW, CH - CG, "path") + me(ctx, "uni", 390, CF, 1.5, { mood: "happy" }) + suitcase(440) + petals(15, 24);
+      let b = gateShot(ctx.label, 4, "spring") + bunting(232, 568, 168, 1);
+      b += fx("c-out", 2.5, walk(-300, 0, 0.1, 2.4, me(ctx, "uni", 400, CF + 12, 1.5, { mood: "happy" }) + suitcase(446)));
+      b += fx("c-fade", 2.5, me(ctx, "uni", 400, CF + 12, 1.5, { mood: "happy", pose: "cheer" }) + suitcase(446)) + petals(16, 26);
+      let c = gateShot(ctx.label, 4, "spring") + me(ctx, "uni", 400, CF + 12, 1.5, { mood: "happy", pose: "cheer" }) + petals(17, 30);
+      for (let i = 0; i < 4; i++) c += G(120 + i * 60, 70 + (i % 2) * 20, A("drift", P("M-10 0 q5 -6 10 0 q5 -6 10 0", null, "ink", 2)));
+      return [
+        cutShot(3.0, a, { s0: 1.05, s1: 1.05 }),
+        cutShot(3.6, b, { s0: 1.15, s1: 1.05, ox: 400, oy: 330 }),
+        cutShot(3.0, c, { s0: 1.6, s1: 1.0, ox: 400, oy: 360 }),
+      ];
+    },
+    // Moving house: the truck pulls away; the view from the new window.
+    move(ctx) {
+      let a = outdoorSky(CW, CH, { season: ctx.season, seed: 25 }) + homeOf(ctx) + R(0, CG + 30, CW, CH, "road");
+      let truck = R(-150, -150, 210, 130, "paper", 6, "line", 2) + R(60, -110, 80, 90, "c5", 10) + R(78, -100, 44, 34, "screen", 4) + O(-100, -14, 24, "dark") + O(90, -14, 24, "dark") + O(-100, -14, 9, "metal") + O(90, -14, 9, "metal");
+      for (let i = 0; i < 3; i++) truck += R(-138 + i * 64, -184, 56, 36, "cubicle", 3, "cubicle2", 2);
+      a += walk(0, 900, 1.0, 2.2, G(520, CF + 22, truck)) + mom(ctx, 260, CF + 20, 1.3, { pose: "wave", mood: "ok" });
+      let b = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor") + windowView(150, 50, 500, 280, { view: ctx.view, season: ctx.season, city: true, seed: 26 });
+      for (let i = 0; i < 4; i++) b += R(80 + i * 170, CF - 40 - (i % 2) * 30, 70, 50, "cubicle", 3, "cubicle2", 2);
+      b += me(ctx, ctx.stage, 400, CF + 20, 1.5, { mood: "happy" });
+      return [cutShot(3.2, a, { s0: 1.0, s1: 1.08, x0: 0, x1: -30 }), cutShot(3.2, b, { s0: 1.2, s1: 1.0, ox: 400, oy: 200 })];
+    },
+  };
+  // The shots for one cutscene: [{ t: seconds, svg }]. ctx is app.js's art context plus what the film
+  // needs (items, label, grades, react). VIEW follows the region, as everywhere else.
+  function cutscene(name, ctx) {
+    VIEW = (ctx && ctx.view) || "city";
+    return CUTS[name] ? CUTS[name](ctx) : [];
+  }
+
+  root.SuneungArt = { scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
 })(typeof window !== "undefined" ? window : globalThis);
