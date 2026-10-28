@@ -13,7 +13,7 @@ This version ends when you enroll at a university. College life and what comes a
 School years are counted the Korean way, with each school numbering its own years: Elementary 1–6 (초1–6), Middle 1–3 (중1–3) and High 1–3 (고1–3). High 3 (고3) is the 수능 year.
 
 1. **Be born.** Choose boy or girl and type a name. Your family and your talents are dealt at random; you can't pick or re-roll them.
-   - The birth screen shows where you're born, your family's household income, which fifth of Korean households it's in, and what your parents can spend on your education each month.
+   - The birth screen shows where you're born, with a pin on a map of the peninsula, your family's household income, which fifth of Korean households it's in, and what your parents can spend on your education each month.
    - Stars show aptitude, which is how fast you learn each subject. They stay on screen all game (see Aptitude below).
    - Then your first weeks reveal your **temperament**, and at your first birthday the **돌잡이** shows what you grab. Both give you a trait: a permanent bonus (see Traits below).
    - A fortune-teller's reading (사주) tells you how lucky a life you've been dealt. Luck runs through everything from here on (see Luck below).
@@ -54,6 +54,9 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 ## Features
 
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
+- **A map of Korea.** An interactive map of the peninsula, drawn in code (South Korea with Jeju, Ulleungdo and Dokdo, the North faded above a dashed DMZ), with every place at its real longitude and latitude and Seoul's six areas in a magnified inset.
+  - **Birth:** a pulsing pin shows where your family starts.
+  - **Moving house:** the Move house dialog is the map. Dots are red for home, blue where you can move and grey where you can't. Tap (or Tab and Enter) a place to see a card with what moving there would change, the quotas it brings, or why you can't go. A dashed route runs from home to your pick. The same places are still available as a list underneath.
 - **Aptitude, always on screen.** Aptitude multiplies every study gain in a subject (and its school lessons), so maxing it out takes 1 / aptitude of the average time. Every ability bar ends in stars (· below 0.88, ★ to 1.05, ★★ to 1.25, ★★★ to 1.45, ★★★★ above, gold from ★★★), and each study card shows the stars and the saving in words, such as "20% less study to max out" or "15% more study to max out". The bar's tooltip gives the exact multiplier. A 돌잡이 subject item adds 0.25, so it often earns an extra star.
 - **Luck.** Life is mostly luck, and the game says so:
   - **A fortune-teller's reading (사주) at birth** reveals a hidden fortune, from great to rough. It tilts the odds of every good and bad event (weight × 1 + 0.6 × fortune, for an event tagged good or bad) and adds a little to 수능 day. Lives with a good reading average about 15 points more on their first 수능 than lives with a rough one.
@@ -479,6 +482,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v4.4:** a map of Korea. The birth screen pins where your family starts, and moving house now happens on an interactive map: tap a place to see what it would change, with a route drawn from home. Seoul's six areas get a magnified inset. Gameplay is unchanged.
 
 - **v4.3:** cutscenes. Nine short animated films play at life's milestones (birth, the 돌잡이, the first days of elementary, middle and high school, 수능 morning, results, admission, the ending, and moving house): letterboxed SVG shots with a moving camera, walking characters, captions in both languages, a progress bar, Skip and tap-to-advance. They're personalised (your looks, home, region, school and university, the item you grabbed), play once per life even across reloads, can be turned off with the 🎬 button, and become still frames under reduced motion. Gameplay and balance numbers are unchanged.
 - **v4.2:** luck. A fortune-teller's reading (사주) at birth reveals a hidden fortune that tilts good and bad events. Families change income fifths two or three times a life (promotions, inheritances and lottery wins; layoffs, jeonse scams, a parent's illness). Car accidents and hospital stays cost blocks; a great teacher or a sudden passion raises an aptitude; Middle 2 reshuffles every aptitude. 수능 day swings as a whole, each paper fits you better or worse, and about half the time the day deals something (a sniffling neighbour, a lucky guess, a drilled killer question, an OMR slip). Real cuts move each year and rejections can come good off the February waitlist. Lives spread much more for the same play (the balanced bot's 10th–90th percentile range went from 42 to 63 points), while strong play still wins on average. `sim.js` prints a spread table and takes `--no-traits` to skip the slow trait test. Also fixes the beach and countryside event pictures, which threw an error. Balance tables regenerated.

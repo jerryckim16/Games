@@ -497,10 +497,19 @@
   }
   let holdTimer = 0;
   // Moving: every region with what it changes, why you can't go there, and the quotas it would bring.
+  // The map's place names, translated (the art draws none of its own).
+  function mapLabels() {
+    const o = { seoul: T("map.seoul") };
+    for (const r of S.REGIONS) o[r.id] = L.regionShort(r.id);
+    return o;
+  }
+  // Moving: a map of Korea to pick a place on, a card with what moving there would change, and the same
+  // places as a list for anyone who'd rather not tap dots.
   els.moveBtn.addEventListener("click", () => {
     const g = game;
     if (!g || g.ending || g.queue.length) return;
     const pick = { id: null };
+    const info = {};
     const rows = S.REGIONS.map((r) => {
       const k = S.REGION_KINDS[r.kind];
       const here = r.id === g.region;
@@ -512,6 +521,7 @@
       // A short status pill on the right; the reason goes under the name so phones keep the name readable.
       const note = here ? T("move.here") : why ? T("move." + why) : "";
       const tag = here ? '<span class="chance ch-safe">' + esc(T("move.hereTag")) + "</span>" : why ? '<span class="chance ch-long">' + esc(T("move.noTag")) + "</span>" : "<span></span>";
+      info[r.id] = { here, why, kind: L.regionKind(r.kind) + " · " + fx, quota, note };
       return '<label class="uni region' + (here || why ? " off" : "") + '"><input type="radio" name="moveTo" value="' + r.id + '"' + (here || why ? " disabled" : "") + ">" +
         '<span class="nm">' + esc(L.region(r.id)) + "<small>" + esc(L.regionKind(r.kind) + " · " + fx) + "</small>" + (quota ? "<small>" + esc(quota) + "</small>" : "") +
         (note ? "<small" + (why ? ' class="why"' : "") + ">" + esc(note) + "</small>" : "") + "</span>" + tag + "</label>";
@@ -519,13 +529,34 @@
     // Leaving a private day school behind is worth a warning.
     const sch = g.inClass() ? g.schoolInfo() : null;
     const warn = sch && !sch.board && !/^pub/.test(sch.id) ? '<p class="muted">' + esc(T("move.school")) + "</p>" : "";
-    openModal(T("move.title"), "<p>" + esc(T("move.text")) + "</p>" + warn + '<div class="unis">' + rows + "</div>", [
+    const states = {};
+    for (const r of S.REGIONS) states[r.id] = info[r.id].here ? "home" : info[r.id].why ? "closed" : "open";
+    const legend = '<div class="map-legend"><span><i class="lh"></i>' + esc(T("map.home")) + '</span><span><i class="lo"></i>' + esc(T("map.open")) + '</span><span><i class="lc"></i>' + esc(T("map.closed")) + "</span></div>";
+    openModal(T("move.title"), "<p>" + esc(T("move.text")) + "</p>" + warn + legend + '<div class="map-wrap" id="moveMap"></div><div class="map-card" id="moveCard"></div>' +
+      '<details class="map-list"><summary>' + esc(T("move.list")) + '</summary><div class="unis">' + rows + "</div></details>", [
       { label: T("move.stay"), run: () => render() },
       { label: T("move.go"), primary: true, run: () => { if (!pick.id) return; g.move(pick.id); save(); render(); } },
     ]);
     const go = els.modalButtons.querySelector("button.primary");
-    go.disabled = true;
-    for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.addEventListener("change", () => { pick.id = inp.value; go.disabled = false; });
+    const mapBox = $("moveMap"), card = $("moveCard");
+    // Any place can be looked at; only an open one can be moved to.
+    const select = (id, refocus) => {
+      const x = info[id];
+      pick.id = x && !x.here && !x.why ? id : null;
+      go.disabled = !pick.id;
+      mapBox.innerHTML = Art.koreaMap({ states, sel: id, from: pick.id ? g.region : null, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) });
+      card.innerHTML = id ? "<b>" + esc(L.region(id)) + "</b><small>" + esc(x.kind) + "</small>" + (x.quota ? "<small>" + esc(x.quota) + "</small>" : "") +
+        (x.note ? "<small" + (x.why ? ' class="why"' : "") + ">" + esc(x.note) + "</small>" : "") : esc(T("move.pick"));
+      for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.checked = inp.value === pick.id;
+      if (refocus) { const pt = mapBox.querySelector('[data-place="' + id + '"]'); if (pt) pt.focus({ preventScroll: true }); }
+    };
+    select(null);
+    mapBox.addEventListener("click", (e) => { const pt = e.target.closest("[data-place]"); if (pt) select(pt.dataset.place, true); });
+    mapBox.addEventListener("keydown", (e) => {
+      const pt = e.target.closest("[data-place]");
+      if (pt && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(pt.dataset.place, true); }
+    });
+    for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.addEventListener("change", () => select(inp.value));
   });
 
   // Leaving school: what it gives and what it takes, then a confirmation.
@@ -743,10 +774,17 @@
         "%;background:var(" + subColor[s] + ')"></span></span><span class="val">' + v + '</span><span class="apt" title="' + esc(T("setup.apt")) + '">' + stars + "</span></div>";
     }).join("") + "</div>";
   }
+  function bornStates(g) {
+    const o = {};
+    for (const r of S.REGIONS) o[r.id] = r.id === g.region ? "home" : "closed";
+    return o;
+  }
   function showBirth() {
     const g = game;
     openModal(T("birth.title"),
       "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region })) + "</p>" +
+      // Where on the peninsula the family starts.
+      "<h3>" + esc(T("map.born")) + '</h3><div class="map-wrap">' + Art.koreaMap({ states: bornStates(g), static: true, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) }) + "</div>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",
       [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }],
       Art.screenArt("birth", artCtx({ stage: "baby" })));

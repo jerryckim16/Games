@@ -28,6 +28,7 @@
   /* Artwork (art.js): scenes, the avatar and event illustrations. Dark mode turns day to dusk. */
   --a-sky: #a9dcff; --a-sky2: #e8f6ff; --a-night: #16224a; --a-night2: #34457e; --a-moon: #fff3c4;
   --a-star: #fff7d6; --a-sun: #ffcf4a; --a-cloud: #ffffff; --a-dusk: #ff9e7a; --a-dusk2: #ffd9a0;
+  --a-land: #dcebc6; --a-land2: #b9c2b0; --a-coast: #6f9a5e; --a-mapSea: #cfe7f3; --a-dmz: #c0504d; --a-inset: #5b6b8c; --a-route: #2f5bea; --a-pin: #e0533d; --a-pinOpen: #2f5bea; --a-pinOff: #a6adb9; --a-sel: #f0a020; --a-mapLbl: #1c2a3a; --a-mapHalo: #ffffff;
   --a-sea: #5fb3d9; --a-sea2: #3d8fbd; --a-hill: #9fc78a; --a-city: #9fb3cc; --a-wall: #f6ecda; --a-wall2: #ead9bb; --a-floor: #d9b083;
   --a-floor2: #c49568; --a-tile: #e3e7ee; --a-tile2: #cfd5df; --a-nightwall: #3a3d5c;
   --a-nightfloor: #4a3a34; --a-dark: #2a2e3b; --a-dark2: #3a3f52; --a-locker: #8fb3d9;
@@ -80,6 +81,7 @@
     --g6: #ff6b6b;
     --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
     --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
+    --a-land: #3c5440; --a-land2: #3a3f48; --a-coast: #87b27a; --a-mapSea: #1b2f40; --a-dmz: #e07a6f; --a-inset: #9aa9c8; --a-route: #7d9cff; --a-pin: #ff7a63; --a-pinOpen: #7d9cff; --a-pinOff: #6b7280; --a-sel: #f5b941; --a-mapLbl: #eef2f7; --a-mapHalo: #10161f;
     --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
     --a-floor2: #4a382c; --a-tile: #343a48; --a-tile2: #2b303c; --a-nightwall: #24263a;
     --a-nightfloor: #33282a; --a-dark: #171a22; --a-dark2: #222634; --a-locker: #3d5578;
@@ -132,7 +134,8 @@
   --g6: #ff6b6b;
   --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
   --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
-  --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
+  --a-land: #3c5440; --a-land2: #3a3f48; --a-coast: #87b27a; --a-mapSea: #1b2f40; --a-dmz: #e07a6f; --a-inset: #9aa9c8; --a-route: #7d9cff; --a-pin: #ff7a63; --a-pinOpen: #7d9cff; --a-pinOff: #6b7280; --a-sel: #f5b941; --a-mapLbl: #eef2f7; --a-mapHalo: #10161f;
+    --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
   --a-floor2: #4a382c; --a-tile: #343a48; --a-tile2: #2b303c; --a-nightwall: #24263a;
   --a-nightfloor: #33282a; --a-dark: #171a22; --a-dark2: #222634; --a-locker: #3d5578;
   --a-locker2: #2f4462; --a-cork: #8a6440; --a-frame: #c8cad6; --a-board: #1f4a37;
@@ -667,3 +670,27 @@ body.cutting { overflow: hidden; }
   .cut-progress i.now b { width: 100%; }
   .cut-art .c-out, .cut-art .c-flash { display: none; }
 }
+
+/* The Korea map (birth screen, move dialog). Dot colours by state; the home pin pulses. */
+.kmap { display: block; width: 100%; height: auto; max-height: 62vh; border-radius: 12px; }
+.kmap .kmap-pt .kd { stroke: var(--a-mapHalo); stroke-width: 3; }
+.kmap .kmap-pt.open circle:nth-child(2) { fill: var(--a-pinOpen); }
+.kmap .kmap-pt.closed circle:nth-child(2) { fill: var(--a-pinOff); }
+.kmap .kmap-pt.home circle:nth-child(2) { fill: var(--a-pin); }
+.kmap .kmap-pt[tabindex] { cursor: pointer; outline: none; }
+.kmap .kmap-pt[tabindex]:hover circle:nth-child(2), .kmap .kmap-pt[tabindex]:focus-visible circle:nth-child(2) { stroke: var(--a-sel); stroke-width: 5; }
+.kmap .kmap-lbl { fill: var(--a-mapLbl); font-weight: 700; paint-order: stroke; stroke: var(--a-mapHalo); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.kmap .kmap-lbl.home, .kmap .kmap-lbl.sel { font-weight: 900; }
+.kmap .kmap-seoul { fill: var(--a-inset); }
+.kmap .kmap-pulse { transform-box: fill-box; transform-origin: center; animation: kmap-pulse 1.6s ease-out infinite; }
+@keyframes kmap-pulse { from { transform: scale(0.7); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .kmap .kmap-pulse { animation: none; } }
+.map-wrap { margin: 6px 0 10px; }
+.map-card { margin: 8px 0; padding: 10px 12px; border-radius: 10px; background: var(--track); font-size: 0.86rem; line-height: 1.45; }
+.map-card b { display: block; font-size: 0.95rem; }
+.map-card small { display: block; color: var(--muted); }
+.map-card small.why { color: var(--neg); }
+.map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.76rem; color: var(--muted); margin: 2px 0 6px; }
+.map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.map-legend .lh { background: var(--a-pin); } .map-legend .lo { background: var(--a-pinOpen); } .map-legend .lc { background: var(--a-pinOff); }
+.map-list summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); margin: 6px 0; }

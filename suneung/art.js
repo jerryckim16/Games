@@ -1199,5 +1199,81 @@
     return CUTS[name] ? CUTS[name](ctx) : [];
   }
 
-  root.SuneungArt = { scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
+  // ---------- the map ----------
+  // South Korea (with the North faded above the DMZ) for the birth screen and the move dialog. Places
+  // sit at their real longitude and latitude; one degree of latitude is drawn 1.25× a degree of
+  // longitude, roughly what it is at 37°N. Seoul's six areas are too close together to tap, so they
+  // get a magnified inset in the Yellow Sea, joined to Seoul by a dashed line.
+  // opts: { states: { id: "home" | "open" | "closed" }, sel: id, labels: { id: name }, from: id
+  // (draws a dashed route from there to sel), aria }. Points are focusable buttons (data-place) for
+  // app.js to wire up; the art has no text of its own, only the names app.js passes in.
+  const MW = 755, MH = 750;
+  const mx = (lon) => Math.round((lon - 124.4) * 100);
+  const my = (lat) => Math.round((39.0 - lat) * 125);
+  const mpath = (pts) => "M" + pts.map(([lon, lat]) => mx(lon) + " " + my(lat)).join(" L") + " Z";
+  const SOUTH = [[126.5, 37.75], [126.7, 37.95], [127.0, 38.2], [127.5, 38.3], [128.1, 38.3], [128.35, 38.6], [128.6, 38.15], [128.9, 37.75], [129.15, 37.45], [129.35, 37.0],
+    [129.42, 36.5], [129.37, 36.08], [129.57, 36.07], [129.45, 35.8], [129.37, 35.5], [129.15, 35.15], [128.95, 35.05], [128.6, 34.92], [128.4, 34.84], [128.0, 34.95], [127.75, 34.74],
+    [127.45, 34.6], [127.0, 34.56], [126.75, 34.42], [126.53, 34.3], [126.33, 34.6], [126.4, 34.82], [126.33, 35.1], [126.48, 35.45], [126.66, 35.76], [126.6, 36.0], [126.5, 36.35],
+    [126.15, 36.72], [126.48, 36.92], [126.78, 36.98], [126.62, 37.2], [126.6, 37.45]];
+  const NORTH = [[126.5, 37.75], [125.7, 37.9], [125.2, 37.75], [125.05, 38.0], [125.4, 38.55], [125.15, 39.2], [127.4, 39.2], [127.6, 38.9], [128.0, 38.75], [128.35, 38.6],
+    [128.1, 38.3], [127.5, 38.3], [127.0, 38.2], [126.7, 37.95]];
+  const DMZ = [[126.5, 37.75], [126.7, 37.95], [127.0, 38.2], [127.5, 38.3], [128.1, 38.3], [128.35, 38.6]];
+  const PLACES = {
+    gangnam: [127.05, 37.5], nowon: [127.07, 37.65], mokdong: [126.87, 37.53], mapo: [126.92, 37.57], gwanak: [126.95, 37.47], gangdong: [127.14, 37.54],
+    suwon: [127.03, 37.27], busan: [129.07, 35.18], daegu: [128.6, 35.87], gwangju: [126.85, 35.16], daejeon: [127.38, 36.35], pohang: [129.36, 36.02],
+    jeonju: [127.15, 35.82], cheongju: [127.49, 36.64], jeju: [126.53, 33.45], pyeongchang: [128.39, 37.37], haenam: [126.6, 34.57],
+  };
+  const SEOUL_IDS = ["gangnam", "nowon", "mokdong", "mapo", "gwanak", "gangdong"];
+  // Which side of the dot each name goes on, so names stay on land or open sea and don't collide.
+  const LABEL_SIDE = { suwon: "r", busan: "r", daegu: "l", gwangju: "l", daejeon: "l", pohang: "r", jeonju: "l", cheongju: "r", jeju: "r", pyeongchang: "r", haenam: "l" };
+  const SEOUL = [126.98, 37.55], INSET = { x: 102, y: 660, r: 72, k: 330 };
+  function mapPos(id) {
+    const ll = PLACES[id];
+    if (SEOUL_IDS.indexOf(id) < 0) return [mx(ll[0]), my(ll[1])];
+    return [Math.round(INSET.x + (ll[0] - SEOUL[0]) * INSET.k * 0.95), Math.round(INSET.y + (SEOUL[1] - ll[1]) * INSET.k * 1.25)];
+  }
+  function mapLabel(x, y, text, side, size, cls) {
+    const dx = side === "l" ? -13 : 13;
+    return '<text class="kmap-lbl' + (cls ? " " + cls : "") + '" x="' + (x + dx) + '" y="' + (y + size * 0.35) + '" text-anchor="' + (side === "l" ? "end" : "start") + '" style="font-size:' + size + 'px">' + esc(text) + "</text>";
+  }
+  function koreaMap(opts) {
+    const o = opts || {};
+    const states = o.states || {}, labels = o.labels || {};
+    const fade = nid("nfade");
+    let s = "<defs><linearGradient id=\"" + fade + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + C("land2") + '" stop-opacity="0.15"/><stop offset="1" stop-color="' + C("land2") + '" stop-opacity="0.8"/></linearGradient></defs>';
+    s += R(0, 0, MW, MH, "mapSea");
+    s += P(mpath(NORTH), null, null, 0, "fill:url(#" + fade + ")");
+    s += P(mpath(SOUTH), "land", "coast", 2);
+    // Islands: Jeju, Geoje, Jindo, Ganghwa, Ulleungdo and Dokdo.
+    s += E(mx(126.55), my(33.38), 38, 16, "land", "coast", 2) + E(mx(128.62), my(34.88), 8, 10, "land", "coast", 1.5) + E(mx(126.25), my(34.45), 9, 8, "land", "coast", 1.5) +
+      E(mx(126.45), my(37.7), 7, 8, "land", "coast", 1.5) + O(mx(130.87), my(37.5), 5, "land", "coast", 1.5) + O(mx(131.86), my(37.24), 2.2, "land", "coast", 1) + O(mx(131.87), my(37.25), 1.6, "land", "coast", 1);
+    s += P("M" + DMZ.map(([lon, lat]) => mx(lon) + " " + my(lat)).join(" L"), null, "dmz", 2.5, "stroke-dasharray:7 6");
+    // Seoul on the mainland, and the inset it opens into.
+    const [sx, sy] = [mx(SEOUL[0]), my(SEOUL[1])];
+    s += O(sx, sy, 11, null, "inset", 2.5) + L(sx - 8, sy + 8, INSET.x + 40, INSET.y - INSET.r + 10, "inset", 2, "stroke-dasharray:5 5");
+    s += O(INSET.x, INSET.y, INSET.r, "land", "inset", 3) + P("M" + (INSET.x - 66) + " " + (INSET.y + 4) + " Q" + (INSET.x - 30) + " " + (INSET.y + 14) + " " + INSET.x + " " + (INSET.y + 2) + " T" + (INSET.x + 66) + " " + (INSET.y - 2), null, "mapSea", 7);
+    if (labels.seoul) s += mapLabel(sx - 6, sy, labels.seoul, "l", 20, "kmap-seoul");
+    // A dashed route for a move, drawn under the dots.
+    if (o.from && o.sel && o.from !== o.sel && PLACES[o.from] && PLACES[o.sel]) {
+      const [ax, ay] = SEOUL_IDS.indexOf(o.from) >= 0 ? [sx, sy] : mapPos(o.from), [bx, by] = SEOUL_IDS.indexOf(o.sel) >= 0 ? [sx, sy] : mapPos(o.sel);
+      s += P("M" + ax + " " + ay + " Q" + ((ax + bx) / 2 + 40) + " " + (Math.min(ay, by) - 60) + " " + bx + " " + by, null, "route", 4, "stroke-dasharray:10 8");
+    }
+    for (const id in PLACES) {
+      const [x, y] = mapPos(id);
+      const st = states[id] || "open";
+      const sel = o.sel === id;
+      const inset = SEOUL_IDS.indexOf(id) >= 0;
+      const r = inset ? 9 : 11;
+      // A wider invisible circle makes the dot easy to tap; the visible one is coloured by state in CSS.
+      let dot = O(0, 0, r + 9, null, null, 0, "fill:transparent") + '<circle class="kd" r="' + r + '"/>';
+      if (st === "home") dot += A("kmap-pulse", O(0, 0, r + 6, null, "pin", 3));
+      if (sel) dot += O(0, 0, r + 5, null, "sel", 4);
+      s += '<g class="kmap-pt ' + st + (sel ? " sel" : "") + '" data-place="' + id + '" transform="translate(' + x + " " + y + ')"' + (o.static ? "" : ' tabindex="0" role="button"') +
+        (labels[id] ? ' aria-label="' + esc(labels[id]) + '"' : "") + ">" + dot + "</g>";
+      if (labels[id]) s += mapLabel(x, y, labels[id], inset ? (["mokdong", "mapo", "gwanak"].indexOf(id) >= 0 ? "l" : "r") : LABEL_SIDE[id] || "r", inset ? 15 : 21, (st === "home" ? "home" : "") + (sel ? " sel" : ""));
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + MW + " " + MH + '" class="kmap"' + (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ">" + s + "</svg>";
+  }
+
+  root.SuneungArt = { koreaMap, scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
 })(typeof window !== "undefined" ? window : globalThis);
