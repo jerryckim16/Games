@@ -280,7 +280,9 @@
       "fame.h": ["#", "Name", "Total", "Kor·Math·Eng", "Ended at", "Tries"],
       "fame.none": "No university",
 
-      "stat.date": "Date", "stat.attempt": "Stage", "stat.age": "Age", "stat.money": "Savings",
+      "stat.date": "Date", "stat.attempt": "Stage", "stat.age": "Age", "stat.money": "Savings", "stat.family": "Family",
+      "stat.familySub": (p, h) => "Household income in " + h.fifth(p.fam),
+      "stat.familyMoved": (p, h) => (p.up ? "↑ Up" : "↓ Down") + " from " + h.family(p.from).toLowerCase() + " at birth",
       "stat.years": (p) => "Suneung in " + p.n + (p.n === 1 ? " year" : " years"),
       "stat.dday": "{n} days to the exam",
       "stat.examMonth": "Exam this month",
@@ -888,7 +890,9 @@
       "fame.h": ["#", "이름", "합계", "국·수·영", "진학", "도전"],
       "fame.none": "진학 안 함",
 
-      "stat.date": "날짜", "stat.attempt": "단계", "stat.age": "나이", "stat.money": "용돈 저축",
+      "stat.date": "날짜", "stat.attempt": "단계", "stat.age": "나이", "stat.money": "용돈 저축", "stat.family": "가정 형편",
+      "stat.familySub": (p, h) => "가구소득 " + h.fifth(p.fam),
+      "stat.familyMoved": (p, h) => "태어날 때 " + h.family(p.from) + (p.up ? "에서 ↑ 상승" : "에서 ↓ 하락"),
       "stat.years": "수능까지 {n}년",
       "stat.dday": "수능 D-{n}",
       "stat.examMonth": "이번 달 수능",

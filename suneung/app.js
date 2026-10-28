@@ -13,7 +13,7 @@
     lang: $("lang"),
     setup: $("setup"), game: $("game"), name: $("name"), sex: $("sex"), startBtn: $("startBtn"), resumeBtn: $("resumeBtn"), fame: $("fame"),
     sDate: $("sDate"), sDday: $("sDday"), sAttempt: $("sAttempt"), sStatus: $("sStatus"), sAge: $("sAge"),
-    sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
+    sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"), sFam: $("sFam"), sFamSub: $("sFamSub"), sFamCard: $("sFamCard"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
     planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"), traits: $("traits"), mainMap: $("mainMap"), mapHome: $("mapHome"), mapHint: $("mapHint"),
@@ -263,6 +263,27 @@
     els.moodName.parentElement.dataset.mood = c.mood;
   }
 
+  // The family's wealth class right now: its income fifth as a five-step meter, and how far it has moved
+  // since birth (family-fortune events move it). The card flashes when the class changes.
+  let shownFam = null;
+  function renderFamily(g) {
+    const n = S.FAMILY_IDS.indexOf(g.family) + 1;
+    const born = (g.log.find((l) => l.key === "log.born") || { p: {} }).p.fam || g.family;
+    const diff = n - (S.FAMILY_IDS.indexOf(born) + 1);
+    let meter = "";
+    for (let i = 1; i <= 5; i++) meter += '<i class="' + (i <= n ? "on" : "") + '"></i>';
+    els.sFam.innerHTML = esc(L.family(g.family)) + ' <span class="fam-meter" aria-hidden="true">' + meter + "</span>";
+    els.sFamSub.textContent = diff ? T("stat.familyMoved", { up: diff > 0, from: born, fam: g.family }) : T("stat.familySub", { fam: g.family });
+    els.sFamCard.classList.toggle("fam-up", diff > 0);
+    els.sFamCard.classList.toggle("fam-down", diff < 0);
+    const key = g.seed + ":" + g.family;
+    if (shownFam && shownFam.split(":")[0] === String(g.seed) && shownFam !== key && !calm()) {
+      els.sFamCard.classList.remove("flash");
+      void els.sFamCard.offsetWidth;
+      els.sFamCard.classList.add("flash");
+    }
+    shownFam = key;
+  }
   function renderStats() {
     const g = game;
     els.sDate.textContent = L.date(g.year, g.month);
@@ -276,6 +297,7 @@
     els.sName.textContent = g.name + " · " + L.regionShort(g.regionInfo().id) + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
     els.sAllowance.textContent = T("stat.allowance", { a: L.wonShort(g.allowance()) });
+    renderFamily(g);
   }
 
   // from: where the fill starts, so a fresh turn can grow the bar from last turn's value.

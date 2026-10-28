@@ -463,6 +463,18 @@ table.grid td.l { text-align: left; }
 .bubble[data-mood="happy"] b { color: var(--pos); }
 .bubble[data-mood="tired"] b { color: var(--warn); }
 .bubble[data-mood="stressed"] b, .bubble[data-mood="sick"] b { color: var(--neg); }
+/* The family card is a full-width strip under the other four, so the class name never gets cut off. */
+.life .stat.fam { grid-column: 1 / -1; display: flex; flex-direction: row; justify-content: flex-start; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 2px; padding-top: 8px; padding-bottom: 8px; }
+.life .stat.fam .ic { grid-row: auto; font-size: 1.2rem; }
+.life .stat.fam .v { font-size: 1rem; }
+.fam-meter { display: inline-flex; gap: 2px; vertical-align: middle; margin-left: 4px; }
+.fam-meter i { width: 7px; height: 12px; border-radius: 2px; background: var(--border); }
+.fam-meter i.on { background: var(--accent); }
+.stat.fam.fam-up .s { color: var(--pos); }
+.stat.fam.fam-down .s { color: var(--neg); }
+.stat.fam.flash { animation: fam-flash 1.6s ease-out; }
+@keyframes fam-flash { 0%, 30% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .stat.fam.flash { animation: none; } }
 .life .stats { margin: 0; padding: 12px; gap: 10px; border-top: 1px solid var(--border); }
 .life .stat { background: var(--bg); border: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: center; }
 .life .stat .ic { grid-row: span 3; font-size: 1.5rem; line-height: 1; }

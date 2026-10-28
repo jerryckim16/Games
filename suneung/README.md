@@ -54,6 +54,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 ## Features
 
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
+- **Your family's wealth class, always on screen.** A Family strip under the stats shows the household's current income class (low, lower-middle, middle, upper-middle or high income) with a five-step meter for its income fifth. Once family-fortune events have moved it, it says how far from birth (green "↑ Up from middle income at birth", red "↓ Down…"), and the strip flashes when the class changes.
 - **A map of Korea.** An interactive map of the peninsula, drawn in code (South Korea with Jeju, Ulleungdo and Dokdo, the North faded above a dashed DMZ), with every place at its real longitude and latitude and Seoul's six areas in a magnified inset.
   - **Birth:** a pulsing pin shows where your family starts.
   - **Always on screen:** the map sits beside the scene (below it on phones) with your home pinned and the places you could move to right now in blue. Tap any place to open the move dialog on it. After a move, the route stays drawn until your next turn.
@@ -483,6 +484,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v4.6:** the family's current wealth class is always shown: a Family strip with the income class, a five-step meter, how it has moved since birth, and a flash when it changes. Gameplay is unchanged.
 
 - **v4.5:** the map is part of the main screen, beside the scene (below it on phones): home pinned, movable places in blue, tap a place to open the move dialog on it, and the last move's route shown until the next turn.
 - **v4.4:** a map of Korea. The birth screen pins where your family starts, and moving house now happens on an interactive map: tap a place to see what it would change, with a route drawn from home. Seoul's six areas get a magnified inset. Gameplay is unchanged.
