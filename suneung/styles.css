@@ -437,6 +437,16 @@ table.grid td.l { text-align: left; }
 
 /* ---------- your life: the scene, mood bubble and basics ---------- */
 .life { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+/* The scene and, beside it (below it on phones), the map of where you live. */
+.life-top { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .life-top { grid-template-columns: minmax(0, 1fr) clamp(230px, 27vw, 320px); } .map-side { border-left: 1px solid var(--border); } }
+.map-side { display: flex; flex-direction: column; min-width: 0; background: var(--a-mapSea); border-top: 1px solid var(--border); }
+@media (min-width: 760px) { .map-side { border-top: 0; height: clamp(180px, 31vw, 330px); } }
+.map-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 10px 0; font-size: 0.82rem; font-weight: 700; color: var(--a-mapLbl); }
+.map-head small { font-weight: 500; color: var(--a-inset); text-align: right; }
+.main-map { flex: none; height: 250px; padding: 2px 4px 4px; }
+@media (min-width: 760px) { .main-map { flex: 1; min-height: 0; height: auto; } }
+.main-map .kmap { width: 100%; height: 100%; max-height: none; border-radius: 0; }
 .scene-wrap { position: relative; height: clamp(180px, 31vw, 330px); background: var(--a-wall); }
 .scene-box { position: absolute; inset: 0; }
 .bubble {

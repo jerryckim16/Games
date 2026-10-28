@@ -16,7 +16,7 @@
     sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
-    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"), traits: $("traits"),
+    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"), traits: $("traits"), mainMap: $("mainMap"), mapHome: $("mapHome"), mapHint: $("mapHint"),
     chart: $("chart"), legend: $("legend"), log: $("log"), history: $("history"), newLifeBtn: $("newLifeBtn"),
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
@@ -209,6 +209,7 @@
     // Once the month's screens are cleared, start the next plan from last month's.
     if (!game.queue.length && !game.ending && !planTotal() && !outcome) plan = defaultPlan();
     renderScene();
+    renderMap();
     renderStats();
     renderBars();
     renderPlan();
@@ -459,6 +460,7 @@
   els.clearBtn.addEventListener("click", () => { plan = {}; renderPlan(); });
   els.nextBtn.addEventListener("click", () => {
     const was = game.status;
+    lastMove = null; // the route of a move stays on the map until the next turn
     try {
       game.advance(plan, method);
     } catch (err) {
@@ -505,7 +507,37 @@
   }
   // Moving: a map of Korea to pick a place on, a card with what moving there would change, and the same
   // places as a list for anyone who'd rather not tap dots.
-  els.moveBtn.addEventListener("click", () => {
+  // The map in the main frame: home, where you could move right now, and the route of the last move
+  // until the next turn. Tapping a place opens the move dialog on it.
+  let mapKey = "", lastMove = null;
+  function moveStates(g) {
+    const o = {};
+    for (const r of S.REGIONS) o[r.id] = r.id === g.region ? "home" : g.moveBlock(r.id) ? "closed" : "open";
+    return o;
+  }
+  function renderMap() {
+    const g = game;
+    const states = moveStates(g);
+    const canMove = Object.keys(states).some((id) => states[id] === "open");
+    els.mapHome.textContent = "📍 " + L.region(g.region);
+    els.mapHint.textContent = g.ending ? "" : canMove ? T("map.tapHint") : T("map.noMove");
+    // Redrawing restarts the pin's pulse, so only redraw when something on it changed.
+    const route = lastMove && lastMove.to === g.region ? lastMove : null;
+    const key = JSON.stringify([states, route, lang]);
+    if (key === mapKey) return;
+    mapKey = key;
+    els.mainMap.innerHTML = Art.koreaMap({ states, sel: route ? route.to : null, from: route ? route.from : null, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) });
+  }
+  els.mainMap.addEventListener("click", (e) => {
+    const pt = e.target.closest("[data-place]");
+    openMove(pt ? pt.dataset.place : null);
+  });
+  els.mainMap.addEventListener("keydown", (e) => {
+    const pt = e.target.closest("[data-place]");
+    if (pt && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openMove(pt.dataset.place); }
+  });
+  els.moveBtn.addEventListener("click", () => openMove(null));
+  function openMove(preselect) {
     const g = game;
     if (!g || g.ending || g.queue.length) return;
     const pick = { id: null };
@@ -535,7 +567,7 @@
     openModal(T("move.title"), "<p>" + esc(T("move.text")) + "</p>" + warn + legend + '<div class="map-wrap" id="moveMap"></div><div class="map-card" id="moveCard"></div>' +
       '<details class="map-list"><summary>' + esc(T("move.list")) + '</summary><div class="unis">' + rows + "</div></details>", [
       { label: T("move.stay"), run: () => render() },
-      { label: T("move.go"), primary: true, run: () => { if (!pick.id) return; g.move(pick.id); save(); render(); } },
+      { label: T("move.go"), primary: true, run: () => { if (!pick.id) return; lastMove = { from: g.region, to: pick.id }; g.move(pick.id); save(); render(); } },
     ]);
     const go = els.modalButtons.querySelector("button.primary");
     const mapBox = $("moveMap"), card = $("moveCard");
@@ -550,14 +582,14 @@
       for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.checked = inp.value === pick.id;
       if (refocus) { const pt = mapBox.querySelector('[data-place="' + id + '"]'); if (pt) pt.focus({ preventScroll: true }); }
     };
-    select(null);
+    select(preselect && info[preselect] ? preselect : null);
     mapBox.addEventListener("click", (e) => { const pt = e.target.closest("[data-place]"); if (pt) select(pt.dataset.place, true); });
     mapBox.addEventListener("keydown", (e) => {
       const pt = e.target.closest("[data-place]");
       if (pt && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(pt.dataset.place, true); }
     });
     for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.addEventListener("change", () => select(inp.value));
-  });
+  }
 
   // Leaving school: what it gives and what it takes, then a confirmation.
   els.quitBtn.addEventListener("click", () => {

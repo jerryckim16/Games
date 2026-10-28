@@ -56,6 +56,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
 - **A map of Korea.** An interactive map of the peninsula, drawn in code (South Korea with Jeju, Ulleungdo and Dokdo, the North faded above a dashed DMZ), with every place at its real longitude and latitude and Seoul's six areas in a magnified inset.
   - **Birth:** a pulsing pin shows where your family starts.
+  - **Always on screen:** the map sits beside the scene (below it on phones) with your home pinned and the places you could move to right now in blue. Tap any place to open the move dialog on it. After a move, the route stays drawn until your next turn.
   - **Moving house:** the Move house dialog is the map. Dots are red for home, blue where you can move and grey where you can't. Tap (or Tab and Enter) a place to see a card with what moving there would change, the quotas it brings, or why you can't go. A dashed route runs from home to your pick. The same places are still available as a list underneath.
 - **Aptitude, always on screen.** Aptitude multiplies every study gain in a subject (and its school lessons), so maxing it out takes 1 / aptitude of the average time. Every ability bar ends in stars (· below 0.88, ★ to 1.05, ★★ to 1.25, ★★★ to 1.45, ★★★★ above, gold from ★★★), and each study card shows the stars and the saving in words, such as "20% less study to max out" or "15% more study to max out". The bar's tooltip gives the exact multiplier. A 돌잡이 subject item adds 0.25, so it often earns an extra star.
 - **Luck.** Life is mostly luck, and the game says so:
@@ -483,6 +484,7 @@ What the tables show:
 
 ## Changelog
 
+- **v4.5:** the map is part of the main screen, beside the scene (below it on phones): home pinned, movable places in blue, tap a place to open the move dialog on it, and the last move's route shown until the next turn.
 - **v4.4:** a map of Korea. The birth screen pins where your family starts, and moving house now happens on an interactive map: tap a place to see what it would change, with a route drawn from home. Seoul's six areas get a magnified inset. Gameplay is unchanged.
 
 - **v4.3:** cutscenes. Nine short animated films play at life's milestones (birth, the 돌잡이, the first days of elementary, middle and high school, 수능 morning, results, admission, the ending, and moving house): letterboxed SVG shots with a moving camera, walking characters, captions in both languages, a progress bar, Skip and tap-to-advance. They're personalised (your looks, home, region, school and university, the item you grabbed), play once per life even across reloads, can be turned off with the 🎬 button, and become still frames under reduced motion. Gameplay and balance numbers are unchanged.

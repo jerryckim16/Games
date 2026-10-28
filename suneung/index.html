@@ -54,9 +54,15 @@
     <section id="game" class="hidden">
       <!-- Your life right now: an illustrated scene with you in it, your mood, and the basics. -->
       <section class="life">
-        <div class="scene-wrap">
-          <div id="scene" class="scene-box"></div>
-          <div id="mood" class="bubble" aria-live="polite"><b id="moodName"></b><span id="moodText"></span></div>
+        <div class="life-top">
+          <div class="scene-wrap">
+            <div id="scene" class="scene-box"></div>
+            <div id="mood" class="bubble" aria-live="polite"><b id="moodName"></b><span id="moodText"></span></div>
+          </div>
+          <div class="map-side">
+            <div class="map-head"><span id="mapHome"></span><small id="mapHint"></small></div>
+            <div id="mainMap" class="main-map"></div>
+          </div>
         </div>
         <div class="stats">
           <div class="stat"><span class="ic" aria-hidden="true">📅</span><span class="k" data-t="stat.date"></span><span class="v" id="sDate"></span><span class="s" id="sDday"></span></div>
