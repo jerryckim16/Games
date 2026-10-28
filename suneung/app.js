@@ -884,6 +884,8 @@
       '<div class="seg track-seg" id="trackSeg"><button type="button" data-v="soc"><span aria-hidden="true">🌏 </span>' + esc(L.track("soc")) +
       '</button><button type="button" data-v="sci"><span aria-hidden="true">🔬 </span>' + esc(L.track("sci")) + "</button></div>" +
       '<small class="muted" id="trackNote"></small>' +
+      // Humanities closes medical school for good, so say so loudly while it's selected.
+      '<p class="cond-note hidden" id="trackWarn" role="alert"></p>' +
       '<div class="field"><div class="two"><select id="inqA" aria-label="' + esc(L.subShort("inq1")) + '"></select><select id="inqB" aria-label="' + esc(L.subShort("inq2")) + '"></select></div>' +
       "<small>" + esc(T("track.inqNote")) + "</small></div>",
       [{ label: T("track.go"), primary: true, run: () => { game.chooseTrack(track, [$("inqA").value, $("inqB").value]); plan = {}; after(); } }],
@@ -892,6 +894,9 @@
     const fill = () => {
       for (const btn of seg.querySelectorAll("button")) { btn.classList.toggle("on", btn.dataset.v === track); btn.disabled = !!only && btn.dataset.v !== only; }
       $("trackNote").textContent = (only ? T("track.forced", { t: only }) + " " : "") + T("track.note." + track);
+      $("trackWarn").textContent = track === "soc" ? T("track.warnSoc") : "";
+      $("trackWarn").classList.toggle("hidden", track !== "soc");
+      els.modalButtons.querySelector("button.primary").textContent = T(track === "soc" ? "track.goSoc" : "track.go");
       const opts = INQUIRY[track].map((x) => '<option value="' + x.id + '">' + esc(L.inq(x.id)) + "</option>").join("");
       a.innerHTML = opts; b.innerHTML = opts;
       a.value = INQUIRY[track][0].id; b.value = INQUIRY[track][1].id;

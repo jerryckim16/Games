@@ -38,7 +38,7 @@ School years are counted the Korean way, with each school numbering its own year
    - The elementary-school teacher leaves a note each year.
    - Middle school shows your class rank each semester.
    - High 1 and 2 sit mock exams (학력평가) in June and November.
-6. **Choose a track** at the end of High 1: humanities (확률과 통계 + two social-studies subjects) or sciences (미적분 + two science subjects; the only track that can apply to medical school). Your social-studies ability carries into the humanities subjects, your science ability into the science ones.
+6. **Choose a track** at the end of High 1: humanities (확률과 통계 + two social-studies subjects) or sciences (미적분 + two science subjects; the only track that can apply to medical school). While humanities is selected, a red warning says it closes medical school for good and the button reads "Confirm humanities". Your social-studies ability carries into the humanities subjects, your science ability into the science ones.
 7. **Sit the exams.**
    - High 3 has mock exams in March, June and September, with full score reports.
    - In November you make two last choices: how you spend the night before, and what's in your 수능 lunch box. The day itself may deal you some luck, good or bad. Then you sit the 수능 period by period.
@@ -499,6 +499,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v4.8:** the track screen warns, in red, that humanities can't apply to medical school while humanities is selected, and the button says "Confirm humanities".
 
 - **v4.7:** who raises you, and a fix for babies that looked talentless. About one child in ten is born to a single parent or raised by grandparents, about one in eight sees a divorce and about 3% lose a parent, with a smaller education budget, more stress and changed wording and cutscenes. The birth screen's talent bars now show aptitude (how fast each subject will come) instead of ability, which is near 0 for every newborn on the 수능 scale and made about a quarter of births look like "all zeros, no talent"; the ability panel explains this during early childhood, and every child's best aptitude is at least ×1.10. Balance tables regenerated, with a new table by family setup.
 
