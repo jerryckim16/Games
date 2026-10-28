@@ -85,7 +85,7 @@
   const PAPER = {
     kor: { base: -0.4, spread: 1.15, killer: 2.3, killers: 5, a: 1.25 },
     math: { base: -0.25, spread: 1.0, killer: 2.0, killers: 4, a: 1.35 },
-    eng: { base: -0.08, spread: 1.0, killer: 2.0, killers: 3, a: 1.3 },
+    eng: { base: 0.24, spread: 1.0, killer: 2.0, killers: 3, a: 1.3 },
     hist: { base: -0.6, spread: 0.9, killer: 1.0, killers: 2, a: 1.2 },
     // Inquiry killers sit high enough that only about 0.5–2% of a pool scores 50/50, as in real years.
     // With softer killers 3–9% of a strong pool tied at a perfect score, so a flawless paper was worth
@@ -166,11 +166,11 @@
   // prior: a small head start at age 6 from books at home and parents' schooling.
   // paysAcademy: whether the parents can pay ₩2.9M a month for a retake academy.
   const FAMILIES = {
-    q1: { income: 125, allowance: 150000, prior: -0.1, paysAcademy: false },
-    q2: { income: 300, allowance: 250000, prior: -0.05, paysAcademy: false },
-    q3: { income: 490, allowance: 420000, prior: 0, paysAcademy: true },
-    q4: { income: 770, allowance: 580000, prior: 0.05, paysAcademy: true },
-    q5: { income: 1380, allowance: 900000, prior: 0.1, paysAcademy: true },
+    q1: { income: 125, allowance: 205000, prior: -0.1, paysAcademy: false },
+    q2: { income: 300, allowance: 320000, prior: -0.05, paysAcademy: false },
+    q3: { income: 490, allowance: 470000, prior: 0, paysAcademy: true },
+    q4: { income: 770, allowance: 570000, prior: 0.05, paysAcademy: true },
+    q5: { income: 1380, allowance: 676000, prior: 0.1, paysAcademy: true },
   };
   const FAMILY_IDS = ["q1", "q2", "q3", "q4", "q5"];
 
@@ -241,7 +241,7 @@
     { id: "kinder", stage: "kinder", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
     { id: "homeCare", stage: "kinder", fee: 0, lessons: { all: 0.3 }, stress: -2, motivation: 0, admit: () => 1 },
     { id: "forest", stage: "kinder", fee: 150000, lessons: { all: 0.8 }, stress: -3, motivation: 2, health: 3, admit: () => 0.6 },
-    { id: "engKinder", stage: "kinder", fee: 900000, lessons: { all: 1.05, eng: 3 }, stress: 2, motivation: 0, admit: () => 1, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
+    { id: "engKinder", stage: "kinder", fee: 1545000, fromIncome: true, lessons: { all: 1.05, eng: 3 }, stress: 2, motivation: 0, admit: () => 1, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
     { id: "pubElem", stage: "elem", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
     // 사립초: ₩10M a year or so, small classes and English immersion, by lottery (about 2 applicants a seat).
     { id: "privElem", stage: "elem", fee: 800000, lessons: { all: 1.15, eng: 1.5 }, stress: 1, motivation: 2, admit: () => 0.5, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
@@ -324,8 +324,12 @@
   // divorce or a parent can die (the divorce and bereaved events). With one parent, or grandparents,
   // there is less money and time for your education: PARENT_BUDGET scales the education budget.
   // The household's income fifth itself is dealt as usual, so the 20%-per-fifth shares stay exact.
-  const PARENTS_AT_BIRTH = [["both", 0.9], ["mom", 0.06], ["dad", 0.02], ["grand", 0.02]];
-  const PARENT_BUDGET = { both: 1, mom: 0.75, dad: 0.75, grand: 0.6 };
+  // Grandparent-grandchild households are under 1% of households (153,000 in 2015); single-parent
+  // household income is 60.3% of the all-household average (2024). See data/korea-stats.md.
+  const PARENTS_AT_BIRTH = [["both", 0.91], ["mom", 0.06], ["dad", 0.02], ["grand", 0.01]];
+  const PARENT_BUDGET = { both: 1, mom: 0.6, dad: 0.6, grand: 0.5 };
+  // Fees paid out of household income rather than the education budget (English kindergarten).
+  const FEE_FROM_INCOME = 0.12;
   // ...and fewer hands at home: stress settles this much higher, motivation this much lower.
   const PARENT_STRESS = { both: 0, mom: 4, dad: 4, grand: 3 };
   const PARENT_MOT = { both: 0, mom: -1, dad: -1, grand: -3 };
@@ -563,17 +567,20 @@
     // The family's fortunes. Each moves the income fifth (and the education budget) for good.
     { id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.4 : 0), when: () => true, run: (g) => { g.shiftFamily(1, "promotion"); bump(g, { stress: -4, motivation: 3 }); return "r"; } },
     {
-      id: "jackpot", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.2 : 0), when: () => true,
-      run: (g) => { const two = g.rng() < 0.4; g.shiftFamily(two ? 2 : 1, "jackpot"); g.money += 500000; bump(g, { stress: -6, motivation: 4 }); return two ? "r2" : "r1"; },
+      // Mostly an inheritance; a lottery jackpot (1 in 8,145,060 a ticket) is a once-in-a-lifetime fluke.
+      id: "jackpot", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.03 : 0), when: () => true,
+      run: (g) => { const two = g.rng() < 0.01; g.shiftFamily(two ? 2 : 1, "jackpot"); g.money += 500000; bump(g, { stress: -6, motivation: 4 }); return two ? "r2" : "r1"; },
     },
     { id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.4 : 0), when: () => true, run: (g) => { g.shiftFamily(-1, "layoff"); bump(g, { stress: 10, motivation: -3 }); return "r"; } },
     {
       // 전세 사기: the deposit on the family's rented home is gone.
-      id: "jeonse", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.15 : 0), when: () => true,
+      // 41,559 victims nationally from mid-2023 to 2026: about 1% of families over a childhood.
+      id: "jeonse", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.006 : 0), when: () => true,
       run: (g) => { g.shiftFamily(-1, "jeonse"); g.money = Math.max(0, g.money - 300000); bump(g, { stress: 12 }); return "r"; },
     },
     {
-      id: "parentill", anyStage: true, luck: -1, weight: 0.25, when: (g) => !g.flags.parentIll,
+      // Cancer in a parent's 40s–50s (414–595 per 100,000 a year): roughly 15–20% of childhoods.
+      id: "parentill", anyStage: true, luck: -1, weight: 0.09, when: (g) => !g.flags.parentIll,
       run: (g) => { g.flags.parentIll = 1; if (g.family !== "q1") g.shiftFamily(-1, "parentill"); bump(g, { stress: 14, motivation: -5 }); g.lostBlocks += 1; return "r"; },
     },
     // Divorce: about one child in eight sees their parents split before they're grown. Custody mostly
@@ -593,7 +600,7 @@
     // A parent dies (rare). With one parent left you live with them; if it was your only parent, your
     // grandparents take you in. There is some insurance money, and a long grief.
     {
-      id: "bereaved", anyStage: true, luck: -1, weight: (g) => ((g.parents || "both") !== "grand" && g.grade <= 12 && g.attempt === 1 && !g.flags.bereaved ? 0.018 : 0), when: () => true,
+      id: "bereaved", anyStage: true, luck: -1, weight: (g) => ((g.parents || "both") !== "grand" && g.grade <= 12 && g.attempt === 1 && !g.flags.bereaved ? 0.014 : 0), when: () => true,
       run: (g) => {
         g.flags.bereaved = 1;
         const was = g.parents || "both";
@@ -609,7 +616,8 @@
       },
     },
     // Your own body: an accident or a long illness costs time you can't get back.
-    { id: "accident", luck: -1, weight: 0.35, when: (g) => !g.flags.accident, run: (g) => { g.flags.accident = 1; bump(g, { health: -35, stress: 10, motivation: -4 }); g.lostBlocks += 3; return "r"; } },
+    // About 0.25% of children are hurt in traffic each year: a few percent over a childhood.
+    { id: "accident", luck: -1, weight: 0.03, when: (g) => !g.flags.accident, run: (g) => { g.flags.accident = 1; bump(g, { health: -35, stress: 10, motivation: -4 }); g.lostBlocks += 3; return "r"; } },
     { id: "hospital", luck: -1, weight: 0.3, when: (g) => g.grade >= 4, run: (g) => { bump(g, { health: -22, stress: 6, motivation: -4 }); g.lostBlocks += 2; return "r"; } },
     // And the lucky breaks: a teacher who changes everything, or a subject that suddenly clicks.
     {
@@ -782,7 +790,8 @@
       run: (g, i) => {
         g.flags.gedTry = g.clock;
         g.flags.gedN = (g.flags.gedN || 0) + 1;
-        let p = 0.6 + 0.3 * g.standing() + (g.flags.gedN - 1) * 0.15;
+        // Pass rates run 85–90% a sitting (Seoul, 2024–25): an average candidate passes first time.
+        let p = 0.78 + 0.15 * g.standing() + (g.flags.gedN - 1) * 0.1;
         // Cramming for it pays off, but takes a block from next turn.
         if (i === 0) { p += 0.25; g.lostBlocks += 1; }
         if (g.status === "hs3" && g.month >= 8) p = 1;
@@ -1047,12 +1056,15 @@
   // move, a transfer) doubles it for a year, having no time for friends makes you an easier target,
   // and each earlier episode halves it. Tuned so roughly a quarter to a third of lives meet it.
   function bullyWeight(g) {
-    const stage = g.status === "elem" ? 1.4 : g.status === "mid" ? 1 : 0.3;
+    // Victimization peaks in elementary school (4.2% a year in 2024, then 1.6% middle, 0.5% high), so
+    // per turn: a year in elementary, a semester in middle school, a season in high school.
+    const stage = g.status === "elem" ? BULLY_STAGE.elem : g.status === "mid" ? BULLY_STAGE.mid : BULLY_STAGE.high;
     const newKid = g.flags.moved != null && g.clock - g.flags.moved <= 12 ? 2 : 1;
     const alone = g.lastPlan && !g.lastPlan.friends ? 1.4 : 1;
     return BULLY_BASE * stage * newKid * alone * Math.pow(0.5, g.flags.bullyN || 0) * g.trait("bully");
   }
   const BULLY_BASE = 0.25;
+  const BULLY_STAGE = { elem: 2.3, mid: 0.43, high: 0.07 };
   // Leaving school: extra blocks a turn, the motivation baseline it costs, and stress a turn spent alone.
   const DROPOUT_BLOCKS = 2;
   const DROPOUT_MOTIVATION = 8;
@@ -1268,7 +1280,7 @@
     // A school the family can no longer pay for: back to the public one (or ordinary kindergarten).
     checkFees() {
       const st = this.status === "hs3" ? "high" : this.status === "early" ? "kinder" : this.status;
-      if ((this.inClass() || this.atKinder()) && this.schoolInfo().fee > this.grossBudget() && DEFAULT_SCHOOL[st]) {
+      if ((this.inClass() || this.atKinder()) && this.schoolInfo().fee > this.feeLimit(this.schoolInfo()) && DEFAULT_SCHOOL[st]) {
         this.school = DEFAULT_SCHOOL[st];
         this.addLog("log.schoolFee", { id: this.school }, "event");
       }
@@ -1317,6 +1329,9 @@
       // School fees come out of the same education budget while you're there.
       return Math.max(0, (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0));
     }
+    // What a family can pay for a school: its education budget, or, for fees families pay out of
+    // income (an English kindergarten), FEE_FROM_INCOME of household income.
+    feeLimit(x) { return x && x.fromIncome ? FAMILIES[this.family].income * 10000 * FEE_FROM_INCOME * PARENT_BUDGET[this.parents || "both"] : this.grossBudget(); }
     // The family's monthly education money before fees: less with one parent or grandparents.
     grossBudget() { return Math.round(FAMILIES[this.family].allowance * PARENT_BUDGET[this.parents || "both"] / 1000) * 1000; }
 
@@ -1334,9 +1349,8 @@
       const top = this.queue[0];
       if (!top || top.type !== "school") return [];
       const kind = this.regionInfo().kind;
-      const can = this.grossBudget();
       return SCHOOLS.filter((x) => x.stage === top.stage).map((x) => {
-        const blocked = x.where && x.where.indexOf(kind) < 0 ? "region" : x.fee > can ? "cost" : x.admit(this) <= 0 ? "admit" : null;
+        const blocked = x.where && x.where.indexOf(kind) < 0 ? "region" : x.fee > this.feeLimit(x) ? "cost" : x.admit(this) <= 0 ? "admit" : null;
         return { id: x.id, fee: x.fee, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def: x.id === DEFAULT_SCHOOL[top.stage] };
       });
     }

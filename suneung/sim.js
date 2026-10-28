@@ -37,7 +37,7 @@ function calibration() {
       "  ", f(r0), "  ", f(r2), "  ", f(r3)
     );
   }
-  console.log("Real targets: 국어 1등급 cut 84–92, std max 135–150 · 수학 cut 84–88, std max 135–148 · 영어 1등급 4–10% · 한국사 1등급 15–35% · 탐구 cut 44–50, std max 63–77\n");
+  console.log("Real targets: 국어 1등급 cut 84–92, std max 135–150 · 수학 cut 84–88, std max 135–148 · 영어 1등급 4.7–6.2% (2024–25) · 한국사 1등급 15–35% · 탐구 cut 44–50, std max 63–77\n");
   topEnd();
 }
 

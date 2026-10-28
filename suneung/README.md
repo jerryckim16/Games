@@ -54,10 +54,10 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 ## Features
 
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
-- **Who raises you.** Most children are born to two parents; about 6% are born to a single mother, 2% to a single father, and 2% are raised by grandparents (조손가정). Each is rolled at birth from its own seeded stream and named on the birth screen.
+- **Who raises you.** Most children are born to two parents; about 6% are born to a single mother, 2% to a single father, and 1% are raised by grandparents (조손가정; grandparent households are under 1% of households). Each is rolled at birth from its own seeded stream and named on the birth screen.
   - **Divorce:** about one child in eight sees their parents divorce before High 3 (75% stay with their mother). The household drops an income fifth, with a stress and motivation hit and a lost block.
   - **Losing a parent:** about 3% of children lose a parent. With one left you live with them; if it was your only parent, your grandparents take you in. Some insurance money, a long grief (stress +25, motivation −12) and two lost blocks.
-  - **Everyday effects:** with one parent the education budget is ×0.75 (grandparents ×0.6), stress settles 4 higher (3 with grandparents) and motivation 1 lower (3 with grandparents). The household's income fifth is still dealt as usual.
+  - **Everyday effects:** with one parent the education budget is ×0.6 (single-parent household income is 60.3% of the average; grandparents ×0.5), stress settles 4 higher (3 with grandparents) and motivation 1 lower (3 with grandparents). The household's income fifth is still dealt as usual.
   - **The words follow:** with one parent or grandparents, every "your parents" in the game becomes "your mom", "your dad" or "your grandparents" (verbs and Korean particles adjusted), a missing parent is replaced by the one who's there, and cutscenes draw only the parents in your life (a grandmother when grandparents raise you).
   - The Family strip shows the setup next to the income class.
 - **Your family's wealth class, always on screen.** A Family strip under the stats shows the household's current income class (low, lower-middle, middle, upper-middle or high income) with a five-step meter for its income fifth. Once family-fortune events have moved it, it says how far from birth (green "↑ Up from middle income at birth", red "↓ Down…"), and the strip flashes when the class changes.
@@ -68,8 +68,8 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **Aptitude, always on screen.** Aptitude multiplies every study gain in a subject (and its school lessons), so maxing it out takes 1 / aptitude of the average time. Every ability bar ends in stars (· below 0.88, ★ to 1.05, ★★ to 1.25, ★★★ to 1.45, ★★★★ above, gold from ★★★), and each study card shows the stars and the saving in words, such as "20% less study to max out" or "15% more study to max out". The bar's tooltip gives the exact multiplier. A 돌잡이 subject item adds 0.25, so it often earns an extra star.
 - **Luck.** Life is mostly luck, and the game says so:
   - **A fortune-teller's reading (사주) at birth** reveals a hidden fortune, from great to rough. It tilts the odds of every good and bad event (weight × 1 + 0.6 × fortune, for an event tagged good or bad) and adds a little to 수능 day. Lives with a good reading average about 15 points more on their first 수능 than lives with a rough one.
-  - **The family's fortunes change** two or three times a life, each time moving it a whole income fifth with its education budget: a promotion or a business taking off, an inheritance or a lottery win (sometimes two fifths), a layoff or a business going under, a jeonse deposit scam, a parent's serious illness. A family that can no longer pay a private school's fees moves you to the public one.
-  - **Your own body:** a car accident (−35 health, three blocks lost) or weeks in hospital (two blocks), each in about two lives out of five.
+  - **The family's fortunes change** about twice a life, each time moving it a whole income fifth with its education budget. The rates follow real figures (see `data/korea-stats.md`): a promotion or a business taking off (about 47% of lives) or a layoff or a business going under (about 51%); a parent's serious illness (about 17%, from cancer rates in parents' 40s and 50s); an inheritance (about 5%; a lottery jackpot is a one-in-a-hundred twist on that, since the odds are 1 in 8,145,060 a ticket); a jeonse deposit scam (about 1.5%, from 41,559 victims nationally in three years). A family that can no longer pay a private school's fees moves you to the public one.
+  - **Your own body:** weeks in hospital (two blocks lost) in about a quarter of lives, and a serious car accident (−35 health, three blocks) in about 4%: about 0.25% of children are hurt in traffic each year.
   - **Lucky breaks:** a teacher who makes a subject click (aptitude +0.2), or a sudden passion for one (aptitude +0.3 and a jump in ability).
   - **Middle 2 rewires everyone:** every aptitude shifts, by a shared amount (sd 0.2: late bloomer or early peaker) plus one per subject (sd 0.18), from its own seeded stream.
   - **수능 day:** the whole day goes well or badly together (a shift of sd 0.35 on every subject), each paper fits you better or worse (sd 0.18 a subject, mocks too), and about half the time something happens: a sniffling neighbour, a lucky guess, a killer question you'd just drilled, a calm clear head, or (rarely) answers marked one row off on the OMR card.
@@ -82,11 +82,13 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 
   | Family | Household income (a month) | Education budget (a month) | Head start at age 6 | Pays for a retake academy |
   |---|---|---|---|---|
-  | Low income (bottom fifth) | about ₩1.25M | ₩150,000 | −0.10 | no (scholarship only) |
-  | Lower-middle income | about ₩3.0M | ₩250,000 | −0.05 | no (scholarship only) |
-  | Middle income | about ₩4.9M | ₩420,000 | 0 | yes |
-  | Upper-middle income | about ₩7.7M | ₩580,000 | +0.05 | yes |
-  | High income (top fifth) | about ₩13.8M | ₩900,000 | +0.10 | yes |
+  | Low income (bottom fifth) | about ₩1.25M | ₩205,000 | −0.10 | no (scholarship only) |
+  | Lower-middle income | about ₩3.0M | ₩320,000 | −0.05 | no (scholarship only) |
+  | Middle income | about ₩4.9M | ₩470,000 | 0 | yes |
+  | Upper-middle income | about ₩7.7M | ₩570,000 | +0.05 | yes |
+  | High income (top fifth) | about ₩13.8M | ₩676,000 | +0.10 | yes |
+
+  The budgets are the 2024 private-education survey's spending per student: ₩205,000 in households under ₩3M a month, ₩676,000 at ₩8M and above, ₩474,000 on average; the middle fifths are interpolated.
 
   - **Incomes:** from the 2024 household finance survey (가계금융복지조사). The top fifth averages ₩166M a year and all households ₩71.85M; the middle fifths are interpolated.
   - **Budgets:** follow the 2024 private-education survey (초중고 사교육비조사), which found ₩205,000 a month per student in households under ₩3M and ₩676,000 in households at ₩8M and above. The top fifth's figure is extrapolated above that bracket.
@@ -97,7 +99,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - 탐구 ×2: raw /50, 표준점수 (mean 50, sd 10), 백분위, 등급;
   - 영어: absolute grading, 90+ is grade 1 and every 10 points is a grade;
   - 한국사: absolute grading, 40+ is grade 1 and every 5 points is a grade.
-  - The score report also shows each section's Elementary 1 cut.
+  - The score report also shows each section's grade-1 (1등급) cut.
   - Before the track choice, the two inquiry slots are social studies and science.
 - **Activities (one block each):**
 
@@ -178,7 +180,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - High stress or low health on exam day lowers your scores.
 - **About 30 random events** with conditions (by school grade, family, phone ownership, stress, retakers, 반수 students). After an event fires it can't recur for 4 months. Fixed milestones always fire: the free-semester career week (Middle 1), 중2 (Middle 2) and D-100 (August of each 수능 year).
 - **Bullying (학교폭력)**, a storyline that lasts until it's resolved:
-  - **When:** it can start in Elementary 3 to High 2, most often in middle school. It's twice as likely for a year after you move (Daechi-dong) or change schools, and 1.4× as likely when your last plan had no time with friends. Each earlier episode halves the chance, and a new episode can't start within a year of the last one ending. About 3 in 10 lives meet it.
+  - **When:** it can start in Elementary 3 to High 2, most often in elementary school, as in the national survey (4.2% of elementary, 1.6% of middle and 0.5% of high school students a year in 2024): about three in four episodes start in elementary school, one in five in middle school. It's twice as likely for a year after you move (Daechi-dong) or change schools, and 1.4× as likely when your last plan had no time with friends. Each earlier episode halves the chance, and a new episode can't start within a year of the last one ending. About 3 in 10 lives meet it.
   - **Severity:** mild, serious or severe. It starts mild, or serious (more often in middle school).
   - **What it costs, every turn it lasts:** study efficiency drops 10% per severity level, so −10%, −20% or −30%. If someone is supporting you (parents who know, the Wee class counselor, friends you've made time for), it drops 30% less. It also adds stress (+4 per level), drains motivation (−3 per level) and health (−2 per level, or −1 with support). Severe bullying costs a block a turn (days you can't face school).
   - **The first choice:** tell your homeroom teacher, tell your parents (support, but the call can backfire), fight back, or keep quiet.
@@ -202,7 +204,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   | Worksheets 학습지 (from 4) | Korean and math; ₩40,000 a month and a little stress |
   | Naps, the playground, playdates, cartoons | rest, exercise, friends and games under their early names |
 
-  - At 3 you pick daycare or kindergarten (free under the national 누리과정, with kindergarten lessons), staying home with family (few lessons, less stress, no kindergarten colds), a forest kindergarten (₩150,000, outdoors: less stress, more health) or an English kindergarten (₩900,000, English lessons ×3, big cities only).
+  - At 3 you pick daycare or kindergarten (free under the national 누리과정, with kindergarten lessons), staying home with family (few lessons, less stress, no kindergarten colds), a forest kindergarten (₩150,000, outdoors: less stress, more health) or an English kindergarten (₩1,545,000 a month, the 2024 average for half-day English academies; paid out of household income, so only families whose income covers it eight times over can choose it; English lessons ×3, big cities only).
   - Events of the early years: first steps, first words, a fall off the slide, a new baby brother or sister, grandma's stories, kindergarten colds and the kindergarten play, whether to start Hangul early, and a gifted-child test at 5.
   - **Balance:** ability at birth is 0.66 below the old age-6 start, and a typical early childhood (the balanced bot at an ordinary kindergarten) closes exactly that gap, so a typical child still starts Elementary 1 where it always did. A child who only plays and watches cartoons starts about 6 points lower; one who reads, builds and sings every year starts about the same as typical or a little ahead.
 - **Traits** are passive bonuses for the whole life, dealt by two reveal events. Each is rolled from its own seeded stream, so the seed fixes them the way it fixes your family and talents. The Ability panel lists yours with what they do.
@@ -262,7 +264,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
     - pass the GED by High 2 and you're offered the 수능 a year early, with your age group's year left as a spare.
   - **What it costs:**
     - **No school lessons:** the passive gain in every subject (see Learning) stops, so only your own study moves you;
-    - **The GED (검정고시)** must be passed first. It opens six months after you leave and comes round every four months or more. The pass chance is 60% plus up to 30% from your standing among your age group, plus 15% for each retry; cramming adds 25% but costs a block. From August of High 3 it always passes, so you're never shut out of the 수능.
+    - **The GED (검정고시)** must be passed first. It opens six months after you leave and comes round every four months or more. The pass chance is 78% plus up to 15% from your standing among your age group (real pass rates are 85–90% a sitting), plus 10% for each retry; cramming adds 25% but costs a block. From August of High 3 it always passes, so you're never shut out of the 수능.
     - **No local or rural quotas:** 검정고시 holders don't count as having gone to school in the region.
     - **Nobody sets the pace:** the motivation baseline is 8 lower until your first 수능, and a turn with no time for friends adds 3 stress.
     - **Your parents take it hard** (+6 stress, −4 motivation when you leave), and the relatives ask questions at Chuseok.
@@ -369,11 +371,11 @@ Run it after any change to the exam or learning model. The tables below come fro
 
 Means over 40 sittings.
 
-| Section | Mean raw | Elementary 1 cut | Top 표준점수 | Elementary 1 share | Real target |
+| Section | Mean raw | 1등급 cut | Top 표준점수 | 1등급 share | Real target |
 |---|---|---|---|---|---|
 | 국어 | 59.2 | 90.0 | 141.3 | | cut 84–92, top 135–150 |
 | 수학 | 45.8 | 88.2 | 147.1 | | cut 84–88, top 135–148 |
-| 영어 | 57.7 | | | 8.9% | 4–10% grade 1 |
+| 영어 | 51.3 | | | 5.7% | 4.7% (2024) – 6.2% (2025) grade 1 |
 | 한국사 | 32.1 | | | 33.2% | 15–35% grade 1 |
 | 탐구 | 30.7 | 45.8 | 68.7 | | cut 44–50, top 63–77 |
 
@@ -403,19 +405,19 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 62 | 2.7 · 2.2 · 2.0 | 367 | 367 | 1.00 | 0% | 0% | 45% |
-| slacker (half games & friends), 1 try | 56 | 3.2 · 2.6 · 5.2 | 349 | 349 | 1.00 | 0% | 0% | 10% |
-| grinder (no rest), self-study, 1 try | 66 | 3.0 · 2.2 · 2.4 | 372 | 372 | 1.00 | 3% | 0% | 55% |
-| smart, online lectures, 1 try | 66 | 2.3 · 2.2 · 2.1 | 378 | 378 | 1.00 | 5% | 0% | 68% |
-| smart, best affordable method, 1 try | 68 | 2.0 · 1.8 · 1.8 | 386 | 386 | 1.00 | 8% | 1% | 83% |
-| smart, best affordable, retakes up to 3 tries | 68 | 2.0 · 1.8 · 1.8 | 386 | 410 | 2.58 | 73% | 28% | 98% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.0 · 1.8 · 1.9 | 385 | 419 | 3.31 | 95% | 90% | 100% |
-| smart, best affordable, tries for selective schools, 1 try | 68 | 2.0 · 1.9 · 2.0 | 386 | 386 | 1.00 | 10% | 1% | 78% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.8 · 1.9 | 385 | 419 | 3.26 | 94% | 89% | 99% |
-| balanced, self-study, vocational high school, 1 try | 59 | 2.9 · 2.4 · 2.2 | 355 | 355 | 1.00 | 0% | 0% | 21% |
-| balanced, self-study, leaves school at High 1, 1 try | 61 | 2.9 · 2.5 · 2.2 | 361 | 361 | 1.00 | 0% | 0% | 29% |
-| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.1 · 2.0 · 2.1 | 384 | 384 | 1.00 | 10% | 0% | 74% |
-| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.1 · 2.3 | 378 | 378 | 1.00 | 3% | 0% | 59% |
+| balanced, self-study, 1 try | 62 | 2.6 · 2.2 · 2.5 | 366 | 366 | 1.00 | 0% | 0% | 36% |
+| slacker (half games & friends), 1 try | 56 | 3.0 · 2.5 · 5.8 | 354 | 354 | 1.00 | 0% | 0% | 8% |
+| grinder (no rest), self-study, 1 try | 66 | 3.0 · 2.6 · 2.8 | 369 | 369 | 1.00 | 5% | 0% | 46% |
+| smart, online lectures, 1 try | 66 | 2.3 · 2.0 · 2.5 | 379 | 379 | 1.00 | 3% | 0% | 64% |
+| smart, best affordable method, 1 try | 69 | 2.0 · 1.9 · 2.2 | 385 | 385 | 1.00 | 9% | 1% | 74% |
+| smart, best affordable, retakes up to 3 tries | 69 | 2.0 · 1.9 · 2.2 | 385 | 410 | 2.55 | 61% | 19% | 98% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.0 · 1.8 · 2.2 | 386 | 420 | 3.58 | 93% | 85% | 100% |
+| smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.9 · 2.4 | 386 | 386 | 1.00 | 5% | 1% | 71% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.9 · 2.2 | 384 | 420 | 3.67 | 91% | 80% | 99% |
+| balanced, self-study, vocational high school, 1 try | 59 | 2.8 · 2.3 · 2.6 | 357 | 357 | 1.00 | 0% | 0% | 21% |
+| balanced, self-study, leaves school at High 1, 1 try | 62 | 2.8 · 2.5 · 2.6 | 364 | 364 | 1.00 | 0% | 0% | 29% |
+| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.1 · 2.0 · 2.4 | 382 | 382 | 1.00 | 13% | 0% | 64% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.2 · 2.1 · 2.5 | 379 | 379 | 1.00 | 6% | 1% | 60% |
 
 How much luck spreads lives that follow the same strategy, before (v4.1) and after the luck changes (v4.2). "Skill r²" is how much of the spread in first totals is explained by ability entering High 3; the rest is luck (the exam day, the paper, an accident in High 3, a family that can suddenly afford tutors, or can't):
 
@@ -428,57 +430,57 @@ The smart bot with the best affordable method, first try only, by the family it 
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 15 | 66 | 383 | 0% | 80% |
-| Lower-middle income | 21 | 68 | 388 | 0% | 90% |
-| Middle income | 17 | 68 | 379 | 12% | 71% |
-| Upper-middle income | 14 | 69 | 387 | 7% | 93% |
-| High income | 13 | 72 | 392 | 23% | 77% |
+| Low income | 11 | 66 | 384 | 0% | 82% |
+| Lower-middle income | 22 | 67 | 382 | 0% | 68% |
+| Middle income | 18 | 68 | 383 | 11% | 78% |
+| Upper-middle income | 20 | 70 | 388 | 20% | 70% |
+| High income | 9 | 71 | 388 | 11% | 78% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 10 | 68 | 392 | 10% | 90% | 90% |
-| Seoul academy district | 6 | 71 | 385 | 0% | 83% | 100% |
-| Seoul | 5 | 71 | 394 | 20% | 80% | 100% |
-| Capital-region city | 23 | 67 | 383 | 0% | 74% | 78% |
-| Big city | 14 | 71 | 388 | 14% | 93% | 100% |
-| Mid-sized city | 13 | 68 | 386 | 15% | 77% | 100% |
-| Rural county | 9 | 66 | 378 | 0% | 89% | 78% |
+| Gangnam | 13 | 70 | 382 | 15% | 62% | 85% |
+| Seoul academy district | 5 | 69 | 388 | 0% | 80% | 80% |
+| Seoul | 4 | 71 | 397 | 0% | 100% | 100% |
+| Capital-region city | 20 | 67 | 382 | 5% | 70% | 70% |
+| Big city | 16 | 70 | 390 | 6% | 88% | 100% |
+| Mid-sized city | 13 | 68 | 382 | 8% | 69% | 85% |
+| Rural county | 9 | 66 | 381 | 22% | 67% | 89% |
 
-What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 71% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
+What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 74% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.2 | +0.9 | 71% |
-| Easygoing (순한 아기) | +0.0 | +0.3 | 78% |
-| Curious (호기심 많은 아기) | +0.5 | +1.7 | 76% |
-| Good sleeper (잘 자는 아기) | -0.0 | +0.6 | 76% |
-| Unflappable (겁 없는 아기) | +0.0 | +1.5 | 78% |
-| All smiles (잘 웃는 아기) | -0.1 | -0.3 | 66% |
-| Pencil (연필) | +1.6 | +2.2 | 70% |
-| Book (책) | +1.0 | +0.6 | 73% |
-| Computer mouse (마우스) | +1.2 | +2.9 | 76% |
-| Stethoscope (청진기) | +0.8 | +2.3 | 71% |
-| Microphone (마이크) | +0.9 | +0.5 | 69% |
-| Judge's gavel (판사봉) | +1.0 | +1.6 | 78% |
-| Ball (공) | +0.2 | -0.9 | 71% |
-| Thread (실) | +0.3 | -0.9 | 76% |
-| Money (돈) | +0.1 | +1.2 | 74% |
-| Paintbrush (붓) | -0.0 | +0.7 | 78% |
+| Sturdy (튼튼한 아기) | +0.5 | +1.3 | 70% |
+| Easygoing (순한 아기) | +0.0 | -1.1 | 68% |
+| Curious (호기심 많은 아기) | +0.6 | +2.2 | 79% |
+| Good sleeper (잘 자는 아기) | -0.0 | -1.0 | 68% |
+| Unflappable (겁 없는 아기) | +0.0 | +0.4 | 69% |
+| All smiles (잘 웃는 아기) | +0.2 | +0.6 | 69% |
+| Pencil (연필) | +1.6 | +5.8 | 81% |
+| Book (책) | +1.0 | +2.1 | 75% |
+| Computer mouse (마우스) | +1.3 | +4.1 | 79% |
+| Stethoscope (청진기) | +0.8 | +2.0 | 71% |
+| Microphone (마이크) | +1.1 | +2.7 | 76% |
+| Judge's gavel (판사봉) | +1.1 | +3.5 | 79% |
+| Ball (공) | +0.2 | +1.6 | 70% |
+| Thread (실) | +0.5 | +0.1 | 74% |
+| Money (돈) | +0.2 | -0.9 | 65% |
+| Paintbrush (붓) | +0.0 | -0.1 | 71% |
 
 Who raises you, on the same 80 lives (smart bot, best affordable method, first try) with the family setup forced at birth. Lives that start with both parents can still lose one later:
 
 | Setup at birth | Start | First total | In-Seoul+ |
 |---|---|---|---|
-| Both parents | 68 | 385 | 81% |
-| Single mom | 67 | 383 | 69% |
-| Single dad | 67 | 383 | 69% |
-| Grandparents | 67 | 382 | 78% |
+| Both parents | 69 | 384 | 71% |
+| Single mom | 67 | 383 | 75% |
+| Single dad | 67 | 383 | 75% |
+| Grandparents | 67 | 380 | 64% |
 
 What the tables show:
 
-- **School lifts everyone, habits decide the rest:** lessons carry even the slacker to 56 by High 3, and the same random talents end up anywhere from 56 to 68 on average depending on how you spend your free time, from birth on.
+- **School lifts everyone, habits decide the rest:** lessons carry even the slacker to 56 by High 3, and the same random talents end up anywhere from 56 to 69 on average depending on how you spend your free time, from birth on.
 - **Traits are a head start, not a destiny:** a 돌잡이 subject (pencil, microphone, stethoscope) is worth a few points to a bot that spreads its study, and more to a player who leans into that subject; the temperaments mostly make life more comfortable.
 - **Luck now decides a lot:** two lives with the same habits and similar ability can end 60 points apart. For the balanced bot, ability entering High 3 explains only about a third of its first total. The smart bot is squeezed by the top of the scale, so its spread widens less, but strong play still wins on average (about 20 points over the balanced bot).
 - **Family income matters, but it moves:** families change fifths two or three times a life, so where you're born matters less than it did, and a promotion or a layoff in High school can matter more. Retakes close much of the gap either way.
@@ -499,6 +501,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v4.9:** real numbers, from the new `data/korea-stats.md`. Education budgets now follow the 2024 private-education survey (₩205,000 to ₩676,000 a month); bullying peaks in elementary school as in the national survey; the GED passes about 85–90% of the time; the English kindergarten costs its real ₩1.5M a month; single parents' budgets match their real income gap (×0.6); grandparent households are 1%; the English paper gives grade 1 to 5.7% (real: 4.7–6.2%). Rare shocks now happen at real rates: serious car accidents about 4% of lives (was 40%), jeonse scams 1.5% (was 28%), inheritances and lottery wins 5% (was 37%), a parent's serious illness 17% (was 47%). Exam-day and admissions luck are unchanged, so lives still spread widely. Balance tables regenerated. Also fixed two README lines that said "Elementary 1" for the exam's grade 1.
 
 - **v4.8:** the track screen warns, in red, that humanities can't apply to medical school while humanities is selected, and the button says "Confirm humanities".
 
