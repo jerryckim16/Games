@@ -290,6 +290,10 @@
 
       "ability.title": "Ability", "ability.sub": "0–100; 50 is the average Suneung test taker",
       "ability.tip": "Aptitude ×{a}",
+      "ability.aptNote": "★ = aptitude: how fast a subject sinks in. More stars means less study to max it out.",
+      "apt.less": "{p}% less study to max out",
+      "apt.more": "{p}% more study to max out",
+      "apt.even": "average learning speed",
       "ability.over": "Past the top of the scale. More study still raises your odds at the very top schools.",
       "cond.title": "Condition",
       "cond.health": "Health", "cond.stress": "Stress", "cond.motivation": "Motivation", "cond.practice": "Exam stamina",
@@ -814,6 +818,10 @@
 
       "ability.title": "실력", "ability.sub": "0–100, 50이 수능 응시자 평균",
       "ability.tip": "적성 ×{a}",
+      "ability.aptNote": "★ = 적성: 그 과목이 얼마나 빨리 느는지. 별이 많을수록 만점까지 공부 시간이 덜 듭니다.",
+      "apt.less": "만점까지 공부 시간 {p}% 단축",
+      "apt.more": "만점까지 공부 시간 {p}% 더 필요",
+      "apt.even": "보통 학습 속도",
       "ability.over": "최고치를 넘었습니다. 더 공부하면 최상위 대학 합격 확률이 계속 오릅니다.",
       "cond.title": "컨디션",
       "cond.health": "체력", "cond.stress": "스트레스", "cond.motivation": "의지", "cond.practice": "실전력",

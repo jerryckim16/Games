@@ -48,6 +48,16 @@
   const PLAY_COLOR = { books: "--s-kor", blocks: "--s-math", songs: "--s-eng", worksheet: "--a-c1" };
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // Aptitude multiplies every study gain in a subject, so the time it takes to max it out is
+  // 1 / aptitude of the average. Stars everywhere a subject shows, and the saving in words.
+  function aptStars(apt) { return apt >= 1.45 ? "★★★★" : apt >= 1.25 ? "★★★" : apt >= 1.05 ? "★★" : apt >= 0.88 ? "★" : "·"; }
+  function aptTime(apt) {
+    const pct = Math.round((1 - 1 / apt) * 100);
+    return Math.abs(pct) < 5 ? T("apt.even") : pct > 0 ? T("apt.less", { p: pct }) : T("apt.more", { p: -pct });
+  }
+  function aptBadge(apt) {
+    return '<span class="apt' + (apt >= 1.25 ? " hi" : apt < 0.88 ? " lo" : "") + '" title="' + esc(T("ability.tip", { a: apt }) + " · " + aptTime(apt)) + '">' + aptStars(apt) + "</span>";
+  }
   const gradeChip = (g) => '<span class="gr gr' + g + '">' + g + "</span>";
   const subColor = { kor: "--s-kor", math: "--s-math", eng: "--s-eng", hist: "--s-hist", inq1: "--s-inq1", inq2: "--s-inq2" };
 
@@ -265,7 +275,8 @@
 
   // from: where the fill starts, so a fresh turn can grow the bar from last turn's value.
   // shown: text in place of the number (e.g. "100+"); over: ability past the top of the scale.
-  function bar(name, value, color, delta, title, icon, from, shown, over) {
+  // tail: extra HTML in a last column (the aptitude stars on ability bars).
+  function bar(name, value, color, delta, title, icon, from, shown, over, tail) {
     const v = Math.max(0, Math.min(100, value));
     const start = from == null ? v : Math.max(0, Math.min(100, from));
     let d = "", pop = "";
@@ -275,7 +286,7 @@
       if (from != null) pop = '<span class="gain ' + (delta > 0 ? "up" : "down") + '" aria-hidden="true">' + txt + "</span>";
     }
     return '<div class="bar"' + (title ? ' title="' + esc(title) + '"' : "") + '><span class="name">' + (icon ? '<span class="bi" aria-hidden="true">' + icon + "</span>" : "") + esc(name) +
-      '</span><span class="track"><span class="fill" data-w="' + v + '" style="width:' + start + "%;background:" + color + '"></span></span><span class="val' + (over ? " over" : "") + '">' + (shown != null ? shown : Math.round(value)) + d + pop + "</span></div>";
+      '</span><span class="track"><span class="fill" data-w="' + v + '" style="width:' + start + "%;background:" + color + '"></span></span><span class="val' + (over ? " over" : "") + '">' + (shown != null ? shown : Math.round(value)) + d + pop + "</span>" + (tail || "") + "</div>";
   }
   // Ability gains animate once, on the render right after a turn: bars grow and the gain floats up.
   let shownTrace = 0;
@@ -293,9 +304,9 @@
       // The bar tops out at 100 (θ = 3), but ability keeps counting past it, and it still matters for
       // SNU and 의대, so say so instead of looking stuck.
       const over = 50 + g.skills[s] * 16.67 >= 100.5;
-      const tip = T("ability.tip", { a: g.aptitude[s] }) + (over ? " · " + T("ability.over") : "");
-      return bar(L.sub(s), S.skillScore(g.skills[s]), "var(" + subColor[s] + ")", delta, tip, actIcon(s), from, over ? "100+" : null, over);
-    }).join("");
+      const tip = T("ability.tip", { a: g.aptitude[s] }) + " · " + aptTime(g.aptitude[s]) + (over ? " · " + T("ability.over") : "");
+      return bar(L.sub(s), S.skillScore(g.skills[s]), "var(" + subColor[s] + ")", delta, tip, actIcon(s), from, over ? "100+" : null, over, aptBadge(g.aptitude[s]));
+    }).join("") + '<p class="apt-note">' + esc(T("ability.aptNote")) + "</p>";
     const lvl = (v, goodHigh) => {
       const x = goodHigh ? v : 100 - v;
       return x >= 60 ? "var(--pos)" : x >= 35 ? "var(--warn)" : "var(--neg)";
@@ -365,11 +376,11 @@
       const k = plan[a.id] || 0;
       const study = a.kind === "study";
       const nm = name(a);
-      const hint = study ? T("plan.studyHint", { v: 50 + g.skills[a.subject] * 16.67 >= 100.5 ? "100+" : S.skillScore(g.skills[a.subject]), s: a.subject }) : early && L.actEarlyHint(a.id) ? L.actEarlyHint(a.id) : L.actHint(a.id);
+      const hint = study ? T("plan.studyHint", { v: 50 + g.skills[a.subject] * 16.67 >= 100.5 ? "100+" : S.skillScore(g.skills[a.subject]), s: a.subject }) + " · " + aptTime(g.aptitude[a.subject]) : early && L.actEarlyHint(a.id) ? L.actEarlyHint(a.id) : L.actHint(a.id);
       const pips = k ? '<span class="pips" aria-hidden="true">' + "●".repeat(Math.min(k, 8)) + "</span>" : "";
       return '<div class="act' + (k ? " has" : "") + (used < n && !done ? " open" : "") + '" data-card="' + a.id + '" style="--c:var(' + actColor(a) + ')">' +
         '<span class="ic" aria-hidden="true">' + actIcon(a.id) + "</span>" +
-        '<div class="lbl">' + esc(nm) + "<small>" + esc(hint) + "</small>" + pips + '</div><div class="stepper">' +
+        '<div class="lbl">' + esc(nm) + (study ? " " + aptBadge(g.aptitude[a.subject]) : "") + "<small>" + esc(hint) + "</small>" + pips + '</div><div class="stepper">' +
         '<button type="button" data-a="' + a.id + '" data-d="-1" aria-label="' + esc(T("plan.less", { a: nm })) + '"' + (k && !done ? "" : " disabled") + ">−</button>" +
         '<span class="n">' + k + "</span>" +
         '<button type="button" data-a="' + a.id + '" data-d="1" aria-label="' + esc(T("plan.more", { a: nm })) + '"' + (used < n && !done ? "" : " disabled") + ">+</button></div></div>";
@@ -714,7 +725,7 @@
     return '<div class="talent">' + SUBJECTS.map((s) => {
       const v = S.skillScore(g.skills[s]);
       const apt = g.aptitude[s];
-      const stars = apt >= 1.25 ? "★★★" : apt >= 1.05 ? "★★" : apt >= 0.88 ? "★" : "·";
+      const stars = aptStars(apt);
       return '<div class="bar"><span class="name"><span class="bi" aria-hidden="true">' + actIcon(s) + "</span>" + esc(L.sub(s)) + '</span><span class="track"><span class="fill" style="width:' + v +
         "%;background:var(" + subColor[s] + ')"></span></span><span class="val">' + v + '</span><span class="apt" title="' + esc(T("setup.apt")) + '">' + stars + "</span></div>";
     }).join("") + "</div>";

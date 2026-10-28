@@ -14,7 +14,7 @@ School years are counted the Korean way, with each school numbering its own year
 
 1. **Be born.** Choose boy or girl and type a name. Your family and your talents are dealt at random; you can't pick or re-roll them.
    - The birth screen shows where you're born, your family's household income, which fifth of Korean households it's in, and what your parents can spend on your education each month.
-   - Stars show aptitude, which is how fast you learn each subject.
+   - Stars show aptitude, which is how fast you learn each subject. They stay on screen all game (see Aptitude below).
    - Then your first weeks reveal your **temperament**, and at your first birthday the **돌잡이** shows what you grab. Both give you a trait: a permanent bonus (see Traits below).
    - Ages 0–5 are played a year at a time, with play instead of study, and a kindergarten choice at 3.
 2. **Pick a school** at 3 (kindergarten) and at the start of elementary, middle and high school. The local public school is always open; private and special schools have fees, lotteries or entry requirements (see Schools below).
@@ -53,6 +53,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 ## Features
 
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
+- **Aptitude, always on screen.** Aptitude multiplies every study gain in a subject (and its school lessons), so maxing it out takes 1 / aptitude of the average time. Every ability bar ends in stars (· below 0.88, ★ to 1.05, ★★ to 1.25, ★★★ to 1.45, ★★★★ above, gold from ★★★), and each study card shows the stars and the saving in words, such as "20% less study to max out" or "15% more study to max out". The bar's tooltip gives the exact multiplier. A 돌잡이 subject item adds 0.25, so it often earns an extra star.
 - **Families from real income data:**
   - You're born into one of the five national household-income fifths, each with a 20% chance.
   - The family sets your education budget. Money the parents don't spend on you that turn stays with them.
@@ -441,6 +442,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v4.1:** aptitude is always visible. Ability bars end in aptitude stars (gold for ★★★ and up), study cards show the stars and how much less (or more) study the subject takes to max out, and a note under the bars explains it. Gameplay and balance numbers are unchanged.
 
 - **v4.0:** life starts at birth. Ages 0–5 are played a year at a time with play instead of study (picture books, blocks, songs, worksheets from 4, naps, the playground, playdates, cartoons), a kindergarten choice at 3 (daycare or kindergarten, home, forest kindergarten, English kindergarten) and ten early-years events. Two random reveal events deal **traits**, permanent passive bonuses: your temperament in your first weeks (sturdy, easygoing, curious, good sleeper, unflappable, all smiles) and the 돌잡이 at your first birthday (pencil, book, mouse, stethoscope, microphone, gavel, ball, thread, money, paintbrush; sometimes two at once). The Ability panel lists them. Ability at birth is set so a typical early childhood arrives at Elementary 1 exactly where the old age-6 start was. `sim.js` plays the early years and adds a paired test of what each trait is worth. Balance tables regenerated. Saves from before still load and carry on from elementary school.
 
