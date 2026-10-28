@@ -134,7 +134,7 @@ function pickTrack(g, opts) {
 }
 
 function playCareer(seed, bot, opts) {
-  const g = new S.Game({ seed, family: opts.family });
+  const g = new S.Game({ seed, family: opts.family, parents: opts.parents });
   // opts.trait: a paired test. The life gets only that trait (or none, for null) instead of what its
   // newborn and 돌잡이 reveals would have dealt.
   if (opts.trait !== undefined) {
@@ -325,9 +325,30 @@ function traits() {
   }
 }
 
+// ---------- 4. who raises you ----------
+// The same lives (smart bot, best affordable method, first try) with each family setup at birth.
+// Divorce and bereavement can still happen later in the "both parents" lives.
+function parents() {
+  const cfg = { bot: "smart", method: "tutor", maxAttempts: 1, goal: "college" };
+  console.log("\nWho raises you (" + seeds + " lives each, smart bot, best affordable method, 1 try; same lives, setup forced at birth):");
+  console.log("setup     start | 1st std | in-Seoul+");
+  for (const par of ["both", "mom", "dad", "grand"]) {
+    let start = 0, std = 0, seoul = 0;
+    for (let i = 0; i < seeds; i++) {
+      const { g, results, at12 } = playCareer(1000 + i, "smart", Object.assign({ parents: par }, cfg));
+      start += S.SUBJECTS.reduce((a, s) => a + S.skillScore(at12[s]), 0) / S.SUBJECTS.length;
+      std += results[0].total;
+      const idx = S.UNIVERSITIES.findIndex((u) => u.id === (g.ending && g.ending.uni));
+      if (idx >= 0 && idx <= 19) seoul++;
+    }
+    console.log(par.padEnd(8), (start / seeds).toFixed(0).padStart(6), "|", (std / seeds).toFixed(0).padStart(7), "|", (((100 * seoul) / seeds).toFixed(0) + "%").padStart(9));
+  }
+}
+
 const t0 = Date.now();
 calibration();
 strategies();
+parents();
 // The paired trait test is the slowest part; --no-traits skips it while tuning.
 if (args.indexOf("--no-traits") < 0) traits();
 console.log("\n(" + ((Date.now() - t0) / 1000).toFixed(1) + "s)");

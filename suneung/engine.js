@@ -315,6 +315,21 @@
   };
   const DOLJABI_IDS = Object.keys(DOLJABI);
   const TRAIT_FX = Object.assign({}, TEMPERAMENTS, DOLJABI);
+  // The best aptitude a child is dealt is at least this (see rollTalent).
+  const MIN_BEST_APT = 1.1;
+
+  // ---------- who raises you ----------
+  // Most children grow up with both parents; some are born to a single mother or father, and a few are
+  // raised by grandparents (조손가정). Rolled at birth from its own seeded stream. Later, parents can
+  // divorce or a parent can die (the divorce and bereaved events). With one parent, or grandparents,
+  // there is less money and time for your education: PARENT_BUDGET scales the education budget.
+  // The household's income fifth itself is dealt as usual, so the 20%-per-fifth shares stay exact.
+  const PARENTS_AT_BIRTH = [["both", 0.9], ["mom", 0.06], ["dad", 0.02], ["grand", 0.02]];
+  const PARENT_BUDGET = { both: 1, mom: 0.75, dad: 0.75, grand: 0.6 };
+  // ...and fewer hands at home: stress settles this much higher, motivation this much lower.
+  const PARENT_STRESS = { both: 0, mom: 4, dad: 4, grand: 3 };
+  const PARENT_MOT = { both: 0, mom: -1, dad: -1, grand: -3 };
+
   // Roughly one baby in twelve grabs two things at once.
   const DOUBLE_GRAB = 0.08;
 
@@ -560,6 +575,38 @@
     {
       id: "parentill", anyStage: true, luck: -1, weight: 0.25, when: (g) => !g.flags.parentIll,
       run: (g) => { g.flags.parentIll = 1; if (g.family !== "q1") g.shiftFamily(-1, "parentill"); bump(g, { stress: 14, motivation: -5 }); g.lostBlocks += 1; return "r"; },
+    },
+    // Divorce: about one child in eight sees their parents split before they're grown. Custody mostly
+    // goes to the mother. Losing an earner usually drops the household a fifth.
+    {
+      id: "divorce", anyStage: true, luck: -1, weight: (g) => ((g.parents || "both") === "both" && g.grade <= 12 && g.attempt === 1 ? 0.08 : 0), when: () => true,
+      run: (g) => {
+        g.parents = g.rng() < 0.75 ? "mom" : "dad";
+        g.addLog("log.parents", { now: g.parents, why: "divorce" }, "milestone");
+        g.shiftFamily(-1, "divorce");
+        g.checkFees();
+        bump(g, { stress: 14, motivation: -6 });
+        g.lostBlocks += 1;
+        return ["r", { with: g.parents }];
+      },
+    },
+    // A parent dies (rare). With one parent left you live with them; if it was your only parent, your
+    // grandparents take you in. There is some insurance money, and a long grief.
+    {
+      id: "bereaved", anyStage: true, luck: -1, weight: (g) => ((g.parents || "both") !== "grand" && g.grade <= 12 && g.attempt === 1 && !g.flags.bereaved ? 0.018 : 0), when: () => true,
+      run: (g) => {
+        g.flags.bereaved = 1;
+        const was = g.parents || "both";
+        const lost = was === "both" ? (g.rng() < 0.6 ? "dad" : "mom") : was;
+        g.parents = was === "both" ? (lost === "dad" ? "mom" : "dad") : "grand";
+        g.addLog("log.parents", { now: g.parents, why: "bereaved", lost }, "milestone");
+        if (was === "both") g.shiftFamily(-1, "bereaved");
+        g.checkFees();
+        g.money += 500000;
+        bump(g, { stress: 25, motivation: -12, health: -6 });
+        g.lostBlocks += 2;
+        return ["r", { lost, now: g.parents }];
+      },
     },
     // Your own body: an accident or a long illness costs time you can't get back.
     { id: "accident", luck: -1, weight: 0.35, when: (g) => !g.flags.accident, run: (g) => { g.flags.accident = 1; bump(g, { health: -35, stress: 10, motivation: -4 }); g.lostBlocks += 3; return "r"; } },
@@ -1100,6 +1147,8 @@
       this.age = 0;
       this.status = "early";
       this.traits = []; // temperament and 돌잡이 ids (see TEMPERAMENTS, DOLJABI); absent in old saves
+      // opts.parents exists for sim.js only, like opts.family.
+      this.parents = PARENT_BUDGET[opts.parents] ? opts.parents : Game.rollParents(seed); // "both" | "mom" | "dad" | "grand"; absent in old saves = both
       this.method = "self";
       const talent = Game.rollTalent(seed, this.family);
       this.aptitude = Object.assign({}, talent.aptitude);
@@ -1156,6 +1205,11 @@
       return FAMILY_IDS[row.length - 1];
     }
     // Starting talent: a general knack plus per-subject quirks. Aptitude multiplies study gains.
+    static rollParents(seed) {
+      let x = makeRng(hashSeed(seed, "parents"))();
+      for (const [id, p] of PARENTS_AT_BIRTH) { x -= p; if (x < 0) return id; }
+      return "both";
+    }
     static rollTalent(seed, family) {
       const r = makeRng(hashSeed(seed, "talent"));
       const general = r.normal() * 0.55;
@@ -1166,6 +1220,11 @@
         skills[s] = Math.round((general + quirk + prior - START_GAP) * 100) / 100;
         aptitude[s] = Math.round(clamp(1 + general * 0.25 + r.normal() * 0.18, 0.6, 1.5) * 100) / 100;
       }
+      // Every child is good at something: the best subject is at least a little quicker than average,
+      // so no life starts with no strength at all.
+      let best = SUBJECTS[0];
+      for (const s of SUBJECTS) if (aptitude[s] > aptitude[best]) best = s;
+      if (aptitude[best] < MIN_BEST_APT) aptitude[best] = MIN_BEST_APT;
       return { skills, aptitude };
     }
 
@@ -1203,13 +1262,16 @@
       const from = this.family;
       this.family = FAMILY_IDS[j];
       this.addLog("log.fortune", { from, to: this.family, why }, "milestone");
-      // A school the family can no longer pay for: back to the public one (or ordinary kindergarten).
+      this.checkFees();
+      return j - i;
+    }
+    // A school the family can no longer pay for: back to the public one (or ordinary kindergarten).
+    checkFees() {
       const st = this.status === "hs3" ? "high" : this.status === "early" ? "kinder" : this.status;
-      if ((this.inClass() || this.atKinder()) && this.schoolInfo().fee > FAMILIES[this.family].allowance && DEFAULT_SCHOOL[st]) {
+      if ((this.inClass() || this.atKinder()) && this.schoolInfo().fee > this.grossBudget() && DEFAULT_SCHOOL[st]) {
         this.school = DEFAULT_SCHOOL[st];
         this.addLog("log.schoolFee", { id: this.school }, "event");
       }
-      return j - i;
     }
     addTrait(id) {
       this.traits = (this.traits || []).concat(id);
@@ -1251,10 +1313,12 @@
       return ACTIVITIES.filter((a) => !a.early && (a.from || 1) <= this.grade && this.grade <= (a.to || 12));
     }
     allowance() {
-      const a = FAMILIES[this.family].allowance;
+      const a = this.grossBudget();
       // School fees come out of the same education budget while you're there.
       return Math.max(0, (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0));
     }
+    // The family's monthly education money before fees: less with one parent or grandparents.
+    grossBudget() { return Math.round(FAMILIES[this.family].allowance * PARENT_BUDGET[this.parents || "both"] / 1000) * 1000; }
 
     // ----- schools -----
     // At one of these schools right now (and still going to classes).
@@ -1270,7 +1334,7 @@
       const top = this.queue[0];
       if (!top || top.type !== "school") return [];
       const kind = this.regionInfo().kind;
-      const can = FAMILIES[this.family].allowance;
+      const can = this.grossBudget();
       return SCHOOLS.filter((x) => x.stage === top.stage).map((x) => {
         const blocked = x.where && x.where.indexOf(kind) < 0 ? "region" : x.fee > can ? "cost" : x.admit(this) <= 0 ? "admit" : null;
         return { id: x.id, fee: x.fee, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def: x.id === DEFAULT_SCHOOL[top.stage] };
@@ -1484,7 +1548,7 @@
       // Stress and health also recover on their own toward a baseline, so a steady workload settles
       // at a level instead of spiralling; heavy turns push the level up.
       const d = {
-        stress: pressure + studied * 1.6 + mock * 3 + (25 + this.trait("stressRest") - this.stress) * 0.25 + (plan.worksheet || 0) * 4,
+        stress: pressure + studied * 1.6 + mock * 3 + (25 + this.trait("stressRest") + PARENT_STRESS[this.parents || "both"] - this.stress) * 0.25 + (plan.worksheet || 0) * 4,
         health: -1 - studied * 0.6 + (72 + this.trait("healthRest") - this.health) * 0.15,
         motivation: 0,
       };
@@ -1508,7 +1572,7 @@
       // without time for friends.
       if (drop && !plan.friends) d.stress += DROPOUT_LONELY;
       // Motivation drifts back toward a baseline that sags with every extra year.
-      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) + this.trait("mot") - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
+      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) + this.trait("mot") + PARENT_MOT[this.parents || "both"] - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
       // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
       // softens the toll on your body.

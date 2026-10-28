@@ -68,6 +68,7 @@
         money: "₩300,000 now; New Year's money ×1.5",
         brush: "Arts lessons count double for an arts-school audition; stress settles 2 lower",
       },
+      parents: { both: "Both parents", mom: "Single mom", dad: "Single dad", grand: "Raised by grandparents" },
       school: {
         kinder: "Daycare and kindergarten", homeCare: "At home with family", forest: "Forest kindergarten", engKinder: "English kindergarten",
         pubElem: "Public elementary school", privElem: "Private elementary school",
@@ -169,6 +170,7 @@
         money: "지금 30만원, 세뱃돈 ×1.5",
         brush: "예체능 학원이 예고 실기에 두 배로 반영, 스트레스가 2 낮게 유지",
       },
+      parents: { both: "부모님과 함께", mom: "한부모(엄마)", dad: "한부모(아빠)", grand: "조부모 가정" },
       school: {
         kinder: "어린이집·유치원", homeCare: "가정 보육", forest: "숲유치원", engKinder: "영어유치원",
         pubElem: "공립 초등학교", privElem: "사립 초등학교",
@@ -393,7 +395,7 @@
       "traits.title": "Traits",
       "traits.none": "None yet",
       "log.birthday": "March {y}: you turn {a}.",
-      "ev.newborn.text": "Your first weeks at home. Your parents watch you sleep, eat and cry, and start to notice what kind of baby you are.",
+      "ev.newborn.text": "Your first weeks at home. Your parents watch you sleep, eat and cry. Little by little, they notice what kind of baby you are.",
       "ev.newborn.c": ["See what they notice"],
       "ev.newborn.r.sturdy": "A big, sturdy baby who hardly ever gets sick. (Sturdy: health settles higher, half as many colds.)",
       "ev.newborn.r.calm": "The easiest baby on the block: you rarely fuss. (Easygoing: stress settles lower.)",
@@ -499,6 +501,18 @@
       "map.closed": "Can't move here",
       "move.pick": "Tap a place on the map to see what moving there would change.",
       "move.list": "All places as a list",
+      "birth.parents": (p) => ({
+        mom: "Your father isn't in the picture: your mom is raising you on her own.",
+        dad: "Your mother isn't around: your dad is raising you on his own.",
+        grand: "Your mother and father can't look after you, so your grandparents take you in.",
+      })[p.par] || "",
+      "ev.divorce.r": (p) => "Your parents divorce. You'll live with your " + (p.with === "mom" ? "mom" : "dad") + ". Two homes now, and one of them is very quiet.",
+      "ev.bereaved.r": (p) => "Your " + (p.lost === "mom" ? "mom" : "dad") + " dies suddenly. The funeral is a blur of white chrysanthemums and relatives you barely know. " +
+        (p.now === "grand" ? "Your grandparents take you in." : "It's just you and your " + (p.now === "mom" ? "mom" : "dad") + " now."),
+      "log.parents": (p) => p.why === "divorce" ? "Your parents divorce; you live with your " + (p.with || p.now === "mom" ? (p.now === "mom" ? "mom" : "dad") : "dad") + "." :
+        "Your " + (p.lost === "mom" ? "mom" : "dad") + " dies." + (p.now === "grand" ? " You move in with your grandparents." : ""),
+      "stat.parents": (p, h) => h.parents(p.par),
+      "ability.earlyNote": "Babies start near 0: 50 is the average Suneung test taker, and everyone climbs from the bottom. The stars are what you were born with.",
       "move.noQuota": "Out of school, you can't use the local quotas anywhere.",
       "quit.btn": "Leave school",
       "quit.title": "Leave school?",
@@ -591,7 +605,7 @@
       "ev.star.r0": "Half of it is jokes, but the other half genuinely changes how you see 4-point questions.",
       "ev.star.r1": "You watch the free preview three times instead.",
       "ev.star.r0x": "By the time you go to sign up, your savings have already gone elsewhere. You watch the free preview instead.",
-      "ev.nag.text": "Your mother finds your phone screen time: 6 hours a day. \"Her friend's son studies 14 hours!\"",
+      "ev.nag.text": "Your mother finds your phone screen time: 6 hours a day. \"My friend's son studies 14 hours!\"",
       "ev.nag.c": ["Apologize and lock the phone in a timer box", "Argue back"],
       "ev.nag.r0": "The box clicks shut. You feel lighter, and also like a prisoner.",
       "ev.nag.r1": "Doors slam. Dinner is silent for three days.",
@@ -735,7 +749,7 @@
       "birth.text": (p, h) => p.name + " is born" + (p.sex ? ", a baby " + (p.sex === "f" ? "girl" : "boy") + "," : "") + " into a " + h.familyAdj(p.fam) + " family" + (p.reg ? " in " + h.region(p.reg) : "") + ". Household income is about " + h.wonShort(p.inc * 10000) +
         " a month, in " + h.fifth(p.fam) + " of Korean households, and your parents can spend about " + h.won(p.a) + " a month on your education.",
       "birth.talent": "Your talents",
-      "birth.note": "Stars show aptitude: how fast you learn a subject. Ability is measured on the Suneung scale, where 50 is the average test taker, so every child starts low and climbs. What you learn stays learned.",
+      "birth.note": "Bars show aptitude: how fast you'll learn each subject (×1.00 is average, more is faster). Ability itself is on the Suneung scale, where 50 is the average test taker, so every baby starts near 0 and climbs. What you learn stays learned.",
       "birth.go": "Start life →",
       "track.title": "Choose your track",
       "track.text": "High 1 is ending. Choose humanities or sciences for High 2 and 3, and your two inquiry subjects. Your social-studies ability carries over into humanities subjects, your science ability into science subjects.",
@@ -1108,6 +1122,18 @@
       "map.closed": "이사 불가",
       "move.pick": "지도에서 지역을 누르면 그곳으로 이사했을 때 무엇이 달라지는지 볼 수 있습니다.",
       "move.list": "목록으로 보기",
+      "birth.parents": (p) => ({
+        mom: "아빠는 곁에 없다. 엄마 혼자 너를 키운다.",
+        dad: "엄마는 곁에 없다. 아빠 혼자 너를 키운다.",
+        grand: "엄마 아빠가 키울 형편이 안 되어 할머니 할아버지가 너를 맡아 키운다.",
+      })[p.par] || "",
+      "ev.divorce.r": (p) => "부모님이 이혼하셨다. 앞으로 " + (p.with === "mom" ? "엄마" : "아빠") + "와 산다. 집이 두 곳이 되었고, 그중 한 곳은 아주 조용하다.",
+      "ev.bereaved.r": (p) => (p.lost === "mom" ? "엄마" : "아빠") + "가 갑자기 돌아가셨다. 하얀 국화와 처음 보는 친척들 사이에서 장례식이 흐릿하게 지나갔다. " +
+        (p.now === "grand" ? "할머니 할아버지 댁에서 살게 되었다." : "이제 " + (p.now === "mom" ? "엄마" : "아빠") + "와 둘이다."),
+      "log.parents": (p) => p.why === "divorce" ? "부모님이 이혼하셨다. " + (p.now === "mom" ? "엄마" : "아빠") + "와 살게 되었다." :
+        (p.lost === "mom" ? "엄마" : "아빠") + "가 돌아가셨다." + (p.now === "grand" ? " 할머니 할아버지 댁으로 들어갔다." : ""),
+      "stat.parents": (p, h) => h.parents(p.par),
+      "ability.earlyNote": "아기는 0 근처에서 시작합니다. 50이 수능 응시자 평균이고, 누구나 바닥부터 올라갑니다. 별은 타고난 적성입니다.",
       "move.noQuota": "자퇴했으므로 어느 지역에서도 지역 전형을 받을 수 없습니다.",
       "quit.btn": "자퇴하기",
       "quit.title": "학교를 그만둘까요?",
@@ -1340,7 +1366,7 @@
       "birth.text": (p, h) => p.name + "은(는) " + (p.reg ? h.region(p.reg) + "의 " : "") + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
         "으로 한국 가구 중 " + h.fifth(p.fam) + "에 속하고, 부모님은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
       "birth.talent": "타고난 재능",
-      "birth.note": "별은 적성, 즉 그 과목을 얼마나 빨리 익히는지를 뜻합니다. 실력은 수능 기준이라 50이 수능 응시자 평균입니다. 그래서 모든 아이는 낮은 곳에서 출발해 올라갑니다. 한 번 익힌 실력은 줄어들지 않습니다.",
+      "birth.note": "막대는 적성, 즉 각 과목을 얼마나 빨리 익힐지를 뜻합니다(×1.00이 보통, 클수록 빠름). 실력은 수능 기준이라 50이 수능 응시자 평균이고, 그래서 모든 아기는 0 근처에서 출발해 올라갑니다. 한 번 익힌 실력은 줄어들지 않습니다.",
       "birth.go": "인생 시작 →",
       "track.title": "계열 선택",
       "track.text": "고1이 끝나 갑니다. 고2·고3을 문과로 갈지 이과로 갈지, 그리고 탐구 두 과목을 고르세요. 사회 실력은 사회탐구로, 과학 실력은 과학탐구로 이어집니다.",
@@ -1476,6 +1502,40 @@
 
   // ---------- translator ----------
   // ctx() returns { inq: [id, id], track } for the game being shown, so subject names follow it.
+  // Who raises you changes the words: with one parent or grandparents, "your parents" becomes "your
+  // mom" (with a singular verb in English: "your mom takes it hard"), and a mom or dad who isn't there
+  // is replaced by the one who is. Korean particles follow the new word (부모님이 → 엄마가).
+  // Messages about the change itself (FAMILY_KEYS) are written for it and left alone.
+  const FAMILY_KEYS = /^(birth\.parents|ev\.divorce|ev\.bereaved|log\.parents|parents\.)/;
+  const SING = { are: "is", were: "was", have: "has", do: "does", "don't": "doesn't", "aren't": "isn't", "weren't": "wasn't" };
+  const KEEP = new Set(["can", "can't", "will", "won't", "would", "could", "should", "must", "may", "might", "both", "all", "for", "and", "at", "in", "on", "with", "to", "of", "who", "too"]);
+  function singular(w) {
+    if (SING[w]) return SING[w];
+    if (KEEP.has(w) || !/^[a-z]+$/.test(w) || /(ing|ed)$/.test(w)) return w;
+    if (/(s|sh|ch|x|z|o)$/.test(w)) return w + "es";
+    if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + "ies";
+    return w + "s";
+  }
+  function familyWords(s, par, en) {
+    if (!par || par === "both") return s;
+    if (Array.isArray(s)) return s.map((x) => familyWords(x, par, en));
+    if (typeof s !== "string") return s;
+    if (en) {
+      const who = { mom: "mom", dad: "dad", grand: "grandparents" }[par];
+      s = s.replace(/\b([Yy])our parents'/g, (m, y) => y + "our " + (par === "grand" ? "grandparents'" : who + "'s"));
+      s = s.replace(/\b([Yy])our parents ((?:still|never|always|also|just|often) )?([a-z']+)/g, (m, y, adv, w) => y + "our " + who + " " + (adv || "") + (par === "grand" ? w : singular(w)));
+      s = s.replace(/\b([Yy])our parents\b/g, (m, y) => y + "our " + who);
+      if (par !== "mom") s = s.replace(/\b([Yy])our (mom|mother)\b/g, (m, y) => y + "our " + (par === "dad" ? "dad" : "grandma"));
+      if (par !== "dad") s = s.replace(/\b([Yy])our (dad|father)\b/g, (m, y) => y + "our " + (par === "mom" ? "mom" : "grandpa"));
+    } else {
+      const who = { mom: "엄마", dad: "아빠", grand: "할머니" }[par];
+      s = s.replace(/부모님(이|은|을|과)?/g, (m, j) => who + (j ? { 이: "가", 은: "는", 을: "를", 과: "와" }[j] : ""));
+      if (par !== "mom") s = s.replace(/(^|[^"“])엄마/g, (m, pre) => pre + (par === "dad" ? "아빠" : "할머니"));
+      if (par !== "dad") s = s.replace(/(^|[^"“])아빠/g, (m, pre) => pre + (par === "mom" ? "엄마" : "할아버지"));
+    }
+    return s;
+  }
+
   function make(lang, ctx) {
     lang = MSG[lang] ? lang : "en";
     const D = DATA[lang];
@@ -1486,9 +1546,12 @@
       t(key, p) {
         const v = M[key];
         if (v == null) return key;
-        if (typeof v === "function") return v(p || {}, h);
-        if (typeof v !== "string") return v;
-        return v.replace(/\{(\w+)\}/g, (_, k) => (p && p[k] != null ? p[k] : ""));
+        let out;
+        if (typeof v === "function") out = v(p || {}, h);
+        else if (typeof v !== "string") out = v;
+        else out = v.replace(/\{(\w+)\}/g, (_, k) => (p && p[k] != null ? p[k] : ""));
+        const c = ctx && ctx();
+        return c && c.parents && !FAMILY_KEYS.test(key) ? familyWords(out, c.parents, en) : out;
       },
       sub(s) {
         if (s === "inq1" || s === "inq2") {
@@ -1530,6 +1593,7 @@
         return "year " + n + " of " + st + " school";
       },
       school: (id) => D.school[id] || id,
+      parents: (id) => D.parents[id || "both"],
       trait: (id) => D.trait[id] || id,
       traitFx: (id) => D.traitFx[id] || "",
       actEarly: (id) => D.actEarly[id],

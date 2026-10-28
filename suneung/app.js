@@ -83,7 +83,7 @@
 
   // ---------- language ----------
   // Subject names follow the game being shown: before the track choice there is none.
-  function ctx() { return game ? { inq: game.inq, track: game.track } : { inq: null, track: null }; }
+  function ctx() { return game ? { inq: game.inq, track: game.track, parents: game.parents || "both" } : { inq: null, track: null, parents: "both" }; }
   let lang = store.get(LANG_KEY);
   if (lang !== "en" && lang !== "ko") lang = /^ko\b/i.test(navigator.language || "") ? "ko" : "en";
   let L = window.SuneungText.make(lang, ctx);
@@ -233,6 +233,7 @@
       mood: Art.moodOf(g),
       family: g.family,
       view: g.regionInfo().view || "city",
+      parents: g.parents || "both",
     }, extra || {});
   }
   let sceneKey = "";
@@ -273,7 +274,7 @@
     let meter = "";
     for (let i = 1; i <= 5; i++) meter += '<i class="' + (i <= n ? "on" : "") + '"></i>';
     els.sFam.innerHTML = esc(L.family(g.family)) + ' <span class="fam-meter" aria-hidden="true">' + meter + "</span>";
-    els.sFamSub.textContent = diff ? T("stat.familyMoved", { up: diff > 0, from: born, fam: g.family }) : T("stat.familySub", { fam: g.family });
+    els.sFamSub.textContent = (diff ? T("stat.familyMoved", { up: diff > 0, from: born, fam: g.family }) : T("stat.familySub", { fam: g.family })) + " · " + T("stat.parents", { par: g.parents || "both" });
     els.sFamCard.classList.toggle("fam-up", diff > 0);
     els.sFamCard.classList.toggle("fam-down", diff < 0);
     const key = g.seed + ":" + g.family;
@@ -333,7 +334,7 @@
       const over = 50 + g.skills[s] * 16.67 >= 100.5;
       const tip = T("ability.tip", { a: g.aptitude[s] }) + " · " + aptTime(g.aptitude[s]) + (over ? " · " + T("ability.over") : "");
       return bar(L.sub(s), S.skillScore(g.skills[s]), "var(" + subColor[s] + ")", delta, tip, actIcon(s), from, over ? "100+" : null, over, aptBadge(g.aptitude[s]));
-    }).join("") + '<p class="apt-note">' + esc(T("ability.aptNote")) + "</p>";
+    }).join("") + '<p class="apt-note">' + esc(T(g.isEarly() ? "ability.earlyNote" : "ability.aptNote")) + "</p>";
     const lvl = (v, goodHigh) => {
       const x = goodHigh ? v : 100 - v;
       return x >= 60 ? "var(--pos)" : x >= 35 ? "var(--warn)" : "var(--neg)";
@@ -819,13 +820,15 @@
     closeModal();
   }
 
+  // At birth, ability is near 0 everywhere (it's on the Suneung scale), so the talents a baby shows
+  // are its aptitudes: how fast each subject will come. The bar runs from the slowest aptitude a child
+  // can be dealt (×0.6) to the fastest (×1.7), and the number is the multiplier itself.
   function talentBars(g) {
     return '<div class="talent">' + SUBJECTS.map((s) => {
-      const v = S.skillScore(g.skills[s]);
       const apt = g.aptitude[s];
-      const stars = aptStars(apt);
-      return '<div class="bar"><span class="name"><span class="bi" aria-hidden="true">' + actIcon(s) + "</span>" + esc(L.sub(s)) + '</span><span class="track"><span class="fill" style="width:' + v +
-        "%;background:var(" + subColor[s] + ')"></span></span><span class="val">' + v + '</span><span class="apt" title="' + esc(T("setup.apt")) + '">' + stars + "</span></div>";
+      const w = Math.round(Math.max(4, Math.min(100, ((apt - 0.6) / 1.1) * 100)));
+      return '<div class="bar"><span class="name"><span class="bi" aria-hidden="true">' + actIcon(s) + "</span>" + esc(L.sub(s)) + '</span><span class="track"><span class="fill" style="width:' + w +
+        "%;background:var(" + subColor[s] + ')"></span></span><span class="val" title="' + esc(aptTime(apt)) + '">×' + apt.toFixed(2) + "</span>" + aptBadge(apt) + "</div>";
     }).join("") + "</div>";
   }
   function bornStates(g) {
@@ -836,7 +839,8 @@
   function showBirth() {
     const g = game;
     openModal(T("birth.title"),
-      "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region })) + "</p>" +
+      "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region }) +
+        ((g.parents || "both") !== "both" ? " " + T("birth.parents", { par: g.parents }) : "")) + "</p>" +
       // Where on the peninsula the family starts.
       "<h3>" + esc(T("map.born")) + '</h3><div class="map-wrap">' + Art.koreaMap({ states: bornStates(g), static: true, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) }) + "</div>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",

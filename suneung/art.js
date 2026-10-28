@@ -790,6 +790,9 @@
     spark: { bg: "room", fx: "bulb", mood: "happy", icon: "✨" },
     bloom: { bg: "room", fx: "sparkles", mood: "ok", icon: "🌱", res: { up: { mood: "happy" }, down: { mood: "tired" } } },
     examluck: { bg: "class", fx: "notes", mood: "ok", icon: "🍀", res: { sniffler: { mood: "stressed" }, guess: { mood: "happy" }, drilled: { mood: "happy", pose: "cheer" }, omr: { mood: "stressed" }, calm: { mood: "happy" } } },
+    // Family: a divorce, and losing a parent.
+    divorce: { bg: "kitchen", fx: "raincloud", mood: "stressed", x: 200, icon: "💔" },
+    bereaved: { bg: "room", night: true, fx: "candle", mood: "tired", icon: "🕯️" },
     // Early childhood. The two trait reveals, then the early-years events.
     newborn: { bg: "nursery", fx: "mobile", mood: "happy", x: 200, icon: "👶" },
     doljabi: { bg: "nursery", fx: "doljabi", mood: "happy", pose: "cheer", x: 200, icon: "🎂" },
@@ -920,8 +923,16 @@
   // A one-shot effect (c-pop, c-fade, c-out, c-stamp, c-ring, c-grow, c-flash, c-thud) at `at` seconds.
   const fx = (cls, at, body) => '<g class="' + cls + '" style="--at:' + at + 's">' + body + "</g>";
   // Family and classmates. Parents share your skin tone; everyone else gets a seeded look.
-  const mom = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, skin: ctx.look.skin, shirt: 0, sex: "f" }, mood: "happy" }, extra || {})), s || 1);
-  const dad = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 1, skin: ctx.look.skin, shirt: 2, sex: "m" }, mood: "happy" }, extra || {})), s || 1);
+  // Parents who aren't in this life aren't drawn; children raised by grandparents get a grandmother
+  // (grey hair) where the mother would stand.
+  const hasMom = (ctx) => !ctx.parents || ctx.parents === "both" || ctx.parents === "mom";
+  const hasDad = (ctx) => !ctx.parents || ctx.parents === "both" || ctx.parents === "dad";
+  const grandma = (x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, sex: "f" }, mood: "happy" }, extra || {})) +
+    P("M-18 -128 Q0 -142 18 -128 Q8 -138 0 -138 Q-8 -138 -18 -128 Z", "gray"), s || 1);
+  const mom = (ctx, x, y, s, extra) => (hasMom(ctx) ? momFig(ctx, x, y, s, extra) : ctx.parents === "grand" ? grandma(x, y, s, extra) : "");
+  const dad = (ctx, x, y, s, extra) => (hasDad(ctx) ? dadFig(ctx, x, y, s, extra) : "");
+  const momFig = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, skin: ctx.look.skin, shirt: 0, sex: "f" }, mood: "happy" }, extra || {})), s || 1);
+  const dadFig = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 1, skin: ctx.look.skin, shirt: 2, sex: "m" }, mood: "happy" }, extra || {})), s || 1);
   const me = (ctx, stage, x, y, s, extra) => person(Object.assign({}, ctx, { stage }), x, y, s, extra);
   function other(seed, x, y, s, o) {
     return G(x, y, avatar(Object.assign({ age: "teen", outfit: "uniform", look: lookFor(seed, seed % 2 ? "m" : "f"), mood: "happy" }, o || {})), s || 1);

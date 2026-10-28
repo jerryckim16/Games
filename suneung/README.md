@@ -14,7 +14,7 @@ School years are counted the Korean way, with each school numbering its own year
 
 1. **Be born.** Choose boy or girl and type a name. Your family and your talents are dealt at random; you can't pick or re-roll them.
    - The birth screen shows where you're born, with a pin on a map of the peninsula, your family's household income, which fifth of Korean households it's in, and what your parents can spend on your education each month.
-   - Stars show aptitude, which is how fast you learn each subject. They stay on screen all game (see Aptitude below).
+   - The talent bars show aptitude, which is how fast you learn each subject (×1.00 is average), with stars. Every child is quicker than average at something: the best subject's aptitude is at least ×1.10. Ability itself starts near 0 for every baby, since it's on the 수능 scale. The stars stay on screen all game (see Aptitude below).
    - Then your first weeks reveal your **temperament**, and at your first birthday the **돌잡이** shows what you grab. Both give you a trait: a permanent bonus (see Traits below).
    - A fortune-teller's reading (사주) tells you how lucky a life you've been dealt. Luck runs through everything from here on (see Luck below).
    - Ages 0–5 are played a year at a time, with play instead of study, and a kindergarten choice at 3.
@@ -54,6 +54,12 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 ## Features
 
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
+- **Who raises you.** Most children are born to two parents; about 6% are born to a single mother, 2% to a single father, and 2% are raised by grandparents (조손가정). Each is rolled at birth from its own seeded stream and named on the birth screen.
+  - **Divorce:** about one child in eight sees their parents divorce before High 3 (75% stay with their mother). The household drops an income fifth, with a stress and motivation hit and a lost block.
+  - **Losing a parent:** about 3% of children lose a parent. With one left you live with them; if it was your only parent, your grandparents take you in. Some insurance money, a long grief (stress +25, motivation −12) and two lost blocks.
+  - **Everyday effects:** with one parent the education budget is ×0.75 (grandparents ×0.6), stress settles 4 higher (3 with grandparents) and motivation 1 lower (3 with grandparents). The household's income fifth is still dealt as usual.
+  - **The words follow:** with one parent or grandparents, every "your parents" in the game becomes "your mom", "your dad" or "your grandparents" (verbs and Korean particles adjusted), a missing parent is replaced by the one who's there, and cutscenes draw only the parents in your life (a grandmother when grandparents raise you).
+  - The Family strip shows the setup next to the income class.
 - **Your family's wealth class, always on screen.** A Family strip under the stats shows the household's current income class (low, lower-middle, middle, upper-middle or high income) with a five-step meter for its income fifth. Once family-fortune events have moved it, it says how far from birth (green "↑ Up from middle income at birth", red "↓ Down…"), and the strip flashes when the class changes.
 - **A map of Korea.** An interactive map of the peninsula, drawn in code (South Korea with Jeju, Ulleungdo and Dokdo, the North faded above a dashed DMZ), with every place at its real longitude and latitude and Seoul's six areas in a magnified inset.
   - **Birth:** a pulsing pin shows where your family starts.
@@ -397,19 +403,19 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 61 | 2.7 · 2.2 · 1.9 | 365 | 365 | 1.00 | 0% | 0% | 44% |
-| slacker (half games & friends), 1 try | 56 | 3.3 · 2.7 · 5.1 | 349 | 349 | 1.00 | 0% | 0% | 13% |
-| grinder (no rest), self-study, 1 try | 66 | 2.9 · 2.5 · 2.2 | 370 | 370 | 1.00 | 1% | 0% | 50% |
-| smart, online lectures, 1 try | 66 | 2.3 · 2.0 · 2.0 | 381 | 381 | 1.00 | 3% | 0% | 69% |
-| smart, best affordable method, 1 try | 68 | 2.0 · 1.9 · 2.0 | 385 | 385 | 1.00 | 11% | 1% | 75% |
-| smart, best affordable, retakes up to 3 tries | 68 | 2.0 · 1.9 · 2.0 | 385 | 411 | 2.49 | 75% | 25% | 100% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.1 · 1.9 · 1.9 | 385 | 419 | 3.60 | 91% | 83% | 99% |
-| smart, best affordable, tries for selective schools, 1 try | 68 | 2.1 · 1.8 · 1.8 | 385 | 385 | 1.00 | 11% | 3% | 81% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.1 · 1.9 · 1.9 | 383 | 419 | 3.56 | 93% | 84% | 99% |
-| balanced, self-study, vocational high school, 1 try | 59 | 2.9 · 2.4 · 2.1 | 354 | 354 | 1.00 | 0% | 0% | 23% |
-| balanced, self-study, leaves school at High 1, 1 try | 61 | 3.0 · 2.6 · 2.3 | 360 | 360 | 1.00 | 0% | 0% | 30% |
-| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.0 · 1.9 · 2.1 | 385 | 385 | 1.00 | 9% | 0% | 73% |
-| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.0 · 2.3 | 378 | 378 | 1.00 | 3% | 1% | 53% |
+| balanced, self-study, 1 try | 62 | 2.7 · 2.2 · 2.0 | 367 | 367 | 1.00 | 0% | 0% | 45% |
+| slacker (half games & friends), 1 try | 56 | 3.2 · 2.6 · 5.2 | 349 | 349 | 1.00 | 0% | 0% | 10% |
+| grinder (no rest), self-study, 1 try | 66 | 3.0 · 2.2 · 2.4 | 372 | 372 | 1.00 | 3% | 0% | 55% |
+| smart, online lectures, 1 try | 66 | 2.3 · 2.2 · 2.1 | 378 | 378 | 1.00 | 5% | 0% | 68% |
+| smart, best affordable method, 1 try | 68 | 2.0 · 1.8 · 1.8 | 386 | 386 | 1.00 | 8% | 1% | 83% |
+| smart, best affordable, retakes up to 3 tries | 68 | 2.0 · 1.8 · 1.8 | 386 | 410 | 2.58 | 73% | 28% | 98% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.0 · 1.8 · 1.9 | 385 | 419 | 3.31 | 95% | 90% | 100% |
+| smart, best affordable, tries for selective schools, 1 try | 68 | 2.0 · 1.9 · 2.0 | 386 | 386 | 1.00 | 10% | 1% | 78% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.8 · 1.9 | 385 | 419 | 3.26 | 94% | 89% | 99% |
+| balanced, self-study, vocational high school, 1 try | 59 | 2.9 · 2.4 · 2.2 | 355 | 355 | 1.00 | 0% | 0% | 21% |
+| balanced, self-study, leaves school at High 1, 1 try | 61 | 2.9 · 2.5 · 2.2 | 361 | 361 | 1.00 | 0% | 0% | 29% |
+| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.1 · 2.0 · 2.1 | 384 | 384 | 1.00 | 10% | 0% | 74% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.1 · 2.3 | 378 | 378 | 1.00 | 3% | 0% | 59% |
 
 How much luck spreads lives that follow the same strategy, before (v4.1) and after the luck changes (v4.2). "Skill r²" is how much of the spread in first totals is explained by ability entering High 3; the rest is luck (the exam day, the paper, an accident in High 3, a family that can suddenly afford tutors, or can't):
 
@@ -422,44 +428,53 @@ The smart bot with the best affordable method, first try only, by the family it 
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 16 | 67 | 385 | 13% | 81% |
-| Lower-middle income | 23 | 67 | 386 | 9% | 74% |
-| Middle income | 12 | 70 | 391 | 17% | 67% |
-| Upper-middle income | 20 | 69 | 379 | 5% | 75% |
-| High income | 9 | 70 | 389 | 22% | 78% |
+| Low income | 15 | 66 | 383 | 0% | 80% |
+| Lower-middle income | 21 | 68 | 388 | 0% | 90% |
+| Middle income | 17 | 68 | 379 | 12% | 71% |
+| Upper-middle income | 14 | 69 | 387 | 7% | 93% |
+| High income | 13 | 72 | 392 | 23% | 77% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 10 | 70 | 391 | 20% | 80% | 90% |
-| Seoul academy district | 7 | 69 | 387 | 0% | 86% | 86% |
-| Seoul | 5 | 71 | 398 | 20% | 80% | 100% |
-| Capital-region city | 23 | 67 | 383 | 9% | 78% | 74% |
-| Big city | 13 | 70 | 382 | 8% | 77% | 92% |
-| Mid-sized city | 13 | 68 | 386 | 8% | 62% | 69% |
-| Rural county | 9 | 65 | 377 | 22% | 67% | 89% |
+| Gangnam | 10 | 68 | 392 | 10% | 90% | 90% |
+| Seoul academy district | 6 | 71 | 385 | 0% | 83% | 100% |
+| Seoul | 5 | 71 | 394 | 20% | 80% | 100% |
+| Capital-region city | 23 | 67 | 383 | 0% | 74% | 78% |
+| Big city | 14 | 71 | 388 | 14% | 93% | 100% |
+| Mid-sized city | 13 | 68 | 386 | 15% | 77% | 100% |
+| Rural county | 9 | 66 | 378 | 0% | 89% | 78% |
 
-What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 73% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
+What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 71% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.7 | +2.4 | 75% |
-| Easygoing (순한 아기) | +0.0 | -0.3 | 69% |
-| Curious (호기심 많은 아기) | +0.5 | +1.0 | 70% |
-| Good sleeper (잘 자는 아기) | -0.0 | +0.3 | 70% |
-| Unflappable (겁 없는 아기) | +0.0 | +0.9 | 71% |
-| All smiles (잘 웃는 아기) | -0.1 | +0.2 | 74% |
-| Pencil (연필) | +1.8 | +5.4 | 80% |
-| Book (책) | +1.0 | +3.1 | 76% |
-| Computer mouse (마우스) | +1.2 | +4.0 | 73% |
-| Stethoscope (청진기) | +1.0 | +5.0 | 81% |
-| Microphone (마이크) | +0.9 | +3.3 | 74% |
-| Judge's gavel (판사봉) | +1.1 | +2.5 | 75% |
-| Ball (공) | +0.3 | +2.3 | 75% |
-| Thread (실) | +0.7 | +1.5 | 76% |
-| Money (돈) | +0.2 | +0.9 | 75% |
-| Paintbrush (붓) | +0.0 | +2.1 | 81% |
+| Sturdy (튼튼한 아기) | +0.2 | +0.9 | 71% |
+| Easygoing (순한 아기) | +0.0 | +0.3 | 78% |
+| Curious (호기심 많은 아기) | +0.5 | +1.7 | 76% |
+| Good sleeper (잘 자는 아기) | -0.0 | +0.6 | 76% |
+| Unflappable (겁 없는 아기) | +0.0 | +1.5 | 78% |
+| All smiles (잘 웃는 아기) | -0.1 | -0.3 | 66% |
+| Pencil (연필) | +1.6 | +2.2 | 70% |
+| Book (책) | +1.0 | +0.6 | 73% |
+| Computer mouse (마우스) | +1.2 | +2.9 | 76% |
+| Stethoscope (청진기) | +0.8 | +2.3 | 71% |
+| Microphone (마이크) | +0.9 | +0.5 | 69% |
+| Judge's gavel (판사봉) | +1.0 | +1.6 | 78% |
+| Ball (공) | +0.2 | -0.9 | 71% |
+| Thread (실) | +0.3 | -0.9 | 76% |
+| Money (돈) | +0.1 | +1.2 | 74% |
+| Paintbrush (붓) | -0.0 | +0.7 | 78% |
+
+Who raises you, on the same 80 lives (smart bot, best affordable method, first try) with the family setup forced at birth. Lives that start with both parents can still lose one later:
+
+| Setup at birth | Start | First total | In-Seoul+ |
+|---|---|---|---|
+| Both parents | 68 | 385 | 81% |
+| Single mom | 67 | 383 | 69% |
+| Single dad | 67 | 383 | 69% |
+| Grandparents | 67 | 382 | 78% |
 
 What the tables show:
 
@@ -484,6 +499,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v4.7:** who raises you, and a fix for babies that looked talentless. About one child in ten is born to a single parent or raised by grandparents, about one in eight sees a divorce and about 3% lose a parent, with a smaller education budget, more stress and changed wording and cutscenes. The birth screen's talent bars now show aptitude (how fast each subject will come) instead of ability, which is near 0 for every newborn on the 수능 scale and made about a quarter of births look like "all zeros, no talent"; the ability panel explains this during early childhood, and every child's best aptitude is at least ×1.10. Balance tables regenerated, with a new table by family setup.
 
 - **v4.6:** the family's current wealth class is always shown: a Family strip with the income class, a five-step meter, how it has moved since birth, and a flash when it changes. Gameplay is unchanged.
 
