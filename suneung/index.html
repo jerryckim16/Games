@@ -10,6 +10,7 @@
   <header>
     <div class="top">
       <h1 data-t="app.title">Suneung Simulator</h1>
+      <button type="button" id="cutToggle" class="cut-toggle" aria-pressed="true"></button>
       <div class="seg lang" id="lang" role="group" aria-label="Language / 언어">
         <button type="button" data-v="en" lang="en">English</button>
         <button type="button" data-v="ko" lang="ko">한국어</button>
@@ -136,6 +137,15 @@
       <div id="modalBody"></div>
       <div id="modalButtons" class="buttons"></div>
     </div>
+  </div>
+
+  <!-- Cutscenes: a letterboxed film over everything, shot by shot (app.js plays them, art.js draws them). -->
+  <div id="cut" class="cut hidden" role="dialog" aria-modal="true">
+    <div class="cut-progress" id="cutProg" aria-hidden="true"></div>
+    <button type="button" id="cutSkip" class="cut-skip"></button>
+    <div class="cut-frame" id="cutFrame"></div>
+    <p class="cut-cap" id="cutCap" aria-live="polite"></p>
+    <span class="cut-hint" id="cutHint" aria-hidden="true"></span>
   </div>
 
   <script src="engine.js"></script>

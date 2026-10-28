@@ -47,6 +47,7 @@
   --a-stone: #e6dfd3; --a-stone2: #c9bba6; --a-sofa: #d26d5a; --a-sofa2: #b55543;
   --a-trackred: #e0765c; --a-road: #6d7280; --a-bully: #4b3f63; --a-storm: #7d879a; --a-cup: #f3f3f3;
   --a-omr: #ffe3e3; --a-river: #6fb0e6; --a-glass: #8fb7dc;
+  --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -98,6 +99,7 @@
     --a-stone: #6b6672; --a-stone2: #57505e; --a-sofa: #9a4b3e; --a-sofa2: #7d3a2f;
     --a-trackred: #a8513f; --a-road: #2f323c; --a-bully: #1d1828; --a-storm: #4d5568; --a-cup: #c9c9d2;
     --a-omr: #e8c8cc; --a-river: #2d5a8a; --a-glass: #3d5a80;
+    --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
     color-scheme: dark;
   }
 }
@@ -149,6 +151,7 @@
   --a-stone: #6b6672; --a-stone2: #57505e; --a-sofa: #9a4b3e; --a-sofa2: #7d3a2f;
   --a-trackred: #a8513f; --a-road: #2f323c; --a-bully: #1d1828; --a-storm: #4d5568; --a-cup: #c9c9d2;
   --a-omr: #e8c8cc; --a-river: #2d5a8a; --a-glass: #3d5a80;
+  --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
   color-scheme: dark;
 }
 
@@ -604,4 +607,63 @@ table.grid td.l { text-align: left; }
   .modal-card.pop, .periods li, .periods .rw, .reveal tbody tr, .reveal .gr, .results .result, .stamp, .exam-outro, .slot, .bubble { animation: none !important; }
   .gain, .turn, .confetti { display: none !important; }
   .bar .fill, .act, .choices button { transition: none !important; }
+}
+
+/* ---------- cutscenes ----------
+   A letterboxed film over everything (z-index above the modal). app.js swaps .cut-shot layers; each
+   new one dissolves in over the last. Inside the SVG, .cam pans and zooms over the shot (--t) and the
+   c-* groups walk, pop, ring and grow at --at seconds. Reduced motion turns it all into still frames. */
+.cut { position: fixed; inset: 0; z-index: 40; background: var(--cut-bg); color: var(--cut-text); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; animation: cut-open 0.5s ease both; }
+.cut.hidden { display: none; }
+body.cutting { overflow: hidden; }
+.cut-frame { position: relative; width: 100%; height: max(56.25vw, min(64vh, 400px)); max-height: calc(100vh - 150px); overflow: hidden; background: var(--cut-bg); }
+.cut-shot { position: absolute; inset: 0; animation: cut-shot-in 0.7s ease both; }
+.cut-shot .art { width: 100%; height: 100%; }
+.cut-cap { min-height: 3.2em; max-width: 46rem; margin: 18px 20px 0; padding: 0 16px; text-align: center; font-size: clamp(1rem, 2.6vw, 1.3rem); line-height: 1.5; font-weight: 600; letter-spacing: 0.01em; }
+.cut-cap.in { animation: cut-cap 0.6s 0.15s ease both; }
+.cut-hint { margin-top: 6px; font-size: 0.75rem; color: var(--cut-dim); }
+.cut-progress { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); left: 16px; right: 120px; display: flex; gap: 6px; }
+.cut-progress i { flex: 1; height: 3px; border-radius: 2px; background: var(--cut-bar); overflow: hidden; }
+.cut-progress i b { display: block; height: 100%; width: 0; background: var(--cut-text); }
+.cut-progress i.done b { width: 100%; }
+.cut-progress i.now b { animation: cut-prog var(--t, 3s) linear both; }
+.cut-skip { position: absolute; top: max(8px, env(safe-area-inset-top, 0px)); right: 12px; background: transparent; color: var(--cut-text); border: 1px solid var(--cut-bar); border-radius: 999px; padding: 6px 14px; font-size: 0.85rem; cursor: pointer; }
+.cut-skip:hover, .cut-skip:focus-visible { border-color: var(--cut-accent); color: var(--cut-accent); }
+.cut-toggle { flex: 0 0 auto; margin-left: auto; padding: 6px 12px; font-size: 0.82rem; }
+@keyframes cut-open { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cut-shot-in { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
+@keyframes cut-cap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes cut-prog { from { width: 0; } to { width: 100%; } }
+
+/* Positioning groups (a transform attribute, no animation class) scale from their own origin here, as
+   SVG means them to, so a figure scaled at its feet keeps its feet on the ground. */
+.cut-art g[transform]:not([class]) { transform-box: view-box; transform-origin: 0 0; }
+.cut-art .cam { transform-box: view-box; transform-origin: var(--ox, 400px) var(--oy, 260px); animation: cut-cam var(--t, 3s) cubic-bezier(0.45, 0, 0.55, 1) both; }
+.cut-art .c-walk { transform-box: view-box; animation: cut-walk var(--d, 2s) var(--at, 0s) cubic-bezier(0.35, 0, 0.45, 1) both; }
+.cut-art .c-pop { animation: cut-pop 0.7s var(--at, 0s) cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.cut-art .c-fade { animation: cut-fade 0.6s var(--at, 0s) ease both; }
+.cut-art .c-out { animation: cut-out 0.4s var(--at, 0s) ease both; }
+.cut-art .c-stamp { animation: cut-stamp 0.45s var(--at, 0s) cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+.cut-art .c-ring { animation: shake 0.16s var(--at, 0s) linear 10; }
+.cut-art .c-grow { transform-origin: center bottom; animation: cut-grow 0.9s var(--at, 0s) cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+.cut-art .c-flash { animation: cut-flash 0.6s var(--at, 0s) ease both; }
+.cut-art .c-thud { animation: cut-thud 0.4s var(--at, 0s) ease; }
+@keyframes cut-cam { from { transform: translate(var(--x0, 0px), var(--y0, 0px)) scale(var(--s0, 1)); } to { transform: translate(var(--x1, 0px), var(--y1, 0px)) scale(var(--s1, 1)); } }
+@keyframes cut-walk { from { transform: translateX(var(--wx0, 0px)); } to { transform: translateX(var(--wx1, 0px)); } }
+@keyframes cut-pop { from { opacity: 0; transform: scale(0.1); } to { opacity: 1; transform: scale(1); } }
+@keyframes cut-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cut-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes cut-stamp { from { opacity: 0; transform: scale(3) rotate(-30deg); } to { opacity: 1; transform: scale(1) rotate(-10deg); } }
+@keyframes cut-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes cut-flash { 0% { opacity: 0; } 25% { opacity: 0.85; } 100% { opacity: 0; } }
+@keyframes cut-thud { 0%, 100% { transform: none; } 30% { transform: translate(-6px, 4px); } 60% { transform: translate(5px, -3px); } }
+@media (max-width: 560px) {
+  .cut-frame { height: min(62vh, 440px); }
+  .cut-cap { margin-top: 14px; }
+}
+/* Still frames: the shots stay where they end, the caption is the story. */
+@media (prefers-reduced-motion: reduce) {
+  .cut, .cut-shot, .cut-cap.in, .cut-progress i.now b { animation: none !important; }
+  .cut-progress i.now b { width: 100%; }
+  .cut-art .c-out, .cut-art .c-flash { display: none; }
 }
