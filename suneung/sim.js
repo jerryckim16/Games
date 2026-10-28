@@ -225,6 +225,8 @@ function strategies() {
   // By region kind: the smart bot's first try, and how often the 의대 chaser gets in (local quotas).
   const byKind = {};
   for (const k of Object.keys(S.REGION_KINDS)) byKind[k] = { n: 0, start: 0, std: 0, sky: 0, seoul: 0, mn: 0, med: 0 };
+  // Every life's first 수능 total, per strategy, for the spread table.
+  const firsts = configs.map(() => []), starts = configs.map(() => []);
 
   for (let i = 0; i < seeds; i++) {
     configs.forEach((c, ci) => {
@@ -235,6 +237,8 @@ function strategies() {
       const f = results[0].subjects;
       a.kor += f.kor.grade; a.math += f.math.grade; a.eng += f.eng.grade; a.std += results[0].total;
       a.lastStd += results[results.length - 1].total;
+      firsts[ci].push(results[0].total);
+      starts[ci].push(avg);
       a.tries += g.attempt;
       const uni = g.ending && g.ending.uni;
       const idx = S.UNIVERSITIES.findIndex((u) => u.id === uni);
@@ -262,6 +266,23 @@ function strategies() {
       "|", p(a.sky), "|", p(a.med), "|", p(a.seoul)
     );
   });
+  // How far luck spreads lives that follow the same strategy: their ability entering High 3 and their
+  // first 수능 totals, from the unluckiest tenth to the luckiest.
+  const sdOf = (xs) => { const m = xs.reduce((t, x) => t + x, 0) / xs.length; return Math.sqrt(xs.reduce((t, x) => t + (x - m) * (x - m), 0) / xs.length); };
+  console.log("\nSpread (same strategy, different lives): ability entering High 3, and the first 수능 total");
+  // skill r²: how much of the spread in totals ability entering High 3 explains; the rest is luck
+  // (exam day, the paper, illness and accidents in High 3, family money for the last year's tutors).
+  console.log("strategy".padEnd(42) + "start sd |  mean |   sd |  p10 |  p90 | p90-p10 | skill r²");
+  for (const ci of [0, 4]) {
+    const xs = firsts[ci].slice().sort((x, y) => x - y);
+    const q = (f) => xs[Math.min(xs.length - 1, Math.floor(f * xs.length))];
+    const mean = xs.reduce((t, x) => t + x, 0) / xs.length;
+    const ms = starts[ci].reduce((t, x) => t + x, 0) / starts[ci].length;
+    let cov = 0;
+    for (let k = 0; k < firsts[ci].length; k++) cov += (firsts[ci][k] - mean) * (starts[ci][k] - ms);
+    const r = cov / firsts[ci].length / (sdOf(firsts[ci]) * sdOf(starts[ci]));
+    console.log(configs[ci].label.padEnd(42), sdOf(starts[ci]).toFixed(1).padStart(8), "|", mean.toFixed(0).padStart(5), "|", sdOf(xs).toFixed(1).padStart(4), "|", String(q(0.1)).padStart(4), "|", String(q(0.9)).padStart(4), "|", String(q(0.9) - q(0.1)).padStart(7), "|", (r * r).toFixed(2).padStart(8));
+  }
   console.log("\nBy family (smart bot, best affordable method, 1 try):");
   console.log("family   lives | start | 1st std | SKY+  | in-Seoul+");
   for (const f of S.FAMILY_IDS) {
@@ -307,5 +328,6 @@ function traits() {
 const t0 = Date.now();
 calibration();
 strategies();
-traits();
+// The paired trait test is the slowest part; --no-traits skips it while tuning.
+if (args.indexOf("--no-traits") < 0) traits();
 console.log("\n(" + ((Date.now() - t0) / 1000).toFixed(1) + "s)");

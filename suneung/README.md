@@ -16,6 +16,7 @@ School years are counted the Korean way, with each school numbering its own year
    - The birth screen shows where you're born, your family's household income, which fifth of Korean households it's in, and what your parents can spend on your education each month.
    - Stars show aptitude, which is how fast you learn each subject. They stay on screen all game (see Aptitude below).
    - Then your first weeks reveal your **temperament**, and at your first birthday the **돌잡이** shows what you grab. Both give you a trait: a permanent bonus (see Traits below).
+   - A fortune-teller's reading (사주) tells you how lucky a life you've been dealt. Luck runs through everything from here on (see Luck below).
    - Ages 0–5 are played a year at a time, with play instead of study, and a kindergarten choice at 3.
 2. **Pick a school** at 3 (kindergarten) and at the start of elementary, middle and high school. The local public school is always open; private and special schools have fees, lotteries or entry requirements (see Schools below).
 3. **Grow up.** Each turn you assign blocks of free time. You can also **move house** to another region (once a year) with the Move house button:
@@ -40,9 +41,9 @@ School years are counted the Korean way, with each school numbering its own year
 6. **Choose a track** at the end of High 1: humanities (확률과 통계 + two social-studies subjects) or sciences (미적분 + two science subjects; the only track that can apply to medical school). Your social-studies ability carries into the humanities subjects, your science ability into the science ones.
 7. **Sit the exams.**
    - High 3 has mock exams in March, June and September, with full score reports.
-   - In November you make two last choices: how you spend the night before, and what's in your 수능 lunch box. Then you sit the 수능 period by period.
+   - In November you make two last choices: how you spend the night before, and what's in your 수능 lunch box. The day itself may deal you some luck, good or bad. Then you sit the 수능 period by period.
    - The score report comes in December.
-8. **Apply and decide.** Apply to up to three universities (정시, one per 가·나·다 group). Then:
+8. **Apply and decide.** Apply to up to three universities (정시, one per 가·나·다 group). The real cuts only show when the results come out, and a rejection can still turn into a February waitlist call. Then:
    - enroll;
    - enroll but secretly retake (반수);
    - retake at a 재수종합학원 or by self-study (독학재수);
@@ -54,6 +55,15 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
 - **Aptitude, always on screen.** Aptitude multiplies every study gain in a subject (and its school lessons), so maxing it out takes 1 / aptitude of the average time. Every ability bar ends in stars (· below 0.88, ★ to 1.05, ★★ to 1.25, ★★★ to 1.45, ★★★★ above, gold from ★★★), and each study card shows the stars and the saving in words, such as "20% less study to max out" or "15% more study to max out". The bar's tooltip gives the exact multiplier. A 돌잡이 subject item adds 0.25, so it often earns an extra star.
+- **Luck.** Life is mostly luck, and the game says so:
+  - **A fortune-teller's reading (사주) at birth** reveals a hidden fortune, from great to rough. It tilts the odds of every good and bad event (weight × 1 + 0.6 × fortune, for an event tagged good or bad) and adds a little to 수능 day. Lives with a good reading average about 15 points more on their first 수능 than lives with a rough one.
+  - **The family's fortunes change** two or three times a life, each time moving it a whole income fifth with its education budget: a promotion or a business taking off, an inheritance or a lottery win (sometimes two fifths), a layoff or a business going under, a jeonse deposit scam, a parent's serious illness. A family that can no longer pay a private school's fees moves you to the public one.
+  - **Your own body:** a car accident (−35 health, three blocks lost) or weeks in hospital (two blocks), each in about two lives out of five.
+  - **Lucky breaks:** a teacher who makes a subject click (aptitude +0.2), or a sudden passion for one (aptitude +0.3 and a jump in ability).
+  - **Middle 2 rewires everyone:** every aptitude shifts, by a shared amount (sd 0.2: late bloomer or early peaker) plus one per subject (sd 0.18), from its own seeded stream.
+  - **수능 day:** the whole day goes well or badly together (a shift of sd 0.35 on every subject), each paper fits you better or worse (sd 0.18 a subject, mocks too), and about half the time something happens: a sniffling neighbour, a lucky guess, a killer question you'd just drilled, a calm clear head, or (rarely) answers marked one row off on the OMR card.
+  - **Admissions:** each university's real cut moves a little every year without warning (sd 0.45 percentile points: a 펑크 or a 폭발), and a rejection can still turn into a February waitlist call (추가합격) at a quarter of the chance you had.
+  - Everything is seeded: the same seed gives the same fortune, family shocks happen on the same stream, and 수능 day and the paper's fit depend only on the seed and the sitting, never on how you played.
 - **Families from real income data:**
   - You're born into one of the five national household-income fifths, each with a 20% chance.
   - The family sets your education budget. Money the parents don't spend on you that turn stays with them.
@@ -277,7 +287,8 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - a stress penalty (above 65) and a health penalty (below 45), each at most −0.25;
   - first-수능 nerves, which practice reduces;
   - the night-before and lunch-box choices;
-  - random day form, whose spread shrinks with exam stamina.
+  - random day form, whose spread shrinks with exam stamina;
+  - **luck:** a whole-day swing on 수능 day (sd 0.35 θ on every subject, plus 0.06 × your fortune), how well each paper fits you (sd 0.18 θ a subject, mocks too), and the day's event if there is one (−0.1 on every subject for a sniffling neighbour, +0.08 for a clear head, +0.3 or +0.4 on one subject for a lucky guess or a drilled killer question, −0.6 on one subject for an OMR slip).
 - **Learning:**
   - each block on a subject adds 0.24 × subject rate × aptitude × method speed × condition × headroom(θ) × √(months in the turn), times 0.32 during the school years (Elementary 1 to High 2);
   - **school lessons** add to every subject each turn on their own, whatever you do with your blocks, from Elementary 1 through High 3 (not after leaving school): 0.4 a year × the months in the turn / 12 × subject rate × aptitude × how far behind the class you are × attention × headroom(θ). "Behind" is 0.5 + 0.5 × (the typical level for your grade − your θ), kept between 0.4 and 1, so lessons help most when you're behind and a little even when you're far ahead. Attention is 0.6 + 0.4 × motivation/100, times the health and bullying factors. The typical level climbs 0.28 a school year from −2.4 at Elementary 1 (the balanced bot's path); class ranks and the GED use the same line. For an average child, lessons add up to about a third of the climb to High 3. The diary shows each turn's lesson total;
@@ -294,6 +305,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - an English deduction by grade: 0, 0, 0.8, 2, 3.5, 5.5, 8, 11, 14 for grades 1–9;
   - 0.5 for History grade 4, or 2 for grade 5 and worse.
 - **Quotas** you qualify for (see Regions) take 0.6 (local) or 0.8 (rural) points off the cut; the application list marks them.
+- **This year's cut is a surprise:** the chances on the application screen use the expected cut, but the real one moves each year (sd 0.45 points), and a rejection becomes a February waitlist admit (추가합격) at 25% of the real chance.
 - **Each school has a cut** where an application is a coin flip. The chance of admission follows a logistic curve with a 0.7-point slope, narrowed near the top to a third of the room left above the cut (0.4 points for 의대), so a perfect exam is a near-certain admit everywhere.
 - **The top end:** with every bar at 100 (θ = 3, the top 0.13% of test takers) and a good exam day, you are a likely SNU admit (about 70–80%) and roughly a coin flip for 의대 (about 45–65%, depending on how strong your inquiry subjects' pools are). A flawless exam gets you into 의대 85–90% of the time.
 - **Labels:** 안정 (safe, 85%+), 적정 (match, 55%+), 소신 (reach, 25%+), 상향 (long shot).
@@ -363,68 +375,76 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 61 | 2.6 · 2.0 · 1.7 | 369 | 369 | 1.00 | 0% | 0% | 45% |
-| slacker (half games & friends), 1 try | 56 | 2.9 · 2.3 · 4.7 | 358 | 358 | 1.00 | 0% | 0% | 11% |
-| grinder (no rest), self-study, 1 try | 65 | 2.9 · 2.3 · 2.1 | 373 | 373 | 1.00 | 1% | 0% | 50% |
-| smart, online lectures, 1 try | 66 | 2.2 · 1.9 · 1.7 | 383 | 383 | 1.00 | 5% | 0% | 71% |
-| smart, best affordable method, 1 try | 69 | 1.9 · 1.8 · 1.6 | 388 | 388 | 1.00 | 11% | 3% | 83% |
-| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.8 · 1.6 | 388 | 410 | 2.56 | 74% | 25% | 99% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 1.9 · 1.8 · 1.6 | 387 | 420 | 3.71 | 90% | 88% | 96% |
-| smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.7 · 1.7 | 389 | 389 | 1.00 | 10% | 1% | 86% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.0 · 1.8 · 1.6 | 386 | 420 | 3.79 | 91% | 89% | 98% |
-| balanced, self-study, vocational high school, 1 try | 58 | 2.9 · 2.4 · 1.9 | 354 | 354 | 1.00 | 0% | 0% | 15% |
-| balanced, self-study, leaves school at High 1, 1 try | 61 | 2.7 · 2.2 · 1.9 | 366 | 366 | 1.00 | 0% | 0% | 39% |
-| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.1 · 1.8 · 1.8 | 386 | 386 | 1.00 | 13% | 1% | 71% |
-| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 1.9 · 2.1 | 381 | 381 | 1.00 | 10% | 0% | 69% |
+| balanced, self-study, 1 try | 61 | 2.7 · 2.2 · 1.9 | 365 | 365 | 1.00 | 0% | 0% | 44% |
+| slacker (half games & friends), 1 try | 56 | 3.3 · 2.7 · 5.1 | 349 | 349 | 1.00 | 0% | 0% | 13% |
+| grinder (no rest), self-study, 1 try | 66 | 2.9 · 2.5 · 2.2 | 370 | 370 | 1.00 | 1% | 0% | 50% |
+| smart, online lectures, 1 try | 66 | 2.3 · 2.0 · 2.0 | 381 | 381 | 1.00 | 3% | 0% | 69% |
+| smart, best affordable method, 1 try | 68 | 2.0 · 1.9 · 2.0 | 385 | 385 | 1.00 | 11% | 1% | 75% |
+| smart, best affordable, retakes up to 3 tries | 68 | 2.0 · 1.9 · 2.0 | 385 | 411 | 2.49 | 75% | 25% | 100% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.1 · 1.9 · 1.9 | 385 | 419 | 3.60 | 91% | 83% | 99% |
+| smart, best affordable, tries for selective schools, 1 try | 68 | 2.1 · 1.8 · 1.8 | 385 | 385 | 1.00 | 11% | 3% | 81% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.1 · 1.9 · 1.9 | 383 | 419 | 3.56 | 93% | 84% | 99% |
+| balanced, self-study, vocational high school, 1 try | 59 | 2.9 · 2.4 · 2.1 | 354 | 354 | 1.00 | 0% | 0% | 23% |
+| balanced, self-study, leaves school at High 1, 1 try | 61 | 3.0 · 2.6 · 2.3 | 360 | 360 | 1.00 | 0% | 0% | 30% |
+| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.0 · 1.9 · 2.1 | 385 | 385 | 1.00 | 9% | 0% | 73% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.0 · 2.3 | 378 | 378 | 1.00 | 3% | 1% | 53% |
 
-The smart bot with the best affordable method, first try only, by family:
+How much luck spreads lives that follow the same strategy, before (v4.1) and after the luck changes (v4.2). "Skill r²" is how much of the spread in first totals is explained by ability entering High 3; the rest is luck (the exam day, the paper, an accident in High 3, a family that can suddenly afford tutors, or can't):
+
+| Strategy | Mean first total | Spread (sd) | 10th–90th percentile | p90 − p10 | Skill r² |
+|---|---|---|---|---|---|
+| balanced, self-study, 1 try | 369 → 365 | 19.3 → 24.2 | 350–392 → 332–395 | 42 → 63 | 0.50 → 0.30 |
+| smart, best affordable method, 1 try | 388 → 385 | 17.3 → 20.2 | 366–411 → 360–407 | 45 → 47 | 0.53 → 0.45 |
+
+The smart bot with the best affordable method, first try only, by the family it ended up in (fortunes move families up and down a fifth during a life):
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 14 | 63 | 374 | 0% | 64% |
-| Lower-middle income | 15 | 66 | 383 | 0% | 87% |
-| Middle income | 17 | 68 | 387 | 12% | 82% |
-| Upper-middle income | 14 | 70 | 391 | 29% | 79% |
-| High income | 20 | 74 | 400 | 15% | 95% |
+| Low income | 16 | 67 | 385 | 13% | 81% |
+| Lower-middle income | 23 | 67 | 386 | 9% | 74% |
+| Middle income | 12 | 70 | 391 | 17% | 67% |
+| Upper-middle income | 20 | 69 | 379 | 5% | 75% |
+| High income | 9 | 70 | 389 | 22% | 78% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 20 | 72 | 396 | 25% | 80% | 85% |
-| Seoul academy district | 4 | 71 | 392 | 0% | 100% | 100% |
-| Seoul | 5 | 71 | 395 | 20% | 80% | 100% |
-| Capital-region city | 20 | 65 | 385 | 5% | 90% | 85% |
-| Big city | 10 | 69 | 388 | 10% | 90% | 90% |
-| Mid-sized city | 12 | 68 | 383 | 8% | 75% | 92% |
-| Rural county | 9 | 66 | 377 | 0% | 67% | 78% |
+| Gangnam | 10 | 70 | 391 | 20% | 80% | 90% |
+| Seoul academy district | 7 | 69 | 387 | 0% | 86% | 86% |
+| Seoul | 5 | 71 | 398 | 20% | 80% | 100% |
+| Capital-region city | 23 | 67 | 383 | 9% | 78% | 74% |
+| Big city | 13 | 70 | 382 | 8% | 77% | 92% |
+| Mid-sized city | 13 | 68 | 386 | 8% | 62% | 69% |
+| Rural county | 9 | 65 | 377 | 22% | 67% | 89% |
 
-What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 83% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
+What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 73% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.5 | +1.3 | 80% |
-| Easygoing (순한 아기) | +0.0 | -0.3 | 84% |
-| Curious (호기심 많은 아기) | +0.5 | +1.5 | 78% |
-| Good sleeper (잘 자는 아기) | +0.1 | +0.8 | 83% |
-| Unflappable (겁 없는 아기) | +0.0 | +1.0 | 81% |
-| All smiles (잘 웃는 아기) | +0.1 | +0.7 | 84% |
-| Pencil (연필) | +1.8 | +3.2 | 83% |
-| Book (책) | +1.0 | +0.9 | 84% |
-| Computer mouse (마우스) | +1.1 | +1.8 | 81% |
-| Stethoscope (청진기) | +0.9 | +3.2 | 85% |
-| Microphone (마이크) | +1.1 | +2.5 | 84% |
-| Judge's gavel (판사봉) | +1.2 | +1.6 | 86% |
-| Ball (공) | +0.2 | +1.5 | 80% |
-| Thread (실) | +0.4 | -0.9 | 76% |
-| Money (돈) | +0.3 | +0.6 | 81% |
-| Paintbrush (붓) | +0.0 | -0.3 | 78% |
+| Sturdy (튼튼한 아기) | +0.7 | +2.4 | 75% |
+| Easygoing (순한 아기) | +0.0 | -0.3 | 69% |
+| Curious (호기심 많은 아기) | +0.5 | +1.0 | 70% |
+| Good sleeper (잘 자는 아기) | -0.0 | +0.3 | 70% |
+| Unflappable (겁 없는 아기) | +0.0 | +0.9 | 71% |
+| All smiles (잘 웃는 아기) | -0.1 | +0.2 | 74% |
+| Pencil (연필) | +1.8 | +5.4 | 80% |
+| Book (책) | +1.0 | +3.1 | 76% |
+| Computer mouse (마우스) | +1.2 | +4.0 | 73% |
+| Stethoscope (청진기) | +1.0 | +5.0 | 81% |
+| Microphone (마이크) | +0.9 | +3.3 | 74% |
+| Judge's gavel (판사봉) | +1.1 | +2.5 | 75% |
+| Ball (공) | +0.3 | +2.3 | 75% |
+| Thread (실) | +0.7 | +1.5 | 76% |
+| Money (돈) | +0.2 | +0.9 | 75% |
+| Paintbrush (붓) | +0.0 | +2.1 | 81% |
 
 What the tables show:
 
-- **School lifts everyone, habits decide the rest:** lessons carry even the slacker to 56 by High 3, and the same random talents end up anywhere from 56 to 69 on average depending on how you spend your free time, from birth on.
+- **School lifts everyone, habits decide the rest:** lessons carry even the slacker to 56 by High 3, and the same random talents end up anywhere from 56 to 68 on average depending on how you spend your free time, from birth on.
 - **Traits are a head start, not a destiny:** a 돌잡이 subject (pencil, microphone, stethoscope) is worth a few points to a bot that spreads its study, and more to a player who leans into that subject; the temperaments mostly make life more comfortable.
-- **Family income matters, but it isn't destiny:** with the same smart play, the top fifth reaches SKY on the first try about a fifth of the time and the bottom two fifths rarely do. Retakes close much of the gap.
+- **Luck now decides a lot:** two lives with the same habits and similar ability can end 60 points apart. For the balanced bot, ability entering High 3 explains only about a third of its first total. The smart bot is squeezed by the top of the scale, so its spread widens less, but strong play still wins on average (about 20 points over the balanced bot).
+- **Family income matters, but it moves:** families change fifths two or three times a life, so where you're born matters less than it did, and a promotion or a layoff in High school can matter more. Retakes close much of the gap either way.
 - **Where you live matters too:** Gangnam's academies give the strongest start, while local and rural quotas help students outside the capital (the region groups above are small, so treat them as a direction, not exact rates).
 - **School choice nudges rather than decides:** the bot that tries for selective schools mostly lands in private ones by lottery (a few get into 자사고 or an international middle school) and does slightly better; the smart bot rarely studies far enough ahead in math and science for a science school; a vocational school costs a 수능 candidate about 9 points of total and a block a turn.
 - **Leaving school is a trade, not a shortcut:** the extra hours almost make up for the lost lessons, motivation and the GED, but not quite, and you lose the quotas; what you gain is freedom from school (and bullying) and a spare year if you sit early.
@@ -442,6 +462,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v4.2:** luck. A fortune-teller's reading (사주) at birth reveals a hidden fortune that tilts good and bad events. Families change income fifths two or three times a life (promotions, inheritances and lottery wins; layoffs, jeonse scams, a parent's illness). Car accidents and hospital stays cost blocks; a great teacher or a sudden passion raises an aptitude; Middle 2 reshuffles every aptitude. 수능 day swings as a whole, each paper fits you better or worse, and about half the time the day deals something (a sniffling neighbour, a lucky guess, a drilled killer question, an OMR slip). Real cuts move each year and rejections can come good off the February waitlist. Lives spread much more for the same play (the balanced bot's 10th–90th percentile range went from 42 to 63 points), while strong play still wins on average. `sim.js` prints a spread table and takes `--no-traits` to skip the slow trait test. Also fixes the beach and countryside event pictures, which threw an error. Balance tables regenerated.
 
 - **v4.1:** aptitude is always visible. Ability bars end in aptitude stars (gold for ★★★ and up), study cards show the stars and how much less (or more) study the subject takes to max out, and a note under the bars explains it. Gameplay and balance numbers are unchanged.
 

@@ -318,6 +318,30 @@
   // Roughly one baby in twelve grabs two things at once.
   const DOUBLE_GRAB = 0.08;
 
+  // ---------- luck ----------
+  // Life is mostly luck. Every life gets a hidden fortune at birth (luck, about −1 to 1, its own seeded
+  // stream), read out by a fortune-teller (사주). It tilts the odds of good and bad events: an event
+  // tagged luck +1 (good) or −1 (bad) has its weight multiplied by 1 + LUCK_BIAS × luck × tag.
+  const LUCK_BIAS = 0.6;
+  // Each 수능 and mock paper fits some students better than others (the killer question is a type you
+  // happened to drill, or one you never saw): a per-subject nudge to ability on the day, rolled from the
+  // seed and the sitting only.
+  const PAPER_LUCK = 0.18;
+  // On 수능 day itself the whole day goes well or badly together (sleep, nerves, the room), a shift on
+  // every subject at once, from the seed and the sitting; your fortune adds a little on top.
+  const DAY_LUCK = 0.35;
+  const FORTUNE_DAY = 0.06;
+  // Middle 2's rewiring (the bloom event): a shift shared by every subject (late bloomer or early
+  // peaker) plus one per subject, in aptitude.
+  const BLOOM_ALL = 0.2;
+  const BLOOM_EACH = 0.18;
+  // Admissions: every university's real cut moves a little each year (a 펑크 when strong applicants
+  // go elsewhere, a 폭발 when everyone piles in), in percentile points, hidden until the results; and
+  // a rejection can still turn into a February waitlist call (추가합격), at WAITLIST × the chance you had.
+  const CUT_SWING = 0.45;
+  const WAITLIST = 0.25;
+  // The family's fortunes change: each step moves it one income fifth (see shiftFamily).
+
   // How far ahead of your year group you are in these subjects, in the units standing() uses.
   function zOf(g, subs) {
     const avg = subs.reduce((a, x) => a + g.skills[x], 0) / subs.length;
@@ -512,6 +536,63 @@
   // it has `choices` options and run(g, i) applies option i. run returns the outcome's key suffix
   // (strings.js has "ev.<id>.<suffix>"), or [suffix, params] when the text names something.
   const EVENTS = [
+    // ----- luck (anyStage: these can happen at any age) -----
+    // The fortune-teller's reading of your hidden luck, pushed at birth.
+    {
+      id: "saju", early: true, weight: 0, when: () => false, choices: 1,
+      run: (g) => {
+        const l = g.luck || 0;
+        return "r." + (l > 0.55 ? "great" : l > 0.18 ? "good" : l > -0.18 ? "even" : l > -0.55 ? "mixed" : "rough");
+      },
+    },
+    // The family's fortunes. Each moves the income fifth (and the education budget) for good.
+    { id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.4 : 0), when: () => true, run: (g) => { g.shiftFamily(1, "promotion"); bump(g, { stress: -4, motivation: 3 }); return "r"; } },
+    {
+      id: "jackpot", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.2 : 0), when: () => true,
+      run: (g) => { const two = g.rng() < 0.4; g.shiftFamily(two ? 2 : 1, "jackpot"); g.money += 500000; bump(g, { stress: -6, motivation: 4 }); return two ? "r2" : "r1"; },
+    },
+    { id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.4 : 0), when: () => true, run: (g) => { g.shiftFamily(-1, "layoff"); bump(g, { stress: 10, motivation: -3 }); return "r"; } },
+    {
+      // 전세 사기: the deposit on the family's rented home is gone.
+      id: "jeonse", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.15 : 0), when: () => true,
+      run: (g) => { g.shiftFamily(-1, "jeonse"); g.money = Math.max(0, g.money - 300000); bump(g, { stress: 12 }); return "r"; },
+    },
+    {
+      id: "parentill", anyStage: true, luck: -1, weight: 0.25, when: (g) => !g.flags.parentIll,
+      run: (g) => { g.flags.parentIll = 1; if (g.family !== "q1") g.shiftFamily(-1, "parentill"); bump(g, { stress: 14, motivation: -5 }); g.lostBlocks += 1; return "r"; },
+    },
+    // Your own body: an accident or a long illness costs time you can't get back.
+    { id: "accident", luck: -1, weight: 0.35, when: (g) => !g.flags.accident, run: (g) => { g.flags.accident = 1; bump(g, { health: -35, stress: 10, motivation: -4 }); g.lostBlocks += 3; return "r"; } },
+    { id: "hospital", luck: -1, weight: 0.3, when: (g) => g.grade >= 4, run: (g) => { bump(g, { health: -22, stress: 6, motivation: -4 }); g.lostBlocks += 2; return "r"; } },
+    // And the lucky breaks: a teacher who changes everything, or a subject that suddenly clicks.
+    {
+      id: "greatteacher", luck: 1, weight: 0.5, when: (g) => g.inClass(),
+      run: (g) => { const s = SUBJECTS[Math.floor(g.rng() * SUBJECTS.length)]; g.aptitude[s] = Math.round(Math.min(1.8, g.aptitude[s] + 0.2) * 100) / 100; studyBoost(g, s, 0.05); bump(g, { motivation: 8 }); return ["r", { s }]; },
+    },
+    {
+      id: "spark", luck: 1, weight: 0.4, when: (g) => g.grade >= 3 && !g.flags.spark,
+      run: (g) => { g.flags.spark = 1; const s = SUBJECTS[Math.floor(g.rng() * SUBJECTS.length)]; g.aptitude[s] = Math.round(Math.min(1.8, g.aptitude[s] + 0.3) * 100) / 100; studyBoost(g, s, 0.08); bump(g, { motivation: 10 }); return ["r", { s }]; },
+    },
+    // Puberty rewires everyone (Middle 2): aptitudes drift, some up, some down, from their own stream.
+    {
+      id: "bloom", weight: 100, when: (g) => g.grade === 8 && !g.flags.bloom,
+      run: (g) => {
+        g.flags.bloom = 1;
+        const r = makeRng(hashSeed(g.seed, "bloom"));
+        let up = null, down = null, net = 0;
+        const all = r.normal() * BLOOM_ALL;
+        for (const s of SUBJECTS) {
+          const d = Math.round((all + r.normal() * BLOOM_EACH) * 100) / 100;
+          g.aptitude[s] = Math.round(clamp(g.aptitude[s] + d, 0.5, 1.8) * 100) / 100;
+          net += d;
+          if (!up || d > up.d) up = { s, d };
+          if (!down || d < down.d) down = { s, d };
+        }
+        return [net > 0.12 ? "up" : net < -0.12 ? "down" : "mixed", { up: up.s, down: down.s }];
+      },
+    },
+    // Exam-day luck, pushed by advance() before every 수능 (see examLuckEvent). Never rolled.
+    { id: "examluck", weight: 0, when: () => false, run: () => "r" },
     // ----- early childhood (ages 0–5; stageFits keeps these before school and the rest after) -----
     // Your first weeks: your parents notice your temperament. Pushed at birth, never rolled.
     {
@@ -820,8 +901,8 @@
         bump(g, { stress: 4, motivation: 3 }); studyBoost(g, pickWeak(g), 0.03); return "r1";
       },
     },
-    { id: "cold", weight: (g) => 2 * g.trait("ill"), when: () => true, run: (g) => { bump(g, { health: -18, stress: 4 }); return "r"; } },
-    { id: "flu", weight: (g) => g.trait("ill"), when: (g) => g.health < 45, run: (g) => { bump(g, { health: -25, stress: 6 }); g.lostBlocks += 2; return "r"; } },
+    { id: "cold", luck: -1, weight: (g) => 2 * g.trait("ill"), when: () => true, run: (g) => { bump(g, { health: -18, stress: 4 }); return "r"; } },
+    { id: "flu", luck: -1, weight: (g) => g.trait("ill"), when: (g) => g.health < 45, run: (g) => { bump(g, { health: -25, stress: 6 }); g.lostBlocks += 2; return "r"; } },
     {
       id: "star", weight: 2, when: (g) => g.grade >= 10 && g.money >= 300000, choices: 2,
       run: (g, i) => {
@@ -861,7 +942,7 @@
       id: "family-money", weight: 1, when: (g) => g.grade >= 4 && (g.family === "q1" || g.family === "q2"),
       run: (g) => { bump(g, { stress: 6 }); g.money = Math.max(0, g.money - 200000); return "r"; },
     },
-    { id: "grandma", weight: 1, when: () => true, run: (g) => { g.money += 200000; bump(g, { motivation: 5, stress: -4 }); return "r"; } },
+    { id: "grandma", luck: 1, weight: 1, when: () => true, run: (g) => { g.money += 200000; bump(g, { motivation: 5, stress: -4 }); return "r"; } },
     { id: "insomnia", weight: (g) => 1.2 * g.trait("insomnia"), when: (g) => g.grade >= 7 && g.stress > 55, run: (g) => { bump(g, { health: -10 }); return "r"; } },
     {
       id: "festival", weight: 1, when: (g) => !g.dropoutActive() && ((g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high"), choices: 2,
@@ -890,7 +971,7 @@
         studyBoost(g, pickWeak(g), 0.03); bump(g, { stress: 5 }); return "r1";
       },
     },
-    { id: "insight", weight: 1, when: (g) => g.motivation > 60, run: (g) => { const s = pickWeak(g); studyBoost(g, s, 0.04); return ["r", { s }]; } },
+    { id: "insight", luck: 1, weight: 1, when: (g) => g.motivation > 60, run: (g) => { const s = pickWeak(g); studyBoost(g, s, 0.04); return ["r", { s }]; } },
   ];
   // run() result → { key, p } message.
   function outcome(id, r) {
@@ -954,7 +1035,11 @@
   // Saves from before regions existed have none; they play as the capital-region suburbs.
   function regionKind(g) { return (REGION_BY_ID[g.region] || REGION_BY_ID.suwon).kind; }
   // An event's weight is a number or a function of the game.
-  const weightOf = (e, g) => (typeof e.weight === "function" ? e.weight(g) : e.weight);
+  const weightOf = (e, g) => {
+    const w = typeof e.weight === "function" ? e.weight(g) : e.weight;
+    // Good and bad events lean with your fortune (forced events, weight 100+, are never tagged).
+    return e.luck ? w * Math.max(0.2, 1 + LUCK_BIAS * (g.luck || 0) * e.luck) : w;
+  };
 
   function inquiryInfo(id) {
     return INQUIRY.soc.concat(INQUIRY.sci).find((x) => x.id === id);
@@ -1032,7 +1117,9 @@
       this.history = []; // finished 수능 results
       this.mocks = []; // mock exam results
       this.trace = [{ t: this.t(), att: 1, ph: "early", skills: Object.assign({}, this.skills) }];
-      this.queue = [{ type: "birth" }, { type: "event", id: "newborn", choices: 1 }];
+      this.queue = [{ type: "birth" }, { type: "event", id: "newborn", choices: 1 }, { type: "event", id: "saju", choices: 1 }];
+      // Hidden fortune, from its own stream; the saju event reads it out. Old saves have none (neutral).
+      this.luck = Game.rollLuck(seed);
       this.examMods = { shift: 0 };
       this.enrolled = null; // university id kept while doing 반수
       this.ending = null;
@@ -1047,6 +1134,11 @@
     }
 
     // Birth region, weighted only by population share.
+    // A fortune between −1 and 1, most lives near the middle.
+    static rollLuck(seed) {
+      const r = makeRng(hashSeed(seed, "saju"));
+      return Math.round(clamp(r.normal() * 0.45, -1, 1) * 100) / 100;
+    }
     static rollRegion(seed) {
       let x = makeRng(hashSeed(seed, "region"))() * REGIONS.reduce((a, r) => a + r.pop, 0);
       for (const r of REGIONS) { x -= r.pop; if (x <= 0) return r.id; }
@@ -1102,6 +1194,23 @@
       }
       return v;
     }
+    // The family's fortunes move it up or down the income fifths (and with them the education budget and
+    // whether a retake academy is affordable). Returns how many steps it actually moved.
+    shiftFamily(d, why) {
+      const i = FAMILY_IDS.indexOf(this.family);
+      const j = clamp(i + d, 0, FAMILY_IDS.length - 1);
+      if (j === i) return 0;
+      const from = this.family;
+      this.family = FAMILY_IDS[j];
+      this.addLog("log.fortune", { from, to: this.family, why }, "milestone");
+      // A school the family can no longer pay for: back to the public one (or ordinary kindergarten).
+      const st = this.status === "hs3" ? "high" : this.status === "early" ? "kinder" : this.status;
+      if ((this.inClass() || this.atKinder()) && this.schoolInfo().fee > FAMILIES[this.family].allowance && DEFAULT_SCHOOL[st]) {
+        this.school = DEFAULT_SCHOOL[st];
+        this.addLog("log.schoolFee", { id: this.school }, "event");
+      }
+      return j - i;
+    }
     addTrait(id) {
       this.traits = (this.traits || []).concat(id);
       const fx = TRAIT_FX[id];
@@ -1144,7 +1253,7 @@
     allowance() {
       const a = FAMILIES[this.family].allowance;
       // School fees come out of the same education budget while you're there.
-      return (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0);
+      return Math.max(0, (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0));
     }
 
     // ----- schools -----
@@ -1446,6 +1555,8 @@
       if (this.status !== "elem" && !school && this.month === 11) {
         this.queue.push(this.examEveEvent());
         this.queue.push(this.lunchEvent());
+        const luckEv = this.examLuckEvent();
+        if (luckEv) this.queue.push(luckEv);
         this.queue.push({ type: "exam" });
       } else {
         this.queue.push({ type: "nextMonth" });
@@ -1481,13 +1592,40 @@
       }
     }
     // Early-childhood events only happen before school, and every other event only after.
-    stageFits(e) { return !!e.early === this.isEarly(); }
+    stageFits(e) { return e.anyStage || !!e.early === this.isEarly(); }
     fireEvent(e) {
       this.flags["ev-" + e.id] = this.clock;
       if (e.choices) this.queue.push({ type: "event", id: e.id, choices: e.choices });
       else this.queue.push({ type: "event", id: e.id, choices: 0, result: outcome(e.id, e.run(this)) });
     }
 
+    // What the day itself deals you, from a stream of the seed and the sitting (so a given exam day is
+    // the same however you played), tilted by your fortune. Often nothing happens; otherwise a stuffy
+    // room, a sniffling neighbour, a lucky guess, a killer question you'd drilled, or (rarely) answers
+    // marked one row off on the OMR card, caught with minutes to spare.
+    examLuckEvent() {
+      const r = makeRng(hashSeed(this.seed, this.year, this.attempt, "examluck"));
+      const l = this.luck || 0;
+      const odds = [
+        ["sniffler", 0.12 - 0.05 * l], ["guess", 0.1 + 0.05 * l], ["drilled", 0.1 + 0.05 * l], ["omr", 0.04 - 0.02 * l], ["calm", 0.1 + 0.04 * l],
+      ];
+      let x = r();
+      for (const [id, w] of odds) {
+        if (x < w) {
+          const s = SUBJECTS[Math.floor(r() * SUBJECTS.length)];
+          const m = this.examMods;
+          m.subj = m.subj || {};
+          if (id === "sniffler") m.shift -= 0.1;
+          else if (id === "calm") m.shift += 0.08;
+          else if (id === "guess") m.subj[s] = (m.subj[s] || 0) + 0.3;
+          else if (id === "drilled") m.subj[s] = (m.subj[s] || 0) + 0.4;
+          else m.subj[s] = (m.subj[s] || 0) - 0.6;
+          return { type: "event", id: "examluck", choices: 0, result: { key: "ev.examluck." + id, p: { s } } };
+        }
+        x -= w;
+      }
+      return null;
+    }
     examEveEvent() { return { type: "event", id: "eve", choices: 3 }; }
     lunchEvent() { return { type: "event", id: "lunch", choices: 3 }; }
 
@@ -1647,9 +1785,12 @@
       const healthHit = this.health < 45 ? -0.25 * (45 - this.health) / 45 : 0;
       const nerves = real ? -0.08 * (1 - this.practice) * this.trait("nerves") : 0;
       const sigma = 0.32 - 0.22 * this.practice;
-      const dayForm = rng.normal() * sigma * 0.6 + (real ? this.examMods.shift : 0);
+      const dayForm = rng.normal() * sigma * 0.6 + (real ? this.examMods.shift + this.dayLuck() : 0);
       const examKey = hashSeed(this.seed, this.year, kind, month);
       const diffRng = makeRng(hashSeed(examKey, "difficulty"));
+      // How well this paper happens to fit you (see PAPER_LUCK): its own stream, so the cohort and the
+      // paper's difficulty don't change.
+      const fitRng = makeRng(hashSeed(examKey, "fit"));
       const subjects = {};
       const shifts = {};
       for (const s of SUBJECTS) {
@@ -1658,6 +1799,7 @@
         shifts[s] = shift;
         let theta = this.skills[s] + stressHit + healthHit + nerves + dayForm + rng.normal() * sigma * 0.8;
         if (real && (s === "eng" || s === "hist" || s === "inq1" || s === "inq2")) theta += this.examMods.lunch || 0;
+        theta += fitRng.normal() * PAPER_LUCK + (real && this.examMods.subj ? this.examMods.subj[s] || 0 : 0);
         const pop = this.inq && (s === "inq1" || s === "inq2") ? inquiryInfo(this.inq[s === "inq1" ? 0 : 1]).pop : 0;
         const kindG = s === "eng" || s === "hist" ? "absolute" : "relative";
         subjects[s] = gradeSubject(s, theta, pop, shift, examKey, kindG);
@@ -1671,6 +1813,10 @@
       };
     }
 
+    // How 수능 day itself goes (see DAY_LUCK): the same for a given seed and sitting however you played.
+    dayLuck() { return makeRng(hashSeed(this.seed, this.year, this.attempt, "day")).normal() * DAY_LUCK + FORTUNE_DAY * (this.luck || 0); }
+    // This year's hidden move in a university's cut, in percentile points (positive: easier this year).
+    cutSwing(u) { return makeRng(hashSeed(this.seed, this.year, "cut", u.id)).normal() * CUT_SWING; }
     // Admission chances for the latest 수능.
     options() {
       const top = this.queue[0];
@@ -1690,7 +1836,13 @@
         const u = UNI_BY_ID[id];
         const q = this.quotaFor(u);
         const p = admitChance(top.score + (q ? q.pts : 0), u, this.track);
-        return { id, p, admitted: this.rng() < p, quota: q ? q.kind : null };
+        // The real cut this year differs from the expected one (hidden until now), and a rejection can
+        // still come good off the waitlist in February.
+        const real = admitChance(top.score + (q ? q.pts : 0) + this.cutSwing(u), u, this.track);
+        let admitted = this.rng() < real, wait = false;
+        if (!admitted && this.rng() < WAITLIST * real) { admitted = true; wait = true; }
+        if (wait) this.addLog("log.waitlist", { uni: id }, "milestone");
+        return { id, p, admitted, quota: q ? q.kind : null, wait };
       });
       this.queue.shift();
       const offers = results.filter((r) => r.admitted).map((r) => r.id);
