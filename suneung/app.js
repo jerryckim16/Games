@@ -16,7 +16,7 @@
     sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
-    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"),
+    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"), traits: $("traits"),
     chart: $("chart"), legend: $("legend"), log: $("log"), history: $("history"), newLifeBtn: $("newLifeBtn"),
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
@@ -28,6 +28,12 @@
   const calm = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   // Emoji icons for activities, study methods and condition. Inquiry icons follow the track.
+  // Early childhood relabels some activities (naps, the playground, playdates, cartoons).
+  const EARLY_ICON = { books: "📚", blocks: "🧩", songs: "🎵", worksheet: "📝", rest: "😴", exercise: "🛝", friends: "🧸", games: "📺" };
+  const TRAIT_ICON = {
+    sturdy: "💪", calm: "😌", curious: "👀", sleeper: "🌙", steady: "🛡️", smiley: "😊",
+    pencil: "✏️", book: "📕", mouse: "🖱️", stethoscope: "🩺", mic: "🎤", gavel: "⚖️", ball: "⚽", thread: "🧵", money: "💴", brush: "🖌️",
+  };
   const ACT_ICON = { kor: "📖", math: "📐", eng: "🔤", hist: "🏯", reading: "📚", arts: "🎹", mock: "⏱️", rest: "😴", exercise: "🏃", friends: "🧑‍🤝‍🧑", games: "🎮", job: "🏪" };
   const ACT_COLOR = { reading: "--a-c5", arts: "--a-c4", mock: "--a-c1", rest: "--a-c3", exercise: "--pos", friends: "--a-c2", games: "--a-c4", job: "--a-gold" };
   const METHOD_ICON = { self: "✏️", online: "💻", hagwon: "🏫", tutor: "🧑‍🏫" };
@@ -35,9 +41,11 @@
     const tr = game && game.track;
     if (id === "inq1") return tr === "sci" ? "🔬" : "🌏";
     if (id === "inq2") return tr === "soc" ? "🏛️" : tr === "sci" ? "🧪" : "🔬";
+    if (game && game.isEarly() && EARLY_ICON[id]) return EARLY_ICON[id];
     return ACT_ICON[id] || "•";
   }
-  function actColor(a) { return a.kind === "study" ? subColor[a.subject] : ACT_COLOR[a.id] || "--accent"; }
+  function actColor(a) { return a.kind === "study" ? subColor[a.subject] : ACT_COLOR[a.id] || PLAY_COLOR[a.id] || "--accent"; }
+  const PLAY_COLOR = { books: "--s-kor", blocks: "--s-math", songs: "--s-eng", worksheet: "--a-c1" };
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const gradeChip = (g) => '<span class="gr gr' + g + '">' + g + "</span>";
@@ -128,7 +136,8 @@
     renderSetup();
   });
   els.startBtn.addEventListener("click", () => {
-    game = new Game({ name: els.name.value.trim() || T("setup.namePh." + sex), sex, startYear: new Date().getFullYear() });
+    // Born this year, so elementary school starts six years on.
+    game = new Game({ name: els.name.value.trim() || T("setup.namePh." + sex), sex, startYear: new Date().getFullYear() + 6 });
     plan = {};
     save();
     showGame();
@@ -201,7 +210,9 @@
     const g = game;
     return Object.assign({
       // Out of school you study at a study café in a hoodie, up to the Suneung.
-      stage: g.ending ? "uni" : g.dropout != null && (g.inSchool() || g.status === "hs3") ? "dropout" : g.status,
+      stage: g.ending ? "uni" : g.isEarly() ? (g.age <= 2 ? "baby" : "kinder") : g.dropout != null && (g.inSchool() || g.status === "hs3") ? "dropout" : g.status,
+      // A child kept at home from 3 stays in the nursery scene.
+      home: g.isEarly() && g.atKinder() && g.schoolInfo().id === "homeCare",
       season: Art.seasonOf(g.month),
       look: Art.lookFor(g.seed, g.sex),
       mood: Art.moodOf(g),
@@ -242,10 +253,10 @@
     els.sDate.textContent = L.date(g.year, g.month);
     const d = g.daysToExam();
     const school = g.inSchool();
-    els.sDday.textContent = g.ending ? T("stat.over") : school ? T("stat.years", { n: 12 - g.grade }) :
+    els.sDday.textContent = g.ending ? T("stat.over") : school ? T("stat.years", { n: g.isEarly() ? 17 - g.age : 12 - g.grade }) :
       g.month <= 11 ? (d > 0 ? T("stat.dday", { n: d }) : T("stat.examMonth")) : T("stat.results");
-    els.sAttempt.textContent = school ? L.schoolGrade(g.grade) : L.att(g.attempt);
-    els.sStatus.textContent = g.dropout != null && (school || g.status === "hs3") ? T("st.dropout", { ged: g.flags.ged != null }) : g.inClass() ? L.school(g.schoolInfo().id) : L.status(g.status);
+    els.sAttempt.textContent = g.isEarly() ? T("early.stage", { a: g.age }) : school ? L.schoolGrade(g.grade) : L.att(g.attempt);
+    els.sStatus.textContent = g.dropout != null && (school || g.status === "hs3") ? T("st.dropout", { ged: g.flags.ged != null }) : g.inClass() || g.atKinder() ? L.school(g.schoolInfo().id) : L.status(g.status);
     els.sAge.textContent = L.age(g.age);
     els.sName.textContent = g.name + " · " + L.regionShort(g.regionInfo().id) + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
@@ -295,6 +306,8 @@
       bar(T("cond.motivation"), g.motivation, lvl(g.motivation, true), 0, T("cond.motivation.tip"), "🔥") +
       bar(T("cond.practice"), g.practice * 100, "var(--accent)", 0, T("cond.practice.tip"), "⏱️") +
       bullyNote(g) + dropoutNote(g);
+    // Traits from the newborn and 돌잡이 reveals, with what each does.
+    els.traits.innerHTML = (g.traits || []).map((id) => '<span class="trait-chip" title="' + esc(L.traitFx(id)) + '"><b><span aria-hidden="true">' + (TRAIT_ICON[id] || "✨") + " </span>" + esc(L.trait(id)) + "</b><small>" + esc(L.traitFx(id)) + "</small></span>").join("");
     if (animate) {
       // Two frames: the first paints the old width, the second lets the CSS transition run.
       requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -323,11 +336,13 @@
     els.planTitle.parentElement.parentElement.classList.toggle("ended", done);
     const mock = MOCKS[g.month] && !(g.month === 3 && g.status !== "hs3");
     els.planTitle.textContent = done ? T("plan.done") :
-      T("plan.title", { m: g.month, mock, exam: g.month === 11, st: g.status, g: g.grade, track: g.grade === 10 && g.month === 12 });
+      T("plan.title", { m: g.month, mock, exam: g.month === 11, st: g.status, g: g.grade, a: g.age, track: g.grade === 10 && g.month === 12 });
     els.blocksLeft.textContent = done ? "" : T("plan.left", { l: n - used, n });
     els.blocksLeft.classList.toggle("done", used === n);
     els.blocksLeft.classList.toggle("hidden", done);
 
+    // Small children don't pick study methods.
+    els.method.parentElement.classList.toggle("hidden", g.isEarly());
     const fixed = g.methodFixed();
     // After a move to the countryside there may be no tutor to keep: fall back to online lectures.
     if (!fixed && !g.methodAvailable(method)) method = "online";
@@ -344,12 +359,13 @@
 
     // Activities are cards: tap the card (or +) to give it a block, − to take one back.
     const acts = g.activities();
-    const name = (a) => (a.kind === "study" ? L.sub(a.subject) : L.actLong(a.id));
+    const early = g.isEarly();
+    const name = (a) => (a.kind === "study" ? L.sub(a.subject) : early && L.actEarlyLong(a.id) ? L.actEarlyLong(a.id) : L.actLong(a.id));
     const card = (a) => {
       const k = plan[a.id] || 0;
       const study = a.kind === "study";
       const nm = name(a);
-      const hint = study ? T("plan.studyHint", { v: 50 + g.skills[a.subject] * 16.67 >= 100.5 ? "100+" : S.skillScore(g.skills[a.subject]), s: a.subject }) : L.actHint(a.id);
+      const hint = study ? T("plan.studyHint", { v: 50 + g.skills[a.subject] * 16.67 >= 100.5 ? "100+" : S.skillScore(g.skills[a.subject]), s: a.subject }) : early && L.actEarlyHint(a.id) ? L.actEarlyHint(a.id) : L.actHint(a.id);
       const pips = k ? '<span class="pips" aria-hidden="true">' + "●".repeat(Math.min(k, 8)) + "</span>" : "";
       return '<div class="act' + (k ? " has" : "") + (used < n && !done ? " open" : "") + '" data-card="' + a.id + '" style="--c:var(' + actColor(a) + ')">' +
         '<span class="ic" aria-hidden="true">' + actIcon(a.id) + "</span>" +
@@ -358,8 +374,8 @@
         '<span class="n">' + k + "</span>" +
         '<button type="button" data-a="' + a.id + '" data-d="1" aria-label="' + esc(T("plan.more", { a: nm })) + '"' + (used < n && !done ? "" : " disabled") + ">+</button></div></div>";
     };
-    const study = acts.filter((a) => a.kind === "study"), life = acts.filter((a) => a.kind !== "study");
-    els.activities.innerHTML = '<h3 class="grp">' + esc(T("plan.study")) + "</h3>" + study.map(card).join("") +
+    const study = acts.filter((a) => a.kind === "study" || a.kind === "play"), life = acts.filter((a) => a.kind !== "study" && a.kind !== "play");
+    els.activities.innerHTML = '<h3 class="grp">' + esc(T(early ? "plan.play" : "plan.study")) + "</h3>" + study.map(card).join("") +
       '<h3 class="grp">' + esc(T("plan.life")) + "</h3>" + life.map(card).join("");
 
     // The turn's time as a row of slots, filled in activity order.
@@ -386,7 +402,7 @@
     els.clearBtn.disabled = done || !used;
     els.moveBtn.classList.toggle("hidden", done);
     // School lessons add to every subject on their own; say so, and say when they're gone.
-    els.lessonNote.textContent = done ? "" : g.inClass() ? T("plan.lessons") : g.dropout != null && (g.inSchool() || g.status === "hs3") ? T("plan.noLessons") : "";
+    els.lessonNote.textContent = done ? "" : g.isEarly() ? T("plan.early") + (g.atKinder() && g.schoolInfo().id !== "homeCare" ? " " + T("plan.kinder") : "") : g.inClass() ? T("plan.lessons") : g.dropout != null && (g.inSchool() || g.status === "hs3") ? T("plan.noLessons") : "";
     els.lessonNote.classList.toggle("hidden", !els.lessonNote.textContent);
     // Leaving school is offered from grade 7 until you do it.
     const qb = g.quitBlock();
@@ -525,7 +541,7 @@
   // with your age, and an icon for each kind of entry.
   const LOG_ICON = {
     "log.born": "👶", "log.stage": "🏫", "log.grade": "🎒", "log.teacher": "🍎", "log.report": "📊", "log.sebae": "🧧", "log.track": "🔀",
-    "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩", "log.school": "🏫", "log.schoolMove": "🏫",
+    "log.birthday": "🎂", "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩", "log.school": "🏫", "log.schoolMove": "🏫",
     "log.month": "🗓️", "log.mock": "📝", "log.suneung": "🎯", "log.apply": "📮", "log.enroll": "🎓", "log.quit": "🚪", "log.halfpay": "💸", "log.newyear": "🌱",
   };
   function logIcon(l) {
@@ -709,7 +725,7 @@
       "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region })) + "</p>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",
       [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }],
-      Art.screenArt("birth", artCtx({ stage: "elem" })));
+      Art.screenArt("birth", artCtx({ stage: "baby" })));
   }
   // Picking a school: every option for the stage with what it does, what it costs, the chance of
   // getting in, and why it's closed. The default public school is always open.
@@ -770,6 +786,7 @@
 
   function eventTitle(ev) {
     if (ev.id === "eve" || ev.id === "lunch") return T("ev." + ev.id + ".title");
+    if (game.isEarly()) return T("turn.age", { a: L.age(game.age) }) + " · " + L.date(game.year, game.month);
     return game.inSchool() && !game.dropoutActive() ? L.schoolGrade(game.grade) + " · " + L.date(game.year, game.month) : L.date(game.year, game.month);
   }
   // The suffix of an outcome key ("ev.bully.r1a" → "r1a") picks the art's variant.

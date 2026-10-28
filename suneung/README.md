@@ -1,6 +1,6 @@
 # Suneung Simulator (수능 시뮬레이터)
 
-A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You're born at random into one of Korea's five household-income fifths. You start elementary school at 6 and grow up through middle school and high school, deciding each turn how to spend your time: which subjects to study, whether your family pays for cram school, when to read, rest, play or see friends. Life happens along the way. At the end of High 1 you choose humanities or sciences. In High 3 you play month by month and sit the real 수능 in November. With your score you apply to universities, then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
+A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You're born at random into one of Korea's five household-income fifths, with a temperament your parents notice in your first weeks and a head start from what you grab at your first-birthday 돌잡이. You play the baby and kindergarten years, start elementary school at 6 and grow up through middle school and high school, deciding each turn how to spend your time: which subjects to study, whether your family pays for cram school, when to read, rest, play or see friends. Life happens along the way. At the end of High 1 you choose humanities or sciences. In High 3 you play month by month and sit the real 수능 in November. With your score you apply to universities, then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
 
 Open `index.html` in a browser. There's no build step and no dependencies. Progress autosaves in the browser. It's also published as a single-file claude.ai artifact: https://claude.ai/artifact/H8zzP1PqsHVdvEQEARTuFE
 
@@ -15,11 +15,14 @@ School years are counted the Korean way, with each school numbering its own year
 1. **Be born.** Choose boy or girl and type a name. Your family and your talents are dealt at random; you can't pick or re-roll them.
    - The birth screen shows where you're born, your family's household income, which fifth of Korean households it's in, and what your parents can spend on your education each month.
    - Stars show aptitude, which is how fast you learn each subject.
-2. **Pick a school** at the start of elementary, middle and high school. The local public school is always open; private and special schools have fees, lotteries or entry requirements (see Schools below).
+   - Then your first weeks reveal your **temperament**, and at your first birthday the **돌잡이** shows what you grab. Both give you a trait: a permanent bonus (see Traits below).
+   - Ages 0–5 are played a year at a time, with play instead of study, and a kindergarten choice at 3.
+2. **Pick a school** at 3 (kindergarten) and at the start of elementary, middle and high school. The local public school is always open; private and special schools have fees, lotteries or entry requirements (see Schools below).
 3. **Grow up.** Each turn you assign blocks of free time. You can also **move house** to another region (once a year) with the Move house button:
 
    | Stage | One turn is | Blocks |
    |---|---|---|
+   | Early childhood (age 0–5) | a year | 3 |
    | Elementary school (초1–6, Elementary 1–6, age 6–11) | a school year | 4 |
    | Middle school (중1–3, Middle 1–3) | a semester | 4 |
    | High school (고1–2, High 1–2) | a season: spring term, summer break, fall term, winter break | 4, or 5 in the breaks |
@@ -49,7 +52,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 
 ## Features
 
-- **A whole childhood.** Ability is on the 수능 scale from the start (50 is the average test taker), so a 6-year-old begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
+- **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
 - **Families from real income data:**
   - You're born into one of the five national household-income fifths, each with a 20% chance.
   - The family sets your education budget. Money the parents don't spend on you that turn stays with them.
@@ -167,6 +170,47 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **How it ends:** a choice that works, the March class reshuffle (60%, 40% or 20% by severity), starting a new school (70%), or leaving high school.
   - **On screen:** the Condition panel shows a red line with the severity and its cost while it lasts. Every step is in the life log.
   - **Cost by High 3:** in a paired test (the same 200 lives cloned at the start of Middle 1 with serious bullying), reporting it costs about 1 point of average ability entering High 3 and enduring it about 4.
+- **Early childhood (age 0–5).** A turn is a year with three blocks; your parents plan your days, and small children learn by playing:
+
+  | Activity | What it does |
+  |---|---|
+  | Picture books 그림책 | Korean, with some history and social studies |
+  | Blocks & puzzles 블록·퍼즐 | Math and a little science |
+  | English songs 영어 동요 | English, a little Korean |
+  | Worksheets 학습지 (from 4) | Korean and math; ₩40,000 a month and a little stress |
+  | Naps, the playground, playdates, cartoons | rest, exercise, friends and games under their early names |
+
+  - At 3 you pick daycare or kindergarten (free under the national 누리과정, with kindergarten lessons), staying home with family (few lessons, less stress, no kindergarten colds), a forest kindergarten (₩150,000, outdoors: less stress, more health) or an English kindergarten (₩900,000, English lessons ×3, big cities only).
+  - Events of the early years: first steps, first words, a fall off the slide, a new baby brother or sister, grandma's stories, kindergarten colds and the kindergarten play, whether to start Hangul early, and a gifted-child test at 5.
+  - **Balance:** ability at birth is 0.66 below the old age-6 start, and a typical early childhood (the balanced bot at an ordinary kindergarten) closes exactly that gap, so a typical child still starts Elementary 1 where it always did. A child who only plays and watches cartoons starts about 6 points lower; one who reads, builds and sings every year starts about the same as typical or a little ahead.
+- **Traits** are passive bonuses for the whole life, dealt by two reveal events. Each is rolled from its own seeded stream, so the seed fixes them the way it fixes your family and talents. The Ability panel lists yours with what they do.
+  - **Temperament** (your first weeks), one of:
+
+    | Trait | Effect |
+    |---|---|
+    | Sturdy 튼튼한 아기 | health settles 8 higher; half as many colds and flu |
+    | Easygoing 순한 아기 | stress settles 6 lower |
+    | Curious 호기심 많은 아기 | motivation settles 4 higher |
+    | Good sleeper 잘 자는 아기 | rest works 50% better; no insomnia |
+    | Unflappable 겁 없는 아기 | half the exam-day nerves and stress hit |
+    | All smiles 잘 웃는 아기 | friends relieve 30% more stress; bullying 40% less likely |
+
+  - **돌잡이** (your first birthday): a table of objects, and whatever you grab is said to foretell your future. About one baby in twelve grabs two at once and gets both.
+
+    | Item | Effect |
+    |---|---|
+    | Pencil 연필 | Korean aptitude +0.25; reading works 25% better |
+    | Book 책 | History and social studies aptitude +0.15 |
+    | Computer mouse 마우스 | Math aptitude +0.25 |
+    | Stethoscope 청진기 | Science aptitude +0.25 |
+    | Microphone 마이크 | English aptitude +0.25 |
+    | Judge's gavel 판사봉 | Korean and social studies aptitude +0.12 |
+    | Ball 공 | exercise works 50% better; health settles 3 higher |
+    | Thread 실 | health settles 5 higher; fewer colds and flu |
+    | Money 돈 | ₩300,000 now; New Year's money ×1.5 |
+    | Paintbrush 붓 | arts lessons count double toward an arts-school audition; stress settles 2 lower |
+
+  - "Settles" means the resting level health and stress drift back to each turn; aptitude multiplies every study gain in that subject for life (the stars on the birth screen show it before the 돌잡이).
 - **Schools.** At the start of each school stage a screen lists the schools you could go to, with what each does, its fees and your chance of getting in. The public school is the default and is always open. Fees come out of your parents' monthly education budget, so they compete with cram school and tutors, and a school is closed if the budget can't cover them. Missing out on a lottery or selection means the public school.
 
   | Stage | School | Fee a month | Getting in | What it does |
@@ -240,7 +284,8 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - headroom(θ) = e^(−0.62·max(0, θ + 0.8)) gives diminishing returns: going from average to top 4% is far quicker than from top 4% to a perfect score;
   - a second block on the same subject in one turn counts ×0.77, a third ×0.63, and so on;
   - **no decay:** ability only goes up. A subject you don't study stays where it is;
-  - subject rates are 국어 0.8, 수학 1.0, 영어 0.95, 한국사 1.6, 탐구 1.3.
+  - subject rates are 국어 0.8, 수학 1.0, 영어 0.95, 한국사 1.6, 탐구 1.3;
+  - **early childhood:** each block of play adds 0.1 × its share of a subject × aptitude × condition × headroom(θ) (picture books: Korean 0.6, history 0.3, social studies 0.45; blocks: math 0.7, science 0.5; songs: English 0.8, Korean 0.15; worksheets: Korean and math 0.5), and kindergarten lessons add 0.12 a year × subject rate × aptitude × the kindergarten's multiplier × condition × headroom(θ).
 
 ### University admission (rough)
 
@@ -310,51 +355,74 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 - The bots always pick the first option at events (for bullying, that means telling a teacher and then reporting it).
 - "Best affordable" means the most expensive study method the family's budget covers that turn.
+- In early childhood the bots play their own way: balanced mixes picture books, blocks, songs, playdates and the playground; the slacker watches cartoons and plays; the grinder and smart bots stick to picture books, blocks and songs. All of them go to an ordinary kindergarten.
 - "smart" looks after stress and health, reads in elementary school, adds a timed practice exam in October of High 3, and studies the subject with the most room to grow. It skips English past about the 90-point level and History once it is safe.
 - The bots apply to one reach, one match and one safe school.
 - "Start" is the average ability (0–100) entering High 3.
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 61 | 2.7 · 2.2 · 2.0 | 365 | 365 | 1.00 | 0% | 0% | 28% |
-| slacker (half games & friends), 1 try | 56 | 2.9 · 2.5 · 4.7 | 355 | 355 | 1.00 | 0% | 0% | 11% |
-| grinder (no rest), self-study, 1 try | 65 | 3.0 · 2.3 · 2.0 | 371 | 371 | 1.00 | 0% | 0% | 51% |
-| smart, online lectures, 1 try | 65 | 2.3 · 1.9 · 1.8 | 381 | 381 | 1.00 | 1% | 0% | 65% |
-| smart, best affordable method, 1 try | 67 | 2.1 · 1.7 · 1.6 | 386 | 386 | 1.00 | 8% | 1% | 76% |
-| smart, best affordable, retakes up to 3 tries | 67 | 2.1 · 1.7 · 1.6 | 386 | 410 | 2.51 | 71% | 19% | 100% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 67 | 2.2 · 1.8 · 1.6 | 385 | 419 | 3.70 | 94% | 89% | 99% |
-| smart, best affordable, tries for selective schools, 1 try | 67 | 2.0 · 1.8 · 1.8 | 386 | 386 | 1.00 | 8% | 0% | 80% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 67 | 2.2 · 1.8 · 1.6 | 384 | 420 | 3.70 | 94% | 88% | 99% |
-| balanced, self-study, vocational high school, 1 try | 58 | 2.8 · 2.4 · 1.9 | 356 | 356 | 1.00 | 0% | 0% | 20% |
-| balanced, self-study, leaves school at High 1, 1 try | 60 | 2.9 · 2.4 · 2.1 | 363 | 363 | 1.00 | 0% | 0% | 25% |
-| smart, best affordable, leaves school at High 1, 1 try | 67 | 2.1 · 2.0 · 1.7 | 383 | 383 | 1.00 | 5% | 0% | 73% |
-| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 62 | 2.4 · 2.2 · 2.2 | 377 | 377 | 1.00 | 4% | 0% | 63% |
+| balanced, self-study, 1 try | 61 | 2.6 · 2.0 · 1.7 | 369 | 369 | 1.00 | 0% | 0% | 45% |
+| slacker (half games & friends), 1 try | 56 | 2.9 · 2.3 · 4.7 | 358 | 358 | 1.00 | 0% | 0% | 11% |
+| grinder (no rest), self-study, 1 try | 65 | 2.9 · 2.3 · 2.1 | 373 | 373 | 1.00 | 1% | 0% | 50% |
+| smart, online lectures, 1 try | 66 | 2.2 · 1.9 · 1.7 | 383 | 383 | 1.00 | 5% | 0% | 71% |
+| smart, best affordable method, 1 try | 69 | 1.9 · 1.8 · 1.6 | 388 | 388 | 1.00 | 11% | 3% | 83% |
+| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.8 · 1.6 | 388 | 410 | 2.56 | 74% | 25% | 99% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 1.9 · 1.8 · 1.6 | 387 | 420 | 3.71 | 90% | 88% | 96% |
+| smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.7 · 1.7 | 389 | 389 | 1.00 | 10% | 1% | 86% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.0 · 1.8 · 1.6 | 386 | 420 | 3.79 | 91% | 89% | 98% |
+| balanced, self-study, vocational high school, 1 try | 58 | 2.9 · 2.4 · 1.9 | 354 | 354 | 1.00 | 0% | 0% | 15% |
+| balanced, self-study, leaves school at High 1, 1 try | 61 | 2.7 · 2.2 · 1.9 | 366 | 366 | 1.00 | 0% | 0% | 39% |
+| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.1 · 1.8 · 1.8 | 386 | 386 | 1.00 | 13% | 1% | 71% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 1.9 · 2.1 | 381 | 381 | 1.00 | 10% | 0% | 69% |
 
 The smart bot with the best affordable method, first try only, by family:
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 14 | 63 | 375 | 0% | 64% |
-| Lower-middle income | 15 | 65 | 386 | 7% | 87% |
-| Middle income | 17 | 67 | 382 | 0% | 71% |
-| Upper-middle income | 14 | 68 | 384 | 7% | 57% |
-| High income | 20 | 73 | 397 | 20% | 95% |
+| Low income | 14 | 63 | 374 | 0% | 64% |
+| Lower-middle income | 15 | 66 | 383 | 0% | 87% |
+| Middle income | 17 | 68 | 387 | 12% | 82% |
+| Upper-middle income | 14 | 70 | 391 | 29% | 79% |
+| High income | 20 | 74 | 400 | 15% | 95% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 21 | 70 | 391 | 19% | 86% | 86% |
-| Seoul academy district | 4 | 74 | 400 | 0% | 75% | 100% |
-| Seoul | 4 | 70 | 402 | 25% | 100% | 100% |
-| Capital-region city | 20 | 64 | 376 | 0% | 70% | 75% |
-| Big city | 12 | 67 | 384 | 0% | 75% | 92% |
-| Mid-sized city | 10 | 66 | 388 | 0% | 70% | 100% |
-| Rural county | 9 | 65 | 383 | 11% | 67% | 100% |
+| Gangnam | 20 | 72 | 396 | 25% | 80% | 85% |
+| Seoul academy district | 4 | 71 | 392 | 0% | 100% | 100% |
+| Seoul | 5 | 71 | 395 | 20% | 80% | 100% |
+| Capital-region city | 20 | 65 | 385 | 5% | 90% | 85% |
+| Big city | 10 | 69 | 388 | 10% | 90% | 90% |
+| Mid-sized city | 12 | 68 | 383 | 8% | 75% | 92% |
+| Rural county | 9 | 66 | 377 | 0% | 67% | 78% |
+
+What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 83% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
+
+| Trait | Δ start | Δ first total | In-Seoul+ |
+|---|---|---|---|
+| Sturdy (튼튼한 아기) | +0.5 | +1.3 | 80% |
+| Easygoing (순한 아기) | +0.0 | -0.3 | 84% |
+| Curious (호기심 많은 아기) | +0.5 | +1.5 | 78% |
+| Good sleeper (잘 자는 아기) | +0.1 | +0.8 | 83% |
+| Unflappable (겁 없는 아기) | +0.0 | +1.0 | 81% |
+| All smiles (잘 웃는 아기) | +0.1 | +0.7 | 84% |
+| Pencil (연필) | +1.8 | +3.2 | 83% |
+| Book (책) | +1.0 | +0.9 | 84% |
+| Computer mouse (마우스) | +1.1 | +1.8 | 81% |
+| Stethoscope (청진기) | +0.9 | +3.2 | 85% |
+| Microphone (마이크) | +1.1 | +2.5 | 84% |
+| Judge's gavel (판사봉) | +1.2 | +1.6 | 86% |
+| Ball (공) | +0.2 | +1.5 | 80% |
+| Thread (실) | +0.4 | -0.9 | 76% |
+| Money (돈) | +0.3 | +0.6 | 81% |
+| Paintbrush (붓) | +0.0 | -0.3 | 78% |
 
 What the tables show:
 
-- **School lifts everyone, habits decide the rest:** lessons carry even the slacker to 56 by High 3, and the same random talents end up anywhere from 56 to 67 on average depending on how you spend your free time.
+- **School lifts everyone, habits decide the rest:** lessons carry even the slacker to 56 by High 3, and the same random talents end up anywhere from 56 to 69 on average depending on how you spend your free time, from birth on.
+- **Traits are a head start, not a destiny:** a 돌잡이 subject (pencil, microphone, stethoscope) is worth a few points to a bot that spreads its study, and more to a player who leans into that subject; the temperaments mostly make life more comfortable.
 - **Family income matters, but it isn't destiny:** with the same smart play, the top fifth reaches SKY on the first try about a fifth of the time and the bottom two fifths rarely do. Retakes close much of the gap.
 - **Where you live matters too:** Gangnam's academies give the strongest start, while local and rural quotas help students outside the capital (the region groups above are small, so treat them as a direction, not exact rates).
 - **School choice nudges rather than decides:** the bot that tries for selective schools mostly lands in private ones by lottery (a few get into 자사고 or an international middle school) and does slightly better; the smart bot rarely studies far enough ahead in math and science for a science school; a vocational school costs a 수능 candidate about 9 points of total and a block a turn.
@@ -373,6 +441,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v4.0:** life starts at birth. Ages 0–5 are played a year at a time with play instead of study (picture books, blocks, songs, worksheets from 4, naps, the playground, playdates, cartoons), a kindergarten choice at 3 (daycare or kindergarten, home, forest kindergarten, English kindergarten) and ten early-years events. Two random reveal events deal **traits**, permanent passive bonuses: your temperament in your first weeks (sturdy, easygoing, curious, good sleeper, unflappable, all smiles) and the 돌잡이 at your first birthday (pencil, book, mouse, stethoscope, microphone, gavel, ball, thread, money, paintbrush; sometimes two at once). The Ability panel lists them. Ability at birth is set so a typical early childhood arrives at Elementary 1 exactly where the old age-6 start was. `sim.js` plays the early years and adds a paired test of what each trait is worth. Balance tables regenerated. Saves from before still load and carry on from elementary school.
 
 - **v3.2:** schools, and Korean grade names. At the start of elementary, middle and high school you pick a school: public or private at every stage, a private elementary school in big cities, an international middle school, and at high school 자사고, science and gifted schools, foreign language schools, arts and sports schools, and vocational schools. Each has its own fees (out of the education budget), lottery or entry requirement, lesson strengths, pressure and track limits, plus a few events of its own. Picking the public school changes nothing, so the earlier balance numbers are unchanged; three new bots show the school paths. The English version now counts school years the Korean way (Elementary 1–6, Middle 1–3, High 1–3) instead of grades 1–12, everywhere from the plan title to the diary and the chart.
 

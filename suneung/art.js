@@ -279,6 +279,9 @@
 
   // Which body and clothes fit the life stage.
   function figureFor(stage) {
+    // Ages 0–2 and 3–5: a small child, smaller still as a baby.
+    if (stage === "baby") return { age: "child", outfit: "kid", scale: 0.6 };
+    if (stage === "kinder") return { age: "child", outfit: "kid", scale: 0.8 };
     if (stage === "elem" || stage === "birth") return { age: "child", outfit: "kid", backpack: true };
     if (stage === "mid") return { age: "teen", outfit: "uniform", scale: 0.92 };
     if (stage === "high" || stage === "hs3") return { age: "teen", outfit: "uniform" };
@@ -309,6 +312,14 @@
   }
 
   // ---------- room furniture ----------
+  function crib(x, y) {
+    let s = R(x - 80, y - 90, 160, 8, "wood", 3) + R(x - 80, y - 40, 160, 8, "wood", 3) + R(x - 86, y - 100, 10, 100, "wood2", 3) + R(x + 76, y - 100, 10, 100, "wood2", 3);
+    for (let i = 0; i < 9; i++) s += R(x - 70 + i * 17, y - 84, 4, 46, "wood2", 2);
+    return s + R(x - 76, y - 48, 152, 10, "paper", 4);
+  }
+  function toyBlocks(x, y) {
+    return R(x - 30, y - 22, 22, 22, "c1", 3) + R(x - 6, y - 22, 22, 22, "c3", 3) + R(x - 18, y - 44, 22, 22, "c5", 3) + O(x + 36, y - 10, 10, "c2");
+  }
   function floorPlanks(y, w, h, tok) {
     let s = R(0, y, w, h, tok || "floor");
     for (let i = 1; i < 4; i++) s += L(0, y + (h * i) / 4, w, y + (h * i) / 4, "floor2", 1);
@@ -384,6 +395,17 @@
       s += windowView(640, 70, 130, 100, { season: ctx.season, seed: 21 });
       s += G(140, 233, deskSmall(0, 0)) + G(660, 236, deskSmall(0, 0));
       s += person(ctx, 352, FEET, 1.15);
+      return s;
+    },
+    // Ages 0–2 (and 3–5 at home): a sunny room with a crib, a mobile, a rug and toy blocks.
+    nursery(ctx) {
+      let s = R(0, 0, W, FLOOR, "wall") + R(0, 150, W, FLOOR - 150, "wall2") + floorPlanks(FLOOR, W, H - FLOOR);
+      s += windowView(80, 40, 150, 110, { season: ctx.season, city: true, seed: 91 });
+      s += crib(560, FLOOR) + toyBlocks(430, FLOOR + 14);
+      s += E(360, FLOOR + 16, 150, 14, "c5", null, 0, "opacity:0.35");
+      s += G(620, 40, A("sway", L(0, 0, 0, 16, "line", 1.5) + L(-30, 16, 30, 16, "line", 2) + L(-30, 16, -30, 30, "line", 1) + L(30, 16, 30, 30, "line", 1) + L(0, 16, 0, 34, "line", 1) +
+        O(-30, 36, 7, "c1") + P("M0 34 l7 12 l-14 0 Z", "c3") + O(30, 36, 7, "gold")));
+      s += person(ctx, 340, FEET, 1.1);
       return s;
     },
     hallway(ctx) {
@@ -511,6 +533,8 @@
     if (ctx.ending) return ctx.label ? "gate" : "road";
     if (ctx.examMonth) return "examhall";
     if (ctx.results) return "home";
+    if (stage === "baby") return "nursery";
+    if (stage === "kinder") return ctx.home ? "nursery" : "classroom";
     return { elem: "classroom", mid: "hallway", high: "desk", hs3: "desk", academy: "academy", selfstudy: "cubicle", halfretake: "campus", dropout: "cubicle" }[stage] || "desk";
   }
   function scene(ctx) {
@@ -522,6 +546,11 @@
   // ---------- event illustrations (600 × 220, floor at 178) ----------
   const EW = 600, EH = 220, EF = 178, EFEET = 204;
   const BACKDROPS = {
+    nursery(ctx) {
+      let s = R(0, 0, EW, EF, "wall") + R(0, 130, EW, EF - 130, "wall2") + floorPlanks(EF, EW, EH - EF);
+      s += windowView(420, 26, 120, 90, { season: ctx.season, city: true, seed: 92 });
+      return s + E(300, EF + 14, 200, 12, "c5", null, 0, "opacity:0.3");
+    },
     room(ctx, night) {
       let s = R(0, 0, EW, EF, night ? "nightwall" : "wall") + floorPlanks(EF, EW, EH - EF, night ? "nightfloor" : "floor");
       s += windowView(400, 30, 130, 92, { season: ctx.season, night, city: true, seed: 71 });
@@ -603,6 +632,31 @@
   // Foreground pieces per event. Each returns SVG drawn over the backdrop; v is the outcome suffix
   // (r0a, r1 ...) when the art illustrates a result rather than the question.
   const FX = {
+    // 돌잡이: a low table laid with objects; the grabbed one (the outcome's suffix) sparkles.
+    doljabi: (v) => {
+      const items = {
+        pencil: (x) => R(x - 3, 140, 6, 28, "c5", 1) + P("M" + (x - 3) + " 140 L" + x + " 132 L" + (x + 3) + " 140 Z", "skin"),
+        book: (x) => R(x - 14, 148, 28, 20, "c1", 2) + R(x - 12, 150, 24, 3, "paper", 1),
+        mouse: (x) => E(x, 160, 10, 13, "paper", "line", 1.5) + L(x, 148, x, 156, "line", 1.5),
+        stethoscope: (x) => P("M" + (x - 10) + " 146 Q" + (x - 12) + " 166 " + x + " 166 Q" + (x + 12) + " 166 " + (x + 10) + " 146", null, "dark", 2.5) + O(x, 166, 5, "metal"),
+        mic: (x) => R(x - 3, 150, 6, 18, "dark", 2) + O(x, 147, 7, "metal"),
+        gavel: (x) => R(x - 14, 148, 28, 10, "wood2", 3) + R(x - 2, 156, 4, 14, "wood", 1),
+        ball: (x) => O(x, 158, 11, "c2") + P("M" + (x - 11) + " 158 Q" + x + " 150 " + (x + 11) + " 158", null, "paper", 1.5),
+        thread: (x) => R(x - 9, 150, 18, 18, "paper", 3, "line", 1) + L(x - 9, 155, x + 9, 155, "c1", 2) + L(x - 9, 161, x + 9, 161, "c1", 2),
+        money: (x) => R(x - 14, 154, 28, 14, "leaf", 2) + R(x - 10, 150, 28, 14, "leaf", 2, "paper", 1) + O(x + 4, 157, 3, "paper"),
+        brush: (x) => R(x - 2, 140, 4, 24, "wood", 1) + P("M" + (x - 4) + " 164 L" + (x + 4) + " 164 L" + x + " 174 Z", "dark"),
+      };
+      const ids = Object.keys(items);
+      let s = R(300, 166, 290, 14, "wood", 4) + R(310, 180, 10, 24, "wood2", 2) + R(570, 180, 10, 24, "wood2", 2) + R(296, 160, 298, 8, "c1", 3, null, 0, "opacity:0.6");
+      ids.forEach((id, i) => {
+        const x = 320 + i * 28;
+        s += items[id](x);
+        if (v === id || (v === "two" && (i === 1 || i === 6))) s += sparkle(x, 126, 0.8) + sparkle(x + 10, 140, 0.5, "c5");
+      });
+      return s;
+    },
+    mobile: () => G(440, 20, A("sway", L(0, 0, 0, 20, "line", 1.5) + L(-50, 20, 50, 20, "line", 2) + O(-50, 40, 9, "c1") + P("M0 36 l9 16 l-18 0 Z", "c3") + O(50, 40, 9, "gold") +
+      L(-50, 20, -50, 31, "line", 1) + L(0, 20, 0, 36, "line", 1) + L(50, 20, 50, 31, "line", 1))) + heart(360, 90, 1.2, "c1", -1) + heart(520, 110, 1, "blossom", -2),
     cracks: () => A("shake", P("M380 20 L392 50 L380 70 L398 100 L386 128", null, "ink", 2.5) + P("M120 30 L132 56 L122 76 L136 104", null, "ink", 2)) +
       R(330, 150, 10, 8, "stone", 1) + R(352, 160, 8, 6, "stone", 1) + R(110, 156, 9, 7, "stone", 1),
     bus: () => G(420, 150, R(-60, -34, 140, 46, "c3", 8) + R(-52, -28, 30, 16, "screen", 2) + R(-16, -28, 30, 16, "screen", 2) + R(20, -28, 30, 16, "screen", 2) +
@@ -718,6 +772,18 @@
     intern: { bg: "street", fx: "shop", mood: "happy", x: 420, icon: "🔧" },
     rankshock: { bg: "class", fx: "raincloud", mood: "stressed", icon: "📉" },
     immersion: { bg: "class", fx: "chat", mood: "happy", icon: "🗣️" },
+    // Early childhood. The two trait reveals, then the early-years events.
+    newborn: { bg: "nursery", fx: "mobile", mood: "happy", x: 200, icon: "👶" },
+    doljabi: { bg: "nursery", fx: "doljabi", mood: "happy", pose: "cheer", x: 200, icon: "🎂" },
+    firstword: { bg: "nursery", fx: "hearts", mood: "happy", icon: "🗣️" },
+    firststeps: { bg: "nursery", fx: "sparkles", mood: "happy", pose: "cheer", icon: "👣" },
+    daycarecold: { bg: "room", fx: "bed", mood: "sick", prop: "mask", icon: "🤧" },
+    bump: { bg: "field", fx: "sparkles", mood: "sick", icon: "🩹" },
+    sibling: { bg: "nursery", fx: "mobile", mood: "grumpy", icon: "🍼" },
+    grandstory: { bg: "room", night: true, fx: "grandma", mood: "happy", x: 220, icon: "👵" },
+    hangul: { bg: "nursery", fx: "notes", mood: "ok", icon: "🔤", res: { r1: { mood: "happy" } } },
+    kinderplay: { bg: "class", fx: "podium", mood: "happy", pose: "cheer", icon: "🌳" },
+    prodigy: { bg: "class", fx: "mathsyms", mood: "stressed", icon: "🧠", res: { r0a: { mood: "happy", pose: "cheer" }, r0b: { mood: "tired" }, r1: { mood: "ok" } } },
     // Leaving school: the dialog's picture, 검정고시, the early Suneung, loneliness, Chuseok questions.
     dropout: { bg: "hall", fx: "door", mood: "ok", x: 220, icon: "🚪" },
     ged: { bg: "class", fx: "planner", mood: "stressed", icon: "📜", res: { pass0: { mood: "happy", pose: "cheer" }, pass1: { mood: "happy", pose: "cheer" }, fail0: { mood: "tired" }, fail1: { mood: "tired" } } },
@@ -733,7 +799,7 @@
     [/phone|sns|chat|online/, "smartphone"],
     [/friend|party|trip|camp/, "festival"],
   ];
-  const STAGE_BG = { elem: "class", mid: "hall", high: "room", hs3: "room", academy: "cubicle", selfstudy: "cubicle", halfretake: "campus", dropout: "cubicle" };
+  const STAGE_BG = { baby: "nursery", kinder: "class", elem: "class", mid: "hall", high: "room", hs3: "room", academy: "cubicle", selfstudy: "cubicle", halfretake: "campus", dropout: "cubicle" };
   function specFor(id, stage) {
     if (EVENT_ART[id]) return EVENT_ART[id];
     const head = String(id).split(/[-_.:]/)[0];

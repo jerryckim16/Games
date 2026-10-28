@@ -120,10 +120,16 @@
     { id: "reading", kind: "life", to: 11 },
     { id: "arts", kind: "life", to: 9, cost: 150000 },
     { id: "mock", kind: "life", from: 10 },
-    { id: "rest", kind: "life" },
-    { id: "exercise", kind: "life" },
-    { id: "friends", kind: "life" },
-    { id: "games", kind: "life" },
+    { id: "rest", kind: "life", alsoEarly: true },
+    { id: "exercise", kind: "life", alsoEarly: true },
+    { id: "friends", kind: "life", alsoEarly: true },
+    { id: "games", kind: "life", alsoEarly: true },
+    // Early childhood (ages 0–5): learning through play. Rest, exercise, friends and games are offered
+    // too, as naps, the playground, playdates and cartoons.
+    { id: "books", kind: "play", early: true },
+    { id: "blocks", kind: "play", early: true },
+    { id: "songs", kind: "play", early: true },
+    { id: "worksheet", kind: "play", early: true, fromAge: 4, cost: 40000 },
     { id: "job", kind: "life", from: 10 },
   ];
   const JOB_PAY = 250000; // won per block per month
@@ -139,6 +145,8 @@
   // School years before grade 12 move in big steps (a year, a semester, a season); grade 12 and every
   // retake year are played month by month, and 수능 month only has half a month.
   const STATUSES = {
+    // Birth to age 5: a year a turn, three blocks, and the parents choose (you're the one growing up).
+    early: { months: 12, blocks: () => 3, school: true, early: true },
     elem: { months: 12, blocks: () => 4, school: true },
     mid: { months: 6, blocks: () => 4, school: true },
     high: { months: 3, blocks: (m) => (m === 6 || m === 12 ? 5 : 4), school: true },
@@ -227,6 +235,13 @@
   // board: boarding or commuter schools you keep when the family moves; others are swapped for the
   // local public school.
   const SCHOOLS = [
+    // Kindergarten from age 3. Most children go to daycare or kindergarten, free under the national
+    // 누리과정; some stay home with family, some go to a forest kindergarten, and big-city families
+    // with money pay for an English kindergarten (영어유치원).
+    { id: "kinder", stage: "kinder", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
+    { id: "homeCare", stage: "kinder", fee: 0, lessons: { all: 0.3 }, stress: -2, motivation: 0, admit: () => 1 },
+    { id: "forest", stage: "kinder", fee: 150000, lessons: { all: 0.8 }, stress: -3, motivation: 2, health: 3, admit: () => 0.6 },
+    { id: "engKinder", stage: "kinder", fee: 900000, lessons: { all: 1.05, eng: 3 }, stress: 2, motivation: 0, admit: () => 1, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
     { id: "pubElem", stage: "elem", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
     // 사립초: ₩10M a year or so, small classes and English immersion, by lottery (about 2 applicants a seat).
     { id: "privElem", stage: "elem", fee: 800000, lessons: { all: 1.15, eng: 1.5 }, stress: 1, motivation: 2, admit: () => 0.5, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
@@ -249,7 +264,60 @@
     { id: "vocHigh", stage: "high", fee: 0, lessons: { all: 0.4 }, blocks: -1, stress: -3, motivation: -2, job: 1.5, admit: () => 0.95 },
   ];
   const SCHOOL_BY_ID = Object.fromEntries(SCHOOLS.map((x) => [x.id, x]));
-  const DEFAULT_SCHOOL = { elem: "pubElem", mid: "pubMid", high: "pubHigh" };
+  const DEFAULT_SCHOOL = { kinder: "kinder", elem: "pubElem", mid: "pubMid", high: "pubHigh" };
+
+  // ---------- early childhood ----------
+  // Life starts at birth. Ability at birth is EARLY_GAP below the age-6 level the rest of the game is
+  // tuned from, and a typical early childhood (sim.js's balanced bot at an ordinary kindergarten)
+  // closes it, so a typical child still starts elementary school where it always did.
+  // EARLY_FEED: what a block of each kind of play feeds, by subject, at EARLY_RATE a block.
+  // KINDER_YEAR: kindergarten lessons a year, like school lessons (ages 3–5).
+  const EARLY_GAP = 0.66;
+  const EARLY_RATE = 0.1;
+  const EARLY_FEED = {
+    books: { kor: 0.6, hist: 0.3, inq1: 0.45 },
+    blocks: { math: 0.7, inq2: 0.5 },
+    songs: { eng: 0.8, kor: 0.15 },
+    worksheet: { kor: 0.5, math: 0.5 },
+  };
+  const KINDER_YEAR = 0.12;
+
+  // ---------- traits ----------
+  // Passive bonuses dealt by two reveal events: your temperament, noticed in your first weeks, and
+  // what you grab at your first-birthday 돌잡이. Each is rolled from its own seeded stream, so the
+  // seed fixes them like the family and talents. fx keys: apt (aptitude per subject, permanent),
+  // healthRest / stressRest (the resting levels health and stress drift to), mot (motivation
+  // baseline), and multipliers: rest, exercise, friends, reading (also picture books), ill (chance of
+  // colds and flu), bully (chance of bullying), nerves (exam-day nerves and stress hit), sebae (New
+  // Year's money), arts (arts & sports lessons toward an arts-school audition).
+  const TEMPERAMENTS = {
+    sturdy: { healthRest: 8, ill: 0.5 },
+    calm: { stressRest: -6 },
+    curious: { mot: 4 },
+    sleeper: { rest: 1.5, insomnia: 0 },
+    steady: { nerves: 0.5 },
+    smiley: { friends: 1.3, bully: 0.6 },
+  };
+  const TEMPERAMENT_IDS = Object.keys(TEMPERAMENTS);
+  // 돌잡이 items. Modern tables add a mouse, a stethoscope, a microphone and a judge's gavel to the
+  // traditional pencil, book, thread, money and brush.
+  const DOLJABI = {
+    pencil: { apt: { kor: 0.25 }, reading: 1.25 },
+    book: { apt: { hist: 0.15, inq1: 0.15 } },
+    mouse: { apt: { math: 0.25 } },
+    stethoscope: { apt: { inq2: 0.25 } },
+    mic: { apt: { eng: 0.25 } },
+    gavel: { apt: { kor: 0.12, inq1: 0.12 } },
+    ball: { exercise: 1.5, healthRest: 3 },
+    thread: { healthRest: 5, ill: 0.6 },
+    money: { sebae: 1.5, cash: 300000 },
+    brush: { arts: 2, stressRest: -2 },
+  };
+  const DOLJABI_IDS = Object.keys(DOLJABI);
+  const TRAIT_FX = Object.assign({}, TEMPERAMENTS, DOLJABI);
+  // Roughly one baby in twelve grabs two things at once.
+  const DOUBLE_GRAB = 0.08;
+
   // How far ahead of your year group you are in these subjects, in the units standing() uses.
   function zOf(g, subs) {
     const avg = subs.reduce((a, x) => a + g.skills[x], 0) / subs.length;
@@ -444,6 +512,66 @@
   // it has `choices` options and run(g, i) applies option i. run returns the outcome's key suffix
   // (strings.js has "ev.<id>.<suffix>"), or [suffix, params] when the text names something.
   const EVENTS = [
+    // ----- early childhood (ages 0–5; stageFits keeps these before school and the rest after) -----
+    // Your first weeks: your parents notice your temperament. Pushed at birth, never rolled.
+    {
+      id: "newborn", early: true, weight: 0, when: () => false, choices: 1,
+      run: (g) => {
+        const r = makeRng(hashSeed(g.seed, "temperament"));
+        const t = TEMPERAMENT_IDS[Math.floor(r() * TEMPERAMENT_IDS.length)];
+        g.addTrait(t);
+        return "r." + t;
+      },
+    },
+    // 돌잡이 at the first-birthday party: whatever you grab is said to foretell your future, and here
+    // it gives you a head start. Pushed by nextTurn at age 1.
+    {
+      id: "doljabi", early: true, weight: 0, when: () => false, choices: 1,
+      run: (g) => {
+        const r = makeRng(hashSeed(g.seed, "doljabi"));
+        const first = DOLJABI_IDS[Math.floor(r() * DOLJABI_IDS.length)];
+        g.addTrait(first);
+        if (r() < DOUBLE_GRAB) {
+          const rest = DOLJABI_IDS.filter((x) => x !== first);
+          const second = rest[Math.floor(r() * rest.length)];
+          g.addTrait(second);
+          return ["two", { a: first, b: second }];
+        }
+        return ["r." + first, { a: first }];
+      },
+    },
+    { id: "firstword", early: true, weight: 3, when: (g) => g.age <= 2 && !g.flags.firstWord, run: (g) => { g.flags.firstWord = 1; studyBoost(g, "kor", 0.03); bump(g, { motivation: 4 }); return "r"; } },
+    { id: "firststeps", early: true, weight: 3, when: (g) => g.age <= 1 && !g.flags.firstSteps, run: (g) => { g.flags.firstSteps = 1; bump(g, { health: 6, motivation: 3 }); return "r"; } },
+    {
+      id: "daycarecold", early: true, weight: (g) => 2 * g.trait("ill"), when: (g) => g.atKinder() && g.schoolInfo().id !== "homeCare",
+      run: (g) => { bump(g, { health: -12, stress: 3 }); return "r"; },
+    },
+    { id: "bump", early: true, weight: 1.5, when: (g) => g.age >= 1 && !g.flags.bump, run: (g) => { g.flags.bump = 1; bump(g, { health: -8, stress: 3 }); return "r"; } },
+    {
+      id: "sibling", early: true, weight: 1, when: (g) => g.age >= 2 && !g.flags.sibling,
+      run: (g) => { g.flags.sibling = g.rng() < 0.5 ? "m" : "f"; bump(g, { stress: 8, motivation: -3 }); return ["r", { sib: g.flags.sibling }]; },
+    },
+    { id: "grandstory", early: true, weight: 1.5, when: (g) => g.age >= 2 && !g.flags.grandstory, run: (g) => { g.flags.grandstory = 1; studyBoost(g, "hist", 0.03); studyBoost(g, "inq1", 0.02); bump(g, { stress: -4 }); return "r"; } },
+    {
+      // Learning to read 한글 before school: common, and a choice for the parents.
+      id: "hangul", early: true, weight: 3, when: (g) => g.age >= 4 && !g.flags.hangul, choices: 2,
+      run: (g, i) => {
+        g.flags.hangul = 1;
+        if (i === 0) { studyBoost(g, "kor", 0.05); bump(g, { stress: 5 }); return "r0"; }
+        bump(g, { stress: -5, motivation: 3 }); return "r1";
+      },
+    },
+    { id: "kinderplay", early: true, weight: 2, when: (g) => g.atKinder() && g.schoolInfo().id !== "homeCare" && !g.flags.kinderplay, run: (g) => { g.flags.kinderplay = 1; bump(g, { motivation: 6, stress: -3 }); return "r"; } },
+    {
+      // A 영재 (gifted) test the year before school.
+      id: "prodigy", early: true, weight: 2, when: (g) => g.age === 5 && !g.flags.prodigy, choices: 2,
+      run: (g, i) => {
+        g.flags.prodigy = 1;
+        if (i === 1) return "r1";
+        if (zOf(g, ["kor", "math", "eng", "inq1", "inq2"]) > 0.6 || g.rng() < 0.15) { bump(g, { motivation: 10 }); return "r0a"; }
+        bump(g, { stress: 6, motivation: -2 }); return "r0b";
+      },
+    },
     // ----- childhood -----
     { id: "sportsday", weight: 1.5, when: (g) => g.grade <= 6, run: (g) => { bump(g, { health: 6, stress: -6, motivation: 4 }); return "r"; } },
     { id: "bookworm", weight: 1.5, when: (g) => g.grade <= 8, run: (g) => { studyBoost(g, "kor", 0.05); bump(g, { motivation: 3 }); return "r"; } },
@@ -692,8 +820,8 @@
         bump(g, { stress: 4, motivation: 3 }); studyBoost(g, pickWeak(g), 0.03); return "r1";
       },
     },
-    { id: "cold", weight: 2, when: () => true, run: (g) => { bump(g, { health: -18, stress: 4 }); return "r"; } },
-    { id: "flu", weight: 1, when: (g) => g.health < 45, run: (g) => { bump(g, { health: -25, stress: 6 }); g.lostBlocks += 2; return "r"; } },
+    { id: "cold", weight: (g) => 2 * g.trait("ill"), when: () => true, run: (g) => { bump(g, { health: -18, stress: 4 }); return "r"; } },
+    { id: "flu", weight: (g) => g.trait("ill"), when: (g) => g.health < 45, run: (g) => { bump(g, { health: -25, stress: 6 }); g.lostBlocks += 2; return "r"; } },
     {
       id: "star", weight: 2, when: (g) => g.grade >= 10 && g.money >= 300000, choices: 2,
       run: (g, i) => {
@@ -734,7 +862,7 @@
       run: (g) => { bump(g, { stress: 6 }); g.money = Math.max(0, g.money - 200000); return "r"; },
     },
     { id: "grandma", weight: 1, when: () => true, run: (g) => { g.money += 200000; bump(g, { motivation: 5, stress: -4 }); return "r"; } },
-    { id: "insomnia", weight: 1.2, when: (g) => g.grade >= 7 && g.stress > 55, run: (g) => { bump(g, { health: -10 }); return "r"; } },
+    { id: "insomnia", weight: (g) => 1.2 * g.trait("insomnia"), when: (g) => g.grade >= 7 && g.stress > 55, run: (g) => { bump(g, { health: -10 }); return "r"; } },
     {
       id: "festival", weight: 1, when: (g) => !g.dropoutActive() && ((g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high"), choices: 2,
       run: (g, i) => {
@@ -794,7 +922,7 @@
     const stage = g.status === "elem" ? 1.4 : g.status === "mid" ? 1 : 0.3;
     const newKid = g.flags.moved != null && g.clock - g.flags.moved <= 12 ? 2 : 1;
     const alone = g.lastPlan && !g.lastPlan.friends ? 1.4 : 1;
-    return BULLY_BASE * stage * newKid * alone * Math.pow(0.5, g.flags.bullyN || 0);
+    return BULLY_BASE * stage * newKid * alone * Math.pow(0.5, g.flags.bullyN || 0) * g.trait("bully");
   }
   const BULLY_BASE = 0.25;
   // Leaving school: extra blocks a turn, the motivation baseline it costs, and stress a turn spent alone.
@@ -876,18 +1004,22 @@
       this.family = FAMILIES[opts.family] ? opts.family : Game.rollFamily(seed, bornIn);
       this.track = null; // chosen at the end of grade 10
       this.inq = null;
+      // startYear is the year you start elementary school; life starts six years earlier, at birth.
       this.startYear = opts.startYear || 2026;
-      this.year = this.startYear;
+      this.year = this.startYear - 6;
       this.month = 3;
-      this.grade = 1;
+      // Grade 0 until elementary school; the early years count age instead.
+      this.grade = 0;
       this.attempt = 1;
       // International age (만 나이): most children start grade 1 in March at 6 and turn 7 that year.
-      this.age = 6;
-      this.status = "elem";
+      this.age = 0;
+      this.status = "early";
+      this.traits = []; // temperament and 돌잡이 ids (see TEMPERAMENTS, DOLJABI); absent in old saves
       this.method = "self";
       const talent = Game.rollTalent(seed, this.family);
       this.aptitude = Object.assign({}, talent.aptitude);
       this.skills = Object.assign({}, talent.skills);
+      for (const sub in this.skills) this.skills[sub] = Math.round((this.skills[sub] - EARLY_GAP) * 100) / 100;
       this.practice = 0.1;
       this.health = 80;
       this.stress = 15;
@@ -899,8 +1031,8 @@
       this.log = [];
       this.history = []; // finished 수능 results
       this.mocks = []; // mock exam results
-      this.trace = [{ t: this.t(), att: 1, ph: "elem", skills: Object.assign({}, this.skills) }];
-      this.queue = [{ type: "birth" }, { type: "school", stage: "elem" }];
+      this.trace = [{ t: this.t(), att: 1, ph: "early", skills: Object.assign({}, this.skills) }];
+      this.queue = [{ type: "birth" }, { type: "event", id: "newborn", choices: 1 }];
       this.examMods = { shift: 0 };
       this.enrolled = null; // university id kept while doing 반수
       this.ending = null;
@@ -911,7 +1043,7 @@
       // there (from grade 7).
       this.region = bornIn;
       this.regionFrom = 1;
-      this.addLog("log.born", { fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex, reg: this.region }, "milestone");
+      this.addLog("log.born", { early: 1, fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex, reg: this.region }, "milestone");
     }
 
     // Birth region, weighted only by population share.
@@ -959,6 +1091,23 @@
     phase() { return STATUSES[this.status].school ? this.status : "a" + this.attempt; }
 
     inSchool() { return !!STATUSES[this.status].school; }
+    isEarly() { return !!STATUSES[this.status].early; }
+    // The combined effect of your traits on one fx key: a sum for levels, a product for multipliers.
+    trait(key) {
+      const add = key === "healthRest" || key === "stressRest" || key === "mot" || key === "cash";
+      let v = add ? 0 : 1;
+      for (const id of this.traits || []) {
+        const fx = TRAIT_FX[id];
+        if (fx && fx[key] != null) v = add ? v + fx[key] : v * fx[key];
+      }
+      return v;
+    }
+    addTrait(id) {
+      this.traits = (this.traits || []).concat(id);
+      const fx = TRAIT_FX[id];
+      for (const sub in fx.apt || {}) this.aptitude[sub] = Math.round(Math.min(1.7, this.aptitude[sub] + fx.apt[sub]) * 100) / 100;
+      if (fx.cash) this.money += fx.cash;
+    }
     turnMonths() { return STATUSES[this.status].months; }
     blocks() { return Math.max(1, this.baseBlocks() - this.lostBlocks); }
     // Out of school, the hours that went to classes are yours: two more blocks a turn in grades 7–11. Grade
@@ -988,11 +1137,14 @@
       this.addLog("log.dropout", { g: this.grade }, "milestone");
       if (this.bully) { endBully(this); this.addLog("log.bullyEnd", { why: "quit" }, "event"); }
     }
-    activities() { return ACTIVITIES.filter((a) => (a.from || 1) <= this.grade && this.grade <= (a.to || 12)); }
+    activities() {
+      if (this.isEarly()) return ACTIVITIES.filter((a) => (a.early && (a.fromAge || 0) <= this.age) || a.alsoEarly);
+      return ACTIVITIES.filter((a) => !a.early && (a.from || 1) <= this.grade && this.grade <= (a.to || 12));
+    }
     allowance() {
       const a = FAMILIES[this.family].allowance;
       // School fees come out of the same education budget while you're there.
-      return (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() ? this.schoolInfo().fee : 0);
+      return (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0);
     }
 
     // ----- schools -----
@@ -1000,7 +1152,7 @@
     atSchool(...ids) { return this.inClass() && ids.indexOf(this.schoolInfo().id) >= 0; }
     // The school you're at. Saves from before schools existed have none: the public one for the stage.
     schoolInfo() {
-      const st = this.status === "hs3" ? "high" : this.status;
+      const st = this.status === "hs3" ? "high" : this.status === "early" ? "kinder" : this.status;
       const x = SCHOOL_BY_ID[this.school];
       return x && x.stage === st ? x : SCHOOL_BY_ID[DEFAULT_SCHOOL[st] || "pubHigh"];
     }
@@ -1180,7 +1332,20 @@
       const reading = plan.reading || 0;
       if (reading) {
         const share = { kor: 0.6, hist: 0.25, inq1: 0.25 };
-        for (const s in share) this.skills[s] += reading * 0.24 * share[s] * this.aptitude[s] * eff * headroom(this.skills[s]) * k;
+        for (const s in share) this.skills[s] += reading * 0.24 * share[s] * this.aptitude[s] * eff * headroom(this.skills[s]) * k * this.trait("reading");
+      }
+      // Early childhood: play feeds the subjects it touches, and kindergarten adds lessons of its own.
+      if (this.isEarly()) {
+        for (const id in EARLY_FEED) {
+          const n = plan[id] || 0;
+          if (!n) continue;
+          const tm = id === "books" ? this.trait("reading") : 1;
+          for (const s in EARLY_FEED[id]) this.skills[s] += n * EARLY_RATE * EARLY_FEED[id][s] * this.aptitude[s] * eff * headroom(this.skills[s]) * tm;
+        }
+        if (this.atKinder()) {
+          const kl = this.schoolInfo().lessons;
+          for (const s of SUBJECTS) this.skills[s] += KINDER_YEAR * SUBJECT_INFO[s].rate * this.aptitude[s] * eff * headroom(this.skills[s]) * (kl[s] || kl.all || 1);
+        }
       }
       // Lessons: being at school teaches every subject a little each turn, whatever you do with your
       // free blocks. Classes are pitched at the grade, so they help most when you're behind the class
@@ -1206,32 +1371,35 @@
 
       // Condition. Study is stressful; in grade 12 the pressure rises as November gets closer.
       const drop = this.dropoutActive();
-      const pressure = this.status === "elem" || drop ? 0 : school ? 1 : this.month >= 9 ? 4 + (this.month - 9) * 2 : 2;
+      const pressure = this.status === "elem" || this.isEarly() || drop ? 0 : school ? 1 : this.month >= 9 ? 4 + (this.month - 9) * 2 : 2;
       // Stress and health also recover on their own toward a baseline, so a steady workload settles
       // at a level instead of spiralling; heavy turns push the level up.
       const d = {
-        stress: pressure + studied * 1.6 + mock * 3 + (25 - this.stress) * 0.25,
-        health: -1 - studied * 0.6 + (72 - this.health) * 0.15,
+        stress: pressure + studied * 1.6 + mock * 3 + (25 + this.trait("stressRest") - this.stress) * 0.25 + (plan.worksheet || 0) * 4,
+        health: -1 - studied * 0.6 + (72 + this.trait("healthRest") - this.health) * 0.15,
         motivation: 0,
       };
-      d.stress -= (plan.rest || 0) * 9 + (plan.exercise || 0) * 6 + (plan.friends || 0) * 14 + (plan.games || 0) * 10 + (plan.arts || 0) * 8 + reading * 3;
-      d.health += (plan.rest || 0) * 7 + (plan.exercise || 0) * 11 + (plan.arts || 0) * 8 - (plan.job || 0) * 4;
+      // Traits make some of these go further (a good sleeper rests better, a smiley child gets more out
+      // of friends).
+      const tRest = this.trait("rest"), tEx = this.trait("exercise");
+      d.stress -= (plan.rest || 0) * 9 * tRest + (plan.exercise || 0) * 6 * tEx + (plan.friends || 0) * 14 * this.trait("friends") + (plan.games || 0) * 10 + (plan.arts || 0) * 8 + reading * 3 + (plan.books || 0) * 2;
+      d.health += (plan.rest || 0) * 7 * tRest + (plan.exercise || 0) * 11 * tEx + (plan.arts || 0) * 8 - (plan.job || 0) * 4;
       // Where you live: Gangnam's pressure, the countryside's quiet.
       const rk = this.regionKindInfo();
       d.stress += rk.stress;
       d.health += rk.health;
       // The school you're at: a special school's pace, or an arts school's breathing room.
-      const sch = this.inClass() ? this.schoolInfo() : null;
-      if (sch) d.stress += sch.stress;
+      const sch = this.inClass() || this.atKinder() ? this.schoolInfo() : null;
+      if (sch) { d.stress += sch.stress; d.health += sch.health || 0; }
       // Arts & sports lessons over the years are what an arts high school audition looks at.
-      if (plan.arts) this.flags.artsN = (this.flags.artsN || 0) + plan.arts * months / 12 * 2;
+      if (plan.arts) this.flags.artsN = (this.flags.artsN || 0) + plan.arts * months / 12 * 2 * this.trait("arts");
       d.stress += (plan.job || 0) * 5;
       d.motivation += (plan.friends || 0) * 3 - (plan.games || 0) * 4 + (plan.arts || 0) * 4;
       // Out of school, nobody sets the pace and nobody's around: a lower baseline, and loneliness
       // without time for friends.
       if (drop && !plan.friends) d.stress += DROPOUT_LONELY;
       // Motivation drifts back toward a baseline that sags with every extra year.
-      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
+      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) + this.trait("mot") - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
       // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
       // softens the toll on your body.
@@ -1254,7 +1422,7 @@
       if (this.status === "mid" && !drop) this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
       if (school && (this.month === 3 && months === 12 || this.month + months > 12)) {
-        const gift = Math.min(300000, 60000 + this.age * 10000);
+        const gift = Math.round(Math.min(300000, 60000 + this.age * 10000) * this.trait("sebae"));
         this.money += gift;
         this.addLog("log.sebae", { a: gift }, "");
       }
@@ -1265,7 +1433,7 @@
       const seen = new Set();
       // Fixed milestones (D-100, free-semester career week, 중2) always fire when their time comes, and so
       // does the bullying follow-up while it lasts.
-      for (const e of EVENTS) if (weightOf(e, this) >= 100 && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
+      for (const e of EVENTS) if (weightOf(e, this) >= 100 && this.stageFits(e) && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
       for (let i = 0; i < n; i++) this.rollEvent(seen);
       if ((plan.friends || 0) > 0 && rng() < 0.35 && !seen.has("pcbang") && this.grade >= 7 && this.clock - (this.flags["ev-pcbang"] || -99) >= 4) {
         this.fireEvent(EVENTS.find((e) => e.id === "pcbang"));
@@ -1295,13 +1463,15 @@
     }
     typicalLevel() { return -START_GAP + TYPICAL_CLIMB * (this.grade - 1); }
     // Sitting in classes this turn: school years and grade 12, unless you've left school.
-    inClass() { return (this.inSchool() || this.status === "hs3") && this.dropout == null; }
+    inClass() { return (this.inSchool() || this.status === "hs3") && this.dropout == null && !this.isEarly(); }
+    // Ages 3–5, at whatever kindergarten (or home) was picked.
+    atKinder() { return this.isEarly() && this.age >= 3; }
     classRank() { return clamp(Math.round((1 - this.standing()) * 30) + 1, 1, 30); }
     classLevel() { const s = this.standing(); return s > 0.8 ? 3 : s > 0.4 ? 2 : 1; }
 
     rollEvent(seen) {
       // An event that just happened waits at least four months before it can happen again.
-      const pool = EVENTS.filter((e) => !seen.has(e.id) && weightOf(e, this) < 100 && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
+      const pool = EVENTS.filter((e) => !seen.has(e.id) && weightOf(e, this) < 100 && this.stageFits(e) && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
       let total = 0;
       for (const e of pool) total += weightOf(e, this);
       let r = this.rng() * total;
@@ -1310,6 +1480,8 @@
         if (r <= 0) { seen.add(e.id); this.fireEvent(e); return; }
       }
     }
+    // Early-childhood events only happen before school, and every other event only after.
+    stageFits(e) { return !!e.early === this.isEarly(); }
     fireEvent(e) {
       this.flags["ev-" + e.id] = this.clock;
       if (e.choices) this.queue.push({ type: "event", id: e.id, choices: e.choices });
@@ -1393,6 +1565,18 @@
     nextTurn() {
       this.month += this.turnMonths();
       if (this.month > 12) { this.month -= 12; this.year += 1; }
+      // Early childhood: a birthday a year, the 돌잡이 at one, kindergarten at three, school at six.
+      if (this.isEarly()) {
+        this.age += 1;
+        if (this.age === 1) this.queue.push({ type: "event", id: "doljabi", choices: 1 });
+        if (this.age === 3) this.queue.push({ type: "school", stage: "kinder" });
+        if (this.age < 6) { this.addLog("log.birthday", { a: this.age, y: this.year }, ""); return; }
+        this.grade = 1;
+        this.status = "elem";
+        this.addLog("log.stage", { g: 1, st: "elem", y: this.year }, "milestone");
+        this.queue.push({ type: "school", stage: "elem" });
+        return;
+      }
       if (this.month === 3 && this.inSchool()) {
         const was = this.status;
         this.grade += 1;
@@ -1459,9 +1643,9 @@
     sitExam(kind, month) {
       const real = kind === "suneung";
       const rng = this.rng;
-      const stressHit = this.stress > 65 ? -0.25 * (this.stress - 65) / 35 : 0;
+      const stressHit = (this.stress > 65 ? -0.25 * (this.stress - 65) / 35 : 0) * this.trait("nerves");
       const healthHit = this.health < 45 ? -0.25 * (45 - this.health) / 45 : 0;
-      const nerves = real ? -0.08 * (1 - this.practice) : 0;
+      const nerves = real ? -0.08 * (1 - this.practice) * this.trait("nerves") : 0;
       const sigma = 0.32 - 0.22 * this.practice;
       const dayForm = rng.normal() * sigma * 0.6 + (real ? this.examMods.shift : 0);
       const examKey = hashSeed(this.seed, this.year, kind, month);
@@ -1610,7 +1794,7 @@
   }
 
   const api = {
-    Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SCHOOLS, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
+    Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SCHOOLS, TEMPERAMENTS, DOLJABI, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
     inquiryInfo, admissionScore, admitChance, chanceLabel, gradeSubject, makeRng, hashSeed,
     skillScore: (theta) => clamp(Math.round(50 + theta * 16.67), 0, 100),
   };
