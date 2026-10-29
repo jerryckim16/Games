@@ -70,6 +70,11 @@
       },
       parents: { both: "Both parents", mom: "Single mom", dad: "Single dad", grand: "Raised by grandparents", care: "Children's home" },
       homeCareCare: "In the home with the carers", homeCareCareNoun: "the home, with the carers",
+      jobs: {
+        exec: "company executive", doctor: "doctor", pro: "engineer or accountant", dev: "software developer", teacher: "teacher", nurse: "nurse",
+        civil: "civil servant", office: "office worker", service: "service worker", shop: "small-shop owner", sales: "salesperson", farmer: "farmer",
+        builder: "construction worker", driver: "driver", factory: "factory worker", labor: "cleaner or security guard", home: "stays at home",
+      },
       school: {
         kinder: "Daycare and kindergarten", homeCare: "At home with family", forest: "Forest kindergarten", engKinder: "English kindergarten",
         pubElem: "Public elementary school", privElem: "Private elementary school",
@@ -173,6 +178,11 @@
       },
       parents: { both: "부모님과 함께", mom: "한부모(엄마)", dad: "한부모(아빠)", grand: "조부모 가정", care: "보육원(아동양육시설)" },
       homeCareCare: "보육원에서 지내기", homeCareCareNoun: "보육원",
+      jobs: {
+        exec: "회사 임원", doctor: "의사", pro: "엔지니어·회계사", dev: "개발자", teacher: "교사", nurse: "간호사",
+        civil: "공무원", office: "회사원", service: "서비스직", shop: "가게 사장님", sales: "판매원", farmer: "농어민",
+        builder: "건설 기능공", driver: "운전기사", factory: "생산직", labor: "청소·경비원", home: "전업 살림",
+      },
       school: {
         kinder: "어린이집·유치원", homeCare: "가정 보육", forest: "숲유치원", engKinder: "영어유치원",
         pubElem: "공립 초등학교", privElem: "사립 초등학교",
@@ -370,10 +380,13 @@
       "ev.saju.r.even": "\"An ordinary fortune. What they make of it is up to them.\" (Luck: average.)",
       "ev.saju.r.mixed": "\"Some storms, but they pass.\" Your grandmother tucks a charm into your blanket. (Luck: a little unlucky.)",
       "ev.saju.r.rough": "\"A hard road. This one will have to be tough.\" Nobody repeats it at dinner. (Luck: unlucky. Bad things happen more often.)",
-      "ev.promotion.r": "Your parent gets a big promotion (or the shop finally takes off). There's more money for your education now.",
+      "ev.promotion.r": (p, h) => !p || !p.who ? "Your parent gets a big promotion (or the shop finally takes off). There's more money for your education now." :
+        "Your " + (p.who === "mom" ? "mom" : "dad") + (p.job === "shop" ? "'s shop finally takes off: a line out the door every evening." : p.job === "farmer" ? " has a record harvest, and prices hold." : " gets a big promotion.") + " There's more money for your education now.",
       "ev.jackpot.r1": "An unexpected inheritance from a distant relative. The family is better off for good.",
       "ev.jackpot.r2": "A winning lottery ticket! Not millions, but enough to change everything.",
-      "ev.layoff.r": "Your parent is laid off (or the business goes under). Money is tight from now on.",
+      "ev.layoff.r": (p, h) => !p || !p.who ? "Your parent is laid off (or the business goes under). Money is tight from now on." :
+        "Your " + (p.who === "mom" ? "mom" : "dad") + (p.from === "shop" ? "'s shop goes under, like most small businesses do." : p.from === "farmer" ? " loses a season to blight and debts." : " is let go after years as " + h.jobA(p.from) + ".") +
+        (p.to === "shop" ? " The severance pay goes into a small fried-chicken shop." : " Now it's work as " + h.jobA(p.to) + ".") + " Money is tight from now on.",
       "ev.jeonse.r": "The landlord vanishes with the family's rental deposit: a jeonse scam. Your parents start over with less.",
       "ev.parentill.r": "Your parent falls seriously ill. Hospital bills, worry, and less money for anything else.",
       "ev.accident.r": "A car runs a red light. You'll be fine, but months of recovery cost you time you can't get back.",
@@ -519,6 +532,33 @@
       "log.parents": (p) => p.why === "divorce" ? "Your parents divorce; you live with your " + (p.with || p.now === "mom" ? (p.now === "mom" ? "mom" : "dad") : "dad") + "." :
         "Your " + (p.lost === "mom" ? "mom" : "dad") + " dies." + (p.now === "grand" ? " You move in with your grandparents." : p.now === "care" ? " You go into a children's home." : ""),
       "stat.parents": (p, h) => h.parents(p.par),
+      // ----- parents' jobs -----
+      "birth.jobs": (p, h) => [["mom", "Mom"], ["dad", "Dad"]].filter(([w]) => p[w]).map(([w, W]) => p[w] === "home" ? W + " stays at home with you" : W + " is " + h.jobA(p[w])).join(", and ") + ".",
+      "stat.jobs": (p, h) => [["mom", "Mom"], ["dad", "Dad"]].filter(([w]) => p[w]).map(([w, W]) => W + ": " + h.job(p[w])).join(" · "),
+      "log.job": (p, h) => {
+        const W = p.who === "mom" ? "Your mom" : "Your dad";
+        if (p.why === "back") return W + " goes back to work as " + h.jobA(p.to) + ".";
+        if (p.why === "layoff") return W + (p.to === "shop" ? " opens a small fried-chicken shop with the severance pay." : " now works as " + h.jobA(p.to) + ".");
+        return W + " has to work now, as " + h.jobA(p.to) + ".";
+      },
+      "ev.momwork.text": "You're at school all day now, and your mom wants to go back to work.",
+      "ev.momwork.r": (p, h) => "Your mom starts work as " + h.jobA(p.to) + ". Dinner is later now, and she seems happier.",
+      "ev.job-shop.text": (p) => "It's the weekend rush at your " + (p && p.who === "mom" ? "mom" : "dad") + "'s shop, and they're short of hands.",
+      "ev.job-shop.c": ["Help out at the shop", "Stay home and study"],
+      "ev.job-shop.r0": "You carry boxes, wipe tables and learn to smile at customers. You get paid, but the weekend is gone. (+₩150,000, −1 block next turn)",
+      "ev.job-shop.r1": "You stay at your desk. Nobody says anything, which is worse.",
+      "ev.job-teacher.text": "Having a teacher at home means every page of homework gets checked, in red pen.",
+      "ev.job-teacher.r": (p) => "Your " + (p && p.who === "mom" ? "mom" : "dad") + " corrects your spelling, your essays and your English, every night. It's exhausting, and it works. (Korean and English up, stress up)",
+      "ev.job-doctor.text": "\"You'd make a good doctor,\" your parent says, for the hundredth time. The med school question is on the table.",
+      "ev.job-doctor.c": ["Aim for medical school", "Say it isn't for you"],
+      "ev.job-doctor.r0": "You say you'll try. Suddenly there are science books on your desk and a cram school brochure on the fridge. (Motivation up, stress up)",
+      "ev.job-doctor.r1": "There's a long silence, then a nod. It's your life. (Stress down)",
+      "ev.job-shift.text": (p, h) => "Your " + (p && p.who === "mom" ? "mom" : "dad") + " is on early starts and night shifts this month.",
+      "ev.job-shift.r": "You learn to cook ramyeon, set your own alarm and lock the door. You grow up a little.",
+      "ev.job-farm.text": "Harvest season. The whole family is needed in the fields (or on the boat) this weekend.",
+      "ev.job-farm.r": "Sunburn, sore arms and the best meal of the year. (+₩100,000, health up, −1 block next turn)",
+      "ev.job-overtime.text": "Your school play is tonight. Your parent's office has other ideas.",
+      "ev.job-overtime.r": (p) => "Your " + (p && p.who === "mom" ? "mom" : "dad") + " texts \"so sorry, big meeting\" ten minutes before you go on. You look for them in the audience anyway.",
       // ----- growing up in care (keys ending ".care" replace the plain key in a life in care) -----
       "birth.text.care": (p, h) => p.name + " is born" + (p.sex ? ", a baby " + (p.sex === "f" ? "girl" : "boy") + "," : "") + (p.reg ? " in " + h.region(p.reg) : "") + ". The home can spend about " + h.won(p.a) + " a month on your education.",
       "log.born.care": (p, h) => !p.care ? MSG.en["log.born"](p, h) : "Born " + (p.sex ? (p.sex === "f" ? "a girl" : "a boy") : "") + (p.reg ? " in " + h.regionShort(p.reg) : "") + ", and taken into a children's home. " + (p.early ? "March " + p.y + "." : "March " + p.y + ": you start elementary school."),
@@ -1026,10 +1066,13 @@
       "ev.saju.r.even": "\"평범한 사주요. 하기 나름이지.\" (운: 보통)",
       "ev.saju.r.mixed": "\"풍파가 좀 있겠지만 지나가오.\" 할머니가 이불 속에 부적을 넣어 두셨다. (운: 조금 나쁨)",
       "ev.saju.r.rough": "\"험한 길이오. 아이가 강해야겠소.\" 아무도 저녁 식탁에서 그 얘기를 꺼내지 않는다. (운: 나쁨. 나쁜 일이 더 자주 생김)",
-      "ev.promotion.r": "부모님이 크게 승진하셨다(혹은 가게가 드디어 잘되기 시작했다). 이제 교육비에 쓸 돈이 더 있다.",
+      "ev.promotion.r": (p, h) => !p || !p.who ? "부모님이 크게 승진하셨다(혹은 가게가 드디어 잘되기 시작했다). 이제 교육비에 쓸 돈이 더 있다." :
+        (p.who === "mom" ? "엄마" : "아빠") + (p.job === "shop" ? " 가게가 드디어 대박이 났다. 저녁마다 줄이 선다." : p.job === "farmer" ? "가 올해 대풍을 거뒀고 값도 잘 받았다." : "가 크게 승진하셨다.") + " 이제 교육비에 쓸 돈이 더 있다.",
       "ev.jackpot.r1": "먼 친척에게서 뜻밖의 유산을 받았다. 집안 형편이 확 폈다.",
       "ev.jackpot.r2": "복권 당첨! 수십억은 아니지만 모든 걸 바꿀 만큼이다.",
-      "ev.layoff.r": "부모님이 회사에서 잘리셨다(혹은 사업이 망했다). 이제부터 돈이 빠듯하다.",
+      "ev.layoff.r": (p, h) => !p || !p.who ? "부모님이 회사에서 잘리셨다(혹은 사업이 망했다). 이제부터 돈이 빠듯하다." :
+        (p.who === "mom" ? "엄마" : "아빠") + (p.from === "shop" ? " 가게가 결국 문을 닫았다. 작은 가게 대부분이 그렇듯." : p.from === "farmer" ? "가 병충해로 한 해 농사를 망치고 빚을 졌다." : "가 " + ro(h.job(p.from)) + " 일하던 직장에서 해고되셨다.") +
+        (p.to === "shop" ? " 퇴직금으로 작은 치킨집을 차렸다." : " 이제는 " + ro(h.job(p.to)) + " 일한다.") + " 이제부터 돈이 빠듯하다.",
       "ev.jeonse.r": "집주인이 전세 보증금을 들고 사라졌다. 전세 사기다. 부모님은 더 적은 돈으로 다시 시작하신다.",
       "ev.parentill.r": "부모님이 크게 편찮으시다. 병원비와 걱정, 그리고 다른 데 쓸 돈이 줄었다.",
       "ev.accident.r": "신호를 무시한 차에 치였다. 괜찮아지겠지만, 몇 달 동안의 회복으로 되돌릴 수 없는 시간을 잃었다.",
@@ -1175,6 +1218,33 @@
       "log.parents": (p) => p.why === "divorce" ? "부모님이 이혼하셨다. " + (p.now === "mom" ? "엄마" : "아빠") + "와 살게 되었다." :
         (p.lost === "mom" ? "엄마" : "아빠") + "가 돌아가셨다." + (p.now === "grand" ? " 할머니 할아버지 댁으로 들어갔다." : p.now === "care" ? " 보육원에 들어갔다." : ""),
       "stat.parents": (p, h) => h.parents(p.par),
+      // ----- 부모님 직업 -----
+      "birth.jobs": (p, h) => [["mom", "엄마"], ["dad", "아빠"]].filter(([w]) => p[w]).map(([w, W]) => p[w] === "home" ? W + "는 집에서 너를 돌본다" : W + "는 " + josa(h.job(p[w]), "이다", "다")).join(", ") + ".",
+      "stat.jobs": (p, h) => [["mom", "엄마"], ["dad", "아빠"]].filter(([w]) => p[w]).map(([w, W]) => W + ": " + h.job(p[w])).join(" · "),
+      "log.job": (p, h) => {
+        const W = p.who === "mom" ? "엄마" : "아빠";
+        if (p.why === "back") return W + "가 다시 일을 시작했다: " + h.job(p.to) + ".";
+        if (p.why === "layoff") return p.to === "shop" ? W + "가 퇴직금으로 작은 치킨집을 차렸다." : W + "는 이제 " + ro(h.job(p.to)) + " 일한다.";
+        return W + "가 일을 해야 하게 되었다: " + h.job(p.to) + ".";
+      },
+      "ev.momwork.text": "이제 네가 하루 종일 학교에 있으니, 엄마가 다시 일을 하고 싶어 하신다.",
+      "ev.momwork.r": (p, h) => "엄마가 " + ro(h.job(p.to)) + " 일을 시작했다. 저녁은 늦어졌지만 엄마 얼굴이 밝아졌다.",
+      "ev.job-shop.text": (p) => "주말 대목, " + (p && p.who === "mom" ? "엄마" : "아빠") + " 가게에 일손이 모자란다.",
+      "ev.job-shop.c": ["가게 일 돕기", "집에서 공부하기"],
+      "ev.job-shop.r0": "상자를 나르고 테이블을 닦고 손님에게 웃는 법을 배운다. 용돈은 받았지만 주말이 사라졌다. (+15만원, 다음 턴 1칸 감소)",
+      "ev.job-shop.r1": "책상 앞에 남았다. 아무도 뭐라 하지 않는데, 그게 더 불편하다.",
+      "ev.job-teacher.text": "집에 선생님이 있다는 건, 숙제 한 장 한 장이 빨간 펜으로 검사받는다는 뜻이다.",
+      "ev.job-teacher.r": (p) => (p && p.who === "mom" ? "엄마" : "아빠") + "가 매일 밤 맞춤법, 글쓰기, 영어를 고쳐 준다. 지치지만 효과는 있다. (국어·영어 실력 상승, 스트레스 상승)",
+      "ev.job-doctor.text": "\"너는 의사 하면 잘할 거야.\" 백 번째 듣는 말이다. 의대 이야기가 식탁에 올랐다.",
+      "ev.job-doctor.c": ["의대를 목표로 하기", "나랑 안 맞는다고 말하기"],
+      "ev.job-doctor.r0": "해 보겠다고 했다. 갑자기 책상엔 과학책이, 냉장고엔 학원 전단지가 붙었다. (의지 상승, 스트레스 상승)",
+      "ev.job-doctor.r1": "긴 침묵 끝에 고개를 끄덕이신다. 네 인생이니까. (스트레스 감소)",
+      "ev.job-shift.text": (p, h) => "이번 달 " + (p && p.who === "mom" ? "엄마" : "아빠") + "는 새벽 출근과 야간 근무가 이어진다.",
+      "ev.job-shift.r": "라면 끓이는 법, 알람 맞추는 법, 문 잠그는 법을 배웠다. 조금 더 컸다.",
+      "ev.job-farm.text": "수확철이다. 이번 주말엔 온 가족이 밭에(혹은 배에) 나가야 한다.",
+      "ev.job-farm.r": "햇볕에 그을리고 팔이 쑤시지만, 일 년 중 제일 맛있는 밥을 먹었다. (+10만원, 체력 상승, 다음 턴 1칸 감소)",
+      "ev.job-overtime.text": "오늘 밤은 학예회다. 그런데 부모님 회사 사정은 다르다.",
+      "ev.job-overtime.r": (p) => "무대에 오르기 10분 전, " + (p && p.who === "mom" ? "엄마" : "아빠") + "에게서 \"미안, 급한 회의\"라는 문자가 왔다. 그래도 객석을 두리번거리게 된다.",
       // ----- 보육원에서 자라기 -----
       "birth.text.care": (p, h) => p.name + "은(는) " + (p.reg ? h.region(p.reg) + "에서 " : "") + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났습니다. 보육원은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
       "log.born.care": (p, h) => !p.care ? MSG.ko["log.born"](p, h) : (p.reg ? h.regionShort(p.reg) + "에서 " : "") + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어나 보육원에 맡겨졌다. " + (p.early ? p.y + "년 3월." : p.y + "년 3월, 초등학교에 입학했다."),
@@ -1724,6 +1794,9 @@
       realSchool: (n) => (en ? schoolNameEn(n) : n),
       realPlace: (n) => (en ? placeEn(n) : n),
       parents: (id) => D.parents[id || "both"],
+      job: (id) => D.jobs[id] || id,
+      // English needs an article: "a nurse", "an office worker".
+      jobA: (id) => { const j = D.jobs[id] || id; return en ? (/^[aeiou]/i.test(j) ? "an " : "a ") + j : j; },
       trait: (id) => D.trait[id] || id,
       traitFx: (id) => D.traitFx[id] || "",
       actEarly: (id) => D.actEarly[id],

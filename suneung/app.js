@@ -234,6 +234,7 @@
       family: g.family,
       view: g.regionInfo().view || "city",
       parents: g.parents || "both",
+      jobs: presentJobs(g),
     }, extra || {});
   }
   let sceneKey = "";
@@ -267,6 +268,12 @@
   // The family's wealth class right now: its income fifth as a five-step meter, and how far it has moved
   // since birth (family-fortune events move it). The card flashes when the class changes.
   let shownFam = null;
+  // The jobs of the parents you live with ({ mom, dad }, null for one who isn't there), or null.
+  function presentJobs(g) {
+    if (!g.jobs) return null;
+    const here = g.workingParents(true);
+    return { mom: here.indexOf("mom") >= 0 ? g.jobs.mom : null, dad: here.indexOf("dad") >= 0 ? g.jobs.dad : null };
+  }
   function renderFamily(g) {
     const n = S.FAMILY_IDS.indexOf(g.family) + 1;
     const born = (g.log.find((l) => l.key === "log.born") || { p: {} }).p.fam || g.family;
@@ -279,7 +286,9 @@
       els.sFamSub.textContent = g.flags.careLeft != null ? T("stat.careOut", { a: g.grossBudget() }) : T("stat.careSub", { a: g.grossBudget() });
     } else {
       els.sFam.innerHTML = esc(L.family(g.family)) + ' <span class="fam-meter" aria-hidden="true">' + meter + "</span>";
-      els.sFamSub.textContent = (diff ? T("stat.familyMoved", { up: diff > 0, from: born, fam: g.family }) : T("stat.familySub", { fam: g.family })) + " · " + T("stat.parents", { par: g.parents || "both" });
+      const jobs = presentJobs(g);
+      els.sFamSub.textContent = (diff ? T("stat.familyMoved", { up: diff > 0, from: born, fam: g.family }) : T("stat.familySub", { fam: g.family })) + " · " + T("stat.parents", { par: g.parents || "both" }) +
+        (jobs && (jobs.mom || jobs.dad) ? " · " + T("stat.jobs", jobs) : "");
     }
     els.sFamCard.classList.toggle("fam-up", diff > 0);
     els.sFamCard.classList.toggle("fam-down", diff < 0);
@@ -856,7 +865,7 @@
     const g = game;
     openModal(T("birth.title"),
       "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region }) +
-        ((g.parents || "both") !== "both" ? " " + T("birth.parents", { par: g.parents }) : "")) + "</p>" +
+        ((g.parents || "both") !== "both" ? " " + T("birth.parents", { par: g.parents }) : "") + (g.jobs ? " " + T("birth.jobs", g.jobs) : "")) + "</p>" +
       // Where on the peninsula the family starts.
       "<h3>" + esc(T("map.born")) + '</h3><div class="map-wrap">' + Art.koreaMap({ states: bornStates(g), static: true, home: g.region, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) }) + "</div>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",

@@ -363,6 +363,78 @@
   const PARENT_STRESS = { both: 0, mom: 4, dad: 4, grand: 3, care: 5, careOut: 7 };
   const PARENT_MOT = { both: 0, mom: -1, dad: -1, grand: -3, care: -2, careOut: 0 };
 
+  // ---------- parents' jobs ----------
+  // Each working parent's job is rolled at birth from its own seeded stream ("jobs"). JOB_SHARE is the
+  // national share of each job among employed women and men (KSCO major groups, split into named jobs by
+  // official head counts; see data/korea-stats.md "Jobs"); PARENT_PAY their pay against the average. A
+  // household's income fifth is dealt first, so jobs are drawn from JOB_JOINT: for each fifth, weights
+  // fitted (iterative proportional fitting, below) so every fifth holds its share of working parents and each job
+  // keeps its national share, with better-paid jobs leaning to richer fifths (pay ^ JOB_TILT).
+  // fx: small effects through g.trait(): stressRest / mot / healthRest add up; reading, layoff and
+  // promotion multiply (how likely the family's fortune events are, and picture-book reading).
+  const JOBS = {
+    exec: { group: "mgr", fx: { mot: 1, stressRest: 1 } },
+    doctor: { group: "pro", fx: { mot: 2, stressRest: 2 } },
+    pro: { group: "pro", fx: { mot: 1 } },
+    dev: { group: "pro", fx: { mot: 1 } },
+    teacher: { group: "pro", fx: { reading: 1.25, mot: 2, stressRest: 1, layoff: 0.2 } },
+    nurse: { group: "pro", fx: { healthRest: 2, stressRest: 1, layoff: 0.5 } },
+    civil: { group: "clerk", fx: { layoff: 0.2, promotion: 0.7 } },
+    office: { group: "clerk", fx: {} },
+    service: { group: "service", fx: { stressRest: 1 } },
+    shop: { group: "sales", self: true, fx: { layoff: 1.6, promotion: 1.3, stressRest: 1 } },
+    sales: { group: "sales", fx: {} },
+    farmer: { group: "farm", self: true, fx: { healthRest: 3, layoff: 0.7 } },
+    builder: { group: "craft", fx: { stressRest: 1 } },
+    driver: { group: "machine", fx: { stressRest: 1 } },
+    factory: { group: "machine", fx: { stressRest: 1 } },
+    labor: { group: "labor", fx: { stressRest: 1 } },
+    // Not in paid work: a parent at home has more time for you.
+    home: { group: "none", fx: { stressRest: -2, mot: 1 } },
+  };
+  const WORK_IDS = Object.keys(JOBS).filter((id) => id !== "home");
+  // Filled in from the research below (JOB_SHARE: % of employed women / men; PARENT_PAY: × average pay).
+  const JOB_SHARE = {
+    // Provisional (to be replaced with the research figures).
+    f: { exec: 0.6, doctor: 0.3, pro: 7, dev: 1, teacher: 5, nurse: 4, civil: 3, office: 18, service: 18, shop: 8, sales: 10, farmer: 4, builder: 1, driver: 0.7, factory: 5, labor: 14.4 },
+    m: { exec: 2.5, doctor: 0.6, pro: 10, dev: 4, teacher: 2, nurse: 0.4, civil: 4, office: 15, service: 5, shop: 10, sales: 7, farmer: 5, builder: 12, driver: 8, factory: 9, labor: 5.5 },
+  };
+  const PARENT_PAY = { exec: 2.2, doctor: 3.5, pro: 1.5, dev: 1.5, teacher: 1.3, nurse: 1.1, civil: 1.15, office: 1.1, service: 0.6, shop: 0.9, sales: 0.75, farmer: 0.55, builder: 0.95, driver: 0.85, factory: 0.9, labor: 0.5 };
+  const JOB_TILT = 1.5;
+  // Who works, by income fifth: mothers of young children work less in poorer households (dual earners
+  // lift a household up the fifths); fathers mostly work. Fitted to 53% of mothers working while the
+  // youngest is under 7 and about 95% of fathers (see data/korea-stats.md).
+  const MOM_WORKS = [0.36, 0.48, 0.56, 0.62, 0.66];
+  const DAD_WORKS = [0.84, 0.95, 0.97, 0.98, 0.98];
+  const SINGLE_MOM_WORKS = 0.8;
+  // Farming is a rural job: its weight moves with the kind of place, then the row is renormalised.
+  const FARM_BY_KIND = { rural: 8, city: 0.6, metro: 0.15, gangnam: 0.02, seoulAcad: 0.02, seoul: 0.02 };
+  // JOB_JOINT[sex][fifth][job]: P(job | fifth, sex) for working parents.
+  const JOB_JOINT = (() => {
+    const out = {};
+    for (const sex of ["f", "m"]) {
+      const col = WORK_IDS.map((id) => JOB_SHARE[sex][id] / 100);
+      const ct = col.reduce((a, b) => a + b, 0);
+      let m = [0, 1, 2, 3, 4].map((i) => WORK_IDS.map((id) => Math.pow(PARENT_PAY[id], JOB_TILT * (i - 2))));
+      // Rows: each fifth holds its share of the working parents (more mothers work in richer fifths).
+      // Columns: each job its national share.
+      const works = sex === "f" ? MOM_WORKS : DAD_WORKS, wt = works.reduce((a, b) => a + b, 0);
+      for (let it = 0; it < 200; it++) {
+        m = m.map((row, i) => { const t = row.reduce((a, b) => a + b, 0); return row.map((v) => (v / t) * (works[i] / wt)); });
+        for (let j = 0; j < WORK_IDS.length; j++) {
+          const t = m.reduce((a, row) => a + row[j], 0);
+          for (const row of m) row[j] *= col[j] / ct / t;
+        }
+      }
+      out[sex] = m.map((row) => { const t = row.reduce((a, b) => a + b, 0); const o = {}; WORK_IDS.forEach((id, j) => { o[id] = row[j] / t; }); return o; });
+    }
+    return out;
+  })();
+  // Jobs a parent takes after losing one, or on going (back) to work: 치킨집 is a national joke for a
+  // reason; most others drive, sell, care or do day labour.
+  const AFTER_LAYOFF = [["shop", 0.3], ["driver", 0.25], ["sales", 0.15], ["labor", 0.15], ["service", 0.15]];
+  const BACK_TO_WORK = [["office", 0.25], ["sales", 0.25], ["service", 0.3], ["labor", 0.1], ["shop", 0.1]];
+
   // Roughly one baby in twelve grabs two things at once.
   const DOUBLE_GRAB = 0.08;
 
@@ -594,13 +666,35 @@
       },
     },
     // The family's fortunes. Each moves the income fifth (and the education budget) for good.
-    { id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.4 : 0), when: () => true, run: (g) => { g.shiftFamily(1, "promotion"); bump(g, { stress: -4, motivation: 3 }); return "r"; } },
+    {
+      // A promotion, or a family business that takes off. Safe jobs (civil servants) rise more slowly.
+      id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("promotion") : 0), when: () => true,
+      run: (g) => {
+        const who = g.fortuneParent("promotion");
+        g.shiftFamily(1, "promotion");
+        bump(g, { stress: -4, motivation: 3 });
+        return who ? ["r", { who, job: g.jobs[who] }] : "r";
+      },
+    },
     {
       // Mostly an inheritance; a lottery jackpot (1 in 8,145,060 a ticket) is a once-in-a-lifetime fluke.
       id: "jackpot", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.03 : 0), when: () => true,
       run: (g) => { const two = g.rng() < 0.01; g.shiftFamily(two ? 2 : 1, "jackpot"); g.money += 500000; bump(g, { stress: -6, motivation: 4 }); return two ? "r2" : "r1"; },
     },
-    { id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.4 : 0), when: () => true, run: (g) => { g.shiftFamily(-1, "layoff"); bump(g, { stress: 10, motivation: -3 }); return "r"; } },
+    {
+      // A layoff, or a business that goes under (most small shops close within five years). Teachers
+      // and civil servants are rarely let go. The parent finds other work: often a shop or a steering wheel.
+      id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("layoff") : 0), when: () => true,
+      run: (g) => {
+        const who = g.fortuneParent("layoff");
+        const from = who && g.jobs[who];
+        g.shiftFamily(-1, "layoff");
+        bump(g, { stress: 10, motivation: -3 });
+        if (!who) return "r";
+        const to = g.setJob(who, AFTER_LAYOFF, "layoff");
+        return ["r", { who, from, to }];
+      },
+    },
     {
       // 전세 사기: the deposit on the family's rented home is gone.
       // 41,559 victims nationally from mid-2023 to 2026: about 1% of families over a childhood.
@@ -619,6 +713,7 @@
       run: (g) => {
         g.parents = g.rng() < 0.75 ? "mom" : "dad";
         g.addLog("log.parents", { now: g.parents, why: "divorce" }, "milestone");
+        g.toWork("divorce");
         g.shiftFamily(-1, "divorce");
         g.checkFees();
         bump(g, { stress: 14, motivation: -6 });
@@ -638,7 +733,9 @@
         // is about one in nine of the children who come into care).
         g.parents = was === "both" ? (lost === "dad" ? "mom" : "dad") : g.rng() < 0.7 ? "grand" : "care";
         if (g.parents === "care") g.family = "q1";
+        if (g.parents === "grand" || g.parents === "care") g.jobs = null;
         g.addLog("log.parents", { now: g.parents, why: "bereaved", lost }, "milestone");
+        g.toWork("bereaved");
         if (was === "both") g.shiftFamily(-1, "bereaved");
         g.checkFees();
         g.money += 500000;
@@ -671,6 +768,49 @@
       },
     },
     { id: "careend", weight: (g) => (g.parents === "care" && g.flags.careLeft == null && g.flags.careStay != null ? 100 : 0), when: (g) => g.age >= 24, run: (g) => leaveCare(g, "r") },
+    // Parents' jobs. A mother at home often goes back to work once school starts (53% of mothers work
+    // while the youngest is under 7, 64% once they're 13–17), usually in a different, lower-paid job.
+    {
+      id: "momwork", weight: (g) => (g.jobs && g.jobs.mom === "home" && g.workingParents(true).indexOf("mom") >= 0 ? 0.2 : 0), when: (g) => g.grade >= 1 && g.grade <= 12 && g.attempt === 1,
+      run: (g) => { const to = g.setJob("mom", BACK_TO_WORK, "back"); bump(g, { stress: 2, motivation: 1 }); return ["r", { to }]; },
+    },
+    {
+      // The family shop or restaurant needs hands on weekends.
+      id: "job-shop", weight: (g) => (g.hasJob("shop") ? 1 : 0), when: (g) => g.grade >= 4 && g.grade <= 12 && g.attempt === 1, choices: 2,
+      run: (g, i) => {
+        if (i === 0) { g.money += 150000; bump(g, { stress: 4, motivation: 2 }); g.lostBlocks += 1; return ["r0", { who: g.hasJob("shop") }]; }
+        bump(g, { stress: -2, motivation: -2 }); return ["r1", { who: g.hasJob("shop") }];
+      },
+    },
+    {
+      // A teacher at home checks every page of homework.
+      id: "job-teacher", weight: (g) => (g.hasJob("teacher") ? 1.2 : 0), when: (g) => g.grade >= 1 && g.grade <= 9 && !g.flags.jobTeacher,
+      run: (g) => { g.flags.jobTeacher = 1; studyBoost(g, "kor", 0.04); studyBoost(g, "eng", 0.03); bump(g, { stress: 4 }); return ["r", { who: g.hasJob("teacher") }]; },
+    },
+    {
+      // A doctor's child hears about medical school from the start.
+      id: "job-doctor", weight: (g) => (g.hasJob("doctor") ? 1.5 : 0), when: (g) => g.grade >= 7 && g.grade <= 11 && !g.flags.jobDoctor, choices: 2,
+      run: (g, i) => {
+        g.flags.jobDoctor = 1;
+        if (i === 0) { bump(g, { motivation: 6, stress: 6 }); return ["r0", { who: g.hasJob("doctor") }]; }
+        bump(g, { stress: -2, motivation: -1 }); return ["r1", { who: g.hasJob("doctor") }];
+      },
+    },
+    {
+      // Night shifts and early starts: dinner on your own, and you grow up a little faster.
+      id: "job-shift", weight: (g) => (["nurse", "driver", "factory", "labor", "service", "builder"].some((j) => g.hasJob(j)) ? 0.8 : 0), when: (g) => g.grade >= 1 && g.grade <= 9 && !g.flags.jobShift,
+      run: (g) => { g.flags.jobShift = 1; const who = ["nurse", "driver", "factory", "labor", "service", "builder"].map((j) => g.hasJob(j)).find(Boolean); bump(g, { stress: 3, motivation: 2 }); return ["r", { who, job: g.jobs[who] }]; },
+    },
+    {
+      // Harvest weekends on the family farm (or boat).
+      id: "job-farm", weight: (g) => (g.hasJob("farmer") ? 1.2 : 0), when: (g) => g.grade >= 3 && g.grade <= 12 && g.attempt === 1 && g.month >= 6 && g.month <= 11,
+      run: (g) => { g.money += 100000; bump(g, { health: 4, stress: 2 }); g.lostBlocks += 1; return ["r", { who: g.hasJob("farmer") }]; },
+    },
+    {
+      // Long hours at the office: the school play goes on without them.
+      id: "job-overtime", weight: (g) => (["office", "exec", "dev", "pro"].some((j) => g.hasJob(j)) ? 0.6 : 0), when: (g) => g.grade >= 1 && g.grade <= 6 && !g.flags.jobOvertime,
+      run: (g) => { g.flags.jobOvertime = 1; const who = ["office", "exec", "dev", "pro"].map((j) => g.hasJob(j)).find(Boolean); bump(g, { stress: 3, motivation: -1 }); return ["r", { who, job: g.jobs[who] }]; },
+    },
     // Your own body: an accident or a long illness costs time you can't get back.
     // About 0.25% of children are hurt in traffic each year: a few percent over a childhood.
     { id: "accident", luck: -1, weight: 0.03, when: (g) => !g.flags.accident, run: (g) => { g.flags.accident = 1; bump(g, { health: -35, stress: 10, motivation: -4 }); g.lostBlocks += 3; return "r"; } },
@@ -1231,6 +1371,9 @@
       // A child in care has no household: count it in the lowest fifth (for the head start and the
       // retake academy), which moves the fifth shares by a rounding error.
       if (this.parents === "care") this.family = "q1";
+      // Each parent's job ({ mom, dad }: a JOBS id, or null for a parent not in your life); absent in
+      // old saves and for grandparents and children's homes.
+      this.jobs = Game.rollJobs(seed, this.family, bornIn, this.parents);
       this.method = "self";
       const talent = Game.rollTalent(seed, this.family);
       this.aptitude = Object.assign({}, talent.aptitude);
@@ -1287,6 +1430,22 @@
       return FAMILY_IDS[row.length - 1];
     }
     // Starting talent: a general knack plus per-subject quirks. Aptitude multiplies study gains.
+    static rollJobs(seed, family, region, parents) {
+      if (parents === "grand" || parents === "care") return null;
+      const r = makeRng(hashSeed(seed, "jobs"));
+      const fi = Math.max(0, FAMILY_IDS.indexOf(family));
+      const farm = FARM_BY_KIND[(REGION_BY_ID[region] || {}).kind];
+      const pick = (sex) => {
+        const row = Object.assign({}, JOB_JOINT[sex][fi]);
+        if (farm != null) row.farmer *= farm;
+        let x = r() * WORK_IDS.reduce((a, id) => a + row[id], 0);
+        for (const id of WORK_IDS) { x -= row[id]; if (x <= 0) return id; }
+        return "office";
+      };
+      const mom = parents === "both" || parents === "mom" ? (r() < (parents === "mom" ? SINGLE_MOM_WORKS : MOM_WORKS[fi]) ? pick("f") : "home") : null;
+      const dad = parents === "both" || parents === "dad" ? (r() < DAD_WORKS[fi] ? pick("m") : "home") : null;
+      return { mom, dad };
+    }
     static rollParents(seed) {
       let x = makeRng(hashSeed(seed, "parents"))();
       for (const [id, p] of PARENTS_AT_BIRTH) { x -= p; if (x < 0) return id; }
@@ -1329,11 +1488,40 @@
     trait(key) {
       const add = key === "healthRest" || key === "stressRest" || key === "mot" || key === "cash";
       let v = add ? 0 : 1;
-      for (const id of this.traits || []) {
-        const fx = TRAIT_FX[id];
-        if (fx && fx[key] != null) v = add ? v + fx[key] : v * fx[key];
-      }
+      // Your own traits, then the jobs of the parents you live with.
+      const fxs = (this.traits || []).map((id) => TRAIT_FX[id]).concat(this.workingParents(true).map((w) => JOBS[this.jobs[w]].fx));
+      for (const fx of fxs) if (fx && fx[key] != null) v = add ? v + fx[key] : v * fx[key];
       return v;
+    }
+    // The parents you live with who have a job on record ("mom", "dad"); with home true, also one at home.
+    workingParents(home) {
+      if (!this.jobs) return [];
+      const p = this.parents || "both";
+      return ["mom", "dad"].filter((w) => this.jobs[w] && (home || this.jobs[w] !== "home") && (p === "both" || p === w));
+    }
+    // A parent's new job, from its own stream (so it never moves the main RNG), logged.
+    setJob(who, table, why) {
+      const r = makeRng(hashSeed(this.seed, "jobchange", this.clock, who, why))();
+      const from = this.jobs[who];
+      let x = r * table.reduce((a, e) => a + (e[0] === from ? 0 : e[1]), 0), to = table[0][0];
+      for (const [id, w] of table) { if (id === from) continue; x -= w; if (x <= 0) { to = id; break; } }
+      this.jobs[who] = to;
+      this.addLog("log.job", { who, from, to, why }, "event");
+      return to;
+    }
+    // The parent you live with who has this job ("mom" / "dad"), or null.
+    hasJob(id) { return this.workingParents().find((w) => this.jobs[w] === id) || null; }
+    // A parent left on their own who stayed at home goes (back) to work.
+    toWork(why) {
+      for (const w of this.workingParents(true)) if (this.jobs[w] === "home") this.setJob(w, BACK_TO_WORK, why);
+    }
+    // Which working parent a promotion or a layoff happens to: the better paid one, usually.
+    fortuneParent(why) {
+      const ws = this.workingParents();
+      if (!ws.length) return null;
+      if (ws.length === 1) return ws[0];
+      const a = PARENT_PAY[this.jobs[ws[0]]], b = PARENT_PAY[this.jobs[ws[1]]];
+      return makeRng(hashSeed(this.seed, "jobwho", this.clock, why))() < a / (a + b) ? ws[0] : ws[1];
     }
     // The family's fortunes move it up or down the income fifths (and with them the education budget and
     // whether a retake academy is affordable). Returns how many steps it actually moved.

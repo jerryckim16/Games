@@ -142,7 +142,8 @@
   }
 
   // ---------- the avatar ----------
-  // o: { age: child|teen|adult, outfit: kid|uniform|hoodie|casual, mood, look: {hair, skin, shirt}, pose, prop, backpack }
+  // o: { age: child|teen|adult, outfit: kid|uniform|hoodie|casual, mood, look: {hair, skin, shirt}, pose, prop, backpack,
+  //      gear } where gear dresses a parent for their job (see JOB_GEAR).
   // Drawn with its feet at (0, 0).
   const BODY = {
     child: { leg: 30, body: 36, head: 23, w: 34, arm: 30 },
@@ -156,7 +157,8 @@
     const skin = look.skin ? "skinb" : "skin";
     const hw = b.w / 2, hipY = -b.leg, shY = hipY - b.body, hr = b.head, hy = shY - 3 - hr + 2;
     const outfit = o.outfit || "uniform";
-    const top = outfit === "uniform" ? "uniform" : outfit === "hoodie" ? "hoodie" : SHIRTS[(look.shirt || 0) % SHIRTS.length];
+    const gear = o.gear || "";
+    const top = outfit === "uniform" ? "uniform" : outfit === "hoodie" ? "hoodie" : gear === "suit" ? "uniform2" : gear === "coat" ? "paper" : gear === "scrubs" ? "c3" : SHIRTS[(look.shirt || 0) % SHIRTS.length];
     const pants = outfit === "uniform" ? "uniform2" : outfit === "kid" ? "jeans" : outfit === "casual" ? "jeans" : "pants";
     const mood = o.mood || "ok";
     let s = E(0, 2, hw + 8, 4, "shadow");
@@ -202,6 +204,11 @@
     } else {
       s += R(-hw + 2, shY + 14, b.w - 4, 4, "snow", 0, null, 0, "opacity:0.7");
     }
+    // Work clothes: a long white coat, an apron, a hi-vis vest, a suit and tie.
+    if (gear === "coat") s += R(-hw - 1, shY + 2, 13, b.body + 16, "paper", 3, "line", 1.2) + R(hw - 12, shY + 2, 13, b.body + 16, "paper", 3, "line", 1.2) + R(hw - 10, shY + 12, 6, 8, "c3", 1);
+    if (gear === "apron") s += R(-hw + 5, shY + 10, b.w - 10, b.body + 4, "paper", 4, "line", 1.5) + L(-hw + 6, shY + 10, -4, shY, "line", 1.5) + L(hw - 6, shY + 10, 4, shY, "line", 1.5);
+    if (gear === "vest") s += R(-hw + 1, shY + 2, b.w - 2, b.body - 4, "gold", 4) + R(-hw + 1, shY + 20, b.w - 2, 4, "snow") + R(-hw + 1, shY + 34, b.w - 2, 4, "snow");
+    if (gear === "suit") s += P("M-8 " + shY + " L0 " + (shY + 16) + " L8 " + shY + " Z", "shirt") + P("M-2 " + (shY + 4) + " L2 " + (shY + 4) + " L3 " + (shY + 20) + " L0 " + (shY + 24) + " L-3 " + (shY + 20) + " Z", "tie");
     if (o.backpack) s += L(-hw + 5, shY + 1, -hw + 7, hipY + 2, "c2dark", 3) + L(hw - 5, shY + 1, hw - 7, hipY + 2, "c2dark", 3);
     if (o.prop === "medal") s += L(-6, shY, 0, shY + 16, "c5", 2.5) + L(6, shY, 0, shY + 16, "c1", 2.5) + O(0, shY + 20, 5.5, "gold", "gold2", 1.5);
 
@@ -222,6 +229,10 @@
     if (mood === "sick") s += O(0, hy, hr, "sickface", null, 0, "opacity:0.35");
     s += face(hr, hy, mood, o.age === "child");
     s += hairFront(look.hair || 0, hr, hy);
+    // Hats: a driver's cap, a hard hat, a farmer's straw hat.
+    if (gear === "cap") s += P("M" + (-hr - 1) + " " + (hy - hr * 0.35) + " Q0 " + (hy - hr - 10) + " " + (hr + 1) + " " + (hy - hr * 0.35) + " Z", "c2") + R(-hr - 1, hy - hr * 0.42, hr * 2 + 12, 5, "c2dark", 2);
+    if (gear === "hardhat") s += P("M" + (-hr - 2) + " " + (hy - hr * 0.3) + " Q0 " + (hy - hr - 12) + " " + (hr + 2) + " " + (hy - hr * 0.3) + " Z", "gold", "gold2", 1.5) + R(-hr - 6, hy - hr * 0.38, hr * 2 + 12, 4, "gold2", 2);
+    if (gear === "straw") s += E(0, hy - hr * 0.45, hr + 13, 5, "paper", "line", 1) + P("M" + (-hr + 2) + " " + (hy - hr * 0.45) + " Q0 " + (hy - hr - 12) + " " + (hr - 2) + " " + (hy - hr * 0.45) + " Z", "paper", "line", 1) + R(-hr + 2, hy - hr * 0.62, hr * 2 - 4, 4, "c5");
     if (o.prop === "headphones") s += P("M" + (-hr - 2) + " " + hy + " Q" + (-hr) + " " + (hy - hr - 8) + " 0 " + (hy - hr - 8) + " Q" + hr + " " + (hy - hr - 8) + " " + (hr + 2) + " " + hy, null, "dark", 3.5) + R(-hr - 6, hy - 5, 7, 13, "c1", 3) + R(hr - 1, hy - 5, 7, 13, "c1", 3);
 
     // Props in hand.
@@ -756,6 +767,14 @@
     "retaker-doubt": { bg: "cubicle", fx: "polaroids", mood: "tired", prop: "phone", pose: "hold", x: 160, icon: "📸" },
     "phone-broke": { bg: "bath", fx: "toilet", mood: "stressed", icon: "🚽" },
     mentor: { bg: "class", fx: "planner", mood: "ok", icon: "🗓️" },
+    // Parents' jobs.
+    momwork: { bg: "city", fx: "sparkles", mood: "happy", icon: "💼" },
+    "job-shop": { bg: "street", fx: "shop", mood: "ok", x: 420, icon: "🍗" },
+    "job-teacher": { bg: "room", fx: "notes", mood: "tired", icon: "🖍️" },
+    "job-doctor": { bg: "hospital", fx: "doctor", mood: "ok", icon: "🩺" },
+    "job-shift": { bg: "kitchen", night: true, fx: "candle", mood: "ok", icon: "🌙" },
+    "job-farm": { bg: "field", fx: "sparkles", mood: "happy", icon: "🌾" },
+    "job-overtime": { bg: "class", fx: "podium", mood: "stressed", icon: "🎭" },
     // Growing up in a children's home.
     "care-tutor": { bg: "room", fx: "mathsyms", mood: "happy", prop: "book", pose: "hold", icon: "✏️" },
     "care-sponsor": { bg: "room", fx: "grandma", mood: "happy", x: 220, icon: "✉️" },
@@ -867,13 +886,19 @@
     q5: () => R(0, 176, 600, 20, "river") + P("M100 20 L180 6 L180 204 L100 204 Z", "glass") + P("M180 6 L230 26 L230 204 L180 204 Z", "stone2") +
       (function () { let s = ""; for (let k = 0; k < 12; k++) s += L(104, 30 + k * 14, 176, 20 + k * 14.6, "screen", 2, "opacity:0.7"); return s; })() + R(250, 60, 60, 144, "glass", 2) + G(560, 60, O(0, 0, 3, "gold")),
   };
+  // What each parent wears for work (engine JOBS ids).
+  const JOB_GEAR = { exec: "suit", doctor: "coat", pro: "suit", civil: "suit", office: "suit", nurse: "scrubs", service: "apron", shop: "apron",
+    farmer: "straw", builder: "hardhat", driver: "cap", factory: "vest", labor: "vest" };
   const homeShape = (ctx) => (ctx.parents === "care" ? HOMES.care : HOMES[ctx.family] || HOMES.q3);
   const SCREENS = {
     birth(ctx) {
       let s = outdoorSky(EW, EH, { season: "spring", seed: 81 });
       s += homeShape(ctx)() + R(0, 196, EW, 24, "grass");
       s += tree(560, 200, "spring", 1.1) + tree(480, 204, "spring", 0.8) + particles("spring", 0, 0, EW, 200, false, 12, 3);
-      s += person(Object.assign({}, ctx, { stage: "elem" }), 400, EFEET, 1, { mood: "happy", pose: "wave" });
+      // The parents in your life stand at the door, dressed for work.
+      const j = ctx.jobs || {};
+      if (ctx.jobs) s += mom(ctx, 330, EFEET, 0.9, { gear: JOB_GEAR[j.mom] || "", mood: "happy" }) + dad(ctx, 470, EFEET, 0.95, { gear: JOB_GEAR[j.dad] || "", mood: "happy" });
+      s += person(Object.assign({}, ctx, { stage: "elem" }), 400, EFEET, ctx.jobs ? 0.7 : 1, { mood: "happy", pose: "wave" });
       return s;
     },
     track() {
