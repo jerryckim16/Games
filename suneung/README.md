@@ -54,12 +54,18 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 ## Features
 
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
-- **Who raises you.** Most children are born to two parents; about 6% are born to a single mother, 2% to a single father, and 1% are raised by grandparents (조손가정; grandparent households are under 1% of households). Each is rolled at birth from its own seeded stream and named on the birth screen.
+- **Who raises you.** Most children are born to two parents; about 6% are born to a single mother, 2% to a single father, 0.7% are raised by grandparents (조손가정; grandparent households are under 1% of households) and 0.3% grow up in a children's home (보육원, see below). Each is rolled at birth from its own seeded stream and named on the birth screen.
   - **Divorce:** about one child in eight sees their parents divorce before High 3 (75% stay with their mother). The household drops an income fifth, with a stress and motivation hit and a lost block.
-  - **Losing a parent:** about 3% of children lose a parent. With one left you live with them; if it was your only parent, your grandparents take you in. Some insurance money, a long grief (stress +25, motivation −12) and two lost blocks.
+  - **Losing a parent:** about 3% of children lose a parent. With one left you live with them; if it was your only parent, your grandparents take you in (7 times in 10) or you go into a children's home. Some insurance money, a long grief (stress +25, motivation −12) and two lost blocks.
   - **Everyday effects:** with one parent the education budget is ×0.6 (single-parent household income is 60.3% of the average; grandparents ×0.5), stress settles 4 higher (3 with grandparents) and motivation 1 lower (3 with grandparents). The household's income fifth is still dealt as usual.
   - **The words follow:** with one parent or grandparents, every "your parents" in the game becomes "your mom", "your dad" or "your grandparents" (verbs and Korean particles adjusted), a missing parent is replaced by the one who's there, and cutscenes draw only the parents in your life (a grandmother when grandparents raise you).
   - The Family strip shows the setup next to the income class.
+- **Growing up in a children's home (보육원, 아동양육시설).** About 2,300–4,100 children a year come into state care in Korea, 63% of them into a home, so roughly 0.6% of a cohort spends time in one; in the game 0.3% start life there, and a child whose only parent dies goes there 3 times in 10.
+  - **Money:** the home pays for school and gives about ₩150,000 a month for your education (an estimate; below the lowest fifth's ₩205,000), with nothing from income or fortune: promotions, layoffs, inheritances, scams, parents' illness and divorce never happen, and nobody pays for a retake academy (a scholarship still gets you in). New Year's money comes from the staff and sponsors, and is smaller.
+  - **Life:** stress settles 5 higher and motivation 2 lower. The home decides where you live, so you can't move house while you're in care. Carers stand in for parents in the words ("your carers", "the home's education budget", 보육원 선생님), the art (a carer in an apron) and the home itself (a long two-storey building with a slide in the yard).
+  - **Events:** university volunteers who tutor on Saturdays (math and English up), letters and a little money from a sponsor, and the day classmates find out where you live; the early events (the newborn weeks, the 사주 reading by a volunteer, the 돌잡이, the first word) have their own versions.
+  - **Leaving care at 18 (보호종료):** after the first 수능, choose to leave or to stay on in the home until 24. Leaving pays the province's real one-off settlement (자립정착금: ₩20M in Seoul; ₩15M in Gyeonggi, Daejeon and Jeju; ₩12M in Busan; ₩10M elsewhere) into your savings and the real allowance (자립수당, ₩500,000 a month for five years) as your budget, which doesn't halve from the fourth try; living alone costs a block and stress settles 7 higher. Staying keeps a bed, meals and calmer days but no money until you leave, at 24 at the latest. Once you've left you can move like anyone.
+  - The Family strip shows "Children's home" and what the home pays (or your allowance after leaving) instead of an income class.
 - **Your family's wealth class, always on screen.** A Family strip under the stats shows the household's current income class (low, lower-middle, middle, upper-middle or high income) with a five-step meter for its income fifth. Once family-fortune events have moved it, it says how far from birth (green "↑ Up from middle income at birth", red "↓ Down…"), and the strip flashes when the class changes.
 - **A map of Korea.** An interactive map of the peninsula with the real borders of all 17 provinces and all 250 cities, counties and districts (KOSTAT census boundaries; the North faded above a dashed DMZ), every place at its real longitude and latitude, and Seoul's six areas in a magnified inset drawn from its real 25 districts. Your home area is shaded, and your current school is a star where it really stands. Without `places.js` the map falls back to a hand-drawn outline.
   - **Birth:** a pulsing pin shows where your family starts.
@@ -415,11 +421,11 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 | slacker (half games & friends), 1 try | 56 | 3.0 · 2.5 · 5.8 | 354 | 354 | 1.00 | 0% | 0% | 8% |
 | grinder (no rest), self-study, 1 try | 66 | 3.0 · 2.6 · 2.8 | 369 | 369 | 1.00 | 5% | 0% | 46% |
 | smart, online lectures, 1 try | 66 | 2.3 · 2.0 · 2.5 | 379 | 379 | 1.00 | 3% | 0% | 64% |
-| smart, best affordable method, 1 try | 69 | 2.0 · 1.9 · 2.2 | 385 | 385 | 1.00 | 9% | 1% | 74% |
-| smart, best affordable, retakes up to 3 tries | 69 | 2.0 · 1.9 · 2.2 | 385 | 410 | 2.55 | 61% | 19% | 98% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.0 · 1.8 · 2.2 | 386 | 420 | 3.58 | 93% | 85% | 100% |
+| smart, best affordable method, 1 try | 69 | 2.1 · 1.9 · 2.2 | 385 | 385 | 1.00 | 9% | 1% | 75% |
+| smart, best affordable, retakes up to 3 tries | 69 | 2.1 · 1.9 · 2.2 | 385 | 410 | 2.55 | 63% | 18% | 98% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.0 · 1.8 · 2.2 | 386 | 420 | 3.60 | 93% | 85% | 100% |
 | smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.9 · 2.4 | 386 | 386 | 1.00 | 4% | 1% | 73% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.9 · 2.2 | 384 | 420 | 3.67 | 91% | 80% | 99% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.8 · 2.2 | 385 | 420 | 3.70 | 91% | 80% | 99% |
 | balanced, self-study, vocational high school, 1 try | 59 | 2.8 · 2.3 · 2.6 | 357 | 357 | 1.00 | 0% | 0% | 21% |
 | balanced, self-study, leaves school at High 1, 1 try | 62 | 2.8 · 2.5 · 2.6 | 364 | 364 | 1.00 | 0% | 0% | 29% |
 | smart, best affordable, leaves school at High 1, 1 try | 68 | 2.1 · 2.0 · 2.4 | 382 | 382 | 1.00 | 13% | 0% | 64% |
@@ -437,8 +443,8 @@ The smart bot with the best affordable method, first try only, by the family it 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
 | Low income | 11 | 66 | 384 | 0% | 82% |
-| Lower-middle income | 22 | 67 | 382 | 0% | 68% |
-| Middle income | 18 | 68 | 383 | 11% | 78% |
+| Lower-middle income | 23 | 67 | 382 | 0% | 70% |
+| Middle income | 17 | 68 | 385 | 12% | 82% |
 | Upper-middle income | 20 | 70 | 388 | 20% | 70% |
 | High income | 9 | 71 | 388 | 11% | 78% |
 
@@ -450,39 +456,40 @@ By region kind, where the life ended up (the same smart bot, first try; 의대 i
 | Seoul academy district | 5 | 69 | 388 | 0% | 80% | 80% |
 | Seoul | 4 | 71 | 397 | 0% | 100% | 100% |
 | Capital-region city | 20 | 67 | 382 | 5% | 70% | 70% |
-| Big city | 16 | 70 | 390 | 6% | 88% | 100% |
-| Mid-sized city | 13 | 68 | 382 | 8% | 69% | 85% |
+| Big city | 16 | 70 | 391 | 6% | 94% | 100% |
+| Mid-sized city | 13 | 68 | 384 | 8% | 69% | 85% |
 | Rural county | 9 | 66 | 381 | 22% | 67% | 89% |
 
 What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 74% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.5 | +1.3 | 70% |
-| Easygoing (순한 아기) | +0.0 | -1.1 | 68% |
-| Curious (호기심 많은 아기) | +0.6 | +2.2 | 79% |
-| Good sleeper (잘 자는 아기) | -0.0 | -1.0 | 68% |
-| Unflappable (겁 없는 아기) | +0.0 | +0.4 | 69% |
-| All smiles (잘 웃는 아기) | +0.2 | +0.6 | 69% |
-| Pencil (연필) | +1.6 | +5.8 | 81% |
-| Book (책) | +1.0 | +2.1 | 75% |
-| Computer mouse (마우스) | +1.3 | +4.1 | 79% |
+| Sturdy (튼튼한 아기) | +0.5 | +1.5 | 70% |
+| Easygoing (순한 아기) | +0.0 | -0.9 | 68% |
+| Curious (호기심 많은 아기) | +0.6 | +2.4 | 79% |
+| Good sleeper (잘 자는 아기) | -0.0 | -0.6 | 68% |
+| Unflappable (겁 없는 아기) | +0.0 | +0.6 | 69% |
+| All smiles (잘 웃는 아기) | +0.2 | +0.4 | 69% |
+| Pencil (연필) | +1.6 | +5.9 | 81% |
+| Book (책) | +1.0 | +2.2 | 75% |
+| Computer mouse (마우스) | +1.3 | +4.4 | 79% |
 | Stethoscope (청진기) | +0.8 | +2.0 | 71% |
-| Microphone (마이크) | +1.1 | +2.7 | 76% |
-| Judge's gavel (판사봉) | +1.1 | +3.5 | 79% |
-| Ball (공) | +0.2 | +1.6 | 70% |
-| Thread (실) | +0.5 | +0.1 | 74% |
-| Money (돈) | +0.2 | -0.9 | 65% |
-| Paintbrush (붓) | +0.0 | -0.1 | 71% |
+| Microphone (마이크) | +1.1 | +3.0 | 76% |
+| Judge's gavel (판사봉) | +1.1 | +3.6 | 79% |
+| Ball (공) | +0.2 | +1.9 | 70% |
+| Thread (실) | +0.5 | +0.2 | 74% |
+| Money (돈) | +0.2 | -0.7 | 65% |
+| Paintbrush (붓) | +0.0 | +0.3 | 71% |
 
 Who raises you, on the same 80 lives (smart bot, best affordable method, first try) with the family setup forced at birth. Lives that start with both parents can still lose one later:
 
 | Setup at birth | Start | First total | In-Seoul+ |
 |---|---|---|---|
-| Both parents | 69 | 384 | 71% |
-| Single mom | 67 | 383 | 75% |
-| Single dad | 67 | 383 | 75% |
+| Both parents | 69 | 385 | 73% |
+| Single mom | 67 | 383 | 74% |
+| Single dad | 67 | 383 | 74% |
 | Grandparents | 67 | 380 | 64% |
+| Children's home | 66 | 377 | 59% |
 
 What the tables show:
 
@@ -492,6 +499,7 @@ What the tables show:
 - **Family income matters, but it moves:** families change fifths two or three times a life, so where you're born matters less than it did, and a promotion or a layoff in High school can matter more. Retakes close much of the gap either way.
 - **Where you live matters too:** Gangnam's academies give the strongest start, while local and rural quotas help students outside the capital (the region groups above are small, so treat them as a direction, not exact rates).
 - **School choice nudges rather than decides:** the bot that tries for selective schools mostly lands in private ones by lottery (a few get into 자사고 or an international middle school) and does slightly better; the smart bot rarely studies far enough ahead in math and science for a science school; a vocational school costs a 수능 candidate about 9 points of total and a block a turn.
+- **A children's home is the hardest start, not a closed door:** the same lives start 3 points lower and score 8 lower on a first try, and 59% reach an in-Seoul university against 73% with both parents; the leaving-care money then makes self-study retakes affordable.
 - **Leaving school is a trade, not a shortcut:** the extra hours almost make up for the lost lessons, motivation and the GED, but not quite, and you lose the quotas; what you gain is freedom from school (and bullying) and a spare year if you sit early.
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
 - **Medical school** takes talent, a sciences track and usually several years: the bot chasing it rarely gets in on the first try, but a near-optimal player who keeps retaking usually makes it within five.
@@ -508,6 +516,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v5.1:** growing up in a children's home (보육원). About 0.3% of lives start in care, and a child whose only parent dies goes into care 3 times in 10 (grandparents at birth are now 0.7%). Care has its own budget, wording, art and events, no family-fortune events, and a real leaving-care choice at 18 with the real settlement and monthly allowance (see Growing up in a children's home). Also fixed a rare bug where a turn with no possible event fired one whose weight was 0. Balance tables regenerated, with a children's-home row in the Who raises you table.
 
 - **v5.0:** real places and real schools. The map now draws Korea's real provinces and all 250 cities, counties and districts, with your home area shaded and your school as a star. Every school choice is a real school: local schools from the 12,004-school national list in your area's real districts, and special schools (science, 자사고, 외고, international, arts, vocational) the nearest real one, with its city and distance. The school screen adds a close-up map with numbered markers, and private schools are closed where none exist. Rules and balance are unchanged apart from those closures (one strategy row moved by a point). Also added the missing scene descriptions for the nursery, kindergarten, baby and city scenes.
 

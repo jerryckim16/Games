@@ -332,7 +332,7 @@ function parents() {
   const cfg = { bot: "smart", method: "tutor", maxAttempts: 1, goal: "college" };
   console.log("\nWho raises you (" + seeds + " lives each, smart bot, best affordable method, 1 try; same lives, setup forced at birth):");
   console.log("setup     start | 1st std | in-Seoul+");
-  for (const par of ["both", "mom", "dad", "grand"]) {
+  for (const par of ["both", "mom", "dad", "grand", "care"]) {
     let start = 0, std = 0, seoul = 0;
     for (let i = 0; i < seeds; i++) {
       const { g, results, at12 } = playCareer(1000 + i, "smart", Object.assign({ parents: par }, cfg));

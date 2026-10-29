@@ -337,13 +337,31 @@
   // The household's income fifth itself is dealt as usual, so the 20%-per-fifth shares stay exact.
   // Grandparent-grandchild households are under 1% of households (153,000 in 2015); single-parent
   // household income is 60.3% of the all-household average (2024). See data/korea-stats.md.
-  const PARENTS_AT_BIRTH = [["both", 0.91], ["mom", 0.06], ["dad", 0.02], ["grand", 0.01]];
-  const PARENT_BUDGET = { both: 1, mom: 0.6, dad: 0.6, grand: 0.5 };
+  // A few children have no one to take them and grow up in a children's home (보육원, 아동양육시설):
+  // about 2,300–4,100 children a year come into state care (out of 250,000–270,000 births), 63% of
+  // them into a home, so about 0.6% of a cohort spends time in one; fewer arrive as babies. "care" is
+  // last in the list so adding it only moved the top 0.3% of the stream, which used to be "grand".
+  const PARENTS_AT_BIRTH = [["both", 0.91], ["mom", 0.06], ["dad", 0.02], ["grand", 0.007], ["care", 0.003]];
+  const PARENT_BUDGET = { both: 1, mom: 0.6, dad: 0.6, grand: 0.5, care: 0 };
+  // In care the home, not a household, pays: a small fixed education budget (an estimate: homes get
+  // school costs and some tutoring support, far below even the lowest fifth's ₩205,000). At 18 care
+  // ends (보호종료), or you choose to stay on until 24; leaving pays a one-off settlement (자립정착금,
+  // set by each province) into your savings and a monthly allowance (자립수당, ₩500,000) for 5 years,
+  // which becomes your budget. Figures: NABO 2025; see data/korea-stats.md.
+  const CARE_BUDGET = 150000;
+  const CARE_PAY = 500000, CARE_PAY_MONTHS = 60;
+  const CARE_SETTLE = { seoul: 20000000, suwon: 15000000, daejeon: 15000000, jeju: 15000000, busan: 12000000 };
+  const CARE_SETTLE_ELSE = 10000000;
+  const SEOUL_AREAS = new Set(["gangnam", "nowon", "mokdong", "mapo", "gwanak", "gangdong"]);
+  // Events that need a family household: its fortunes, its moves, its relatives.
+  const CARE_SKIP = new Set(["promotion", "jackpot", "layoff", "jeonse", "parentill", "divorce", "bereaved", "daechi", "med-move", "grandma", "grandstory", "chuseok"]);
   // Fees paid out of household income rather than the education budget (English kindergarten).
   const FEE_FROM_INCOME = 0.12;
   // ...and fewer hands at home: stress settles this much higher, motivation this much lower.
-  const PARENT_STRESS = { both: 0, mom: 4, dad: 4, grand: 3 };
-  const PARENT_MOT = { both: 0, mom: -1, dad: -1, grand: -3 };
+  // In a children's home stress settles higher and motivation lower (crowded rooms, changing staff);
+  // living alone after care ends is harder still, but it's your own life.
+  const PARENT_STRESS = { both: 0, mom: 4, dad: 4, grand: 3, care: 5, careOut: 7 };
+  const PARENT_MOT = { both: 0, mom: -1, dad: -1, grand: -3, care: -2, careOut: 0 };
 
   // Roughly one baby in twelve grabs two things at once.
   const DOUBLE_GRAB = 0.08;
@@ -616,7 +634,10 @@
         g.flags.bereaved = 1;
         const was = g.parents || "both";
         const lost = was === "both" ? (g.rng() < 0.6 ? "dad" : "mom") : was;
-        g.parents = was === "both" ? (lost === "dad" ? "mom" : "dad") : "grand";
+        // Losing your only parent: grandparents if they can, otherwise a children's home (parental death
+        // is about one in nine of the children who come into care).
+        g.parents = was === "both" ? (lost === "dad" ? "mom" : "dad") : g.rng() < 0.7 ? "grand" : "care";
+        if (g.parents === "care") g.family = "q1";
         g.addLog("log.parents", { now: g.parents, why: "bereaved", lost }, "milestone");
         if (was === "both") g.shiftFamily(-1, "bereaved");
         g.checkFees();
@@ -626,6 +647,30 @@
         return ["r", { lost, now: g.parents }];
       },
     },
+    // Growing up in a children's home. University volunteers tutor in most homes; sponsors send a
+    // little money; and at some point classmates find out where you live.
+    {
+      id: "care-tutor", weight: (g) => (g.parents === "care" && g.flags.careLeft == null ? 0.8 : 0), when: (g) => g.grade >= 3 && g.grade <= 12 && !g.flags.careTutor,
+      run: (g) => { g.flags.careTutor = 1; studyBoost(g, "math", 0.04); studyBoost(g, "eng", 0.03); bump(g, { motivation: 5 }); return "r"; },
+    },
+    {
+      id: "care-sponsor", luck: 1, weight: (g) => (g.parents === "care" && g.flags.careLeft == null ? 0.6 : 0), when: (g) => g.grade >= 1 && g.grade <= 12,
+      run: (g) => { g.money += 100000; bump(g, { motivation: 3, stress: -2 }); return "r"; },
+    },
+    {
+      id: "care-found", luck: -1, weight: (g) => (g.parents === "care" ? 0.5 : 0), when: (g) => g.grade >= 4 && g.grade <= 9 && !g.flags.careFound,
+      run: (g) => { g.flags.careFound = 1; bump(g, { stress: 8, motivation: -3 }); return "r"; },
+    },
+    // Care ends at 18 (보호종료): after the first 수능 you leave with the settlement and a monthly
+    // allowance, or stay on in the home (allowed to 24) with a roof and meals but neither payment yet.
+    {
+      id: "careleave", weight: (g) => (g.parents === "care" && g.flags.careLeft == null && !g.flags.careStay ? 100 : 0), when: (g) => g.attempt >= 2, choices: 2,
+      run: (g, i) => {
+        if (i === 1) { g.flags.careStay = g.clock; bump(g, { stress: -4, motivation: 2 }); return "r1"; }
+        return leaveCare(g, "r0");
+      },
+    },
+    { id: "careend", weight: (g) => (g.parents === "care" && g.flags.careLeft == null && g.flags.careStay != null ? 100 : 0), when: (g) => g.age >= 24, run: (g) => leaveCare(g, "r") },
     // Your own body: an accident or a long illness costs time you can't get back.
     // About 0.25% of children are hurt in traffic each year: a few percent over a childhood.
     { id: "accident", luck: -1, weight: 0.03, when: (g) => !g.flags.accident, run: (g) => { g.flags.accident = 1; bump(g, { health: -35, stress: 10, motivation: -4 }); g.lostBlocks += 3; return "r"; } },
@@ -1057,6 +1102,16 @@
     const pool = SUBJECTS.filter((s) => s !== "hist");
     return pool[Math.floor(g.rng() * pool.length)];
   }
+  // Leaving care: the settlement goes into your savings, and the 자립수당 starts (see grossBudget).
+  function leaveCare(g, key) {
+    g.flags.careLeft = g.clock;
+    const a = g.careSettlement();
+    g.money += a;
+    g.addLog("log.careLeave", { a, pay: CARE_PAY }, "milestone");
+    bump(g, { stress: 6, motivation: 4 });
+    g.lostBlocks += 1;
+    return [key, { a, pay: CARE_PAY }];
+  }
   function studyBoost(g, s, amount) {
     g.skills[s] += amount * headroom(g.skills[s]) * 1.5;
   }
@@ -1106,6 +1161,7 @@
   function regionKind(g) { return (REGION_BY_ID[g.region] || REGION_BY_ID.suwon).kind; }
   // An event's weight is a number or a function of the game.
   const weightOf = (e, g) => {
+    if (g.parents === "care" && CARE_SKIP.has(e.id)) return 0;
     const w = typeof e.weight === "function" ? e.weight(g) : e.weight;
     // Good and bad events lean with your fortune (forced events, weight 100+, are never tagged).
     return e.luck ? w * Math.max(0.2, 1 + LUCK_BIAS * (g.luck || 0) * e.luck) : w;
@@ -1171,7 +1227,10 @@
       this.status = "early";
       this.traits = []; // temperament and 돌잡이 ids (see TEMPERAMENTS, DOLJABI); absent in old saves
       // opts.parents exists for sim.js only, like opts.family.
-      this.parents = PARENT_BUDGET[opts.parents] ? opts.parents : Game.rollParents(seed); // "both" | "mom" | "dad" | "grand"; absent in old saves = both
+      this.parents = PARENT_BUDGET[opts.parents] != null ? opts.parents : Game.rollParents(seed); // "both" | "mom" | "dad" | "grand" | "care"; absent in old saves = both
+      // A child in care has no household: count it in the lowest fifth (for the head start and the
+      // retake academy), which moves the fifth shares by a rounding error.
+      if (this.parents === "care") this.family = "q1";
       this.method = "self";
       const talent = Game.rollTalent(seed, this.family);
       this.aptitude = Object.assign({}, talent.aptitude);
@@ -1202,7 +1261,7 @@
       // there (from grade 7).
       this.region = bornIn;
       this.regionFrom = 1;
-      this.addLog("log.born", { early: 1, fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex, reg: this.region }, "milestone");
+      this.addLog("log.born", { early: 1, fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex, reg: this.region, care: this.parents === "care" ? 1 : undefined }, "milestone");
     }
 
     // Birth region, weighted only by population share.
@@ -1338,13 +1397,24 @@
     allowance() {
       const a = this.grossBudget();
       // School fees come out of the same education budget while you're there.
-      return Math.max(0, (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0));
+      // From the fourth try the parents pay half; the 자립수당 is the state's and doesn't shrink.
+      return Math.max(0, (this.attempt >= 4 && this.parents !== "care" ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0));
     }
     // What a family can pay for a school: its education budget, or, for fees families pay out of
     // income (an English kindergarten), FEE_FROM_INCOME of household income.
     feeLimit(x) { return x && x.fromIncome ? FAMILIES[this.family].income * 10000 * FEE_FROM_INCOME * PARENT_BUDGET[this.parents || "both"] : this.grossBudget(); }
-    // The family's monthly education money before fees: less with one parent or grandparents.
-    grossBudget() { return Math.round(FAMILIES[this.family].allowance * PARENT_BUDGET[this.parents || "both"] / 1000) * 1000; }
+    // The family's monthly education money before fees: less with one parent or grandparents. In care,
+    // the home's small budget, then the 자립수당 for five years once you've left.
+    grossBudget() {
+      if (this.parents === "care") return this.flags.careLeft != null ? (this.clock - this.flags.careLeft < CARE_PAY_MONTHS ? CARE_PAY : 0) : CARE_BUDGET;
+      return Math.round(FAMILIES[this.family].allowance * PARENT_BUDGET[this.parents || "both"] / 1000) * 1000;
+    }
+    // Who you live with, for the resting stress and motivation: care splits into in the home and out.
+    home() { const p = this.parents || "both"; return p === "care" && this.flags.careLeft != null ? "careOut" : p; }
+    // Whether someone pays ₩2.9M a month for a retake academy. Nobody does for a child in care.
+    paysAcademy() { return this.parents !== "care" && FAMILIES[this.family].paysAcademy; }
+    // The one-off settlement on leaving care, which each province sets.
+    careSettlement() { return CARE_SETTLE[SEOUL_AREAS.has(this.region) ? "seoul" : this.region] || CARE_SETTLE_ELSE; }
 
     // ----- schools -----
     // At one of these schools right now (and still going to classes).
@@ -1461,6 +1531,8 @@
       if (!r || id === this.region) return "same";
       if (this.ending || this.queue.length) return "busy";
       if (this.flags.lastMove != null && this.clock - this.flags.lastMove < MOVE_COOLDOWN) return "cooldown";
+      // The home decides where a child in care lives; once you've left, you can move like anyone.
+      if (this.parents === "care" && this.flags.careLeft == null) return "care";
       if (r.need && FAMILY_IDS.indexOf(this.family) + 1 < r.need) return "cost";
       return null;
     }
@@ -1493,7 +1565,7 @@
     // Retake options after the latest 수능, with the reason any of them is closed. The parents pay a
     // retake academy if they can; otherwise only a scholarship gets you in.
     retakeOptions(score) {
-      const pays = FAMILIES[this.family].paysAcademy;
+      const pays = this.paysAcademy();
       return ["academy", "selfstudy", "halfretake"].map((id) => ({
         id,
         blocked: id === "academy" && !pays && score < 85 ? "academyFee" : null,
@@ -1620,7 +1692,7 @@
       // Stress and health also recover on their own toward a baseline, so a steady workload settles
       // at a level instead of spiralling; heavy turns push the level up.
       const d = {
-        stress: pressure + studied * 1.6 + mock * 3 + (25 + this.trait("stressRest") + PARENT_STRESS[this.parents || "both"] - this.stress) * 0.25 + (plan.worksheet || 0) * 4,
+        stress: pressure + studied * 1.6 + mock * 3 + (25 + this.trait("stressRest") + PARENT_STRESS[this.home()] - this.stress) * 0.25 + (plan.worksheet || 0) * 4,
         health: -1 - studied * 0.6 + (72 + this.trait("healthRest") - this.health) * 0.15,
         motivation: 0,
       };
@@ -1644,7 +1716,7 @@
       // without time for friends.
       if (drop && !plan.friends) d.stress += DROPOUT_LONELY;
       // Motivation drifts back toward a baseline that sags with every extra year.
-      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) + this.trait("mot") + PARENT_MOT[this.parents || "both"] - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
+      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) + this.trait("mot") + PARENT_MOT[this.home()] - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
       // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
       // softens the toll on your body.
@@ -1667,7 +1739,8 @@
       if (this.status === "mid" && !drop) this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
       if (school && (this.month === 3 && months === 12 || this.month + months > 12)) {
-        const gift = Math.round(Math.min(300000, 60000 + this.age * 10000) * this.trait("sebae"));
+        // In care it comes from the staff and sponsors, and there's less of it.
+        const gift = Math.round(Math.min(300000, 60000 + this.age * 10000) * this.trait("sebae") * (this.parents === "care" ? 0.4 : 1));
         this.money += gift;
         this.addLog("log.sebae", { a: gift }, "");
       }
@@ -1722,7 +1795,10 @@
       let total = 0;
       for (const e of pool) total += weightOf(e, this);
       let r = this.rng() * total;
+      // Nothing that can happen: no event (otherwise the first weight-0 event would fire).
+      if (!(total > 0)) return;
       for (const e of pool) {
+        if (!(weightOf(e, this) > 0)) continue;
         r -= weightOf(e, this);
         if (r <= 0) { seen.add(e.id); this.fireEvent(e); return; }
       }
@@ -2026,8 +2102,8 @@
       this.motivation = clamp(this.motivation + 10, 0, 100);
       this.stress = clamp(this.stress - 15, 0, 100);
       this.health = clamp(this.health + 15, 0, 100);
-      if (this.attempt === 4) this.addLog("log.halfpay", null, "event");
-      this.addLog("log.newyear", { y: this.year, att: this.attempt, st: d.action, sch: this.scholarship, pays: FAMILIES[this.family].paysAcademy, uni: this.enrolled }, "milestone");
+      if (this.attempt === 4 && this.parents !== "care") this.addLog("log.halfpay", null, "event");
+      this.addLog("log.newyear", { y: this.year, att: this.attempt, st: d.action, sch: this.scholarship, pays: this.paysAcademy(), uni: this.enrolled }, "milestone");
       this.trace.push({ t: this.t(), att: this.attempt, ph: this.phase(), skills: Object.assign({}, this.skills) });
     }
 

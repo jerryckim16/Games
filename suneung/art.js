@@ -756,6 +756,12 @@
     "retaker-doubt": { bg: "cubicle", fx: "polaroids", mood: "tired", prop: "phone", pose: "hold", x: 160, icon: "📸" },
     "phone-broke": { bg: "bath", fx: "toilet", mood: "stressed", icon: "🚽" },
     mentor: { bg: "class", fx: "planner", mood: "ok", icon: "🗓️" },
+    // Growing up in a children's home.
+    "care-tutor": { bg: "room", fx: "mathsyms", mood: "happy", prop: "book", pose: "hold", icon: "✏️" },
+    "care-sponsor": { bg: "room", fx: "grandma", mood: "happy", x: 220, icon: "✉️" },
+    "care-found": { bg: "hall", fx: "looming", mood: "stressed", x: 220, icon: "🏠" },
+    careleave: { bg: "city", fx: "sparkles", mood: "ok", icon: "🧳", res: { r1: { mood: "happy" } } },
+    careend: { bg: "city", fx: "sparkles", mood: "ok", icon: "🧳" },
     campus: { bg: "campus", fx: "trip", mood: "happy", icon: "🚌" },
     insight: { bg: "room", fx: "bulb", mood: "happy", x: 300, icon: "💡" },
     eve: { bg: "room", night: true, fx: "examEve", mood: "stressed", icon: "🌙" },
@@ -853,13 +859,19 @@
     q2: () => R(40, 70, 240, 134, "stone", 2) + R(40, 64, 240, 10, "stone2") + (function () { let s = ""; for (let i = 0; i < 6; i++) for (let k = 0; k < 4; k++) s += R(52 + i * 38, 82 + k * 30, 22, 18, "screen", 2); return s; })(),
     q3: () => [40, 170].map((x, j) => R(x, 30 + j * 16, 110, 174 - j * 16, j ? "stone" : "stone2", 2) + (function () { let s = ""; for (let i = 0; i < 3; i++) for (let k = 0; k < 7 - j; k++) s += R(x + 12 + i * 32, 44 + j * 16 + k * 22, 20, 12, "screen", 2); return s; })()).join(""),
     q4: () => HOMES.q3() + tree(30, 204, "spring", 0.8) + tree(300, 204, "spring", 0.9) + R(0, 196, 320, 8, "grass"),
+    // A children's home: a long two-storey building behind a low fence, with a slide in the yard.
+    care: () => R(30, 80, 250, 124, "stone", 2) + R(24, 72, 262, 12, "stone2") + R(138, 150, 34, 54, "c2", 2) +
+      (function () { let s = ""; for (let i = 0; i < 5; i++) for (let k = 0; k < 2; k++) s += R(44 + i * 48, 94 + k * 34, 26, 22, "screen", 2); return s; })() +
+      (function () { let s = ""; for (let i = 0; i < 14; i++) s += R(6 + i * 24, 184, 4, 20, "stone2"); return s; })() + R(4, 186, 330, 4, "stone2") +
+      L(300, 204, 330, 150, "metal", 4) + L(330, 150, 350, 150, "metal", 4) + L(350, 150, 350, 204, "metal", 3) + P("M300 204 L330 150 L338 154 L310 204 Z", "c1"),
     q5: () => R(0, 176, 600, 20, "river") + P("M100 20 L180 6 L180 204 L100 204 Z", "glass") + P("M180 6 L230 26 L230 204 L180 204 Z", "stone2") +
       (function () { let s = ""; for (let k = 0; k < 12; k++) s += L(104, 30 + k * 14, 176, 20 + k * 14.6, "screen", 2, "opacity:0.7"); return s; })() + R(250, 60, 60, 144, "glass", 2) + G(560, 60, O(0, 0, 3, "gold")),
   };
+  const homeShape = (ctx) => (ctx.parents === "care" ? HOMES.care : HOMES[ctx.family] || HOMES.q3);
   const SCREENS = {
     birth(ctx) {
       let s = outdoorSky(EW, EH, { season: "spring", seed: 81 });
-      s += (HOMES[ctx.family] || HOMES.q3)() + R(0, 196, EW, 24, "grass");
+      s += homeShape(ctx)() + R(0, 196, EW, 24, "grass");
       s += tree(560, 200, "spring", 1.1) + tree(480, 204, "spring", 0.8) + particles("spring", 0, 0, EW, 200, false, 12, 3);
       s += person(Object.assign({}, ctx, { stage: "elem" }), 400, EFEET, 1, { mood: "happy", pose: "wave" });
       return s;
@@ -924,12 +936,15 @@
   const fx = (cls, at, body) => '<g class="' + cls + '" style="--at:' + at + 's">' + body + "</g>";
   // Family and classmates. Parents share your skin tone; everyone else gets a seeded look.
   // Parents who aren't in this life aren't drawn; children raised by grandparents get a grandmother
-  // (grey hair) where the mother would stand.
+  // (grey hair) where the mother would stand, and children in care a carer.
   const hasMom = (ctx) => !ctx.parents || ctx.parents === "both" || ctx.parents === "mom";
   const hasDad = (ctx) => !ctx.parents || ctx.parents === "both" || ctx.parents === "dad";
   const grandma = (x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, sex: "f" }, mood: "happy" }, extra || {})) +
     P("M-18 -128 Q0 -142 18 -128 Q8 -138 0 -138 Q-8 -138 -18 -128 Z", "gray"), s || 1);
-  const mom = (ctx, x, y, s, extra) => (hasMom(ctx) ? momFig(ctx, x, y, s, extra) : ctx.parents === "grand" ? grandma(x, y, s, extra) : "");
+  // In a children's home a carer in a work apron stands where the mother would.
+  const carer = (x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 2, shirt: 4, sex: "f" }, mood: "happy" }, extra || {})) +
+    R(-15, -78, 30, 44, "paper", 4, "line", 1.5), s || 1);
+  const mom = (ctx, x, y, s, extra) => (hasMom(ctx) ? momFig(ctx, x, y, s, extra) : ctx.parents === "grand" ? grandma(x, y, s, extra) : ctx.parents === "care" ? carer(x, y, s, extra) : "");
   const dad = (ctx, x, y, s, extra) => (hasDad(ctx) ? dadFig(ctx, x, y, s, extra) : "");
   const momFig = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, skin: ctx.look.skin, shirt: 0, sex: "f" }, mood: "happy" }, extra || {})), s || 1);
   const dadFig = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 1, skin: ctx.look.skin, shirt: 2, sex: "m" }, mood: "happy" }, extra || {})), s || 1);
@@ -982,7 +997,7 @@
     return G(-314, 64, s, 1.6);
   }
   const dolX = (id) => (320 + Math.max(0, DOL_ORDER.indexOf(id)) * 28) * 1.6 - 314;
-  const homeOf = (ctx) => G(40, 112, (HOMES[ctx.family] || HOMES.q3)(), 1.45);
+  const homeOf = (ctx) => G(40, 112, homeShape(ctx)(), 1.45);
 
   const CUTS = {
     birth(ctx) {

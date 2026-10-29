@@ -74,6 +74,12 @@ Retrieved: 2026-10-28
 | Single-parent families receiving government support | 65.9% | 2024 | Share | MOGEF | https://gonggam.korea.kr/newsContentView.es?mid=a12502000000&section_id=NCCD_COVER&content=NC002&news_id=68d6f6bf-0668-43de-bd1d-c3478ef0ccdc&code_cd=0119000000 | official; more than doubled in 12 years |
 | Single-parent households | 1.53 million (7.6% of 20.17 million households) | 2017 | Households (all ages of children) | Statistics Korea census | — | unverified (cited in a search summary, old) |
 | Grandparent-grandchild households (조손가정) | 153,000 (2015) → 321,000 projected (2035) | 2015 / 2035 | Households | MOHW citing Statistics Korea household projections | https://mohw.go.kr/board.es?act=view&bid=0027&list_no=338616&mid=a10503010200 | official |
+| Children newly in state care (보호대상아동 발생) | 9,085 (2000), 8,590 (2010), 4,503 (2015), 4,120 (2020), 3,657 (2021), 2,289 (2022) | 2000–2022 | Children a year | MOHW 보호대상아동 현황보고 (approved statistic 117034), via e-나라지표 | https://www.index.go.kr/unify/idx-info.do?idxCd=1421 | official; the 2021→2022 drop is unexplained in the sources found |
+| Where children in state care go | residential homes (시설입소) 2,308 (63.1%); family-based care 1,349 (36.9%) | 2021 | Children | MOHW, reported in the press | https://www.medicaldaily.co.kr/news/14457 | official figure, press source |
+| Why children come into care | abuse 47.4% (up from 35.0% in 2017); then divorce, unmarried parents / born outside marriage, parent's death (417, 11.4%), running away | 2021 | Share of new cases | MOHW, reported in the press | https://v.daum.net/v/20221020112118961 | official figure, press source |
+| Leaving care (보호종료) | at 18, or by choice up to 24 | 2022– | Age | MOHW support plan (2021) | https://view.asiae.co.kr/article/2021071309344648969 | official plan, press source |
+| Leaving-care allowance (자립수당) | ₩500,000 a month for 5 years after leaving | 2025 | Won/month | NABO, 자립지원 대상 아동·청년 지원사업 평가 (2025-08) | https://www.nabo.go.kr/ko/notice/releasesView.do?idx=8846 | official |
+| Leaving-care settlement (자립정착금) | Seoul ₩20M; Daejeon, Gyeonggi, Gyeongnam, Jeju ₩15M; Busan ₩12M; others ₩10M (one-off, set by each province) | 2024–25 | Won | NABO report, cited by Future Chosun | https://futurechosun.com/archives/68251 | news citing an official report |
 
 ## 4. Early childhood
 Retrieved: 2026-10-28
@@ -251,7 +257,8 @@ Retrieved: 2026-10-28. The Suneung Simulator's constants (suneung/engine.js at c
 | `REGIONS` Seoul total (6 areas) | 18.3% | Seoul 18.3% of registered population (2024) | matches |
 | `REGIONS.suwon` (Gyeonggi + Incheon) | 32.6% | 32.7% (2024) | matches |
 | Capital region total | 50.9% | 50.8% (2024 census) | matches |
-| `PARENTS_AT_BIRTH` | both 90%; single mother 6%; single father 2%; grandparents 2% | single-parent households 7.6% of all households (2017, all ages, unverified); grandparent-grandchild households 153,000 (2015) | no direct data on the share of children; grandparents 2% looks high (153,000 households is under 1% of households) |
+| `PARENTS_AT_BIRTH` | both 91%; single mother 6%; single father 2%; grandparents 0.7%; children's home 0.3% | single-parent households 7.6% of all households (2017, all ages, unverified); grandparent-grandchild households 153,000 (2015); 2,300–4,100 children a year come into care, 63% into a home (2021–22), out of 250,000–270,000 births | the home share at birth is above the share that arrives as babies, below the ~0.6% of a cohort that spends time in a home; single parents dying move a child into care 30% of the time (parental death is 11% of new care cases) |
+| `CARE_BUDGET`, `CARE_PAY`, `CARE_SETTLE` | home's education budget ₩150,000/month; ₩500,000/month for 5 years after leaving; settlement ₩10–20M by province | 자립수당 ₩500,000 × 5 years (NABO 2025); settlements Seoul ₩20M … others ₩10M | allowance and settlements match; the home's education budget is an estimate (see Gaps) |
 | `PARENT_BUDGET` single parent | education budget ×0.75 | single-parent income is 60.3% of the all-household average (2024) | game is gentler than the income gap (0.75 vs 0.60) |
 | `divorce` event | ~12% of children see a divorce before High 3 | 39,000 divorces a year involve minor children (2024) | no direct cumulative figure found; plausible order of magnitude |
 | `bereaved` event | ~3% lose a parent | no official figure found | no data |
@@ -277,6 +284,7 @@ Retrieved: 2026-10-28. The Suneung Simulator's constants (suneung/engine.js at c
 ## Gaps (no verifiable figure found yet)
 - Population of each province and of Seoul's districts (Gangnam 3 districts etc.) for 2024–25: the table is in the KOSIS / 등록센서스 xlsx, not in page text.
 - Share of children (not households) in single-parent or grandparent households; children who lose a parent before 18.
+- What a children's home spends on each child's education (tutoring, cram school) a month; how many care leavers choose to stay on to 24; 2023–25 new care cases.
 - Kindergarten vs daycare vs home-care shares by age.
 - Students by high-school type nationally (자사고, 외고, 과학고, 특성화고, 마이스터고) and their tuition; 국제중 competition ratios.
 - Private elementary school tuition.

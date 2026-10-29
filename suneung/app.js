@@ -273,8 +273,14 @@
     const diff = n - (S.FAMILY_IDS.indexOf(born) + 1);
     let meter = "";
     for (let i = 1; i <= 5; i++) meter += '<i class="' + (i <= n ? "on" : "") + '"></i>';
-    els.sFam.innerHTML = esc(L.family(g.family)) + ' <span class="fam-meter" aria-hidden="true">' + meter + "</span>";
-    els.sFamSub.textContent = (diff ? T("stat.familyMoved", { up: diff > 0, from: born, fam: g.family }) : T("stat.familySub", { fam: g.family })) + " · " + T("stat.parents", { par: g.parents || "both" });
+    // A child in care has no household class: the card names the home and what it pays instead.
+    if (g.parents === "care") {
+      els.sFam.textContent = L.parents("care");
+      els.sFamSub.textContent = g.flags.careLeft != null ? T("stat.careOut", { a: g.grossBudget() }) : T("stat.careSub", { a: g.grossBudget() });
+    } else {
+      els.sFam.innerHTML = esc(L.family(g.family)) + ' <span class="fam-meter" aria-hidden="true">' + meter + "</span>";
+      els.sFamSub.textContent = (diff ? T("stat.familyMoved", { up: diff > 0, from: born, fam: g.family }) : T("stat.familySub", { fam: g.family })) + " · " + T("stat.parents", { par: g.parents || "both" });
+    }
     els.sFamCard.classList.toggle("fam-up", diff > 0);
     els.sFamCard.classList.toggle("fam-down", diff < 0);
     const key = g.seed + ":" + g.family;

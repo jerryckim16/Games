@@ -68,7 +68,8 @@
         money: "₩300,000 now; New Year's money ×1.5",
         brush: "Arts lessons count double for an arts-school audition; stress settles 2 lower",
       },
-      parents: { both: "Both parents", mom: "Single mom", dad: "Single dad", grand: "Raised by grandparents" },
+      parents: { both: "Both parents", mom: "Single mom", dad: "Single dad", grand: "Raised by grandparents", care: "Children's home" },
+      homeCareCare: "In the home with the carers", homeCareCareNoun: "the home, with the carers",
       school: {
         kinder: "Daycare and kindergarten", homeCare: "At home with family", forest: "Forest kindergarten", engKinder: "English kindergarten",
         pubElem: "Public elementary school", privElem: "Private elementary school",
@@ -170,7 +171,8 @@
         money: "지금 30만원, 세뱃돈 ×1.5",
         brush: "예체능 학원이 예고 실기에 두 배로 반영, 스트레스가 2 낮게 유지",
       },
-      parents: { both: "부모님과 함께", mom: "한부모(엄마)", dad: "한부모(아빠)", grand: "조부모 가정" },
+      parents: { both: "부모님과 함께", mom: "한부모(엄마)", dad: "한부모(아빠)", grand: "조부모 가정", care: "보육원(아동양육시설)" },
+      homeCareCare: "보육원에서 지내기", homeCareCareNoun: "보육원",
       school: {
         kinder: "어린이집·유치원", homeCare: "가정 보육", forest: "숲유치원", engKinder: "영어유치원",
         pubElem: "공립 초등학교", privElem: "사립 초등학교",
@@ -498,6 +500,7 @@
       "map.tapHint": "Tap a place to move",
       "map.noMove": "Can't move right now",
       "map.born": "Where your family lives",
+      "map.born.care": "Where the home is",
       "map.aria": (p, h) => "Map of Korea. Home: " + h.region(p.reg) + ".",
       "map.home": "Home",
       "map.open": "You can move here",
@@ -508,13 +511,41 @@
         mom: "Your father isn't in the picture: your mom is raising you on her own.",
         dad: "Your mother isn't around: your dad is raising you on his own.",
         grand: "Your mother and father can't look after you, so your grandparents take you in.",
+        care: "No one comes forward to raise you, so you grow up in a children's home with a dozen other kids, a rota of carers and a lot of rules. The home pays for school; there's little left for anything else.",
       })[p.par] || "",
       "ev.divorce.r": (p) => "Your parents divorce. You'll live with your " + (p.with === "mom" ? "mom" : "dad") + ". Two homes now, and one of them is very quiet.",
       "ev.bereaved.r": (p) => "Your " + (p.lost === "mom" ? "mom" : "dad") + " dies suddenly. The funeral is a blur of white chrysanthemums and relatives you barely know. " +
-        (p.now === "grand" ? "Your grandparents take you in." : "It's just you and your " + (p.now === "mom" ? "mom" : "dad") + " now."),
+        (p.now === "grand" ? "Your grandparents take you in." : p.now === "care" ? "There's no one left to take you in. A social worker drives you to a children's home with one bag of clothes." : "It's just you and your " + (p.now === "mom" ? "mom" : "dad") + " now."),
       "log.parents": (p) => p.why === "divorce" ? "Your parents divorce; you live with your " + (p.with || p.now === "mom" ? (p.now === "mom" ? "mom" : "dad") : "dad") + "." :
-        "Your " + (p.lost === "mom" ? "mom" : "dad") + " dies." + (p.now === "grand" ? " You move in with your grandparents." : ""),
+        "Your " + (p.lost === "mom" ? "mom" : "dad") + " dies." + (p.now === "grand" ? " You move in with your grandparents." : p.now === "care" ? " You go into a children's home." : ""),
       "stat.parents": (p, h) => h.parents(p.par),
+      // ----- growing up in care (keys ending ".care" replace the plain key in a life in care) -----
+      "birth.text.care": (p, h) => p.name + " is born" + (p.sex ? ", a baby " + (p.sex === "f" ? "girl" : "boy") + "," : "") + (p.reg ? " in " + h.region(p.reg) : "") + ". The home can spend about " + h.won(p.a) + " a month on your education.",
+      "log.born.care": (p, h) => !p.care ? MSG.en["log.born"](p, h) : "Born " + (p.sex ? (p.sex === "f" ? "a girl" : "a boy") : "") + (p.reg ? " in " + h.regionShort(p.reg) : "") + ", and taken into a children's home. " + (p.early ? "March " + p.y + "." : "March " + p.y + ": you start elementary school."),
+      "stat.careSub": (p, h) => "The home pays " + h.wonShort(p.a) + " a month for school",
+      "stat.careOut": (p, h) => p.a ? "On your own: " + h.wonShort(p.a) + " a month from the state" : "On your own",
+      "ev.newborn.text.care": "Your first weeks in the infant room of the home. The carers on the night shift watch you sleep, eat and cry, and start to notice what kind of baby you are.",
+      "ev.saju.text.care": "An old volunteer who knits for the babies asks your birth date and hour, and works out the four pillars of your fate (saju) on the back of a napkin. She frowns, then smiles.",
+      "ev.saju.r.great.care": "\"A great fortune. Doors open for this one.\" She brings rice cakes for the whole room next week. (Luck: very good. Good things happen more often.)",
+      "ev.saju.r.mixed.care": "\"Some storms, but they pass.\" She tucks a charm into your blanket. (Luck: a little unlucky.)",
+      "ev.saju.r.rough.care": "\"A hard road. This one will have to be tough.\" The carers tell her to stop. (Luck: unlucky. Bad things happen more often.)",
+      "ev.firstword.r.care": "Your first word! The carers argue for a week about whose name it was.",
+      "ev.doljabi.r.money.care": "You grab the money, and the volunteers laugh. A sponsor tucks an envelope into your little hanbok. (₩300,000 now, more New Year's money.)",
+      "log.sebae.care": (p, h) => "New Year's money from the staff and sponsors: +" + h.won(p.a) + ".",
+      "move.care": "You live in a children's home: the home decides where you live until you leave care.",
+      "ev.care-tutor.text": "University students come to the home every Saturday to tutor. One of them, a math major, picks you.",
+      "ev.care-tutor.r": "Every Saturday for a year: math worksheets, English vocabulary and someone who asks how your week was. (Math and English up, motivation up.)",
+      "ev.care-sponsor.text": "A letter arrives from your sponsor, someone you've never met, with a card and a little money for books.",
+      "ev.care-sponsor.r": "You keep the card in your desk. (+₩100,000)",
+      "ev.care-found.text": "A classmate sees you walk through the gate of the home after school. By the next morning, everyone knows.",
+      "ev.care-found.r": "Some kids go quiet around you, one asks where your parents are, and your best friend sits with you at lunch as if nothing happened. It still stings.",
+      "ev.careleave.text": "You're 18, so care ends unless you ask to stay. Leaving means a one-off settlement from the province and a monthly allowance for five years, but also a room of your own to find and pay for. Staying means a bed and meals until 24, and no money until you go.",
+      "ev.careleave.c": ["Leave and live on your own", "Stay on in the home"],
+      "ev.careleave.r0": (p, h) => "A rooftop room, a rice cooker and a bank account with " + h.won(p.a) + " in it. The allowance of " + h.won(p.pay) + " a month is yours to spend on lectures and a study café. Freedom, and a lot of quiet evenings.",
+      "ev.careleave.r1": "You stay in the older kids' room. The carers make you breakfast before the retake year starts, and nobody mentions rent.",
+      "ev.careend.text": "You turn 24, and the extension runs out. Time to leave the home for good.",
+      "ev.careend.r": (p, h) => "You pack up, take the settlement of " + h.won(p.a) + " and find a room nearby. The allowance of " + h.won(p.pay) + " a month starts now.",
+      "log.careLeave": (p, h) => "You leave care with a settlement of " + h.won(p.a) + " and " + h.won(p.pay) + " a month for five years.",
       "ability.earlyNote": "Babies start near 0: 50 is the average Suneung test taker, and everyone climbs from the bottom. The stars are what you were born with.",
       "move.noQuota": "Out of school, you can't use the local quotas anywhere.",
       "quit.btn": "Leave school",
@@ -1125,6 +1156,7 @@
       "map.tapHint": "지역을 눌러 이사",
       "map.noMove": "지금은 이사 불가",
       "map.born": "우리 집은 여기",
+      "map.born.care": "보육원은 여기",
       "map.aria": (p, h) => "한국 지도. 우리 집: " + h.region(p.reg) + ".",
       "map.home": "우리 집",
       "map.open": "이사 가능",
@@ -1135,13 +1167,41 @@
         mom: "아빠는 곁에 없다. 엄마 혼자 너를 키운다.",
         dad: "엄마는 곁에 없다. 아빠 혼자 너를 키운다.",
         grand: "엄마 아빠가 키울 형편이 안 되어 할머니 할아버지가 너를 맡아 키운다.",
+        care: "너를 맡아 키울 가족이 나타나지 않아 보육원에서 자라게 된다. 또래 열몇 명, 교대로 오는 선생님들, 그리고 많은 규칙. 학비는 보육원이 내 주지만 그 밖에 쓸 돈은 거의 없다.",
       })[p.par] || "",
       "ev.divorce.r": (p) => "부모님이 이혼하셨다. 앞으로 " + (p.with === "mom" ? "엄마" : "아빠") + "와 산다. 집이 두 곳이 되었고, 그중 한 곳은 아주 조용하다.",
       "ev.bereaved.r": (p) => (p.lost === "mom" ? "엄마" : "아빠") + "가 갑자기 돌아가셨다. 하얀 국화와 처음 보는 친척들 사이에서 장례식이 흐릿하게 지나갔다. " +
-        (p.now === "grand" ? "할머니 할아버지 댁에서 살게 되었다." : "이제 " + (p.now === "mom" ? "엄마" : "아빠") + "와 둘이다."),
+        (p.now === "grand" ? "할머니 할아버지 댁에서 살게 되었다." : p.now === "care" ? "맡아 줄 사람이 아무도 없다. 사회복지사가 옷가방 하나와 함께 너를 보육원에 데려다준다." : "이제 " + (p.now === "mom" ? "엄마" : "아빠") + "와 둘이다."),
       "log.parents": (p) => p.why === "divorce" ? "부모님이 이혼하셨다. " + (p.now === "mom" ? "엄마" : "아빠") + "와 살게 되었다." :
-        (p.lost === "mom" ? "엄마" : "아빠") + "가 돌아가셨다." + (p.now === "grand" ? " 할머니 할아버지 댁으로 들어갔다." : ""),
+        (p.lost === "mom" ? "엄마" : "아빠") + "가 돌아가셨다." + (p.now === "grand" ? " 할머니 할아버지 댁으로 들어갔다." : p.now === "care" ? " 보육원에 들어갔다." : ""),
       "stat.parents": (p, h) => h.parents(p.par),
+      // ----- 보육원에서 자라기 -----
+      "birth.text.care": (p, h) => p.name + "은(는) " + (p.reg ? h.region(p.reg) + "에서 " : "") + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났습니다. 보육원은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
+      "log.born.care": (p, h) => !p.care ? MSG.ko["log.born"](p, h) : (p.reg ? h.regionShort(p.reg) + "에서 " : "") + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어나 보육원에 맡겨졌다. " + (p.early ? p.y + "년 3월." : p.y + "년 3월, 초등학교에 입학했다."),
+      "stat.careSub": (p, h) => "보육원이 학비로 월 " + h.wonShort(p.a) + " 지원",
+      "stat.careOut": (p, h) => p.a ? "자립: 자립수당 월 " + h.wonShort(p.a) : "자립",
+      "ev.newborn.text.care": "보육원 영아방에서 보내는 첫 몇 주. 밤 근무 선생님들이 아기가 자고 먹고 우는 모습을 지켜보며 어떤 아이인지 알아 간다.",
+      "ev.saju.text.care": "아기들 옷을 떠 주러 오는 자원봉사 할머니가 태어난 날과 시를 묻더니, 냅킨 뒷면에 사주를 풀어 본다. 인상을 쓰더니, 이내 웃으신다.",
+      "ev.saju.r.great.care": "\"대길이오. 이 아이 앞엔 문이 열립니다.\" 다음 주에 할머니가 방 아이들 모두에게 떡을 돌리셨다. (운: 아주 좋음. 좋은 일이 더 자주 일어남)",
+      "ev.saju.r.mixed.care": "\"풍파가 좀 있겠지만 지나가오.\" 할머니가 이불 속에 부적을 넣어 두셨다. (운: 조금 나쁨)",
+      "ev.saju.r.rough.care": "\"험한 길이오. 아이가 강해야겠소.\" 선생님들이 그만하시라고 말렸다. (운: 나쁨. 나쁜 일이 더 자주 일어남)",
+      "ev.firstword.r.care": "첫 말을 했다! 선생님들은 일주일 내내 그게 누구 이름이었는지 다툰다.",
+      "ev.doljabi.r.money.care": "돈을 잡자 자원봉사자들이 웃음을 터뜨린다. 후원자 한 분이 작은 한복 주머니에 봉투를 넣어 준다. (지금 30만원, 세뱃돈 증가)",
+      "log.sebae.care": (p, h) => "설날, 선생님들과 후원자에게 받은 세뱃돈: +" + h.won(p.a) + ".",
+      "move.care": "보육원에서 지내는 동안에는 사는 곳을 보육원이 정합니다.",
+      "ev.care-tutor.text": "토요일마다 대학생들이 보육원에 교육봉사를 온다. 수학과 다니는 형(누나) 한 명이 너를 맡기로 했다.",
+      "ev.care-tutor.r": "1년 동안 토요일마다: 수학 학습지, 영어 단어, 그리고 이번 주 어땠냐고 물어 주는 사람. (수학·영어 실력 상승, 의지 상승)",
+      "ev.care-sponsor.text": "한 번도 본 적 없는 후원자에게서 편지가 왔다. 카드 한 장과 책 사라는 용돈이 들어 있다.",
+      "ev.care-sponsor.r": "카드는 책상 서랍에 넣어 둔다. (+10만원)",
+      "ev.care-found.text": "방과 후 보육원 정문으로 들어가는 모습을 반 친구가 봤다. 다음 날 아침이 되자 모두가 알고 있다.",
+      "ev.care-found.r": "몇몇은 말이 없어지고, 누군가는 부모님은 어디 계시냐고 묻고, 단짝은 아무 일 없다는 듯 점심을 같이 먹는다. 그래도 마음이 쓰리다.",
+      "ev.careleave.text": "만 18세. 연장을 신청하지 않으면 보호가 종료된다. 나가면 시·도에서 자립정착금을 한 번에 받고 5년 동안 자립수당이 나오지만, 살 방을 스스로 구하고 내야 한다. 남으면 24세까지 잠자리와 밥이 있지만, 나가기 전까지는 돈이 나오지 않는다.",
+      "ev.careleave.c": ["보호 종료하고 자립하기", "보육원에 남기(보호 연장)"],
+      "ev.careleave.r0": (p, h) => "옥탑방 하나, 전기밥솥 하나, 그리고 " + h.won(p.a) + "이 든 통장. 월 " + h.won(p.pay) + "의 자립수당은 인강과 스터디카페에 쓸 수 있다. 자유, 그리고 아주 조용한 저녁들.",
+      "ev.careleave.r1": "큰 아이들 방에 남았다. 재수 첫날 아침, 선생님들이 밥을 차려 주고 아무도 방세 얘기를 하지 않는다.",
+      "ev.careend.text": "만 24세, 보호 연장이 끝났다. 이제 보육원을 완전히 떠날 때다.",
+      "ev.careend.r": (p, h) => "짐을 싸고, 자립정착금 " + h.won(p.a) + "으로 근처에 방을 구했다. 월 " + h.won(p.pay) + "의 자립수당이 이제 시작된다.",
+      "log.careLeave": (p, h) => "보호가 종료되었다. 자립정착금 " + h.won(p.a) + ", 그리고 5년 동안 월 " + h.won(p.pay) + "의 자립수당.",
       "ability.earlyNote": "아기는 0 근처에서 시작합니다. 50이 수능 응시자 평균이고, 누구나 바닥부터 올라갑니다. 별은 타고난 적성입니다.",
       "move.noQuota": "자퇴했으므로 어느 지역에서도 지역 전형을 받을 수 없습니다.",
       "quit.btn": "자퇴하기",
@@ -1531,15 +1591,20 @@
   function familyWords(s, par, en) {
     if (!par || par === "both") return s;
     if (Array.isArray(s)) return s.map((x) => familyWords(x, par, en));
+    if (s && typeof s === "object") { const o = {}; for (const k in s) o[k] = familyWords(s[k], par, en); return o; }
     if (typeof s !== "string") return s;
     if (en) {
-      const who = { mom: "mom", dad: "dad", grand: "grandparents" }[par];
-      s = s.replace(/\b([Yy])our parents'/g, (m, y) => y + "our " + (par === "grand" ? "grandparents'" : who + "'s"));
-      s = s.replace(/\b([Yy])our parents ((?:still|never|always|also|just|often) )?([a-z']+)/g, (m, y, adv, w) => y + "our " + who + " " + (adv || "") + (par === "grand" ? w : singular(w)));
+      const who = { mom: "mom", dad: "dad", grand: "grandparents", care: "carers" }[par];
+      const plural = par === "grand" || par === "care";
+      // In care the money is the home's, not the carers'.
+      s = s.replace(/\b([Yy])our parents'/g, (m, y) => (par === "care" ? (y === "Y" ? "The" : "the") + " home's" : y + "our " + (plural ? who + "'" : who + "'s")));
+      s = s.replace(/\b([Yy])our parents ((?:still|never|always|also|just|often) )?([a-z']+)/g, (m, y, adv, w) => y + "our " + who + " " + (adv || "") + (plural ? w : singular(w)));
       s = s.replace(/\b([Yy])our parents\b/g, (m, y) => y + "our " + who);
-      if (par !== "mom") s = s.replace(/\b([Yy])our (mom|mother)\b/g, (m, y) => y + "our " + (par === "dad" ? "dad" : "grandma"));
-      if (par !== "dad") s = s.replace(/\b([Yy])our (dad|father)\b/g, (m, y) => y + "our " + (par === "mom" ? "mom" : "grandpa"));
+      if (par !== "mom") s = s.replace(/\b([Yy])our (mom|mother)\b/g, (m, y) => y + "our " + ({ dad: "dad", grand: "grandma", care: "carer" })[par]);
+      if (par !== "dad") s = s.replace(/\b([Yy])our (dad|father)\b/g, (m, y) => y + "our " + ({ mom: "mom", grand: "grandpa", care: "carer" })[par]);
     } else {
+      // 선생님 ends in a consonant like 부모님, so its particles stay as they are.
+      if (par === "care") return s.replace(/부모님(의)? ?(교육비|예산)/g, "보육원 $2").replace(/부모님/g, "보육원 선생님").replace(/(^|[^"“])(엄마|아빠)/g, (m, pre) => pre + "선생님");
       const who = { mom: "엄마", dad: "아빠", grand: "할머니" }[par];
       s = s.replace(/부모님(이|은|을|과)?/g, (m, j) => who + (j ? { 이: "가", 은: "는", 을: "를", 과: "와" }[j] : ""));
       if (par !== "mom") s = s.replace(/(^|[^"“])엄마/g, (m, pre) => pre + (par === "dad" ? "아빠" : "할머니"));
@@ -1604,13 +1669,14 @@
     const h = {
       lang,
       t(key, p) {
-        const v = M[key];
+        const c = ctx && ctx();
+        // A life in care reads its own version of a message where one exists (key + ".care").
+        const v = c && c.parents === "care" && M[key + ".care"] != null ? M[key + ".care"] : M[key];
         if (v == null) return key;
         let out;
         if (typeof v === "function") out = v(p || {}, h);
         else if (typeof v !== "string") out = v;
         else out = v.replace(/\{(\w+)\}/g, (_, k) => (p && p[k] != null ? p[k] : ""));
-        const c = ctx && ctx();
         return c && c.parents && !FAMILY_KEYS.test(key) ? familyWords(out, c.parents, en) : out;
       },
       sub(s) {
@@ -1652,7 +1718,8 @@
         const [n, st] = g <= 6 ? [g, "elementary"] : g <= 9 ? [g - 6, "middle"] : [g - 9, "high"];
         return "year " + n + " of " + st + " school";
       },
-      school: (id) => D.school[id] || id,
+      // Staying out of kindergarten in care is staying in the home.
+      school: (id) => (id === "homeCare" && ctx && (ctx() || {}).parents === "care" ? D.homeCareCare : D.school[id]) || id,
       // A real school's name (or place) in the player's language: as it is in Korean, romanized in English.
       realSchool: (n) => (en ? schoolNameEn(n) : n),
       realPlace: (n) => (en ? placeEn(n) : n),
@@ -1662,7 +1729,7 @@
       actEarly: (id) => D.actEarly[id],
       actEarlyLong: (id) => D.actEarlyLong[id],
       actEarlyHint: (id) => D.actEarlyHint[id],
-      schoolNoun: (id) => D.schoolNoun[id] || id,
+      schoolNoun: (id) => (id === "homeCare" && ctx && (ctx() || {}).parents === "care" ? D.homeCareCareNoun : D.schoolNoun[id]) || id,
       phase(ph) {
         const names = en ? { early: "Early", elem: "Elem", mid: "Middle", high: "High" } : { early: "영유아", elem: "초등", mid: "중학교", high: "고1·2" };
         if (names[ph]) return names[ph];
@@ -1711,6 +1778,9 @@
     return h;
   }
 
+  // In care, staying out of kindergarten means staying in the home, not with grandparents.
+  MSG.en["school.desc.care"] = Object.assign({}, MSG.en["school.desc"], { homeCare: "Free. Stay in the home with the carers: few lessons (×0.3), less stress, no kindergarten colds." });
+  MSG.ko["school.desc.care"] = Object.assign({}, MSG.ko["school.desc"], { homeCare: "무상. 보육원 선생님들이 돌봐 주며 수업은 적고(×0.3) 스트레스는 줄고 유치원 감기도 없습니다." });
   const api = { make, LANGS: ["en", "ko"], _MSG: MSG };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SuneungText = api;
