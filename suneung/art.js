@@ -1247,23 +1247,70 @@
     const dx = side === "l" ? -13 : 13;
     return '<text class="kmap-lbl' + (cls ? " " + cls : "") + '" x="' + (x + dx) + '" y="' + (y + size * 0.35) + '" text-anchor="' + (side === "l" ? "end" : "start") + '" style="font-size:' + size + 'px">' + esc(text) + "</text>";
   }
+  // Real geography, when places.js is loaded: every municipality (시군구) as land with a thin border,
+  // the provinces on top with a stronger one, and the home area tinted. Without it the hand-drawn
+  // outline above stands in.
+  const GEO = root.SuneungPlaces || null;
+  // Seoul's own districts in the inset, by the affine map from the main projection to the inset's.
+  const ISX = (INSET.k * 0.95) / 100, ISY = INSET.k / 100;
+  const INSET_T = "translate(" + (INSET.x - 258 * ISX).toFixed(1) + " " + (INSET.y - 181.25 * ISY).toFixed(1) + ") scale(" + ISX + " " + ISY + ")";
+  const toInset = ([x, y]) => [INSET.x + (x - 258) * ISX, INSET.y + (y - 181.25) * ISY];
+  const inSeoul = (lat, lon) => lat > 37.42 && lat < 37.72 && lon > 126.76 && lon < 127.19;
+  // An area's bounding box in map units, from its municipality outlines (cached).
+  const BOX = {};
+  function areaBox(id) {
+    if (BOX[id] || !GEO || !GEO.areas[id]) return BOX[id] || null;
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const c of GEO.areas[id].munis) {
+      const n = (GEO.geo.munis[c] || "").match(/-?\d+(\.\d+)?/g) || [];
+      for (let i = 0; i + 1 < n.length; i += 2) { const x = +n[i], y = +n[i + 1]; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    }
+    return (BOX[id] = [x0, y0, x1, y1]);
+  }
+  function realLand(home, focus) {
+    const hm = new Set(home && GEO.areas[home] ? GEO.areas[home].munis : []);
+    let s = "";
+    for (const c in GEO.geo.munis) s += '<path class="kmap-muni' + (hm.has(c) ? " home" : "") + '" d="' + GEO.geo.munis[c] + '"/>';
+    for (const d of GEO.geo.provinces) s += '<path class="kmap-prov" d="' + d + '"/>';
+    return s;
+  }
   function koreaMap(opts) {
     const o = opts || {};
     const states = o.states || {}, labels = o.labels || {};
-    const fade = nid("nfade");
-    let s = "<defs><linearGradient id=\"" + fade + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + C("land2") + '" stop-opacity="0.15"/><stop offset="1" stop-color="' + C("land2") + '" stop-opacity="0.8"/></linearGradient></defs>';
-    s += R(0, 0, MW, MH, "mapSea");
+    const fade = nid("nfade"), clip = nid("iclip");
+    const focus = o.focus && GEO ? areaBox(o.focus) : null;
+    let s = "<defs><linearGradient id=\"" + fade + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + C("land2") + '" stop-opacity="0.15"/><stop offset="1" stop-color="' + C("land2") + '" stop-opacity="0.8"/></linearGradient>' +
+      '<clipPath id="' + clip + '"><circle cx="' + INSET.x + '" cy="' + INSET.y + '" r="' + INSET.r + '"/></clipPath></defs>';
+    s += R(-400, -400, MW + 800, MH + 800, "mapSea");
     s += P(mpath(NORTH), null, null, 0, "fill:url(#" + fade + ")");
-    s += P(mpath(SOUTH), "land", "coast", 2);
-    // Islands: Jeju, Geoje, Jindo, Ganghwa, Ulleungdo and Dokdo.
-    s += E(mx(126.55), my(33.38), 38, 16, "land", "coast", 2) + E(mx(128.62), my(34.88), 8, 10, "land", "coast", 1.5) + E(mx(126.25), my(34.45), 9, 8, "land", "coast", 1.5) +
-      E(mx(126.45), my(37.7), 7, 8, "land", "coast", 1.5) + O(mx(130.87), my(37.5), 5, "land", "coast", 1.5) + O(mx(131.86), my(37.24), 2.2, "land", "coast", 1) + O(mx(131.87), my(37.25), 1.6, "land", "coast", 1);
+    if (GEO) s += realLand(o.home, focus);
+    else {
+      s += P(mpath(SOUTH), "land", "coast", 2);
+      // Islands: Jeju, Geoje, Jindo, Ganghwa, Ulleungdo and Dokdo.
+      s += E(mx(126.55), my(33.38), 38, 16, "land", "coast", 2) + E(mx(128.62), my(34.88), 8, 10, "land", "coast", 1.5) + E(mx(126.25), my(34.45), 9, 8, "land", "coast", 1.5) +
+        E(mx(126.45), my(37.7), 7, 8, "land", "coast", 1.5) + O(mx(130.87), my(37.5), 5, "land", "coast", 1.5) + O(mx(131.86), my(37.24), 2.2, "land", "coast", 1) + O(mx(131.87), my(37.25), 1.6, "land", "coast", 1);
+    }
     s += P("M" + DMZ.map(([lon, lat]) => mx(lon) + " " + my(lat)).join(" L"), null, "dmz", 2.5, "stroke-dasharray:7 6");
+    // Zoomed on one area (the school dialog): its real schools, and none of the national furniture.
+    if (focus) return focusMap(o, s, focus);
     // Seoul on the mainland, and the inset it opens into.
     const [sx, sy] = [mx(SEOUL[0]), my(SEOUL[1])];
     s += O(sx, sy, 11, null, "inset", 2.5) + L(sx - 8, sy + 8, INSET.x + 40, INSET.y - INSET.r + 10, "inset", 2, "stroke-dasharray:5 5");
-    s += O(INSET.x, INSET.y, INSET.r, "land", "inset", 3) + P("M" + (INSET.x - 66) + " " + (INSET.y + 4) + " Q" + (INSET.x - 30) + " " + (INSET.y + 14) + " " + INSET.x + " " + (INSET.y + 2) + " T" + (INSET.x + 66) + " " + (INSET.y - 2), null, "mapSea", 7);
+    if (GEO) {
+      const hm = new Set(o.home && GEO.areas[o.home] ? GEO.areas[o.home].munis : []);
+      let gu = "";
+      for (const c in GEO.geo.munis) if (c.startsWith("11")) gu += '<path class="kmap-muni' + (hm.has(c) ? " home" : "") + '" d="' + GEO.geo.munis[c] + '"/>';
+      s += O(INSET.x, INSET.y, INSET.r, "mapSea", null, 0) + '<g clip-path="url(#' + clip + ')"><g transform="' + INSET_T + '">' + gu + "</g></g>" + O(INSET.x, INSET.y, INSET.r, null, "inset", 3);
+    } else {
+      s += O(INSET.x, INSET.y, INSET.r, "land", "inset", 3) + P("M" + (INSET.x - 66) + " " + (INSET.y + 4) + " Q" + (INSET.x - 30) + " " + (INSET.y + 14) + " " + INSET.x + " " + (INSET.y + 2) + " T" + (INSET.x + 66) + " " + (INSET.y - 2), null, "mapSea", 7);
+    }
     if (labels.seoul) s += mapLabel(sx - 6, sy, labels.seoul, "l", 20, "kmap-seoul");
+    // Your school, as a small star where it really is (in the inset if it's in Seoul).
+    for (const m of o.schools || []) {
+      const p = [mx(m.lon), my(m.lat)];
+      const [x, y] = inSeoul(m.lat, m.lon) ? toInset(p) : p;
+      s += G(x, y, P("M0 -9 L2.6 -3 L9 -2.8 L4 1.5 L5.6 8 L0 4.4 L-5.6 8 L-4 1.5 L-9 -2.8 L-2.6 -3 Z", null, null, 0), 1, "kmap-school " + (m.cls || ""));
+    }
     // A dashed route for a move, drawn under the dots.
     if (o.from && o.sel && o.from !== o.sel && PLACES[o.from] && PLACES[o.sel]) {
       const [ax, ay] = SEOUL_IDS.indexOf(o.from) >= 0 ? [sx, sy] : mapPos(o.from), [bx, by] = SEOUL_IDS.indexOf(o.sel) >= 0 ? [sx, sy] : mapPos(o.sel);
@@ -1286,5 +1333,23 @@
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + MW + " " + MH + '" class="kmap"' + (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ">" + s + "</svg>";
   }
 
-  root.SuneungArt = { koreaMap, scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
+  // One area up close for the school dialog: its municipalities, and each option's real school as a
+  // numbered marker (o.schools: { lat, lon, n, cls, id }; id makes it data-pick for taps). Schools outside the area (special schools far
+  // away) get no marker; the dialog names their city instead.
+  function focusMap(o, s, box) {
+    const [x0, y0, x1, y1] = box;
+    const pad = Math.max(x1 - x0, y1 - y0) * 0.12 + 2;
+    const vx = x0 - pad, vy = y0 - pad, vw = x1 - x0 + 2 * pad, vh = y1 - y0 + 2 * pad;
+    const k = Math.max(vw, vh) / 300; // marker size in map units, so markers look the same at any zoom
+    for (const m of o.schools || []) {
+      const x = mx(m.lon), y = my(m.lat);
+      if (x < vx || x > vx + vw || y < vy || y > vy + vh) continue;
+      const mark = G(x, y, O(0, 0, 9, null, null, 0) + (m.n != null ? '<text y="4" text-anchor="middle">' + esc(String(m.n)) + "</text>" : ""), k, "kmap-sch " + (m.cls || ""));
+      s += m.id ? '<g data-pick="' + esc(m.id) + '">' + mark + "</g>" : mark;
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + [vx, vy, vw, vh].map((v) => v.toFixed(1)).join(" ") + '" preserveAspectRatio="xMidYMid meet" class="kmap kmap-focus"' +
+      (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ' style="--k:' + k.toFixed(3) + '">' + s + "</svg>";
+  }
+
+  root.SuneungArt = { koreaMap, areaBox, scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
 })(typeof window !== "undefined" ? window : globalThis);

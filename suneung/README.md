@@ -61,7 +61,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **The words follow:** with one parent or grandparents, every "your parents" in the game becomes "your mom", "your dad" or "your grandparents" (verbs and Korean particles adjusted), a missing parent is replaced by the one who's there, and cutscenes draw only the parents in your life (a grandmother when grandparents raise you).
   - The Family strip shows the setup next to the income class.
 - **Your family's wealth class, always on screen.** A Family strip under the stats shows the household's current income class (low, lower-middle, middle, upper-middle or high income) with a five-step meter for its income fifth. Once family-fortune events have moved it, it says how far from birth (green "↑ Up from middle income at birth", red "↓ Down…"), and the strip flashes when the class changes.
-- **A map of Korea.** An interactive map of the peninsula, drawn in code (South Korea with Jeju, Ulleungdo and Dokdo, the North faded above a dashed DMZ), with every place at its real longitude and latitude and Seoul's six areas in a magnified inset.
+- **A map of Korea.** An interactive map of the peninsula with the real borders of all 17 provinces and all 250 cities, counties and districts (KOSTAT census boundaries; the North faded above a dashed DMZ), every place at its real longitude and latitude, and Seoul's six areas in a magnified inset drawn from its real 25 districts. Your home area is shaded, and your current school is a star where it really stands. Without `places.js` the map falls back to a hand-drawn outline.
   - **Birth:** a pulsing pin shows where your family starts.
   - **Always on screen:** the map sits beside the scene (below it on phones) with your home pinned and the places you could move to right now in blue. Tap any place to open the move dialog on it. After a move, the route stays drawn until your next turn.
   - **Moving house:** the Move house dialog is the map. Dots are red for home, blue where you can move and grey where you can't. Tap (or Tab and Enter) a place to see a card with what moving there would change, the quotas it brings, or why you can't go. A dashed route runs from home to your pick. The same places are still available as a list underneath.
@@ -256,7 +256,13 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - The multipliers apply to school lessons (see Learning), not to your own study.
   - Moving house swaps a day school for the local public school; boarding schools (international middle, 자사고, science and foreign language schools) stay.
   - New events at special schools: dorm nights, the science school's R&E research project, the arts school showcase, paid placements at vocational schools, English week at a private elementary school, and the first-exam shock at an elite high school (for once you're in the bottom half).
-  - The status card names your school.
+  - The status card names your school (its real name; the type shows on hover).
+- **Real schools.** Each game school stands for a real one, from the national list of 12,004 schools (`data/schools/`):
+  - **Local schools** (public and private elementary, middle and 일반고) are picked from the operating schools in your area's real districts: Gangnam is 서초·강남·송파, Nowon is 노원 and its five neighbours, Suwon is 수원시, Busan is the whole city, Haenam is 해남군, and so on. The pick comes from its own seeded stream, so the same life always gets the same schools.
+  - **Special schools** (the 26 science and gifted schools, the 10 nationwide 자사고, 39 foreign-language and international high schools, 5 international middle schools, 50 arts and sports high schools, 351 vocational high schools) are the nearest one to your area, with its city and distance; a local arts or vocational school is used when your area has one.
+  - A private school that doesn't exist where you live is closed ("not offered here"), as in Pyeongchang, which has no private middle school, or Jeonju and Jeju, which have no private elementary school.
+  - The school screen shows a close-up map of your area with each option's school as a numbered marker (tap one to pick it), and the log and outcome name the school you start at.
+  - Kinds come from the verified named lists in `data/schools.md` and, for arts and vocational schools, from words in the school's name. `tools/build_places.py` rebuilds `places.js` from the school list and the boundary files.
 - **Leaving school (자퇴)**, from Middle 1 (middle school) to High 2. The button opens a list of what you gain and what it costs, and it can't be undone.
   - **What you gain:**
     - two more free blocks every turn in Middle 1 to High 2 (6 instead of 4), because the hours that went to classes are yours (High 3 gains nothing, since a 고3's school day is mostly self-study already);
@@ -412,7 +418,7 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 | smart, best affordable method, 1 try | 69 | 2.0 · 1.9 · 2.2 | 385 | 385 | 1.00 | 9% | 1% | 74% |
 | smart, best affordable, retakes up to 3 tries | 69 | 2.0 · 1.9 · 2.2 | 385 | 410 | 2.55 | 61% | 19% | 98% |
 | smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 2.0 · 1.8 · 2.2 | 386 | 420 | 3.58 | 93% | 85% | 100% |
-| smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.9 · 2.4 | 386 | 386 | 1.00 | 5% | 1% | 71% |
+| smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.9 · 2.4 | 386 | 386 | 1.00 | 4% | 1% | 73% |
 | smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.9 · 2.2 | 384 | 420 | 3.67 | 91% | 80% | 99% |
 | balanced, self-study, vocational high school, 1 try | 59 | 2.8 · 2.3 · 2.6 | 357 | 357 | 1.00 | 0% | 0% | 21% |
 | balanced, self-study, leaves school at High 1, 1 try | 62 | 2.8 · 2.5 · 2.6 | 364 | 364 | 1.00 | 0% | 0% | 29% |
@@ -492,6 +498,7 @@ What the tables show:
 
 ## Files
 
+- `places.js`: generated by `tools/build_places.py` (don't edit by hand): province and municipality outlines, each game place's real districts and schools, and the special schools nationwide. The engine reads it for real school names and runs the same without it.
 - `engine.js`: the game, with no DOM, so it runs in Node. It holds no display text: log entries, events and outcomes are message keys with values.
   - `Game` holds the state and the screen queue: `advance(plan, method)`, `choose(i)`, `dismiss()`, `chooseTrack(track, inq)`, `apply(ids)`, `decide(d)`.
   - It also holds the life stages, families, the exam simulation (`gradeSubject`), events, universities and constants.
@@ -501,6 +508,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v5.0:** real places and real schools. The map now draws Korea's real provinces and all 250 cities, counties and districts, with your home area shaded and your school as a star. Every school choice is a real school: local schools from the 12,004-school national list in your area's real districts, and special schools (science, 자사고, 외고, international, arts, vocational) the nearest real one, with its city and distance. The school screen adds a close-up map with numbered markers, and private schools are closed where none exist. Rules and balance are unchanged apart from those closures (one strategy row moved by a point). Also added the missing scene descriptions for the nursery, kindergarten, baby and city scenes.
 
 - **v4.9:** real numbers, from the new `data/korea-stats.md`. Education budgets now follow the 2024 private-education survey (₩205,000 to ₩676,000 a month); bullying peaks in elementary school as in the national survey; the GED passes about 85–90% of the time; the English kindergarten costs its real ₩1.5M a month; single parents' budgets match their real income gap (×0.6); grandparent households are 1%; the English paper gives grade 1 to 5.7% (real: 4.7–6.2%). Rare shocks now happen at real rates: serious car accidents about 4% of lives (was 40%), jeonse scams 1.5% (was 28%), inheritances and lottery wins 5% (was 37%), a parent's serious illness 17% (was 47%). Exam-day and admissions luck are unchanged, so lives still spread widely. Balance tables regenerated. Also fixed two README lines that said "Elementary 1" for the exam's grade 1.
 

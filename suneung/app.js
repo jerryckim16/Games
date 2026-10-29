@@ -294,6 +294,10 @@
       g.month <= 11 ? (d > 0 ? T("stat.dday", { n: d }) : T("stat.examMonth")) : T("stat.results");
     els.sAttempt.textContent = g.isEarly() ? T("early.stage", { a: g.age }) : school ? L.schoolGrade(g.grade) : L.att(g.attempt);
     els.sStatus.textContent = g.dropout != null && (school || g.status === "hs3") ? T("st.dropout", { ged: g.flags.ged != null }) : g.inClass() || g.atKinder() ? L.school(g.schoolInfo().id) : L.status(g.status);
+    // Name the real school this one stands for; its type shows on hover.
+    const rs = g.dropout == null || !school ? g.realSchool() : null;
+    if (rs) els.sStatus.textContent = L.realSchool(rs.name);
+    els.sStatus.title = rs ? L.school(g.schoolInfo().id) : "";
     els.sAge.textContent = L.age(g.age);
     els.sName.textContent = g.name + " · " + L.regionShort(g.regionInfo().id) + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
@@ -533,6 +537,11 @@
   // The map in the main frame: home, where you could move right now, and the route of the last move
   // until the next turn. Tapping a place opens the move dialog on it.
   let mapKey = "", lastMove = null;
+  // The school you go to now, as a star on the national map where it really is.
+  function schoolStar(g) {
+    const r = g.realSchool();
+    return r ? [{ lat: r.lat, lon: r.lon }] : [];
+  }
   function moveStates(g) {
     const o = {};
     for (const r of S.REGIONS) o[r.id] = r.id === g.region ? "home" : g.moveBlock(r.id) ? "closed" : "open";
@@ -546,10 +555,11 @@
     els.mapHint.textContent = g.ending ? "" : canMove ? T("map.tapHint") : T("map.noMove");
     // Redrawing restarts the pin's pulse, so only redraw when something on it changed.
     const route = lastMove && lastMove.to === g.region ? lastMove : null;
-    const key = JSON.stringify([states, route, lang]);
+    const rs = g.realSchool();
+    const key = JSON.stringify([states, route, lang, rs && rs.name]);
     if (key === mapKey) return;
     mapKey = key;
-    els.mainMap.innerHTML = Art.koreaMap({ states, sel: route ? route.to : null, from: route ? route.from : null, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) });
+    els.mainMap.innerHTML = Art.koreaMap({ states, sel: route ? route.to : null, from: route ? route.from : null, home: g.region, schools: schoolStar(g), labels: mapLabels(), aria: T("map.aria", { reg: g.region }) });
   }
   els.mainMap.addEventListener("click", (e) => {
     const pt = e.target.closest("[data-place]");
@@ -599,7 +609,7 @@
       const x = info[id];
       pick.id = x && !x.here && !x.why ? id : null;
       go.disabled = !pick.id;
-      mapBox.innerHTML = Art.koreaMap({ states, sel: id, from: pick.id ? g.region : null, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) });
+      mapBox.innerHTML = Art.koreaMap({ states, sel: id, from: pick.id ? g.region : null, home: g.region, schools: schoolStar(g), labels: mapLabels(), aria: T("map.aria", { reg: g.region }) });
       card.innerHTML = id ? "<b>" + esc(L.region(id)) + "</b><small>" + esc(x.kind) + "</small>" + (x.quota ? "<small>" + esc(x.quota) + "</small>" : "") +
         (x.note ? "<small" + (x.why ? ' class="why"' : "") + ">" + esc(x.note) + "</small>" : "") : esc(T("move.pick"));
       for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.checked = inp.value === pick.id;
@@ -842,7 +852,7 @@
       "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region }) +
         ((g.parents || "both") !== "both" ? " " + T("birth.parents", { par: g.parents }) : "")) + "</p>" +
       // Where on the peninsula the family starts.
-      "<h3>" + esc(T("map.born")) + '</h3><div class="map-wrap">' + Art.koreaMap({ states: bornStates(g), static: true, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) }) + "</div>" +
+      "<h3>" + esc(T("map.born")) + '</h3><div class="map-wrap">' + Art.koreaMap({ states: bornStates(g), static: true, home: g.region, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) }) + "</div>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",
       [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }],
       Art.screenArt("birth", artCtx({ stage: "baby" })));
@@ -854,24 +864,41 @@
     const opts = g.schoolOptions();
     const pick = { id: opts.find((o) => o.def).id };
     const desc = T("school.desc");
+    // Options with a real school get a number, shared by the row and its marker on the area map.
+    let n = 0;
+    for (const o of opts) if (o.real) o.n = ++n;
     const rows = opts.map((o) => {
       const why = o.blocked ? T("school.no." + (o.blocked === "admit" && o.id === "artsHigh" ? "arts" : o.blocked)) : "";
       const cls = o.def ? "ch-safe" : o.blocked ? "ch-long" : o.p >= 0.55 ? "ch-match" : o.p >= 0.25 ? "ch-reach" : "ch-long";
       const tag = '<span class="chance ' + cls + '" title="' + esc(T("school.chance", { p: o.p, def: o.def })) + '">' + esc(o.def ? T("school.tag.def") : o.blocked ? T("school.tag.no") : Math.round(o.p * 100) + "%") + "</span>";
       const facts = [T("school.fee", { fee: o.fee }), o.track ? T("school.track", { t: o.track }) : ""].filter(Boolean).join(" · ");
+      // A special school is the nearest one in the country, which can be a long way from home.
+      const where = o.real ? (o.real.city && o.real.km >= 15 ? T("school.realFar", { city: o.real.city, km: o.real.km }) : T("school.realHere")) : "";
+      const real = o.real ? '<small class="real"><b class="num">' + o.n + "</b> " + esc(L.realSchool(o.real.name)) + " · " + esc(where) + "</small>" : "";
       return '<label class="uni region' + (o.blocked ? " off" : "") + '"><input type="radio" name="schoolPick" value="' + o.id + '"' + (o.blocked ? " disabled" : "") + (o.def ? " checked" : "") + ">" +
-        '<span class="nm">' + esc(L.school(o.id)) + "<small>" + esc(desc[o.id]) + "</small><small>" + esc(facts) + "</small>" +
+        '<span class="nm">' + esc(L.school(o.id)) + real + "<small>" + esc(desc[o.id]) + "</small><small>" + esc(facts) + "</small>" +
         (why ? '<small class="why">' + esc(why) + "</small>" : "") + "</span>" + tag + "</label>";
     }).join("");
     const t = T("school.title"), x = T("school.text");
-    openModal(t[top.stage], "<p>" + esc(x[top.stage]) + '</p><div class="unis">' + rows + "</div>", [
+    const drawMap = () => Art.koreaMap({ focus: g.region, home: g.region, aria: T("school.mapTitle"),
+      schools: opts.filter((o) => o.real).map((o) => ({ lat: o.real.lat, lon: o.real.lon, n: o.n, id: o.blocked ? null : o.id, cls: (o.blocked ? "closed" : o.def ? "def" : "") + (o.id === pick.id ? " sel" : "") })) });
+    const map = n && Art.areaBox && Art.areaBox(g.region) ? '<figure class="school-map"><div id="schoolMap">' + drawMap() + "</div><figcaption>" + esc(T("school.mapTitle")) + "</figcaption></figure>" : "";
+    openModal(t[top.stage], "<p>" + esc(x[top.stage]) + "</p>" + map + '<div class="unis">' + rows + "</div>", [
       { label: T("school.go"), primary: true, run: () => {
         const msg = game.pickSchool(pick.id);
         outcome = { title: t[top.stage], msg, id: "school", variant: msg.key.split(".").pop() };
         after();
       } },
     ], Art.eventArt(artCtx({ id: "school", stage: top.stage })));
-    for (const inp of els.modalBody.querySelectorAll("input[name=schoolPick]")) inp.addEventListener("change", () => { pick.id = inp.value; });
+    const box = $("schoolMap");
+    const choose = (id) => {
+      pick.id = id;
+      for (const inp of els.modalBody.querySelectorAll("input[name=schoolPick]")) inp.checked = inp.value === id;
+      if (box) box.innerHTML = drawMap();
+    };
+    for (const inp of els.modalBody.querySelectorAll("input[name=schoolPick]")) inp.addEventListener("change", () => choose(inp.value));
+    // Tapping an open school's marker picks it, the same as its row.
+    if (box) box.addEventListener("click", (e) => { const m = e.target.closest("[data-pick]"); if (m) choose(m.dataset.pick); });
   }
 
   function showTrack() {

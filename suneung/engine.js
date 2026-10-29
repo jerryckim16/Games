@@ -12,6 +12,9 @@
 // player can switch language mid-game and the whole life log follows.
 (function (root) {
   "use strict";
+  // Real places and schools (places.js, generated from the national school list). Optional: without it
+  // the game plays the same, just without real school names.
+  const REAL = typeof module !== "undefined" && module.exports ? (() => { try { return require("./places.js"); } catch (e) { return null; } })() : root.SuneungPlaces || null;
 
   // ---------- seeded RNG ----------
   // mulberry32: tiny, fast, and its whole state is one integer, so a saved game resumes exactly.
@@ -264,6 +267,14 @@
     { id: "vocHigh", stage: "high", fee: 0, lessons: { all: 0.4 }, blocks: -1, stress: -3, motivation: -2, job: 1.5, admit: () => 0.95 },
   ];
   const SCHOOL_BY_ID = Object.fromEntries(SCHOOLS.map((x) => [x.id, x]));
+  // Which real schools each game school can be: local ones by [level, founding type, kind] from the
+  // home area's list, or the nearest special school of a kind anywhere (places.js "special"). Arts and
+  // vocational schools are local when the area has one.
+  const REAL_LOCAL = {
+    pubElem: ["e", "pub"], privElem: ["e", "priv"], pubMid: ["m", "pub", "gen"], privMid: ["m", "priv", "gen"],
+    pubHigh: ["h", "pub", "gen"], privHigh: ["h", "priv", "gen"], artsHigh: ["h", null, "arts"], vocHigh: ["h", null, "voc"],
+  };
+  const REAL_FAR = { intlMid: "intl", autoHigh: "auto", sciHigh: "sci", langHigh: "lang", artsHigh: "arts", vocHigh: "voc" };
   const DEFAULT_SCHOOL = { kinder: "kinder", elem: "pubElem", mid: "pubMid", high: "pubHigh" };
 
   // ---------- early childhood ----------
@@ -1344,15 +1355,59 @@
       const x = SCHOOL_BY_ID[this.school];
       return x && x.stage === st ? x : SCHOOL_BY_ID[DEFAULT_SCHOOL[st] || "pubHigh"];
     }
-    // Every school for the stage on the current school screen, with its chance and why it's closed.
+    // Every school for the stage on the current school screen, with its chance, why it's closed, and the
+    // real school it would be (see realSchoolFor). A private school that doesn't exist where you live
+    // is closed like any school that isn't there.
     schoolOptions() {
       const top = this.queue[0];
       if (!top || top.type !== "school") return [];
       const kind = this.regionInfo().kind;
       return SCHOOLS.filter((x) => x.stage === top.stage).map((x) => {
-        const blocked = x.where && x.where.indexOf(kind) < 0 ? "region" : x.fee > this.feeLimit(x) ? "cost" : x.admit(this) <= 0 ? "admit" : null;
-        return { id: x.id, fee: x.fee, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def: x.id === DEFAULT_SCHOOL[top.stage] };
+        const real = this.realSchoolFor(x.id);
+        const missing = REAL && REAL.areas[this.region] && REAL_LOCAL[x.id] && !real;
+        const blocked = (x.where && x.where.indexOf(kind) < 0) || missing ? "region" : x.fee > this.feeLimit(x) ? "cost" : x.admit(this) <= 0 ? "admit" : null;
+        return { id: x.id, fee: x.fee, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def: x.id === DEFAULT_SCHOOL[top.stage], real };
       });
+    }
+    // The real school a game school would be for this life: a local one picked from the area's schools
+    // of that kind (its own seeded stream, so the same life always gets the same school), or the
+    // nearest one in the country for special schools. null without places.js, for kindergartens, or
+    // when the area has none. { name, lat, lon, prov, city } (prov and city only for far schools).
+    realSchoolFor(id) {
+      const area = REAL && REAL.areas[this.region];
+      if (!area) return null;
+      const local = REAL_LOCAL[id];
+      if (local) {
+        const list = area.schools.filter((e) => e[1] === local[0] && (local[1] == null || e[2] === local[1]) && (local[2] == null || e[3] === local[2]));
+        if (!list.length) return id === "artsHigh" || id === "vocHigh" ? this.nearestSpecial(REAL_FAR[id], area) : null;
+        const e = list[Math.floor(makeRng(hashSeed(this.seed, "realschool", id, this.region))() * list.length)];
+        return { name: e[0], lat: e[4], lon: e[5] };
+      }
+      return REAL_FAR[id] ? this.nearestSpecial(REAL_FAR[id], area) : null;
+    }
+    nearestSpecial(kind, area) {
+      const list = (REAL.special[kind] || []);
+      let best = null, bd = 1e9;
+      const [la, lo] = area.center;
+      for (const e of list) {
+        const d = (e[2] - la) ** 2 + ((e[3] - lo) * 0.8) ** 2;
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (!best) return null;
+      // Straight-line distance from the middle of your area, for the dialog ("120 km away").
+      const rad = Math.PI / 180, dLa = (best[2] - la) * rad, dLo = (best[3] - lo) * rad;
+      const h = Math.sin(dLa / 2) ** 2 + Math.cos(la * rad) * Math.cos(best[2] * rad) * Math.sin(dLo / 2) ** 2;
+      return { name: best[0], lat: best[2], lon: best[3], prov: best[4], city: best[5], km: Math.round(12742 * Math.asin(Math.sqrt(h))) };
+    }
+    // The real school you attend now: the one picked on the school screen, or (older saves, or after
+    // a move) the local one for your school.
+    realSchool() {
+      if (!this.inClass()) return null;
+      const id = this.schoolInfo().id;
+      const r = this.real;
+      if (r && r.id === id && r.region === this.region || r && r.id === id && SCHOOL_BY_ID[id].board) return r;
+      const x = this.realSchoolFor(id);
+      return x ? Object.assign({ id, region: this.region }, x) : null;
     }
     // Apply to a school. Anything but the default public school is a lottery or a selection; missing
     // out means the public school. Returns the outcome message { key, p }.
@@ -1363,10 +1418,12 @@
       if (!o || o.blocked) throw new Error("school.closed");
       const got = o.def || this.rng() < o.p;
       this.school = got ? id : DEFAULT_SCHOOL[top.stage];
+      const real = this.realSchoolFor(this.school);
+      this.real = real ? Object.assign({ id: this.school, region: this.region }, real) : null;
       this.queue.shift();
-      this.addLog("log.school", { id: this.school, want: id, got }, "milestone");
+      this.addLog("log.school", { id: this.school, want: id, got, real: real && real.name }, "milestone");
       this.flush();
-      return { key: o.def ? "school.r.def" : got ? "school.r.in" : "school.r.out", p: { id, def: DEFAULT_SCHOOL[top.stage] } };
+      return { key: o.def ? "school.r.def" : got ? "school.r.in" : "school.r.out", p: { id, def: DEFAULT_SCHOOL[top.stage], real: real && real.name } };
     }
     // The parents' education money for this turn. Whatever isn't spent stays with them.
     budget() { return this.allowance() * this.turnMonths(); }
@@ -1424,7 +1481,8 @@
       // A new home means the local public school, unless yours is a boarding or commuter school.
       if (this.inClass() && !this.schoolInfo().board && this.schoolInfo().id !== DEFAULT_SCHOOL[this.status === "hs3" ? "high" : this.status]) {
         this.school = DEFAULT_SCHOOL[this.status === "hs3" ? "high" : this.status];
-        this.addLog("log.schoolMove", { id: this.school }, "event");
+        const r = this.realSchoolFor(this.school);
+        this.addLog("log.schoolMove", { id: this.school, real: r && r.name }, "event");
       }
       // In school, the quotas count from the grade you arrive in; after school, you're past them.
       this.regionFrom = this.inSchool() ? this.grade : 13;

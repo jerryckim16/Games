@@ -28,6 +28,7 @@
   /* Artwork (art.js): scenes, the avatar and event illustrations. Dark mode turns day to dusk. */
   --a-sky: #a9dcff; --a-sky2: #e8f6ff; --a-night: #16224a; --a-night2: #34457e; --a-moon: #fff3c4;
   --a-star: #fff7d6; --a-sun: #ffcf4a; --a-cloud: #ffffff; --a-dusk: #ff9e7a; --a-dusk2: #ffd9a0;
+  --a-homeLand: #f6d98a; --a-muniLine: #a9c59a; --a-school: #e0533d; --a-schNum: #ffffff;
   --a-land: #dcebc6; --a-land2: #b9c2b0; --a-coast: #6f9a5e; --a-mapSea: #cfe7f3; --a-dmz: #c0504d; --a-inset: #5b6b8c; --a-route: #2f5bea; --a-pin: #e0533d; --a-pinOpen: #2f5bea; --a-pinOff: #a6adb9; --a-sel: #f0a020; --a-mapLbl: #1c2a3a; --a-mapHalo: #ffffff;
   --a-sea: #5fb3d9; --a-sea2: #3d8fbd; --a-hill: #9fc78a; --a-city: #9fb3cc; --a-wall: #f6ecda; --a-wall2: #ead9bb; --a-floor: #d9b083;
   --a-floor2: #c49568; --a-tile: #e3e7ee; --a-tile2: #cfd5df; --a-nightwall: #3a3d5c;
@@ -81,6 +82,7 @@
     --g6: #ff6b6b;
     --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
     --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
+    --a-homeLand: #7a6a2e; --a-muniLine: #4f6a52; --a-school: #ff7a63; --a-schNum: #1b1b1b;
     --a-land: #3c5440; --a-land2: #3a3f48; --a-coast: #87b27a; --a-mapSea: #1b2f40; --a-dmz: #e07a6f; --a-inset: #9aa9c8; --a-route: #7d9cff; --a-pin: #ff7a63; --a-pinOpen: #7d9cff; --a-pinOff: #6b7280; --a-sel: #f5b941; --a-mapLbl: #eef2f7; --a-mapHalo: #10161f;
     --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
     --a-floor2: #4a382c; --a-tile: #343a48; --a-tile2: #2b303c; --a-nightwall: #24263a;
@@ -134,7 +136,8 @@
   --g6: #ff6b6b;
   --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
   --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
-  --a-land: #3c5440; --a-land2: #3a3f48; --a-coast: #87b27a; --a-mapSea: #1b2f40; --a-dmz: #e07a6f; --a-inset: #9aa9c8; --a-route: #7d9cff; --a-pin: #ff7a63; --a-pinOpen: #7d9cff; --a-pinOff: #6b7280; --a-sel: #f5b941; --a-mapLbl: #eef2f7; --a-mapHalo: #10161f;
+  --a-homeLand: #7a6a2e; --a-muniLine: #4f6a52; --a-school: #ff7a63; --a-schNum: #1b1b1b;
+    --a-land: #3c5440; --a-land2: #3a3f48; --a-coast: #87b27a; --a-mapSea: #1b2f40; --a-dmz: #e07a6f; --a-inset: #9aa9c8; --a-route: #7d9cff; --a-pin: #ff7a63; --a-pinOpen: #7d9cff; --a-pinOff: #6b7280; --a-sel: #f5b941; --a-mapLbl: #eef2f7; --a-mapHalo: #10161f;
     --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
   --a-floor2: #4a382c; --a-tile: #343a48; --a-tile2: #2b303c; --a-nightwall: #24263a;
   --a-nightfloor: #33282a; --a-dark: #171a22; --a-dark2: #222634; --a-locker: #3d5578;
@@ -355,6 +358,12 @@ table.grid td.l { text-align: left; }
 .uni { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--border); font-size: 0.88rem; cursor: pointer; }
 .uni.off { opacity: 0.45; cursor: not-allowed; }
 .uni .nm small.why { color: var(--neg); }
+.uni .nm small.real { color: var(--text); font-weight: 600; }
+.uni .nm small.real .num { display: inline-block; min-width: 1.4em; padding: 0 4px; margin-right: 2px; border-radius: 999px; background: var(--a-pinOpen); color: var(--a-schNum); text-align: center; font-size: 0.7rem; }
+.uni.off .nm small.real .num { background: var(--a-pinOff); }
+.school-map { margin: 8px 0; }
+.school-map .kmap { max-height: 220px; border-radius: 10px; }
+.school-map figcaption { color: var(--muted); font-size: 0.75rem; text-align: center; margin-top: 2px; }
 .uni.region .nm { min-width: 0; }
 .uni .nm small { color: var(--muted); display: block; font-size: 0.75rem; }
 .chance { font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; color: var(--panel); }
@@ -716,3 +725,18 @@ body.cutting { overflow: hidden; }
 .map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
 .map-legend .lh { background: var(--a-pin); } .map-legend .lo { background: var(--a-pinOpen); } .map-legend .lc { background: var(--a-pinOff); }
 .map-list summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); margin: 6px 0; }
+
+/* Real geography on the map (places.js): municipalities as land, provinces drawn over them, the home
+   area tinted; school markers. Borders keep their width at any zoom. */
+.kmap .kmap-muni { fill: var(--a-land); stroke: var(--a-muniLine); stroke-width: 0.5px; vector-effect: non-scaling-stroke; }
+.kmap .kmap-muni.home { fill: var(--a-homeLand); }
+.kmap .kmap-prov { fill: none; stroke: var(--a-coast); stroke-width: 1.2px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.kmap .kmap-school path { fill: var(--a-school); stroke: var(--a-mapHalo); stroke-width: 1.5px; }
+.kmap-focus .kmap-muni { stroke-width: 1px; }
+.kmap-focus .kmap-prov { stroke-width: 2px; }
+.kmap .kmap-sch circle { fill: var(--a-pinOpen); stroke: var(--a-mapHalo); stroke-width: 2px; }
+.kmap .kmap-sch.def circle { fill: var(--a-pin); }
+.kmap .kmap-sch.closed circle { fill: var(--a-pinOff); }
+.kmap .kmap-sch.sel circle { stroke: var(--a-sel); stroke-width: 4px; }
+.kmap .kmap-sch { cursor: pointer; }
+.kmap .kmap-sch text { fill: var(--a-schNum); font-size: 11px; font-weight: 800; pointer-events: none; }

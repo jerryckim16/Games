@@ -469,11 +469,14 @@
       "school.go": "Apply",
       "school.tag.def": "Assigned",
       "school.tag.no": "Closed",
-      "school.r.def": (p, h) => (p.id === "homeCare" ? "You stay home with family for now." : "You start at " + h.schoolNoun(p.id) + "."),
-      "school.r.in": (p, h) => "Accepted! You start at " + h.schoolNoun(p.id) + ".",
-      "school.r.out": (p, h) => "Not this time. You start at " + h.schoolNoun(p.def) + " instead.",
-      "log.school": (p, h) => p.id === "homeCare" ? "You stay home with family instead of going to kindergarten." : p.got || p.want === p.id ? "You start at " + h.schoolNoun(p.id) + "." : "You applied to " + h.schoolNoun(p.want) + " but didn't get in, so you start at " + h.schoolNoun(p.id) + ".",
-      "log.schoolMove": (p, h) => "The move means a new school: " + h.schoolNoun(p.id) + ".",
+      "school.r.def": (p, h) => (p.id === "homeCare" ? "You stay home with family for now." : "You start at " + (p.real ? h.realSchool(p.real) + ", " + h.schoolNoun(p.id) : h.schoolNoun(p.id)) + "."),
+      "school.r.in": (p, h) => "Accepted! You start at " + (p.real ? h.realSchool(p.real) + ", " + h.schoolNoun(p.id) : h.schoolNoun(p.id)) + ".",
+      "school.r.out": (p, h) => "Not this time. You start at " + (p.real ? h.realSchool(p.real) + ", " + h.schoolNoun(p.def) : h.schoolNoun(p.def)) + " instead.",
+      "school.realFar": (p, h) => "in " + h.realPlace(p.city) + ", " + p.km + " km away",
+      "school.realHere": "near home",
+      "school.mapTitle": "Your area's schools",
+      "log.school": (p, h) => { const at = (p.real ? h.realSchool(p.real) + ", " : "") + h.schoolNoun(p.id); return p.id === "homeCare" ? "You stay home with family instead of going to kindergarten." : p.got || p.want === p.id ? "You start at " + at + "." : "You applied to " + h.schoolNoun(p.want) + " but didn't get in, so you start at " + at + "."; },
+      "log.schoolMove": (p, h) => "The move means a new school: " + (p.real ? h.realSchool(p.real) + ", " : "") + h.schoolNoun(p.id) + ".",
       "track.forced": (p, h) => "Your school only teaches the " + h.track(p.t) + " track.",
       "move.school": "Your school is too far from the new home, so you'd switch to the local public school. Boarding schools stay.",
       "ev.dorm.text": "Lights out in the dorm. Your roommate is still studying under a desk lamp, and you miss home.",
@@ -842,6 +845,7 @@
       "art.place.desk": "Your desk, late at night", "art.place.cubicle": "A study-café cubicle", "art.place.academy": "The retake academy's lecture room",
       "art.place.campus": "The university campus", "art.place.examhall": "The exam hall", "art.place.home": "Home, waiting for results",
       "art.place.gate": "The university gate", "art.place.road": "The road ahead", "art.place.start": "A city at night, about to welcome a new life",
+      "art.place.baby": "A baby's first days at home", "art.place.nursery": "The nursery at home", "art.place.kinder": "The kindergarten playroom", "art.place.city": "The neighbourhood streets",
 
       // ----- cutscenes (app.js plays them; each film's captions are numbered by shot) -----
       "cut.label": "Cutscene",
@@ -1092,11 +1096,14 @@
       "school.go": "지원하기",
       "school.tag.def": "배정",
       "school.tag.no": "불가",
-      "school.r.def": (p, h) => (p.id === "homeCare" ? "당분간 집에서 가족과 지내게 되었다." : h.schoolNoun(p.id) + "에 다니게 되었다."),
-      "school.r.in": (p, h) => "합격! " + h.schoolNoun(p.id) + "에" + " 다니게 되었다.",
-      "school.r.out": (p, h) => "이번엔 떨어졌다. 대신 " + h.schoolNoun(p.def) + "에" + " 다니게 되었다.",
-      "log.school": (p, h) => p.id === "homeCare" ? "유치원 대신 집에서 가족과 지내기로 했다." : p.got || p.want === p.id ? h.schoolNoun(p.id) + "에" + " 입학했다." : h.schoolNoun(p.want) + "에" + " 지원했지만 떨어져서 " + h.schoolNoun(p.id) + "에" + " 입학했다.",
-      "log.schoolMove": (p, h) => "이사하면서 학교도 옮겼다: " + h.schoolNoun(p.id) + ".",
+      "school.r.def": (p, h) => (p.id === "homeCare" ? "당분간 집에서 가족과 지내게 되었다." : (p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id)) + "에 다니게 되었다."),
+      "school.r.in": (p, h) => "합격! " + (p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id)) + "에 다니게 되었다.",
+      "school.r.out": (p, h) => "이번엔 떨어졌다. 대신 " + (p.real ? p.real + "(" + h.school(p.def) + ")" : h.schoolNoun(p.def)) + "에 다니게 되었다.",
+      "school.realFar": (p, h) => p.city + ", " + p.km + "km 거리",
+      "school.realHere": "집 근처",
+      "school.mapTitle": "우리 동네 학교",
+      "log.school": (p, h) => { const at = p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id); return p.id === "homeCare" ? "유치원 대신 집에서 가족과 지내기로 했다." : p.got || p.want === p.id ? at + "에 입학했다." : h.schoolNoun(p.want) + "에 지원했지만 떨어져서 " + at + "에 입학했다."; },
+      "log.schoolMove": (p, h) => "이사하면서 학교도 옮겼다: " + (p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id)) + ".",
       "track.forced": (p, h) => "우리 학교에는 " + h.track(p.t) + "만" + " 있다.",
       "move.school": "지금 학교는 새 집에서 너무 멀어 동네 공립학교로 옮기게 됩니다. 기숙학교는 그대로 다닙니다.",
       "ev.dorm.text": "기숙사 소등 시간. 룸메이트는 아직 스탠드 불빛 아래서 공부 중이고, 나는 집이 그립다.",
@@ -1461,6 +1468,7 @@
       "art.place.desk": "늦은 밤 내 책상", "art.place.cubicle": "독서실 칸막이 자리", "art.place.academy": "재종반 강의실",
       "art.place.campus": "대학 캠퍼스", "art.place.examhall": "수능 시험장", "art.place.home": "결과를 기다리는 집",
       "art.place.gate": "대학교 정문", "art.place.road": "앞으로 이어진 길", "art.place.start": "새 생명을 기다리는 밤의 도시",
+      "art.place.baby": "집에서 보내는 아기의 첫날들", "art.place.nursery": "집 안의 아기 방", "art.place.kinder": "유치원 놀이방", "art.place.city": "동네 거리",
 
       // ----- 컷신 -----
       "cut.label": "컷신",
@@ -1540,6 +1548,54 @@
     return s;
   }
 
+  // Real school names are Korean only (the national list has no English names), and English text has
+  // no Hangul, so the English version romanizes them (Revised Romanization, syllable by syllable, with
+  // a final consonant carried onto a following vowel) and translates the words a name is built from:
+  // 봉은중학교 → Bongeun Middle School, 잠실여자고등학교 → Jamsil Girls' High School.
+  const RR_I = ["g", "kk", "n", "d", "tt", "r", "m", "b", "pp", "s", "ss", "", "j", "jj", "ch", "k", "t", "p", "h"];
+  const RR_M = ["a", "ae", "ya", "yae", "eo", "e", "yeo", "ye", "o", "wa", "wae", "oe", "yo", "u", "wo", "we", "wi", "yu", "eu", "ui", "i"];
+  const RR_F = ["", "k", "k", "k", "n", "n", "n", "t", "l", "k", "m", "l", "l", "l", "p", "l", "m", "p", "p", "t", "t", "ng", "t", "t", "k", "t", "p", "t"];
+  // A final consonant before a vowel-initial syllable is pronounced as that syllable's initial.
+  const RR_CARRY = { 1: "g", 4: "n", 7: "d", 8: "r", 16: "m", 17: "b", 19: "s", 22: "j", 23: "ch", 24: "k", 25: "t", 26: "p" };
+  function romanize(word) {
+    const sy = [];
+    for (const ch of word) {
+      const c = ch.charCodeAt(0) - 0xac00;
+      if (c < 0 || c > 11171) { sy.push({ raw: ch }); continue; }
+      sy.push({ i: Math.floor(c / 588), m: Math.floor((c % 588) / 28), f: c % 28 });
+    }
+    let out = "";
+    for (let k = 0; k < sy.length; k++) {
+      const x = sy[k], nx = sy[k + 1];
+      if (x.raw) { out += x.raw; continue; }
+      const init = x.carried != null ? x.carried : RR_I[x.i];
+      let fin = RR_F[x.f];
+      if (nx && !nx.raw && nx.i === 11 && RR_CARRY[x.f]) { nx.carried = RR_CARRY[x.f]; fin = ""; }
+      else if (nx && !nx.raw && x.f === 8 && nx.i === 5) fin = "l"; // ㄹ+ㄹ reads ll
+      out += (init === "r" && k === 0 ? "" : init) + RR_M[x.m] + fin;
+    }
+    out = out.replace(/^([^a-z]*)([a-z])/, (m, a, b) => a + b.toUpperCase());
+    return out;
+  }
+  const NAME_LEVEL = [["초등학교", "Elementary School"], ["중학교", "Middle School"], ["고등학교", "High School"], ["학교", "School"]];
+  const NAME_WORDS = [["사범대학부설", "Affiliated"], ["대학교부설", "University Affiliated"], ["대학교부속", "University Affiliated"], ["부설", "Affiliated"], ["부속", "Affiliated"],
+    ["과학예술영재", "Science and Arts Academy"], ["과학영재", "Science Academy"], ["외국어", "Foreign Language"], ["국제", "International"], ["과학", "Science"], ["예술", "Arts"],
+    ["체육", "Physical Education"], ["여자", "Girls'"], ["남자", "Boys'"], ["공업", "Technical"], ["상업", "Commercial"], ["정보", "Information"], ["마이스터", "Meister"], ["사관", "Leadership Academy"]];
+  function schoolNameEn(name) {
+    let rest = name, tail = [];
+    for (const [k, v] of NAME_LEVEL) if (rest.endsWith(k)) { rest = rest.slice(0, -k.length); tail.unshift(v); break; }
+    for (let found = true; found && rest;) {
+      found = false;
+      for (const [k, v] of NAME_WORDS) if (rest.endsWith(k) && rest.length > k.length) { rest = rest.slice(0, -k.length); tail.unshift(v); found = true; break; }
+    }
+    return (romanize(rest) + " " + tail.join(" ")).trim();
+  }
+  // A city, county or district from an address: 횡성군 → Hoengseong-gun.
+  function placeEn(p) {
+    const m = p.match(/^(.*?)(시|군|구)$/);
+    return m && m[1] ? romanize(m[1]) + "-" + { 시: "si", 군: "gun", 구: "gu" }[m[2]] : romanize(p);
+  }
+
   function make(lang, ctx) {
     lang = MSG[lang] ? lang : "en";
     const D = DATA[lang];
@@ -1597,6 +1653,9 @@
         return "year " + n + " of " + st + " school";
       },
       school: (id) => D.school[id] || id,
+      // A real school's name (or place) in the player's language: as it is in Korean, romanized in English.
+      realSchool: (n) => (en ? schoolNameEn(n) : n),
+      realPlace: (n) => (en ? placeEn(n) : n),
       parents: (id) => D.parents[id || "both"],
       trait: (id) => D.trait[id] || id,
       traitFx: (id) => D.traitFx[id] || "",
