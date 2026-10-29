@@ -393,18 +393,25 @@
     home: { group: "none", fx: { stressRest: -2, mot: 1 } },
   };
   const WORK_IDS = Object.keys(JOBS).filter((id) => id !== "home");
-  // Filled in from the research below (JOB_SHARE: % of employed women / men; PARENT_PAY: × average pay).
+  // JOB_SHARE: % of employed mothers / fathers in each job. Mothers: married women 15–54 living with a
+  // child under 18 (지역별고용조사, 2025 H1). Fathers: employed men's KSCO mix reweighted to ages 30–49
+  // (same survey; it has no sex × age table). Major groups are split into jobs by official head counts:
+  // doctors, teachers, nurses and software experts within professionals; government clerks (11.9%)
+  // within clerks; drivers within machine operators; owners (non-wage: 43% of sales and 29% of
+  // service workers) become "shop". PARENT_PAY: mean monthly pay against the all-worker mean, from
+  // each group's wage bands (2026 H1); doctors, developers and shop owners from other figures (see
+  // data/korea-stats.md "Jobs").
   const JOB_SHARE = {
-    // Provisional (to be replaced with the research figures).
-    f: { exec: 0.6, doctor: 0.3, pro: 7, dev: 1, teacher: 5, nurse: 4, civil: 3, office: 18, service: 18, shop: 8, sales: 10, farmer: 4, builder: 1, driver: 0.7, factory: 5, labor: 14.4 },
-    m: { exec: 2.5, doctor: 0.6, pro: 10, dev: 4, teacher: 2, nurse: 0.4, civil: 4, office: 15, service: 5, shop: 10, sales: 7, farmer: 5, builder: 12, driver: 8, factory: 9, labor: 5.5 },
+    f: { exec: 0.60, doctor: 0.38, pro: 25.70, dev: 1.14, teacher: 3.88, nurse: 3.40, civil: 3.43, office: 25.47, service: 9.72, shop: 8.19, sales: 5.79, farmer: 0.80, builder: 1.60, driver: 0.14, factory: 2.46, labor: 7.30 },
+    m: { exec: 1.48, doctor: 0.80, pro: 24.01, dev: 3.57, teacher: 1.20, nurse: 0.25, civil: 2.52, office: 18.70, service: 3.90, shop: 4.66, sales: 4.18, farmer: 1.13, builder: 12.01, driver: 5.59, factory: 9.77, labor: 6.23 },
   };
-  const PARENT_PAY = { exec: 2.2, doctor: 3.5, pro: 1.5, dev: 1.5, teacher: 1.3, nurse: 1.1, civil: 1.15, office: 1.1, service: 0.6, shop: 0.9, sales: 0.75, farmer: 0.55, builder: 0.95, driver: 0.85, factory: 0.9, labor: 0.5 };
+  const PARENT_PAY = { exec: 1.9, doctor: 3.0, pro: 1.2, dev: 1.4, teacher: 1.25, nurse: 1.15, civil: 1.15, office: 1.15, service: 0.67, shop: 1.0, sales: 0.86, farmer: 0.7, builder: 1.09, driver: 1.0, factory: 1.1, labor: 0.55 };
   const JOB_TILT = 1.5;
   // Who works, by income fifth: mothers of young children work less in poorer households (dual earners
-  // lift a household up the fifths); fathers mostly work. Fitted to 53% of mothers working while the
-  // youngest is under 7 and about 95% of fathers (see data/korea-stats.md).
-  const MOM_WORKS = [0.36, 0.48, 0.56, 0.62, 0.66];
+  // lift a household up the fifths); fathers mostly work. Fitted to 57.7% of mothers working while the
+  // youngest is under 7 (2025) and about 94% of fathers; the momwork event takes mothers to 70% by
+  // the time the child is 13–17 (see data/korea-stats.md).
+  const MOM_WORKS = [0.43, 0.555, 0.635, 0.695, 0.735];
   const DAD_WORKS = [0.84, 0.95, 0.97, 0.98, 0.98];
   const SINGLE_MOM_WORKS = 0.8;
   // Farming is a rural job: its weight moves with the kind of place, then the row is renormalised.
@@ -768,10 +775,10 @@
       },
     },
     { id: "careend", weight: (g) => (g.parents === "care" && g.flags.careLeft == null && g.flags.careStay != null ? 100 : 0), when: (g) => g.age >= 24, run: (g) => leaveCare(g, "r") },
-    // Parents' jobs. A mother at home often goes back to work once school starts (53% of mothers work
-    // while the youngest is under 7, 64% once they're 13–17), usually in a different, lower-paid job.
+    // Parents' jobs. A mother at home often goes back to work once school starts (57.7% of mothers work
+    // while the youngest is under 7, 70.4% once they're 13–17), usually in a different, lower-paid job.
     {
-      id: "momwork", weight: (g) => (g.jobs && g.jobs.mom === "home" && g.workingParents(true).indexOf("mom") >= 0 ? 0.2 : 0), when: (g) => g.grade >= 1 && g.grade <= 12 && g.attempt === 1,
+      id: "momwork", weight: (g) => (g.jobs && g.jobs.mom === "home" && g.workingParents(true).indexOf("mom") >= 0 ? 0.4 : 0), when: (g) => g.grade >= 1 && g.grade <= 12 && g.attempt === 1,
       run: (g) => { const to = g.setJob("mom", BACK_TO_WORK, "back"); bump(g, { stress: 2, motivation: 1 }); return ["r", { to }]; },
     },
     {

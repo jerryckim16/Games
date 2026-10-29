@@ -71,9 +71,9 @@
       parents: { both: "Both parents", mom: "Single mom", dad: "Single dad", grand: "Raised by grandparents", care: "Children's home" },
       homeCareCare: "In the home with the carers", homeCareCareNoun: "the home, with the carers",
       jobs: {
-        exec: "company executive", doctor: "doctor", pro: "engineer or accountant", dev: "software developer", teacher: "teacher", nurse: "nurse",
+        exec: "company executive", doctor: "doctor", pro: "professional (engineer, designer, instructor)", dev: "software developer", teacher: "teacher", nurse: "nurse",
         civil: "civil servant", office: "office worker", service: "service worker", shop: "small-shop owner", sales: "salesperson", farmer: "farmer",
-        builder: "construction worker", driver: "driver", factory: "factory worker", labor: "cleaner or security guard", home: "stays at home",
+        builder: "skilled tradesperson", driver: "driver", factory: "factory worker", labor: "cleaner or laborer", home: "stays at home",
       },
       school: {
         kinder: "Daycare and kindergarten", homeCare: "At home with family", forest: "Forest kindergarten", engKinder: "English kindergarten",
@@ -179,9 +179,9 @@
       parents: { both: "부모님과 함께", mom: "한부모(엄마)", dad: "한부모(아빠)", grand: "조부모 가정", care: "보육원(아동양육시설)" },
       homeCareCare: "보육원에서 지내기", homeCareCareNoun: "보육원",
       jobs: {
-        exec: "회사 임원", doctor: "의사", pro: "엔지니어·회계사", dev: "개발자", teacher: "교사", nurse: "간호사",
+        exec: "회사 임원", doctor: "의사", pro: "전문직(엔지니어·디자이너·강사)", dev: "개발자", teacher: "교사", nurse: "간호사",
         civil: "공무원", office: "회사원", service: "서비스직", shop: "가게 사장님", sales: "판매원", farmer: "농어민",
-        builder: "건설 기능공", driver: "운전기사", factory: "생산직", labor: "청소·경비원", home: "전업 살림",
+        builder: "기능직(건설·정비)", driver: "운전기사", factory: "생산직", labor: "단순노무(청소·경비·배송)", home: "전업 살림",
       },
       school: {
         kinder: "어린이집·유치원", homeCare: "가정 보육", forest: "숲유치원", engKinder: "영어유치원",
