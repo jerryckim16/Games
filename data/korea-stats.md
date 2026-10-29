@@ -94,6 +94,8 @@ Retrieved: 2026-10-28
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
+| Operating schools, by level | elementary 6,286; middle 3,316; high 2,402 (12,004) | 2026-09-20 | Schools (excl. kindergartens and special schools) | 한국교육시설안전원 (초중등학교위치) | https://www.data.go.kr/data/15159184/fileData.do | calc: counted from `data/schools/korea-schools-2026-09.csv`; by province in `schools.md` |
+| Founding type of high schools | national 19; public 1,433; private 950 | 2026-09-20 | Schools | same | same | calc: private 39.6% of high schools, 19.2% of middle, 1.2% of elementary |
 | Students, kindergarten to high school | 5,551,250 (−2.3%) | 2025-04-01 | Students | MOE / KEDI (교육기본통계) | https://www.kedi.re.kr/khome/main/announce/selectBroadAnnounceForm.do?selectTp=0&board_sq_no=3&article_sq_no=36108 | official; 5,684,745 a year earlier |
 | Elementary students | 2,345,488 (−6.0%) | 2025-04-01 | Students | MOE / KEDI | same | official |
 | Middle school students | 1,370,356 (+2.8%) | 2025-04-01 | Students | MOE / KEDI | same | official |

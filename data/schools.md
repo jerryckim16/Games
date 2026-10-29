@@ -2,9 +2,38 @@
 
 How many schools of each kind Korea has, and named lists of the special schools the Suneung Simulator models (영재학교, 과학고, 외고, 국제고, 자사고, 국제중, 마이스터고, medical schools). Same format and status tags as `korea-stats.md` (see `data/README.md`).
 
-**What this file is not (yet): the full national list.** The complete official list of every kindergarten, elementary, middle and high school (about 20,000 schools) is published as the 전국초중등학교위치표준데이터 dataset on data.go.kr (provider: 한국교육시설안전원; fields include school ID, name, level, founding date, address, office of education, latitude and longitude; CSV, updated monthly) and through the NEIS open API. Universities are listed on 대학알리미 (academyinfo.go.kr). On 2026-10-28 none of these hosts (data.go.kr, open.neis.go.kr, schoolinfo.go.kr, academyinfo.go.kr, kess.kedi.re.kr, moe.go.kr) were reachable from the build environment (network policy), and no mirror of the dataset was found. Everything below comes from web search excerpts of official pages and education news, so the named lists are partial. When data.go.kr is reachable, import the CSV into `data/schools/` and replace the partial lists.
+**The full national list is in `data/schools/korea-schools-2026-09.csv`**: all 12,004 operating elementary, middle and high schools (data date 2026-09-20), downloaded from data.go.kr on 2026-10-29; see `data/schools/README.md`. Its counts are in section 0 below. It has no kindergartens and no high-school types, so the named special-school lists further down still come from web search excerpts and are partial.
 
 ---
+
+## 0. Counts from the national list
+Retrieved: 2026-10-29. calc: counted from `data/schools/korea-schools-2026-09.csv` (official, 한국교육시설안전원, data date 2026-09-20, https://www.data.go.kr/data/15159184/fileData.do).
+
+| Office of education (시도교육청) | Elementary | Middle | High | Total |
+|---|---|---|---|---|
+| 경기도교육청 | 1380 | 692 | 504 | 2576 |
+| 서울특별시교육청 | 606 | 388 | 319 | 1313 |
+| 전남광주통합특별시교육청 | 599 | 347 | 211 | 1157 |
+| 경상남도교육청 | 523 | 270 | 193 | 986 |
+| 경상북도교육청 | 473 | 260 | 183 | 916 |
+| 전북특별자치도교육청 | 404 | 207 | 132 | 743 |
+| 충청남도교육청 | 416 | 188 | 119 | 723 |
+| 강원특별자치도교육청 | 355 | 160 | 116 | 631 |
+| 부산광역시교육청 | 302 | 171 | 142 | 615 |
+| 인천광역시교육청 | 274 | 147 | 129 | 550 |
+| 충청북도교육청 | 268 | 131 | 83 | 482 |
+| 대구광역시교육청 | 233 | 126 | 96 | 455 |
+| 대전광역시교육청 | 155 | 90 | 62 | 307 |
+| 울산광역시교육청 | 124 | 64 | 57 | 245 |
+| 제주특별자치도교육청 | 119 | 47 | 34 | 200 |
+| 세종특별자치시교육청 | 55 | 28 | 22 | 105 |
+| **Total** | 6286 | 3316 | 2402 | 12004 |
+
+| Level | National (국립) | Public (공립) | Private (사립) | Branch campuses (분교) |
+|---|---|---|---|---|
+| Elementary | 17 | 6195 | 74 | 95 |
+| Middle | 9 | 2671 | 636 | 13 |
+| High | 19 | 1433 | 950 | 2 |
 
 ## 1. Counts by level
 Retrieved: 2026-10-28
@@ -22,7 +51,7 @@ Retrieved: 2026-10-28
 | Junior colleges in the disclosure analysis | 129 | 2025-04 disclosure | Institutions | KCUE / 대학알리미 analysis, via news | https://www.hangyo.com/news/article.html?no=104290 | unverified (news) |
 | 4-year universities and universities of education; junior colleges | 192; 125 (317 in all) | 2026-08 disclosure | Institutions in the analysis | KCUE | https://www.kcue.or.kr/_upload/news/2026/08/27/application_0638689fbb6c4a66776835c71c28b547.pdf | official (excerpt) |
 
-Not found: counts by level (elementary / middle / high separately), by province, and kindergartens in total. These are in the 교육기본통계 tables on kess.kedi.re.kr.
+Counts by level and by province (elementary, middle, high) are now in section 0, from the national list. Still not found: kindergartens in total and by province (in the 교육기본통계 tables on kess.kedi.re.kr).
 
 ## 2. High schools by type (counts)
 Retrieved: 2026-10-28
