@@ -10,6 +10,7 @@
   <header>
     <div class="top">
       <h1 data-t="app.title">Suneung Simulator</h1>
+      <button type="button" id="cutToggle" class="cut-toggle" aria-pressed="true"></button>
       <div class="seg lang" id="lang" role="group" aria-label="Language / 언어">
         <button type="button" data-v="en" lang="en">English</button>
         <button type="button" data-v="ko" lang="ko">한국어</button>
@@ -53,15 +54,22 @@
     <section id="game" class="hidden">
       <!-- Your life right now: an illustrated scene with you in it, your mood, and the basics. -->
       <section class="life">
-        <div class="scene-wrap">
-          <div id="scene" class="scene-box"></div>
-          <div id="mood" class="bubble" aria-live="polite"><b id="moodName"></b><span id="moodText"></span></div>
+        <div class="life-top">
+          <div class="scene-wrap">
+            <div id="scene" class="scene-box"></div>
+            <div id="mood" class="bubble" aria-live="polite"><b id="moodName"></b><span id="moodText"></span></div>
+          </div>
+          <div class="map-side">
+            <div class="map-head"><span id="mapHome"></span><small id="mapHint"></small></div>
+            <div id="mainMap" class="main-map"></div>
+          </div>
         </div>
         <div class="stats">
           <div class="stat"><span class="ic" aria-hidden="true">📅</span><span class="k" data-t="stat.date"></span><span class="v" id="sDate"></span><span class="s" id="sDday"></span></div>
           <div class="stat"><span class="ic" aria-hidden="true">🎒</span><span class="k" data-t="stat.attempt"></span><span class="v" id="sAttempt"></span><span class="s" id="sStatus"></span></div>
           <div class="stat"><span class="ic" aria-hidden="true">🎂</span><span class="k" data-t="stat.age"></span><span class="v" id="sAge"></span><span class="s" id="sName"></span></div>
           <div class="stat"><span class="ic" aria-hidden="true">💰</span><span class="k" data-t="stat.money"></span><span class="v" id="sMoney"></span><span class="s" id="sAllowance"></span></div>
+          <div class="stat fam" id="sFamCard"><span class="ic" aria-hidden="true">🏠</span><span class="k" data-t="stat.family"></span><span class="v" id="sFam"></span><span class="s" id="sFamSub"></span></div>
         </div>
       </section>
 
@@ -69,6 +77,7 @@
         <section class="panel">
           <h2><span data-t="ability.title"></span> <span class="muted" data-t="ability.sub"></span></h2>
           <div id="skills" class="bars"></div>
+          <div id="traits" class="traits" aria-live="polite"></div>
           <h2 class="gap" data-t="cond.title"></h2>
           <div id="condition" class="bars"></div>
           <div class="chart-head gap">
@@ -137,6 +146,16 @@
     </div>
   </div>
 
+  <!-- Cutscenes: a letterboxed film over everything, shot by shot (app.js plays them, art.js draws them). -->
+  <div id="cut" class="cut hidden" role="dialog" aria-modal="true">
+    <div class="cut-progress" id="cutProg" aria-hidden="true"></div>
+    <button type="button" id="cutSkip" class="cut-skip"></button>
+    <div class="cut-frame" id="cutFrame"></div>
+    <p class="cut-cap" id="cutCap" aria-live="polite"></p>
+    <span class="cut-hint" id="cutHint" aria-hidden="true"></span>
+  </div>
+
+  <script src="places.js"></script>
   <script src="engine.js"></script>
   <script src="strings.js"></script>
   <script src="art.js"></script>

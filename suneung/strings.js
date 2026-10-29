@@ -33,19 +33,63 @@
         job: "+₩250,000 a month, +Stress, −Health",
       },
       method: { self: "Self-study", online: "Online lectures", hagwon: "Cram school", tutor: "Private tutor" },
+      // Early childhood: the play activities, and what rest, exercise, friends and games are called then.
+      actEarly: { books: "Picture books", blocks: "Blocks", songs: "Songs", worksheet: "Worksheets", rest: "Naps", exercise: "Playground", friends: "Playdates", games: "Cartoons" },
+      actEarlyLong: { books: "Picture books", blocks: "Blocks & puzzles", songs: "English songs", worksheet: "Worksheets", rest: "Naps", exercise: "Playground", friends: "Playdates", games: "Cartoons" },
+      actEarlyHint: {
+        books: "Free. Korean, with some history and social studies",
+        blocks: "Free. Math and a little science",
+        songs: "Free. English, a little Korean",
+        worksheet: "₩40,000 a month. Korean and math, a little stress",
+        rest: "−Stress, +Health",
+        exercise: "+Health, −Stress",
+        friends: "Big −Stress, +Motivation",
+        games: "−Stress but −Motivation",
+      },
+      trait: {
+        sturdy: "Sturdy", calm: "Easygoing", curious: "Curious", sleeper: "Good sleeper", steady: "Unflappable", smiley: "All smiles",
+        pencil: "Pencil", book: "Book", mouse: "Computer mouse", stethoscope: "Stethoscope", mic: "Microphone", gavel: "Judge's gavel", ball: "Ball", thread: "Thread", money: "Money", brush: "Paintbrush",
+      },
+      traitFx: {
+        sturdy: "Health settles 8 higher; half as many colds",
+        calm: "Stress settles 6 lower",
+        curious: "Motivation settles 4 higher",
+        sleeper: "Rest works 50% better; no insomnia",
+        steady: "Half the exam-day nerves and stress hit",
+        smiley: "Friends relieve 30% more stress; less likely to be bullied",
+        pencil: "Korean aptitude +0.25; reading works 25% better",
+        book: "History and social studies aptitude +0.15",
+        mouse: "Math aptitude +0.25",
+        stethoscope: "Science aptitude +0.25",
+        mic: "English aptitude +0.25",
+        gavel: "Korean and social studies aptitude +0.12",
+        ball: "Exercise works 50% better; health settles 3 higher",
+        thread: "Health settles 5 higher; fewer colds",
+        money: "₩300,000 now; New Year's money ×1.5",
+        brush: "Arts lessons count double for an arts-school audition; stress settles 2 lower",
+      },
+      parents: { both: "Both parents", mom: "Single mom", dad: "Single dad", grand: "Raised by grandparents", care: "Children's home" },
+      homeCareCare: "In the home with the carers", homeCareCareNoun: "the home, with the carers",
+      jobs: {
+        exec: "company executive", doctor: "doctor", pro: "professional (engineer, designer, instructor)", dev: "software developer", teacher: "teacher", nurse: "nurse",
+        civil: "civil servant", office: "office worker", service: "service worker", shop: "small-shop owner", sales: "salesperson", farmer: "farmer",
+        builder: "skilled tradesperson", driver: "driver", factory: "factory worker", labor: "cleaner or laborer", home: "stays at home",
+      },
       school: {
+        kinder: "Daycare and kindergarten", homeCare: "At home with family", forest: "Forest kindergarten", engKinder: "English kindergarten",
         pubElem: "Public elementary school", privElem: "Private elementary school",
         pubMid: "Public middle school", privMid: "Private middle school", intlMid: "International middle school",
         pubHigh: "Public high school", privHigh: "Private high school", autoHigh: "Autonomous private high school",
         sciHigh: "Science high or gifted school", langHigh: "Foreign language high school", artsHigh: "Arts or sports high school", vocHigh: "Vocational high school",
       },
       schoolNoun: {
+        kinder: "the neighbourhood kindergarten", homeCare: "home, with family", forest: "a forest kindergarten", engKinder: "an English kindergarten",
         pubElem: "the local public elementary school", privElem: "a private elementary school",
         pubMid: "the local public middle school", privMid: "a private middle school", intlMid: "an international middle school",
         pubHigh: "a public high school", privHigh: "a private high school", autoHigh: "an autonomous private high school",
         sciHigh: "a science high school", langHigh: "a foreign language high school", artsHigh: "an arts high school", vocHigh: "a vocational high school",
       },
-      status: { elem: "Elementary school", mid: "Middle school", high: "High school", hs3: "High school, final year", academy: "Retake academy", selfstudy: "Self-study retake", halfretake: "Half-retake at university" },
+      status: { early: "Early childhood", elem: "Elementary school", mid: "Middle school", high: "High school", hs3: "High school, final year", academy: "Retake academy", selfstudy: "Self-study retake", halfretake: "Half-retake at university" },
       family: { q1: "Low income", q2: "Lower-middle income", q3: "Middle income", q4: "Upper-middle income", q5: "High income" },
       familyAdj: { q1: "low-income", q2: "lower-middle-income", q3: "middle-income", q4: "upper-middle-income", q5: "high-income" },
       fifth: { q1: "the bottom fifth", q2: "the second fifth", q3: "the middle fifth", q4: "the fourth fifth", q5: "the top fifth" },
@@ -98,19 +142,62 @@
         job: "월 +25만원, 스트레스 +, 체력 −",
       },
       method: { self: "독학", online: "인강", hagwon: "학원", tutor: "과외" },
+      actEarly: { books: "그림책", blocks: "블록", songs: "동요", worksheet: "학습지", rest: "낮잠", exercise: "놀이터", friends: "친구랑 놀기", games: "만화" },
+      actEarlyLong: { books: "그림책 읽기", blocks: "블록·퍼즐 놀이", songs: "영어 동요", worksheet: "학습지", rest: "낮잠", exercise: "놀이터", friends: "친구랑 놀기", games: "만화 보기" },
+      actEarlyHint: {
+        books: "무료. 국어, 역사와 사회도 조금",
+        blocks: "무료. 수학, 과학도 조금",
+        songs: "무료. 영어, 국어도 조금",
+        worksheet: "월 4만원. 국어와 수학, 스트레스 조금",
+        rest: "스트레스 −, 체력 +",
+        exercise: "체력 +, 스트레스 −",
+        friends: "스트레스 크게 −, 의지 +",
+        games: "스트레스 − 대신 의지 −",
+      },
+      trait: {
+        sturdy: "튼튼한 아기", calm: "순한 아기", curious: "호기심 많은 아기", sleeper: "잘 자는 아기", steady: "겁 없는 아기", smiley: "잘 웃는 아기",
+        pencil: "연필", book: "책", mouse: "마우스", stethoscope: "청진기", mic: "마이크", gavel: "판사봉", ball: "공", thread: "실", money: "돈", brush: "붓",
+      },
+      traitFx: {
+        sturdy: "체력이 8 높게 유지되고 감기에 절반만 걸립니다",
+        calm: "스트레스가 6 낮게 유지됩니다",
+        curious: "의지가 4 높게 유지됩니다",
+        sleeper: "휴식 효과 50% 증가, 불면증 없음",
+        steady: "시험 날 긴장과 스트레스 타격이 절반",
+        smiley: "친구를 만나면 스트레스가 30% 더 풀리고, 학교폭력을 덜 당합니다",
+        pencil: "국어 적성 +0.25, 독서 효과 25% 증가",
+        book: "한국사·사회 적성 +0.15",
+        mouse: "수학 적성 +0.25",
+        stethoscope: "과학 적성 +0.25",
+        mic: "영어 적성 +0.25",
+        gavel: "국어·사회 적성 +0.12",
+        ball: "운동 효과 50% 증가, 체력이 3 높게 유지",
+        thread: "체력이 5 높게 유지되고 감기에 덜 걸립니다",
+        money: "지금 30만원, 세뱃돈 ×1.5",
+        brush: "예체능 학원이 예고 실기에 두 배로 반영, 스트레스가 2 낮게 유지",
+      },
+      parents: { both: "부모님과 함께", mom: "한부모(엄마)", dad: "한부모(아빠)", grand: "조부모 가정", care: "보육원(아동양육시설)" },
+      homeCareCare: "보육원에서 지내기", homeCareCareNoun: "보육원",
+      jobs: {
+        exec: "회사 임원", doctor: "의사", pro: "전문직(엔지니어·디자이너·강사)", dev: "개발자", teacher: "교사", nurse: "간호사",
+        civil: "공무원", office: "회사원", service: "서비스직", shop: "가게 사장님", sales: "판매원", farmer: "농어민",
+        builder: "기능직(건설·정비)", driver: "운전기사", factory: "생산직", labor: "단순노무(청소·경비·배송)", home: "전업 살림",
+      },
       school: {
+        kinder: "어린이집·유치원", homeCare: "가정 보육", forest: "숲유치원", engKinder: "영어유치원",
         pubElem: "공립 초등학교", privElem: "사립 초등학교",
         pubMid: "공립 중학교", privMid: "사립 중학교", intlMid: "국제중학교",
         pubHigh: "공립 일반고", privHigh: "사립 일반고", autoHigh: "자율형 사립고(자사고)",
         sciHigh: "과학고·영재학교", langHigh: "외국어고·국제고", artsHigh: "예술고·체육고", vocHigh: "특성화고·마이스터고",
       },
       schoolNoun: {
+        kinder: "동네 유치원", homeCare: "집", forest: "숲유치원", engKinder: "영어유치원",
         pubElem: "동네 공립 초등학교", privElem: "사립 초등학교",
         pubMid: "집 근처 공립 중학교", privMid: "사립 중학교", intlMid: "국제중학교",
         pubHigh: "공립 일반고", privHigh: "사립 일반고", autoHigh: "자사고",
         sciHigh: "과학고", langHigh: "외고", artsHigh: "예고", vocHigh: "특성화고",
       },
-      status: { elem: "초등학교", mid: "중학교", high: "고등학교", hs3: "고3 현역", academy: "재종반", selfstudy: "독학재수", halfretake: "반수" },
+      status: { early: "영유아", elem: "초등학교", mid: "중학교", high: "고등학교", hs3: "고3 현역", academy: "재종반", selfstudy: "독학재수", halfretake: "반수" },
       family: { q1: "저소득층", q2: "서민층", q3: "중산층", q4: "중상류층", q5: "고소득층" },
       familyAdj: { q1: "저소득층", q2: "서민층", q3: "중산층", q4: "중상류층", q5: "고소득층" },
       fifth: { q1: "하위 20%", q2: "하위 20–40%", q3: "중간 20%", q4: "상위 20–40%", q5: "상위 20%" },
@@ -188,7 +275,7 @@
     en: {
       "lang.html": "en",
       "app.title": "Suneung Simulator",
-      "app.sub": "Grow up from age 6 to Korea's college entrance exam (the Suneung). Study, rest, make choices, sit the exam, and retake it as many times as it takes to get into the school you want.",
+      "app.sub": "Grow up from birth to Korea's college entrance exam (the Suneung). Study, rest, make choices, sit the exam, and retake it as many times as it takes to get into the school you want.",
 
       "setup.title": "A new life",
       "setup.name": "Name",
@@ -197,7 +284,7 @@
       "setup.namePh.f": "Seoyeon Kim",
       "setup.sex": "You are a",
       "sex.m": "Boy", "sex.f": "Girl",
-      "setup.intro": "You start at age 6, on your first day of elementary school, and play all the way to the Suneung in your last year of high school (High 3). Your family and your talents are dealt at random when you're born, the way life does it: each of Korea's five household-income fifths is equally likely.",
+      "setup.intro": "You start at birth, grow up through the baby and kindergarten years, start elementary school at 6, and play all the way to the Suneung in your last year of high school (High 3). Your family and your talents are dealt at random when you're born, the way life does it: each of Korea's five household-income fifths is equally likely.",
       "setup.apt": "Aptitude: how fast you learn this subject",
       "setup.go": "Be born →",
       "setup.resume": "Continue saved life",
@@ -207,7 +294,9 @@
       "fame.h": ["#", "Name", "Total", "Kor·Math·Eng", "Ended at", "Tries"],
       "fame.none": "No university",
 
-      "stat.date": "Date", "stat.attempt": "Stage", "stat.age": "Age", "stat.money": "Savings",
+      "stat.date": "Date", "stat.attempt": "Stage", "stat.age": "Age", "stat.money": "Savings", "stat.family": "Family",
+      "stat.familySub": (p, h) => "Household income in " + h.fifth(p.fam),
+      "stat.familyMoved": (p, h) => (p.up ? "↑ Up" : "↓ Down") + " from " + h.family(p.from).toLowerCase() + " at birth",
       "stat.years": (p) => "Suneung in " + p.n + (p.n === 1 ? " year" : " years"),
       "stat.dday": "{n} days to the exam",
       "stat.examMonth": "Exam this month",
@@ -217,6 +306,10 @@
 
       "ability.title": "Ability", "ability.sub": "0–100; 50 is the average Suneung test taker",
       "ability.tip": "Aptitude ×{a}",
+      "ability.aptNote": "★ = aptitude: how fast a subject sinks in. More stars means less study to max it out.",
+      "apt.less": "{p}% less study to max out",
+      "apt.more": "{p}% more study to max out",
+      "apt.even": "average learning speed",
       "ability.over": "Past the top of the scale. More study still raises your odds at the very top schools.",
       "cond.title": "Condition",
       "cond.health": "Health", "cond.stress": "Stress", "cond.motivation": "Motivation", "cond.practice": "Exam stamina",
@@ -227,6 +320,7 @@
       "chart.title": "Ability over time",
 
       "plan.title": (p, h) => {
+        if (p.st === "early") return "Plan age " + p.a + " (the whole year)";
         if (p.st === "elem") return "Plan " + h.schoolGrade(p.g) + " (the whole school year)";
         if (p.st === "mid") return "Plan " + h.schoolGrade(p.g) + ", " + (p.m === 3 ? "spring" : "fall") + " semester";
         if (p.st === "high") return "Plan " + h.schoolGrade(p.g) + ", " + h.season(p.m) +
@@ -244,7 +338,7 @@
         (p.e ? " · earns " + h.won(p.e) : "") + " · savings after: " + h.wonShort(p.m),
       "plan.less": "Less {a}", "plan.more": "More {a}",
       "plan.repeat": "Same as last time", "plan.clear": "Clear", "plan.sit": "Sit the exam →",
-      "plan.next": (p) => ({ elem: "Next year →", mid: "Next semester →", high: "Next season →" })[p.st] || "Next month →",
+      "plan.next": (p) => ({ early: "Next year →", elem: "Next year →", mid: "Next semester →", high: "Next season →" })[p.st] || "Next month →",
       "err.count": "Each activity needs a whole number of blocks.",
       "err.blocks": "Use exactly {n} blocks.",
       "err.method": "Pick a study method.",
@@ -277,15 +371,96 @@
       "move.rural": "Rural-student quota at most universities if you do middle and high school here.",
       "move.late": "Too late for the local quotas here: they need middle and high school in the region.",
       "plan.noTutor": "There are no private tutors to hire out here.",
+      "early.stage": (p) => (p.a === 0 ? "Baby" : p.a <= 2 ? "Toddler" : "Preschooler"),
+      // ----- luck -----
+      "ev.saju.text": "Your grandmother takes your birth date and hour to a fortune-teller, who spreads out the four pillars of your fate (saju) and frowns, then smiles.",
+      "ev.saju.c": ["Hear the reading"],
+      "ev.saju.r.great": "\"A great fortune. Doors open for this one.\" Your grandmother buys everyone lunch. (Luck: very good. Good things happen more often.)",
+      "ev.saju.r.good": "\"A good fortune, with help from others along the way.\" (Luck: good.)",
+      "ev.saju.r.even": "\"An ordinary fortune. What they make of it is up to them.\" (Luck: average.)",
+      "ev.saju.r.mixed": "\"Some storms, but they pass.\" Your grandmother tucks a charm into your blanket. (Luck: a little unlucky.)",
+      "ev.saju.r.rough": "\"A hard road. This one will have to be tough.\" Nobody repeats it at dinner. (Luck: unlucky. Bad things happen more often.)",
+      "ev.promotion.r": (p, h) => !p || !p.who ? "Your parent gets a big promotion (or the shop finally takes off). There's more money for your education now." :
+        "Your " + (p.who === "mom" ? "mom" : "dad") + (p.job === "shop" ? "'s shop finally takes off: a line out the door every evening." : p.job === "farmer" ? " has a record harvest, and prices hold." : " gets a big promotion.") + " There's more money for your education now.",
+      "ev.jackpot.r1": "An unexpected inheritance from a distant relative. The family is better off for good.",
+      "ev.jackpot.r2": "A winning lottery ticket! Not millions, but enough to change everything.",
+      "ev.layoff.r": (p, h) => !p || !p.who ? "Your parent is laid off (or the business goes under). Money is tight from now on." :
+        "Your " + (p.who === "mom" ? "mom" : "dad") + (p.from === "shop" ? "'s shop goes under, like most small businesses do." : p.from === "farmer" ? " loses a season to blight and debts." : " is let go after years as " + h.jobA(p.from) + ".") +
+        (p.to === "shop" ? " The severance pay goes into a small fried-chicken shop." : " Now it's work as " + h.jobA(p.to) + ".") + " Money is tight from now on.",
+      "ev.jeonse.r": "The landlord vanishes with the family's rental deposit: a jeonse scam. Your parents start over with less.",
+      "ev.parentill.r": "Your parent falls seriously ill. Hospital bills, worry, and less money for anything else.",
+      "ev.accident.r": "A car runs a red light. You'll be fine, but months of recovery cost you time you can't get back.",
+      "ev.hospital.r": "A long illness puts you in hospital for weeks. Your classmates keep going without you.",
+      "ev.greatteacher.r": (p, h) => "A new teacher makes " + h.sub(p.s) + " come alive. Suddenly it just makes sense. (" + h.sub(p.s) + " aptitude up.)",
+      "ev.spark.r": (p, h) => "Out of nowhere you fall in love with " + h.sub(p.s) + ". You read about it for fun. (" + h.sub(p.s) + " aptitude up a lot.)",
+      "ev.bloom.up": (p, h) => "Middle 2: something in your head rewires. You're a late bloomer, and everything comes faster now, " + h.sub(p.up) + " most of all. (Aptitude up overall.)",
+      "ev.bloom.down": (p, h) => "Middle 2: what used to come easily doesn't any more, " + h.sub(p.down) + " least of all. (Aptitude down overall.)",
+      "ev.bloom.mixed": (p, h) => "Middle 2 rewires you: " + h.sub(p.up) + " suddenly clicks, while " + h.sub(p.down) + " gets harder. (Aptitude shifts.)",
+      "ev.examluck.r": "Exam day.",
+      "ev.examluck.sniffler": "The student next to you sniffs every ten seconds, all day. You can't shut it out. (A worse day.)",
+      "ev.examluck.guess": (p, h) => "In " + h.sub(p.s) + " you guess on three questions and they're all right. (Lucky.)",
+      "ev.examluck.drilled": (p, h) => "The killer question in " + h.sub(p.s) + " is a type you drilled last week. (Lucky.)",
+      "ev.examluck.omr": (p, h) => "Two minutes before the bell you notice your " + h.sub(p.s) + " answers are marked one row off on the answer sheet. You fix what you can. (Unlucky.)",
+      "ev.examluck.calm": "You slept well, the room is warm, and your mind is clear. (A better day.)",
+      "log.fortune": (p, h) => "The family's fortunes change: you're now a " + h.familyAdj(p.to) + " family.",
+      "log.schoolFee": (p, h) => "The family can't pay the school fees any more, so you move to " + h.schoolNoun(p.id) + ".",
+      "log.waitlist": (p, h) => "February: a call from " + h.uni(p.uni) + ". Someone gave up their place, and you're in off the waitlist.",
+      "plan.kinder": "🏫 Kindergarten lessons add a little to every subject each year on their own.",
+      "plan.early": "Your parents plan your days for now. Play is how small children learn.",
+      "traits.title": "Traits",
+      "traits.none": "None yet",
+      "log.birthday": "March {y}: you turn {a}.",
+      "ev.newborn.text": "Your first weeks at home. Your parents watch you sleep, eat and cry. Little by little, they notice what kind of baby you are.",
+      "ev.newborn.c": ["See what they notice"],
+      "ev.newborn.r.sturdy": "A big, sturdy baby who hardly ever gets sick. (Sturdy: health settles higher, half as many colds.)",
+      "ev.newborn.r.calm": "The easiest baby on the block: you rarely fuss. (Easygoing: stress settles lower.)",
+      "ev.newborn.r.curious": "Your eyes follow everything, and you reach for whatever moves. (Curious: motivation settles higher.)",
+      "ev.newborn.r.sleeper": "You sleep through the night at six weeks. The other parents are jealous. (Good sleeper: rest works better, no insomnia.)",
+      "ev.newborn.r.steady": "Thunder, a dropped pot, a barking dog: nothing startles you. (Unflappable: less exam-day nerves.)",
+      "ev.newborn.r.smiley": "You smile at everyone, even strangers on the subway. (All smiles: friends help more, bullies pick on you less.)",
+      "ev.doljabi.text": "Your first birthday party, the doljanchi. In front of everyone, a table of objects is laid out: whatever you grab, the tradition goes, foretells your future.",
+      "ev.doljabi.c": ["Let the baby grab"],
+      "ev.doljabi.r.pencil": "You grab the pencil! A scholar, everyone says. (Korean aptitude up, reading works better.)",
+      "ev.doljabi.r.book": "You go straight for the book and won't let go. (History and social studies aptitude up.)",
+      "ev.doljabi.r.mouse": "You grab the computer mouse and click it, delighted. (Math aptitude up.)",
+      "ev.doljabi.r.stethoscope": "The stethoscope! Your grandmother is already telling people you'll be a doctor. (Science aptitude up.)",
+      "ev.doljabi.r.mic": "You grab the microphone and shriek into it. (English aptitude up: a good ear.)",
+      "ev.doljabi.r.gavel": "The judge's gavel. You bang it on the table, very seriously. (Korean and social studies aptitude up.)",
+      "ev.doljabi.r.ball": "You crawl past everything to the ball. An athlete! (Exercise works better, health settles higher.)",
+      "ev.doljabi.r.thread": "The thread: a long, healthy life, the elders say. (Health settles higher, fewer colds.)",
+      "ev.doljabi.r.money": "You grab the money, and the room roars. The relatives press envelopes on your parents. (₩300,000 now, more New Year's money.)",
+      "ev.doljabi.r.brush": "You grab the paintbrush and wave it like a wand. (Arts lessons count double for an arts school; stress settles lower.)",
+      "ev.doljabi.two": (p, h) => "Both hands at once: the " + h.trait(p.a).toLowerCase() + " and the " + h.trait(p.b).toLowerCase() + "! Nobody is sure what it means, so you get both.",
+      "ev.firstword.r": "Your first word! Your parents argue for a week about whether it was \"mom\" or \"dad\".",
+      "ev.firststeps.r": "Three wobbly steps across the living room, then a proud thump onto your bottom.",
+      "ev.daycarecold.r": "Another cold from kindergarten. The whole class has it.",
+      "ev.bump.r": "You fall off the slide and bump your head. Lots of tears, no harm done.",
+      "ev.sibling.r": (p) => "A baby " + (p.sib === "f" ? "sister" : "brother") + " arrives. Suddenly you're not the centre of the world.",
+      "ev.grandstory.r": "Your grandmother tells you old stories of kings, tigers and the war, every night you stay over.",
+      "ev.hangul.text": "Other kids at kindergarten are already reading Hangul. Your parents wonder whether to start you on it.",
+      "ev.hangul.c": ["Start Hangul flashcards", "Let you play; school will teach it"],
+      "ev.hangul.r0": "Flashcards at breakfast. You can read the subway signs by summer.",
+      "ev.hangul.r1": "More time in the sandpit. You'll learn when you learn.",
+      "ev.kinderplay.r": "The kindergarten play: you're the second tree from the left, and you're magnificent.",
+      "ev.prodigy.text": "A gifted-child centre offers a test the year before school.",
+      "ev.prodigy.c": ["Take the test", "Skip it"],
+      "ev.prodigy.r0a": "The tester raises an eyebrow and writes \"gifted\" on the form. Your parents frame it.",
+      "ev.prodigy.r0b": "Strange puzzles, a stern lady, and tears afterwards. Not this time.",
+      "ev.prodigy.r1": "Your parents decide a five-year-old doesn't need a test.",
       "plan.lessons": "🏫 School lessons raise every subject a little each turn on their own, most when you're behind the class.",
       "plan.noLessons": "Out of school: no lessons, so only your own study raises your ability.",
-      "school.title": { elem: "Choosing an elementary school", mid: "Middle school placement", high: "Applying to high school" },
+      "school.title": { kinder: "Daycare or kindergarten?", elem: "Choosing an elementary school", mid: "Middle school placement", high: "Applying to high school" },
       "school.text": {
+        kinder: "You're three. Most children go to daycare or kindergarten, free under the national curriculum. Some families keep their children home, some pick a forest kindergarten, and some pay for an English kindergarten.",
         elem: "Most children go to the public school down the road. Private elementary schools have small classes and English immersion, but places go by lottery and the fees come out of your parents' education budget.",
         mid: "Middle schools are assigned by lottery near home, and you can list a private school as your preference. International middle schools screen applicants and then draw lots.",
         high: "Ordinary high schools are assigned near home. Special high schools pick their students: autonomous private schools by grades and interview, science and foreign language schools by how far ahead you are, arts schools by audition.",
       },
       "school.desc": {
+        kinder: "Free. Kindergarten lessons, friends, and the colds that come with them.",
+        homeCare: "Free. Grandparents and parents, few lessons (×0.3), less stress, no kindergarten colds.",
+        forest: "Days outdoors: lessons ×0.8, less stress, more health and motivation. By lottery, 60%.",
+        engKinder: "English all day: English lessons ×3, others ×1.05, more stress. Big cities only.",
         pubElem: "Close to home. Standard lessons.",
         privElem: "Small classes, English immersion: lessons ×1.15, English ×1.5. By lottery, about 1 in 2.",
         pubMid: "Close to home. Standard lessons.",
@@ -309,11 +484,14 @@
       "school.go": "Apply",
       "school.tag.def": "Assigned",
       "school.tag.no": "Closed",
-      "school.r.def": (p, h) => "You start at " + h.schoolNoun(p.id) + ".",
-      "school.r.in": (p, h) => "Accepted! You start at " + h.schoolNoun(p.id) + ".",
-      "school.r.out": (p, h) => "Not this time. You start at " + h.schoolNoun(p.def) + " instead.",
-      "log.school": (p, h) => p.got || p.want === p.id ? "You start at " + h.schoolNoun(p.id) + "." : "You applied to " + h.schoolNoun(p.want) + " but didn't get in, so you start at " + h.schoolNoun(p.id) + ".",
-      "log.schoolMove": (p, h) => "The move means a new school: " + h.schoolNoun(p.id) + ".",
+      "school.r.def": (p, h) => (p.id === "homeCare" ? "You stay home with family for now." : "You start at " + (p.real ? h.realSchool(p.real) + ", " + h.schoolNoun(p.id) : h.schoolNoun(p.id)) + "."),
+      "school.r.in": (p, h) => "Accepted! You start at " + (p.real ? h.realSchool(p.real) + ", " + h.schoolNoun(p.id) : h.schoolNoun(p.id)) + ".",
+      "school.r.out": (p, h) => "Not this time. You start at " + (p.real ? h.realSchool(p.real) + ", " + h.schoolNoun(p.def) : h.schoolNoun(p.def)) + " instead.",
+      "school.realFar": (p, h) => "in " + h.realPlace(p.city) + ", " + p.km + " km away",
+      "school.realHere": "near home",
+      "school.mapTitle": "Your area's schools",
+      "log.school": (p, h) => { const at = (p.real ? h.realSchool(p.real) + ", " : "") + h.schoolNoun(p.id); return p.id === "homeCare" ? "You stay home with family instead of going to kindergarten." : p.got || p.want === p.id ? "You start at " + at + "." : "You applied to " + h.schoolNoun(p.want) + " but didn't get in, so you start at " + at + "."; },
+      "log.schoolMove": (p, h) => "The move means a new school: " + (p.real ? h.realSchool(p.real) + ", " : "") + h.schoolNoun(p.id) + ".",
       "track.forced": (p, h) => "Your school only teaches the " + h.track(p.t) + " track.",
       "move.school": "Your school is too far from the new home, so you'd switch to the local public school. Boarding schools stay.",
       "ev.dorm.text": "Lights out in the dorm. Your roommate is still studying under a desk lamp, and you miss home.",
@@ -331,6 +509,84 @@
       "ev.intern.r": "A paid placement at a local company: real work, a real paycheck, and a foreman who says you're a natural.",
       "ev.rankshock.r": (p, h) => "First midterms at " + h.schoolNoun(p.id) + ": for the first time in your life you're in the bottom half. Everyone here was top of their class.",
       "ev.immersion.r": "English week at your private school: a play, a debate, a whole day of English only.",
+      "map.seoul": "Seoul",
+      "map.tapHint": "Tap a place to move",
+      "map.noMove": "Can't move right now",
+      "map.born": "Where your family lives",
+      "map.born.care": "Where the home is",
+      "map.aria": (p, h) => "Map of Korea. Home: " + h.region(p.reg) + ".",
+      "map.home": "Home",
+      "map.open": "You can move here",
+      "map.closed": "Can't move here",
+      "move.pick": "Tap a place on the map to see what moving there would change.",
+      "move.list": "All places as a list",
+      "birth.parents": (p) => ({
+        mom: "Your father isn't in the picture: your mom is raising you on her own.",
+        dad: "Your mother isn't around: your dad is raising you on his own.",
+        grand: "Your mother and father can't look after you, so your grandparents take you in.",
+        care: "No one comes forward to raise you, so you grow up in a children's home with a dozen other kids, a rota of carers and a lot of rules. The home pays for school; there's little left for anything else.",
+      })[p.par] || "",
+      "ev.divorce.r": (p) => "Your parents divorce. You'll live with your " + (p.with === "mom" ? "mom" : "dad") + ". Two homes now, and one of them is very quiet.",
+      "ev.bereaved.r": (p) => "Your " + (p.lost === "mom" ? "mom" : "dad") + " dies suddenly. The funeral is a blur of white chrysanthemums and relatives you barely know. " +
+        (p.now === "grand" ? "Your grandparents take you in." : p.now === "care" ? "There's no one left to take you in. A social worker drives you to a children's home with one bag of clothes." : "It's just you and your " + (p.now === "mom" ? "mom" : "dad") + " now."),
+      "log.parents": (p) => p.why === "divorce" ? "Your parents divorce; you live with your " + (p.with || p.now === "mom" ? (p.now === "mom" ? "mom" : "dad") : "dad") + "." :
+        "Your " + (p.lost === "mom" ? "mom" : "dad") + " dies." + (p.now === "grand" ? " You move in with your grandparents." : p.now === "care" ? " You go into a children's home." : ""),
+      "stat.parents": (p, h) => h.parents(p.par),
+      // ----- parents' jobs -----
+      "birth.jobs": (p, h) => [["mom", "Mom"], ["dad", "Dad"]].filter(([w]) => p[w]).map(([w, W]) => p[w] === "home" ? W + " stays at home with you" : W + " is " + h.jobA(p[w])).join(", and ") + ".",
+      "stat.jobs": (p, h) => [["mom", "Mom"], ["dad", "Dad"]].filter(([w]) => p[w]).map(([w, W]) => W + ": " + h.job(p[w])).join(" · "),
+      "log.job": (p, h) => {
+        const W = p.who === "mom" ? "Your mom" : "Your dad";
+        if (p.why === "back") return W + " goes back to work as " + h.jobA(p.to) + ".";
+        if (p.why === "layoff") return W + (p.to === "shop" ? " opens a small fried-chicken shop with the severance pay." : " now works as " + h.jobA(p.to) + ".");
+        return W + " has to work now, as " + h.jobA(p.to) + ".";
+      },
+      "ev.momwork.text": "You're at school all day now, and your mom wants to go back to work.",
+      "ev.momwork.r": (p, h) => "Your mom starts work as " + h.jobA(p.to) + ". Dinner is later now, and she seems happier.",
+      "ev.job-shop.text": (p) => "It's the weekend rush at your " + (p && p.who === "mom" ? "mom" : "dad") + "'s shop, and they're short of hands.",
+      "ev.job-shop.c": ["Help out at the shop", "Stay home and study"],
+      "ev.job-shop.r0": "You carry boxes, wipe tables and learn to smile at customers. You get paid, but the weekend is gone. (+₩150,000, −1 block next turn)",
+      "ev.job-shop.r1": "You stay at your desk. Nobody says anything, which is worse.",
+      "ev.job-teacher.text": "Having a teacher at home means every page of homework gets checked, in red pen.",
+      "ev.job-teacher.r": (p) => "Your " + (p && p.who === "mom" ? "mom" : "dad") + " corrects your spelling, your essays and your English, every night. It's exhausting, and it works. (Korean and English up, stress up)",
+      "ev.job-doctor.text": "\"You'd make a good doctor,\" your parent says, for the hundredth time. The med school question is on the table.",
+      "ev.job-doctor.c": ["Aim for medical school", "Say it isn't for you"],
+      "ev.job-doctor.r0": "You say you'll try. Suddenly there are science books on your desk and a cram school brochure on the fridge. (Motivation up, stress up)",
+      "ev.job-doctor.r1": "There's a long silence, then a nod. It's your life. (Stress down)",
+      "ev.job-shift.text": (p, h) => "Your " + (p && p.who === "mom" ? "mom" : "dad") + " is on early starts and night shifts this month.",
+      "ev.job-shift.r": "You learn to cook ramyeon, set your own alarm and lock the door. You grow up a little.",
+      "ev.job-farm.text": "Harvest season. The whole family is needed in the fields (or on the boat) this weekend.",
+      "ev.job-farm.r": "Sunburn, sore arms and the best meal of the year. (+₩100,000, health up, −1 block next turn)",
+      "ev.job-overtime.text": "Your school play is tonight. Your parent's office has other ideas.",
+      "ev.job-overtime.r": (p) => "Your " + (p && p.who === "mom" ? "mom" : "dad") + " texts \"so sorry, big meeting\" ten minutes before you go on. You look for them in the audience anyway.",
+      // ----- growing up in care (keys ending ".care" replace the plain key in a life in care) -----
+      "birth.text.care": (p, h) => p.name + " is born" + (p.sex ? ", a baby " + (p.sex === "f" ? "girl" : "boy") + "," : "") + (p.reg ? " in " + h.region(p.reg) : "") + ". The home can spend about " + h.won(p.a) + " a month on your education.",
+      "log.born.care": (p, h) => !p.care ? MSG.en["log.born"](p, h) : "Born " + (p.sex ? (p.sex === "f" ? "a girl" : "a boy") : "") + (p.reg ? " in " + h.regionShort(p.reg) : "") + ", and taken into a children's home. " + (p.early ? "March " + p.y + "." : "March " + p.y + ": you start elementary school."),
+      "stat.careSub": (p, h) => "The home pays " + h.wonShort(p.a) + " a month for school",
+      "stat.careOut": (p, h) => p.a ? "On your own: " + h.wonShort(p.a) + " a month from the state" : "On your own",
+      "ev.newborn.text.care": "Your first weeks in the infant room of the home. The carers on the night shift watch you sleep, eat and cry, and start to notice what kind of baby you are.",
+      "ev.saju.text.care": "An old volunteer who knits for the babies asks your birth date and hour, and works out the four pillars of your fate (saju) on the back of a napkin. She frowns, then smiles.",
+      "ev.saju.r.great.care": "\"A great fortune. Doors open for this one.\" She brings rice cakes for the whole room next week. (Luck: very good. Good things happen more often.)",
+      "ev.saju.r.mixed.care": "\"Some storms, but they pass.\" She tucks a charm into your blanket. (Luck: a little unlucky.)",
+      "ev.saju.r.rough.care": "\"A hard road. This one will have to be tough.\" The carers tell her to stop. (Luck: unlucky. Bad things happen more often.)",
+      "ev.firstword.r.care": "Your first word! The carers argue for a week about whose name it was.",
+      "ev.doljabi.r.money.care": "You grab the money, and the volunteers laugh. A sponsor tucks an envelope into your little hanbok. (₩300,000 now, more New Year's money.)",
+      "log.sebae.care": (p, h) => "New Year's money from the staff and sponsors: +" + h.won(p.a) + ".",
+      "move.care": "You live in a children's home: the home decides where you live until you leave care.",
+      "ev.care-tutor.text": "University students come to the home every Saturday to tutor. One of them, a math major, picks you.",
+      "ev.care-tutor.r": "Every Saturday for a year: math worksheets, English vocabulary and someone who asks how your week was. (Math and English up, motivation up.)",
+      "ev.care-sponsor.text": "A letter arrives from your sponsor, someone you've never met, with a card and a little money for books.",
+      "ev.care-sponsor.r": "You keep the card in your desk. (+₩100,000)",
+      "ev.care-found.text": "A classmate sees you walk through the gate of the home after school. By the next morning, everyone knows.",
+      "ev.care-found.r": "Some kids go quiet around you, one asks where your parents are, and your best friend sits with you at lunch as if nothing happened. It still stings.",
+      "ev.careleave.text": "You're 18, so care ends unless you ask to stay. Leaving means a one-off settlement from the province and a monthly allowance for five years, but also a room of your own to find and pay for. Staying means a bed and meals until 24, and no money until you go.",
+      "ev.careleave.c": ["Leave and live on your own", "Stay on in the home"],
+      "ev.careleave.r0": (p, h) => "A rooftop room, a rice cooker and a bank account with " + h.won(p.a) + " in it. The allowance of " + h.won(p.pay) + " a month is yours to spend on lectures and a study café. Freedom, and a lot of quiet evenings.",
+      "ev.careleave.r1": "You stay in the older kids' room. The carers make you breakfast before the retake year starts, and nobody mentions rent.",
+      "ev.careend.text": "You turn 24, and the extension runs out. Time to leave the home for good.",
+      "ev.careend.r": (p, h) => "You pack up, take the settlement of " + h.won(p.a) + " and find a room nearby. The allowance of " + h.won(p.pay) + " a month starts now.",
+      "log.careLeave": (p, h) => "You leave care with a settlement of " + h.won(p.a) + " and " + h.won(p.pay) + " a month for five years.",
+      "ability.earlyNote": "Babies start near 0: 50 is the average Suneung test taker, and everyone climbs from the bottom. The stars are what you were born with.",
       "move.noQuota": "Out of school, you can't use the local quotas anywhere.",
       "quit.btn": "Leave school",
       "quit.title": "Leave school?",
@@ -378,9 +634,9 @@
       "ev.chuseok.r1": "You pass the japchae. On the way out an aunt slips you an envelope.",
 
       // Log lines.
-      "log.born": (p, h) => "Born " + (p.sex ? (p.sex === "f" ? "a girl " : "a boy ") : "") + "into a " + h.familyAdj(p.fam) + " family" + (p.reg ? " in " + h.regionShort(p.reg) : "") + " (household income about " + h.wonShort(p.inc * 10000) + " a month). March " + p.y + ": you start elementary school.",
+      "log.born": (p, h) => "Born " + (p.sex ? (p.sex === "f" ? "a girl " : "a boy ") : "") + "into a " + h.familyAdj(p.fam) + " family" + (p.reg ? " in " + h.regionShort(p.reg) : "") + " (household income about " + h.wonShort(p.inc * 10000) + " a month). " + (p.early ? "March " + p.y + "." : "March " + p.y + ": you start elementary school."),
       "log.grade": (p, h) => "March " + p.y + ": " + (p.out ? "your age group moves up to " : "you start ") + h.schoolYear(p.g) + ".",
-      "log.stage": (p) => "March " + p.y + ": " + (p.out ? { mid: "your age group starts middle school.", high: "your age group starts high school.", hs3: "your age group's Suneung year. You'll sit it in November." } : { mid: "you start middle school.", high: "you start high school.", hs3: "your final year of high school. The Suneung is in November." })[p.st],
+      "log.stage": (p) => "March " + p.y + ": " + (p.out ? { mid: "your age group starts middle school.", high: "your age group starts high school.", hs3: "your age group's Suneung year. You'll sit it in November." } : { elem: "you start elementary school.", mid: "you start middle school.", high: "you start high school.", hs3: "your final year of high school. The Suneung is in November." })[p.st],
       "log.teacher": (p) => "Teacher's note: " + ["", "\"Needs more support at home.\"", "\"Steady, careful work.\"", "\"Outstanding. One of the best in the class.\""][p.lvl],
       "log.report": (p) => "Semester " + p.sem + " exams: ranked " + p.rank + " of " + p.of + " in your class.",
       "log.sebae": (p, h) => "New Year's money from relatives: +" + h.won(p.a) + ".",
@@ -423,7 +679,7 @@
       "ev.star.r0": "Half of it is jokes, but the other half genuinely changes how you see 4-point questions.",
       "ev.star.r1": "You watch the free preview three times instead.",
       "ev.star.r0x": "By the time you go to sign up, your savings have already gone elsewhere. You watch the free preview instead.",
-      "ev.nag.text": "Your mother finds your phone screen time: 6 hours a day. \"Her friend's son studies 14 hours!\"",
+      "ev.nag.text": "Your mother finds your phone screen time: 6 hours a day. \"My friend's son studies 14 hours!\"",
       "ev.nag.c": ["Apologize and lock the phone in a timer box", "Argue back"],
       "ev.nag.r0": "The box clicks shut. You feel lighter, and also like a prisoner.",
       "ev.nag.r1": "Doors slam. Dinner is silent for three days.",
@@ -566,15 +822,17 @@
       "birth.title": "You're born!",
       "birth.text": (p, h) => p.name + " is born" + (p.sex ? ", a baby " + (p.sex === "f" ? "girl" : "boy") + "," : "") + " into a " + h.familyAdj(p.fam) + " family" + (p.reg ? " in " + h.region(p.reg) : "") + ". Household income is about " + h.wonShort(p.inc * 10000) +
         " a month, in " + h.fifth(p.fam) + " of Korean households, and your parents can spend about " + h.won(p.a) + " a month on your education.",
-      "birth.talent": "Your talents at age 6",
-      "birth.note": "Stars show aptitude: how fast you learn a subject. Ability is measured on the Suneung scale, where 50 is the average test taker, so every child starts low and climbs. What you learn stays learned.",
-      "birth.go": "Start elementary school →",
+      "birth.talent": "Your talents",
+      "birth.note": "Bars show aptitude: how fast you'll learn each subject (×1.00 is average, more is faster). Ability itself is on the Suneung scale, where 50 is the average test taker, so every baby starts near 0 and climbs. What you learn stays learned.",
+      "birth.go": "Start life →",
       "track.title": "Choose your track",
       "track.text": "High 1 is ending. Choose humanities or sciences for High 2 and 3, and your two inquiry subjects. Your social-studies ability carries over into humanities subjects, your science ability into science subjects.",
       "track.note.soc": "Math elective: Probability & Statistics.",
       "track.note.sci": "Math elective: Calculus. Only this track can apply to medical school.",
       "track.inqNote": "Scores are relative to everyone who sits the same subject, so a strong pool is harder to top.",
       "track.go": "Confirm",
+      "track.goSoc": "Confirm humanities",
+      "track.warnSoc": "⚠ Humanities can't apply to medical school. If you might want to be a doctor, choose sciences: this can't be changed later.",
       "mock.text": "A practice run at the real thing, graded against the whole country.",
       "mock.total": "Standard-score total: {n}",
       "mock.back": "Back to studying",
@@ -647,10 +905,10 @@
       "mood.tired": ["Why am I even doing this?", "So... sleepy...", "I can't focus on anything.", "Five more minutes. Please."],
       "mood.stressed": ["Too much. Way too much.", "My head is spinning.", "Everyone else seems so far ahead.", "Breathe. Just breathe."],
       "mood.sick": ["Ugh, I feel awful.", "Everything aches.", "I need a nap. Or ten.", "Is it hot in here, or is it me?"],
-      "turn.elem": "A year goes by", "turn.mid": "A semester goes by", "turn.high": "A season goes by", "turn.month": "A month goes by",
+      "turn.early": "A year goes by", "turn.elem": "A year goes by", "turn.mid": "A semester goes by", "turn.high": "A season goes by", "turn.month": "A month goes by",
       "turn.exam": "The day has come",
       "turn.age": "Age {a}",
-      "plan.study": "Study", "plan.life": "Life",
+      "plan.study": "Study", "plan.life": "Life", "plan.play": "Play & learn",
       "plan.tap": "Tap a card to give it a block of time. Tap a filled slot to take it back.",
       "plan.slot": "Take back a block of {a}", "plan.free": "Free block",
       "diary.year": "{y} · age {a}",
@@ -658,12 +916,53 @@
       "art.place.desk": "Your desk, late at night", "art.place.cubicle": "A study-café cubicle", "art.place.academy": "The retake academy's lecture room",
       "art.place.campus": "The university campus", "art.place.examhall": "The exam hall", "art.place.home": "Home, waiting for results",
       "art.place.gate": "The university gate", "art.place.road": "The road ahead", "art.place.start": "A city at night, about to welcome a new life",
+      "art.place.baby": "A baby's first days at home", "art.place.nursery": "The nursery at home", "art.place.kinder": "The kindergarten playroom", "art.place.city": "The neighbourhood streets",
+
+      // ----- cutscenes (app.js plays them; each film's captions are numbered by shot) -----
+      "cut.label": "Cutscene",
+      "cut.skip": "Skip ⏭",
+      "cut.next": "Tap for the next shot",
+      "cut.toggle.on": "🎬 Cutscenes on",
+      "cut.toggle.off": "🎬 Cutscenes off",
+      "cut.site": "Test site {n}",
+      "cut.birth.0": "A spring night, {y}. One window in the hospital is still lit.",
+      "cut.birth.1": "A first cry. {name} is here.",
+      "cut.birth.2": "Home to {region}. This is where it all starts.",
+      "cut.dol.0": "Your first birthday party. The whole family has come.",
+      "cut.dol.1": "The table of objects. Everyone holds their breath.",
+      "cut.dol.2": (p) => (p.two ? "Both hands: the " + p.a.toLowerCase() + " and the " + p.b.toLowerCase() + "!" : "The " + p.a.toLowerCase() + "!"),
+      "cut.elem.0": "First day of school. The backpack is bigger than you are.",
+      "cut.elem.1": "A walk you'll take a thousand times.",
+      "cut.elem.2": "{school}. Wave goodbye.",
+      "cut.mid.0": "A new uniform, still a little too big.",
+      "cut.mid.1": "Middle school. Everyone seems taller.",
+      "cut.mid.2": "{school}.",
+      "cut.high.0": "High school. Three years to the Suneung.",
+      "cut.high.1": "The same street, a heavier bag.",
+      "cut.high.2": "{school}.",
+      "cut.exam.0": "Suneung morning, {y}. It's always cold on Suneung day.",
+      "cut.exam.1": "Somewhere, a police motorcycle races a late student to the gate.",
+      "cut.exam.2": "Juniors cheering, parents praying at the gate.",
+      "cut.exam.3": "08:40. The bell rings.",
+      "cut.results.0": "December. The phone buzzes.",
+      "cut.results.1": "The score report.",
+      "cut.results.2": "Standard-score total: {t}.",
+      "cut.offers.0": "Results go up at ten. Nobody breathes.",
+      "cut.offers.1": "Accepted.",
+      "cut.offers.2": "{uni}!",
+      "cut.end.0": "March. A suitcase and a new city.",
+      "cut.end.1": "{uni}.",
+      "cut.end.2": "{name}, {age}: the next chapter begins.",
+      "cut.endroad.0": "No university this year. The road goes on.",
+      "cut.endroad.1": "{name}, {age}. There's more than one way up.",
+      "cut.move.0": "Everything you own, in one truck.",
+      "cut.move.1": "A new home in {region}.",
     },
 
     ko: {
       "lang.html": "ko",
       "app.title": "수능 시뮬레이터",
-      "app.sub": "만 6세부터 수능까지 자라 보세요. 공부하고, 쉬고, 선택하고, 수능을 치르고, 원하는 대학에 갈 때까지 몇 번이든 다시 도전하세요.",
+      "app.sub": "태어나서 수능까지 자라 보세요. 공부하고, 쉬고, 선택하고, 수능을 치르고, 원하는 대학에 갈 때까지 몇 번이든 다시 도전하세요.",
 
       "setup.title": "새로운 인생",
       "setup.name": "이름",
@@ -672,7 +971,7 @@
       "setup.namePh.f": "김서연",
       "setup.sex": "성별",
       "sex.m": "남자", "sex.f": "여자",
-      "setup.intro": "만 6세, 초등학교 입학 첫날부터 고3 수능까지 살아 봅니다. 가정 형편과 재능은 태어날 때 무작위로 정해집니다. 인생이 그렇듯이요. 한국 가구 소득 5분위 가운데 어느 가정에 태어날지는 모두 같은 확률입니다.",
+      "setup.intro": "태어나는 순간부터 아기와 유치원 시절, 만 6세 초등학교 입학을 거쳐 고3 수능까지 살아 봅니다. 가정 형편과 재능은 태어날 때 무작위로 정해집니다. 인생이 그렇듯이요. 한국 가구 소득 5분위 가운데 어느 가정에 태어날지는 모두 같은 확률입니다.",
       "setup.apt": "적성: 이 과목을 얼마나 빨리 익히는지",
       "setup.go": "태어나기 →",
       "setup.resume": "저장된 인생 이어 하기",
@@ -682,7 +981,9 @@
       "fame.h": ["#", "이름", "합계", "국·수·영", "진학", "도전"],
       "fame.none": "진학 안 함",
 
-      "stat.date": "날짜", "stat.attempt": "단계", "stat.age": "나이", "stat.money": "용돈 저축",
+      "stat.date": "날짜", "stat.attempt": "단계", "stat.age": "나이", "stat.money": "용돈 저축", "stat.family": "가정 형편",
+      "stat.familySub": (p, h) => "가구소득 " + h.fifth(p.fam),
+      "stat.familyMoved": (p, h) => "태어날 때 " + h.family(p.from) + (p.up ? "에서 ↑ 상승" : "에서 ↓ 하락"),
       "stat.years": "수능까지 {n}년",
       "stat.dday": "수능 D-{n}",
       "stat.examMonth": "이번 달 수능",
@@ -692,6 +993,10 @@
 
       "ability.title": "실력", "ability.sub": "0–100, 50이 수능 응시자 평균",
       "ability.tip": "적성 ×{a}",
+      "ability.aptNote": "★ = 적성: 그 과목이 얼마나 빨리 느는지. 별이 많을수록 만점까지 공부 시간이 덜 듭니다.",
+      "apt.less": "만점까지 공부 시간 {p}% 단축",
+      "apt.more": "만점까지 공부 시간 {p}% 더 필요",
+      "apt.even": "보통 학습 속도",
       "ability.over": "최고치를 넘었습니다. 더 공부하면 최상위 대학 합격 확률이 계속 오릅니다.",
       "cond.title": "컨디션",
       "cond.health": "체력", "cond.stress": "스트레스", "cond.motivation": "의지", "cond.practice": "실전력",
@@ -702,6 +1007,7 @@
       "chart.title": "실력 변화",
 
       "plan.title": (p, h) => {
+        if (p.st === "early") return "만 " + p.a + "세 1년 계획";
         if (p.st === "elem") return h.schoolGrade(p.g) + " 1년 계획";
         if (p.st === "mid") return h.schoolGrade(p.g) + " " + (p.m === 3 ? "1학기" : "2학기") + " 계획";
         if (p.st === "high") return h.schoolGrade(p.g) + " " + h.season(p.m) + " 계획" +
@@ -719,7 +1025,7 @@
         (p.e ? " · 수입 " + h.won(p.e) : "") + " · 남는 용돈 " + h.wonShort(p.m),
       "plan.less": "{a} 줄이기", "plan.more": "{a} 늘리기",
       "plan.repeat": "지난번과 같게", "plan.clear": "비우기", "plan.sit": "수능 보러 가기 →",
-      "plan.next": (p) => ({ elem: "다음 해 →", mid: "다음 학기 →", high: "다음 계절 →" })[p.st] || "다음 달 →",
+      "plan.next": (p) => ({ early: "다음 해 →", elem: "다음 해 →", mid: "다음 학기 →", high: "다음 계절 →" })[p.st] || "다음 달 →",
       "err.count": "칸 수는 정수여야 합니다.",
       "err.blocks": "{n}칸을 모두 배정하세요.",
       "err.method": "공부 방법을 고르세요.",
@@ -752,15 +1058,95 @@
       "move.rural": "여기서 중·고등학교를 다니면 대부분 대학의 농어촌 전형에 지원할 수 있습니다.",
       "move.late": "이곳의 지역 전형을 받기엔 늦었습니다. 중·고등학교를 모두 이 지역에서 다녀야 합니다.",
       "plan.noTutor": "이 지역에서는 과외 선생님을 구할 수 없습니다.",
+      "early.stage": (p) => (p.a === 0 ? "갓난아기" : p.a <= 2 ? "아기" : "미취학 아동"),
+      "ev.saju.text": "할머니가 태어난 날과 시를 들고 점집에 가셨다. 사주를 펼쳐 보던 역술가가 인상을 쓰더니, 이내 웃는다.",
+      "ev.saju.c": ["사주 풀이 듣기"],
+      "ev.saju.r.great": "\"대길이오. 이 아이 앞엔 문이 열립니다.\" 할머니가 온 식구에게 점심을 사셨다. (운: 아주 좋음. 좋은 일이 더 자주 생김)",
+      "ev.saju.r.good": "\"길한 사주요. 귀인의 도움을 받겠소.\" (운: 좋음)",
+      "ev.saju.r.even": "\"평범한 사주요. 하기 나름이지.\" (운: 보통)",
+      "ev.saju.r.mixed": "\"풍파가 좀 있겠지만 지나가오.\" 할머니가 이불 속에 부적을 넣어 두셨다. (운: 조금 나쁨)",
+      "ev.saju.r.rough": "\"험한 길이오. 아이가 강해야겠소.\" 아무도 저녁 식탁에서 그 얘기를 꺼내지 않는다. (운: 나쁨. 나쁜 일이 더 자주 생김)",
+      "ev.promotion.r": (p, h) => !p || !p.who ? "부모님이 크게 승진하셨다(혹은 가게가 드디어 잘되기 시작했다). 이제 교육비에 쓸 돈이 더 있다." :
+        (p.who === "mom" ? "엄마" : "아빠") + (p.job === "shop" ? " 가게가 드디어 대박이 났다. 저녁마다 줄이 선다." : p.job === "farmer" ? "가 올해 대풍을 거뒀고 값도 잘 받았다." : "가 크게 승진하셨다.") + " 이제 교육비에 쓸 돈이 더 있다.",
+      "ev.jackpot.r1": "먼 친척에게서 뜻밖의 유산을 받았다. 집안 형편이 확 폈다.",
+      "ev.jackpot.r2": "복권 당첨! 수십억은 아니지만 모든 걸 바꿀 만큼이다.",
+      "ev.layoff.r": (p, h) => !p || !p.who ? "부모님이 회사에서 잘리셨다(혹은 사업이 망했다). 이제부터 돈이 빠듯하다." :
+        (p.who === "mom" ? "엄마" : "아빠") + (p.from === "shop" ? " 가게가 결국 문을 닫았다. 작은 가게 대부분이 그렇듯." : p.from === "farmer" ? "가 병충해로 한 해 농사를 망치고 빚을 졌다." : "가 " + ro(h.job(p.from)) + " 일하던 직장에서 해고되셨다.") +
+        (p.to === "shop" ? " 퇴직금으로 작은 치킨집을 차렸다." : " 이제는 " + ro(h.job(p.to)) + " 일한다.") + " 이제부터 돈이 빠듯하다.",
+      "ev.jeonse.r": "집주인이 전세 보증금을 들고 사라졌다. 전세 사기다. 부모님은 더 적은 돈으로 다시 시작하신다.",
+      "ev.parentill.r": "부모님이 크게 편찮으시다. 병원비와 걱정, 그리고 다른 데 쓸 돈이 줄었다.",
+      "ev.accident.r": "신호를 무시한 차에 치였다. 괜찮아지겠지만, 몇 달 동안의 회복으로 되돌릴 수 없는 시간을 잃었다.",
+      "ev.hospital.r": "오래 앓아 몇 주 동안 입원했다. 반 친구들은 나 없이 진도를 나간다.",
+      "ev.greatteacher.r": (p, h) => "새로 오신 선생님 덕분에 " + josa(h.sub(p.s), "이", "가") + " 살아 움직인다. 갑자기 다 이해된다. (" + h.sub(p.s) + " 적성 상승)",
+      "ev.spark.r": (p, h) => "난데없이 " + h.sub(p.s) + "에 푹 빠졌다. 재미로 찾아 읽는다. (" + h.sub(p.s) + " 적성 크게 상승)",
+      "ev.bloom.up": (p, h) => "중2, 머릿속이 새로 짜인다. 늦게 피는 꽃이었다. 이제 뭐든 빨리 익히고, 특히 " + josa(h.sub(p.up), "이", "가") + " 그렇다. (적성 전체 상승)",
+      "ev.bloom.down": (p, h) => "중2, 예전엔 쉽던 게 이제는 어렵다. 특히 " + josa(h.sub(p.down), "이", "가") + " 그렇다. (적성 전체 하락)",
+      "ev.bloom.mixed": (p, h) => "중2, 머릿속이 새로 짜인다. " + josa(h.sub(p.up), "은", "는") + " 갑자기 쉬워지고, " + josa(h.sub(p.down), "은", "는") + " 어려워진다. (적성 변화)",
+      "ev.examluck.r": "시험 날.",
+      "ev.examluck.sniffler": "옆자리 수험생이 하루 종일 10초마다 코를 훌쩍인다. 신경이 안 쓰일 수가 없다. (컨디션 나쁨)",
+      "ev.examluck.guess": (p, h) => h.sub(p.s) + "에서 세 문제를 찍었는데 다 맞았다. (운 좋음)",
+      "ev.examluck.drilled": (p, h) => h.sub(p.s) + " 킬러 문항이 지난주에 푼 유형 그대로다. (운 좋음)",
+      "ev.examluck.omr": (p, h) => "종료 2분 전, " + h.sub(p.s) + " OMR 답안을 한 칸씩 밀려 쓴 걸 발견했다. 고칠 수 있는 만큼 고쳤다. (운 나쁨)",
+      "ev.examluck.calm": "푹 잤고, 교실은 따뜻하고, 머리가 맑다. (컨디션 좋음)",
+      "log.fortune": (p, h) => "집안 형편이 바뀌었다. 이제 " + h.familyAdj(p.to) + " 가정이다.",
+      "log.schoolFee": (p, h) => "학비를 더 낼 수 없어 " + ro(h.schoolNoun(p.id)) + " 옮겼다.",
+      "log.waitlist": (p, h) => "2월, " + h.uni(p.uni) + "에서 전화가 왔다. 누군가 등록을 포기해서 추가합격이다.",
+      "plan.kinder": "🏫 유치원 수업만으로도 매년 모든 과목이 조금씩 오릅니다.",
+      "plan.early": "아직은 부모님이 하루를 계획해 줍니다. 어린아이는 놀면서 배웁니다.",
+      "traits.title": "타고난 성향",
+      "traits.none": "아직 없음",
+      "log.birthday": "{y}년 3월, 만 {a}세가 되었다.",
+      "ev.newborn.text": "집에서 보내는 첫 몇 주. 부모님은 아기가 자고 먹고 우는 모습을 지켜보며 어떤 아이인지 알아 가기 시작한다.",
+      "ev.newborn.c": ["부모님이 알아챈 것 보기"],
+      "ev.newborn.r.sturdy": "크고 튼튼해서 거의 아프지 않는 아기다. (튼튼한 아기: 체력이 높게 유지되고 감기에 절반만 걸림)",
+      "ev.newborn.r.calm": "동네에서 제일 순한 아기다. 좀처럼 보채지 않는다. (순한 아기: 스트레스가 낮게 유지됨)",
+      "ev.newborn.r.curious": "눈이 모든 것을 따라가고, 움직이는 건 다 잡으려 한다. (호기심 많은 아기: 의지가 높게 유지됨)",
+      "ev.newborn.r.sleeper": "생후 6주 만에 통잠을 잔다. 다른 부모들이 부러워한다. (잘 자는 아기: 휴식 효과 증가, 불면증 없음)",
+      "ev.newborn.r.steady": "천둥, 냄비 떨어지는 소리, 개 짖는 소리에도 놀라지 않는다. (겁 없는 아기: 시험 날 덜 긴장함)",
+      "ev.newborn.r.smiley": "지하철에서 만난 낯선 사람에게도 방긋 웃는다. (잘 웃는 아기: 친구 효과 증가, 학교폭력 위험 감소)",
+      "ev.doljabi.text": "돌잔치 날. 모두가 지켜보는 앞에서 상 위에 여러 물건이 놓였다. 무엇을 잡느냐로 아이의 미래를 점친다고 한다(돌잡이).",
+      "ev.doljabi.c": ["아기에게 고르게 하기"],
+      "ev.doljabi.r.pencil": "연필을 잡았다! 다들 공부할 아이라고 한다. (국어 적성 상승, 독서 효과 증가)",
+      "ev.doljabi.r.book": "곧장 책으로 가서 놓지 않는다. (한국사·사회 적성 상승)",
+      "ev.doljabi.r.mouse": "마우스를 잡고 신나게 딸깍거린다. (수학 적성 상승)",
+      "ev.doljabi.r.stethoscope": "청진기다! 할머니는 벌써 의사 될 손주라고 자랑하신다. (과학 적성 상승)",
+      "ev.doljabi.r.mic": "마이크를 잡고 소리를 지른다. (영어 적성 상승: 귀가 밝음)",
+      "ev.doljabi.r.gavel": "판사봉을 잡고 아주 진지하게 상을 두드린다. (국어·사회 적성 상승)",
+      "ev.doljabi.r.ball": "다른 건 다 지나쳐 공으로 기어간다. 운동선수감이다! (운동 효과 증가, 체력이 높게 유지)",
+      "ev.doljabi.r.thread": "실을 잡았다. 어른들은 오래 건강하게 살 거라고 하신다. (체력이 높게 유지, 감기에 덜 걸림)",
+      "ev.doljabi.r.money": "돈을 잡자 다들 웃음이 터진다. 친척들이 부모님께 봉투를 쥐여 준다. (지금 30만원, 세뱃돈 증가)",
+      "ev.doljabi.r.brush": "붓을 잡고 요술봉처럼 흔든다. (예체능 학원이 예고 실기에 두 배로 반영, 스트레스가 낮게 유지)",
+      "ev.doljabi.two": (p, h) => "두 손으로 동시에 " + josa(h.trait(p.a), "과", "와") + " " + josa(h.trait(p.b), "을", "를") + " 잡았다! 무슨 뜻인지 아무도 몰라서 둘 다 갖기로 했다.",
+      "ev.firstword.r": "첫 말을 했다! 부모님은 일주일 내내 그게 \"엄마\"였는지 \"아빠\"였는지 다투신다.",
+      "ev.firststeps.r": "거실을 가로질러 비틀비틀 세 걸음, 그리고 뿌듯하게 엉덩방아.",
+      "ev.daycarecold.r": "유치원에서 또 감기를 옮아 왔다. 반 전체가 콜록거린다.",
+      "ev.bump.r": "미끄럼틀에서 떨어져 머리를 콩 찧었다. 눈물은 많았지만 다친 데는 없다.",
+      "ev.sibling.r": (p) => (p.sib === "f" ? "여동생" : "남동생") + "이 태어났다. 갑자기 세상의 중심이 아니게 되었다.",
+      "ev.grandstory.r": "할머니 댁에서 자는 날마다 임금님, 호랑이, 전쟁 이야기를 들려주신다.",
+      "ev.hangul.text": "유치원 친구들은 벌써 한글을 읽는다. 부모님은 한글 공부를 시작할지 고민하신다.",
+      "ev.hangul.c": ["한글 카드를 시작한다", "학교 가면 배운다, 지금은 논다"],
+      "ev.hangul.r0": "아침마다 한글 카드. 여름이 되자 지하철 역 이름을 읽는다.",
+      "ev.hangul.r1": "모래놀이 시간이 늘었다. 때가 되면 배우겠지.",
+      "ev.kinderplay.r": "유치원 연극: 왼쪽에서 두 번째 나무 역이었고, 정말 멋졌다.",
+      "ev.prodigy.text": "영재교육원에서 입학 전 영재 검사를 받아 보라고 한다.",
+      "ev.prodigy.c": ["검사를 받는다", "받지 않는다"],
+      "ev.prodigy.r0a": "검사관이 눈썹을 치켜올리더니 \"영재\"라고 적었다. 부모님은 결과지를 액자에 넣으셨다.",
+      "ev.prodigy.r0b": "이상한 퍼즐, 무서운 선생님, 그리고 끝나고 울었다. 이번엔 아니다.",
+      "ev.prodigy.r1": "부모님은 다섯 살짜리에게 검사는 필요 없다고 하신다.",
       "plan.lessons": "🏫 학교 수업만으로도 매 턴 모든 과목 실력이 조금씩 오릅니다. 반 평균보다 뒤처질수록 더 많이 오릅니다.",
       "plan.noLessons": "자퇴: 학교 수업이 없어 직접 공부한 만큼만 실력이 오릅니다.",
-      "school.title": { elem: "초등학교 정하기", mid: "중학교 배정", high: "고등학교 지원" },
+      "school.title": { kinder: "어린이집·유치원 정하기", elem: "초등학교 정하기", mid: "중학교 배정", high: "고등학교 지원" },
       "school.text": {
+        kinder: "만 3세가 되었다. 대부분은 누리과정 지원으로 무상인 어린이집이나 유치원에 다닌다. 집에서 키우는 가정도 있고, 숲유치원을 고르거나 돈을 내고 영어유치원에 보내는 집도 있다.",
         elem: "대부분은 집 앞 공립 초등학교에 다닙니다. 사립 초등학교는 학급이 작고 영어 몰입 수업을 하지만, 추첨으로 뽑고 학비는 부모님의 교육비에서 나갑니다.",
         mid: "중학교는 집 근처에서 추첨으로 배정되며, 사립 중학교를 희망 학교로 적을 수 있습니다. 국제중은 서류 전형 후 추첨합니다.",
         high: "일반고는 집 근처로 배정됩니다. 특수한 고등학교는 학생을 직접 뽑습니다. 자사고는 내신과 면접, 과학고와 외고는 실력이 또래보다 얼마나 앞서는지, 예고·체고는 실기로 뽑습니다.",
       },
       "school.desc": {
+        kinder: "무상. 유치원 수업과 친구들, 그리고 따라오는 감기.",
+        homeCare: "무상. 조부모님과 부모님이 돌봐 주며 수업은 적고(×0.3) 스트레스는 줄고 유치원 감기도 없습니다.",
+        forest: "하루 종일 밖에서: 수업 ×0.8, 스트레스 감소, 체력과 의지 상승. 추첨, 60%.",
+        engKinder: "하루 종일 영어: 영어 수업 ×3, 나머지 ×1.05, 스트레스 증가. 대도시만.",
         pubElem: "집 근처. 기본 수업.",
         privElem: "소규모 학급, 영어 몰입 수업: 수업 효과 ×1.15, 영어 ×1.5. 추첨, 경쟁률 약 2:1.",
         pubMid: "집 근처. 기본 수업.",
@@ -784,11 +1170,14 @@
       "school.go": "지원하기",
       "school.tag.def": "배정",
       "school.tag.no": "불가",
-      "school.r.def": (p, h) => h.schoolNoun(p.id) + "에" + " 다니게 되었다.",
-      "school.r.in": (p, h) => "합격! " + h.schoolNoun(p.id) + "에" + " 다니게 되었다.",
-      "school.r.out": (p, h) => "이번엔 떨어졌다. 대신 " + h.schoolNoun(p.def) + "에" + " 다니게 되었다.",
-      "log.school": (p, h) => p.got || p.want === p.id ? h.schoolNoun(p.id) + "에" + " 입학했다." : h.schoolNoun(p.want) + "에" + " 지원했지만 떨어져서 " + h.schoolNoun(p.id) + "에" + " 입학했다.",
-      "log.schoolMove": (p, h) => "이사하면서 학교도 옮겼다: " + h.schoolNoun(p.id) + ".",
+      "school.r.def": (p, h) => (p.id === "homeCare" ? "당분간 집에서 가족과 지내게 되었다." : (p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id)) + "에 다니게 되었다."),
+      "school.r.in": (p, h) => "합격! " + (p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id)) + "에 다니게 되었다.",
+      "school.r.out": (p, h) => "이번엔 떨어졌다. 대신 " + (p.real ? p.real + "(" + h.school(p.def) + ")" : h.schoolNoun(p.def)) + "에 다니게 되었다.",
+      "school.realFar": (p, h) => p.city + ", " + p.km + "km 거리",
+      "school.realHere": "집 근처",
+      "school.mapTitle": "우리 동네 학교",
+      "log.school": (p, h) => { const at = p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id); return p.id === "homeCare" ? "유치원 대신 집에서 가족과 지내기로 했다." : p.got || p.want === p.id ? at + "에 입학했다." : h.schoolNoun(p.want) + "에 지원했지만 떨어져서 " + at + "에 입학했다."; },
+      "log.schoolMove": (p, h) => "이사하면서 학교도 옮겼다: " + (p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id)) + ".",
       "track.forced": (p, h) => "우리 학교에는 " + h.track(p.t) + "만" + " 있다.",
       "move.school": "지금 학교는 새 집에서 너무 멀어 동네 공립학교로 옮기게 됩니다. 기숙학교는 그대로 다닙니다.",
       "ev.dorm.text": "기숙사 소등 시간. 룸메이트는 아직 스탠드 불빛 아래서 공부 중이고, 나는 집이 그립다.",
@@ -806,6 +1195,84 @@
       "ev.intern.r": "동네 회사에서 유급 현장실습을 했다. 진짜 일, 진짜 월급, 그리고 소질이 있다는 반장님의 칭찬.",
       "ev.rankshock.r": (p, h) => h.schoolNoun(p.id) + "의 첫 중간고사: 태어나서 처음으로 반에서 중간 아래다. 여기 애들은 다 전교 1등이었다.",
       "ev.immersion.r": "사립 초등학교의 영어 주간: 연극, 토론, 하루 종일 영어만 쓰는 날.",
+      "map.seoul": "서울",
+      "map.tapHint": "지역을 눌러 이사",
+      "map.noMove": "지금은 이사 불가",
+      "map.born": "우리 집은 여기",
+      "map.born.care": "보육원은 여기",
+      "map.aria": (p, h) => "한국 지도. 우리 집: " + h.region(p.reg) + ".",
+      "map.home": "우리 집",
+      "map.open": "이사 가능",
+      "map.closed": "이사 불가",
+      "move.pick": "지도에서 지역을 누르면 그곳으로 이사했을 때 무엇이 달라지는지 볼 수 있습니다.",
+      "move.list": "목록으로 보기",
+      "birth.parents": (p) => ({
+        mom: "아빠는 곁에 없다. 엄마 혼자 너를 키운다.",
+        dad: "엄마는 곁에 없다. 아빠 혼자 너를 키운다.",
+        grand: "엄마 아빠가 키울 형편이 안 되어 할머니 할아버지가 너를 맡아 키운다.",
+        care: "너를 맡아 키울 가족이 나타나지 않아 보육원에서 자라게 된다. 또래 열몇 명, 교대로 오는 선생님들, 그리고 많은 규칙. 학비는 보육원이 내 주지만 그 밖에 쓸 돈은 거의 없다.",
+      })[p.par] || "",
+      "ev.divorce.r": (p) => "부모님이 이혼하셨다. 앞으로 " + (p.with === "mom" ? "엄마" : "아빠") + "와 산다. 집이 두 곳이 되었고, 그중 한 곳은 아주 조용하다.",
+      "ev.bereaved.r": (p) => (p.lost === "mom" ? "엄마" : "아빠") + "가 갑자기 돌아가셨다. 하얀 국화와 처음 보는 친척들 사이에서 장례식이 흐릿하게 지나갔다. " +
+        (p.now === "grand" ? "할머니 할아버지 댁에서 살게 되었다." : p.now === "care" ? "맡아 줄 사람이 아무도 없다. 사회복지사가 옷가방 하나와 함께 너를 보육원에 데려다준다." : "이제 " + (p.now === "mom" ? "엄마" : "아빠") + "와 둘이다."),
+      "log.parents": (p) => p.why === "divorce" ? "부모님이 이혼하셨다. " + (p.now === "mom" ? "엄마" : "아빠") + "와 살게 되었다." :
+        (p.lost === "mom" ? "엄마" : "아빠") + "가 돌아가셨다." + (p.now === "grand" ? " 할머니 할아버지 댁으로 들어갔다." : p.now === "care" ? " 보육원에 들어갔다." : ""),
+      "stat.parents": (p, h) => h.parents(p.par),
+      // ----- 부모님 직업 -----
+      "birth.jobs": (p, h) => [["mom", "엄마"], ["dad", "아빠"]].filter(([w]) => p[w]).map(([w, W]) => p[w] === "home" ? W + "는 집에서 너를 돌본다" : W + "는 " + josa(h.job(p[w]), "이다", "다")).join(", ") + ".",
+      "stat.jobs": (p, h) => [["mom", "엄마"], ["dad", "아빠"]].filter(([w]) => p[w]).map(([w, W]) => W + ": " + h.job(p[w])).join(" · "),
+      "log.job": (p, h) => {
+        const W = p.who === "mom" ? "엄마" : "아빠";
+        if (p.why === "back") return W + "가 다시 일을 시작했다: " + h.job(p.to) + ".";
+        if (p.why === "layoff") return p.to === "shop" ? W + "가 퇴직금으로 작은 치킨집을 차렸다." : W + "는 이제 " + ro(h.job(p.to)) + " 일한다.";
+        return W + "가 일을 해야 하게 되었다: " + h.job(p.to) + ".";
+      },
+      "ev.momwork.text": "이제 네가 하루 종일 학교에 있으니, 엄마가 다시 일을 하고 싶어 하신다.",
+      "ev.momwork.r": (p, h) => "엄마가 " + ro(h.job(p.to)) + " 일을 시작했다. 저녁은 늦어졌지만 엄마 얼굴이 밝아졌다.",
+      "ev.job-shop.text": (p) => "주말 대목, " + (p && p.who === "mom" ? "엄마" : "아빠") + " 가게에 일손이 모자란다.",
+      "ev.job-shop.c": ["가게 일 돕기", "집에서 공부하기"],
+      "ev.job-shop.r0": "상자를 나르고 테이블을 닦고 손님에게 웃는 법을 배운다. 용돈은 받았지만 주말이 사라졌다. (+15만원, 다음 턴 1칸 감소)",
+      "ev.job-shop.r1": "책상 앞에 남았다. 아무도 뭐라 하지 않는데, 그게 더 불편하다.",
+      "ev.job-teacher.text": "집에 선생님이 있다는 건, 숙제 한 장 한 장이 빨간 펜으로 검사받는다는 뜻이다.",
+      "ev.job-teacher.r": (p) => (p && p.who === "mom" ? "엄마" : "아빠") + "가 매일 밤 맞춤법, 글쓰기, 영어를 고쳐 준다. 지치지만 효과는 있다. (국어·영어 실력 상승, 스트레스 상승)",
+      "ev.job-doctor.text": "\"너는 의사 하면 잘할 거야.\" 백 번째 듣는 말이다. 의대 이야기가 식탁에 올랐다.",
+      "ev.job-doctor.c": ["의대를 목표로 하기", "나랑 안 맞는다고 말하기"],
+      "ev.job-doctor.r0": "해 보겠다고 했다. 갑자기 책상엔 과학책이, 냉장고엔 학원 전단지가 붙었다. (의지 상승, 스트레스 상승)",
+      "ev.job-doctor.r1": "긴 침묵 끝에 고개를 끄덕이신다. 네 인생이니까. (스트레스 감소)",
+      "ev.job-shift.text": (p, h) => "이번 달 " + (p && p.who === "mom" ? "엄마" : "아빠") + "는 새벽 출근과 야간 근무가 이어진다.",
+      "ev.job-shift.r": "라면 끓이는 법, 알람 맞추는 법, 문 잠그는 법을 배웠다. 조금 더 컸다.",
+      "ev.job-farm.text": "수확철이다. 이번 주말엔 온 가족이 밭에(혹은 배에) 나가야 한다.",
+      "ev.job-farm.r": "햇볕에 그을리고 팔이 쑤시지만, 일 년 중 제일 맛있는 밥을 먹었다. (+10만원, 체력 상승, 다음 턴 1칸 감소)",
+      "ev.job-overtime.text": "오늘 밤은 학예회다. 그런데 부모님 회사 사정은 다르다.",
+      "ev.job-overtime.r": (p) => "무대에 오르기 10분 전, " + (p && p.who === "mom" ? "엄마" : "아빠") + "에게서 \"미안, 급한 회의\"라는 문자가 왔다. 그래도 객석을 두리번거리게 된다.",
+      // ----- 보육원에서 자라기 -----
+      "birth.text.care": (p, h) => p.name + "은(는) " + (p.reg ? h.region(p.reg) + "에서 " : "") + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났습니다. 보육원은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
+      "log.born.care": (p, h) => !p.care ? MSG.ko["log.born"](p, h) : (p.reg ? h.regionShort(p.reg) + "에서 " : "") + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어나 보육원에 맡겨졌다. " + (p.early ? p.y + "년 3월." : p.y + "년 3월, 초등학교에 입학했다."),
+      "stat.careSub": (p, h) => "보육원이 학비로 월 " + h.wonShort(p.a) + " 지원",
+      "stat.careOut": (p, h) => p.a ? "자립: 자립수당 월 " + h.wonShort(p.a) : "자립",
+      "ev.newborn.text.care": "보육원 영아방에서 보내는 첫 몇 주. 밤 근무 선생님들이 아기가 자고 먹고 우는 모습을 지켜보며 어떤 아이인지 알아 간다.",
+      "ev.saju.text.care": "아기들 옷을 떠 주러 오는 자원봉사 할머니가 태어난 날과 시를 묻더니, 냅킨 뒷면에 사주를 풀어 본다. 인상을 쓰더니, 이내 웃으신다.",
+      "ev.saju.r.great.care": "\"대길이오. 이 아이 앞엔 문이 열립니다.\" 다음 주에 할머니가 방 아이들 모두에게 떡을 돌리셨다. (운: 아주 좋음. 좋은 일이 더 자주 일어남)",
+      "ev.saju.r.mixed.care": "\"풍파가 좀 있겠지만 지나가오.\" 할머니가 이불 속에 부적을 넣어 두셨다. (운: 조금 나쁨)",
+      "ev.saju.r.rough.care": "\"험한 길이오. 아이가 강해야겠소.\" 선생님들이 그만하시라고 말렸다. (운: 나쁨. 나쁜 일이 더 자주 일어남)",
+      "ev.firstword.r.care": "첫 말을 했다! 선생님들은 일주일 내내 그게 누구 이름이었는지 다툰다.",
+      "ev.doljabi.r.money.care": "돈을 잡자 자원봉사자들이 웃음을 터뜨린다. 후원자 한 분이 작은 한복 주머니에 봉투를 넣어 준다. (지금 30만원, 세뱃돈 증가)",
+      "log.sebae.care": (p, h) => "설날, 선생님들과 후원자에게 받은 세뱃돈: +" + h.won(p.a) + ".",
+      "move.care": "보육원에서 지내는 동안에는 사는 곳을 보육원이 정합니다.",
+      "ev.care-tutor.text": "토요일마다 대학생들이 보육원에 교육봉사를 온다. 수학과 다니는 형(누나) 한 명이 너를 맡기로 했다.",
+      "ev.care-tutor.r": "1년 동안 토요일마다: 수학 학습지, 영어 단어, 그리고 이번 주 어땠냐고 물어 주는 사람. (수학·영어 실력 상승, 의지 상승)",
+      "ev.care-sponsor.text": "한 번도 본 적 없는 후원자에게서 편지가 왔다. 카드 한 장과 책 사라는 용돈이 들어 있다.",
+      "ev.care-sponsor.r": "카드는 책상 서랍에 넣어 둔다. (+10만원)",
+      "ev.care-found.text": "방과 후 보육원 정문으로 들어가는 모습을 반 친구가 봤다. 다음 날 아침이 되자 모두가 알고 있다.",
+      "ev.care-found.r": "몇몇은 말이 없어지고, 누군가는 부모님은 어디 계시냐고 묻고, 단짝은 아무 일 없다는 듯 점심을 같이 먹는다. 그래도 마음이 쓰리다.",
+      "ev.careleave.text": "만 18세. 연장을 신청하지 않으면 보호가 종료된다. 나가면 시·도에서 자립정착금을 한 번에 받고 5년 동안 자립수당이 나오지만, 살 방을 스스로 구하고 내야 한다. 남으면 24세까지 잠자리와 밥이 있지만, 나가기 전까지는 돈이 나오지 않는다.",
+      "ev.careleave.c": ["보호 종료하고 자립하기", "보육원에 남기(보호 연장)"],
+      "ev.careleave.r0": (p, h) => "옥탑방 하나, 전기밥솥 하나, 그리고 " + h.won(p.a) + "이 든 통장. 월 " + h.won(p.pay) + "의 자립수당은 인강과 스터디카페에 쓸 수 있다. 자유, 그리고 아주 조용한 저녁들.",
+      "ev.careleave.r1": "큰 아이들 방에 남았다. 재수 첫날 아침, 선생님들이 밥을 차려 주고 아무도 방세 얘기를 하지 않는다.",
+      "ev.careend.text": "만 24세, 보호 연장이 끝났다. 이제 보육원을 완전히 떠날 때다.",
+      "ev.careend.r": (p, h) => "짐을 싸고, 자립정착금 " + h.won(p.a) + "으로 근처에 방을 구했다. 월 " + h.won(p.pay) + "의 자립수당이 이제 시작된다.",
+      "log.careLeave": (p, h) => "보호가 종료되었다. 자립정착금 " + h.won(p.a) + ", 그리고 5년 동안 월 " + h.won(p.pay) + "의 자립수당.",
+      "ability.earlyNote": "아기는 0 근처에서 시작합니다. 50이 수능 응시자 평균이고, 누구나 바닥부터 올라갑니다. 별은 타고난 적성입니다.",
       "move.noQuota": "자퇴했으므로 어느 지역에서도 지역 전형을 받을 수 없습니다.",
       "quit.btn": "자퇴하기",
       "quit.title": "학교를 그만둘까요?",
@@ -852,9 +1319,9 @@
       "ev.chuseok.r0": "검정고시, 늘어난 공부 시간, 목표 점수를 설명했다. 할머니가 손을 토닥이며 열심히 하라고 하신다.",
       "ev.chuseok.r1": "잡채 접시를 건넸다. 나가는 길에 고모가 봉투를 슬쩍 쥐여 주신다.",
 
-      "log.born": (p, h) => (p.reg ? h.regionShort(p.reg) + "의 " : "") + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + p.y + "년 3월, 초등학교에 입학했다.",
+      "log.born": (p, h) => (p.reg ? h.regionShort(p.reg) + "의 " : "") + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + (p.early ? p.y + "년 3월." : p.y + "년 3월, 초등학교에 입학했다."),
       "log.grade": (p, h) => p.y + "년 3월, " + (p.out ? "또래들이 " : "") + josa(h.schoolGrade(p.g), "이", "가") + " 되었다.",
-      "log.stage": (p) => p.y + "년 3월, " + (p.out ? { mid: "또래들이 중학교에 입학했다.", high: "또래들이 고등학교에 입학했다.", hs3: "또래들이 고3이 되었다. 나도 11월에 수능을 본다." } : { mid: "중학교에 입학했다.", high: "고등학교에 입학했다.", hs3: "고3이 되었다. 수능은 11월이다." })[p.st],
+      "log.stage": (p) => p.y + "년 3월, " + (p.out ? { mid: "또래들이 중학교에 입학했다.", high: "또래들이 고등학교에 입학했다.", hs3: "또래들이 고3이 되었다. 나도 11월에 수능을 본다." } : { elem: "초등학교에 입학했다.", mid: "중학교에 입학했다.", high: "고등학교에 입학했다.", hs3: "고3이 되었다. 수능은 11월이다." })[p.st],
       "log.teacher": (p) => "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl],
       "log.report": (p) => p.sem + "학기 시험: 반 " + p.of + "명 중 " + p.rank + "등.",
       "log.sebae": (p, h) => "설날 세뱃돈: +" + h.won(p.a) + ".",
@@ -1037,15 +1504,17 @@
       "birth.title": "태어났습니다!",
       "birth.text": (p, h) => p.name + "은(는) " + (p.reg ? h.region(p.reg) + "의 " : "") + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났습니다. 월 가구소득은 약 " + h.wonShort(p.inc * 10000) +
         "으로 한국 가구 중 " + h.fifth(p.fam) + "에 속하고, 부모님은 교육비로 한 달에 약 " + h.won(p.a) + "을 쓸 수 있습니다.",
-      "birth.talent": "만 6세 때의 재능",
-      "birth.note": "별은 적성, 즉 그 과목을 얼마나 빨리 익히는지를 뜻합니다. 실력은 수능 기준이라 50이 수능 응시자 평균입니다. 그래서 모든 아이는 낮은 곳에서 출발해 올라갑니다. 한 번 익힌 실력은 줄어들지 않습니다.",
-      "birth.go": "초등학교 입학 →",
+      "birth.talent": "타고난 재능",
+      "birth.note": "막대는 적성, 즉 각 과목을 얼마나 빨리 익힐지를 뜻합니다(×1.00이 보통, 클수록 빠름). 실력은 수능 기준이라 50이 수능 응시자 평균이고, 그래서 모든 아기는 0 근처에서 출발해 올라갑니다. 한 번 익힌 실력은 줄어들지 않습니다.",
+      "birth.go": "인생 시작 →",
       "track.title": "계열 선택",
       "track.text": "고1이 끝나 갑니다. 고2·고3을 문과로 갈지 이과로 갈지, 그리고 탐구 두 과목을 고르세요. 사회 실력은 사회탐구로, 과학 실력은 과학탐구로 이어집니다.",
       "track.note.soc": "수학 선택과목은 확률과 통계입니다.",
       "track.note.sci": "수학 선택과목은 미적분입니다. 의대는 이과만 지원할 수 있습니다.",
       "track.inqNote": "점수는 같은 과목 응시자끼리 비교되므로, 잘하는 학생이 많은 과목일수록 상위권이 어렵습니다.",
       "track.go": "확정",
+      "track.goSoc": "문과로 확정",
+      "track.warnSoc": "⚠ 문과는 의대에 지원할 수 없습니다. 의사가 되고 싶을 수도 있다면 이과를 고르세요. 나중에 바꿀 수 없습니다.",
       "mock.text": "전국 수험생과 함께 치르는 실전 연습입니다.",
       "mock.total": "국수탐 표준점수 합: {n}",
       "mock.back": "다시 공부하러",
@@ -1118,10 +1587,10 @@
       "mood.tired": ["내가 이걸 왜 하고 있지?", "졸려... 너무 졸려...", "아무것도 머리에 안 들어와.", "5분만 더. 제발."],
       "mood.stressed": ["너무 많아. 진짜 너무 많아.", "머리가 빙빙 돈다.", "다들 나보다 저만치 앞서 있는 것 같아.", "숨 쉬자. 천천히."],
       "mood.sick": ["으, 너무 아프다.", "온몸이 쑤신다.", "낮잠이 필요해. 한 열 번쯤.", "여기 덥나, 아니면 나만 그런가?"],
-      "turn.elem": "1년이 흘렀다", "turn.mid": "한 학기가 흘렀다", "turn.high": "한 계절이 흘렀다", "turn.month": "한 달이 흘렀다",
+      "turn.early": "1년이 흘렀다", "turn.elem": "1년이 흘렀다", "turn.mid": "한 학기가 흘렀다", "turn.high": "한 계절이 흘렀다", "turn.month": "한 달이 흘렀다",
       "turn.exam": "드디어 그날이 왔다",
       "turn.age": "{a}",
-      "plan.study": "공부", "plan.life": "생활",
+      "plan.study": "공부", "plan.life": "생활", "plan.play": "놀이·배움",
       "plan.tap": "카드를 누르면 시간 한 칸을 씁니다. 채워진 칸을 누르면 되돌립니다.",
       "plan.slot": "{a} 한 칸 되돌리기", "plan.free": "빈 칸",
       "diary.year": "{y}년 · {a}",
@@ -1129,11 +1598,139 @@
       "art.place.desk": "늦은 밤 내 책상", "art.place.cubicle": "독서실 칸막이 자리", "art.place.academy": "재종반 강의실",
       "art.place.campus": "대학 캠퍼스", "art.place.examhall": "수능 시험장", "art.place.home": "결과를 기다리는 집",
       "art.place.gate": "대학교 정문", "art.place.road": "앞으로 이어진 길", "art.place.start": "새 생명을 기다리는 밤의 도시",
+      "art.place.baby": "집에서 보내는 아기의 첫날들", "art.place.nursery": "집 안의 아기 방", "art.place.kinder": "유치원 놀이방", "art.place.city": "동네 거리",
+
+      // ----- 컷신 -----
+      "cut.label": "컷신",
+      "cut.skip": "건너뛰기 ⏭",
+      "cut.next": "탭하면 다음 장면",
+      "cut.toggle.on": "🎬 컷신 켜짐",
+      "cut.toggle.off": "🎬 컷신 꺼짐",
+      "cut.site": "제{n}시험장",
+      "cut.birth.0": "{y}년 봄밤. 병원의 창 하나에 아직 불이 켜져 있다.",
+      "cut.birth.1": "첫 울음. {name}, 세상에 나왔다.",
+      "cut.birth.2": "{region}의 우리 집으로. 모든 게 여기서 시작된다.",
+      "cut.dol.0": "돌잔치 날. 온 가족이 모였다.",
+      "cut.dol.1": "돌잡이 상. 모두 숨을 죽인다.",
+      "cut.dol.2": (p) => (p.two ? "양손에 " + josa(p.a, "과", "와") + " " + p.b + "!" : p.a + "!"),
+      "cut.elem.0": "입학식 날. 책가방이 나보다 크다.",
+      "cut.elem.1": "앞으로 천 번은 걸을 길.",
+      "cut.elem.2": "{school}. 손 흔들며 안녕.",
+      "cut.mid.0": "새 교복, 아직 조금 크다.",
+      "cut.mid.1": "중학교. 다들 키가 커 보인다.",
+      "cut.mid.2": "{school}.",
+      "cut.high.0": "고등학교. 수능까지 3년.",
+      "cut.high.1": "같은 길, 더 무거워진 가방.",
+      "cut.high.2": "{school}.",
+      "cut.exam.0": "{y}년 수능 날 아침. 수능 날은 언제나 춥다.",
+      "cut.exam.1": "어딘가에서는 경찰 오토바이가 늦은 수험생을 태우고 달린다.",
+      "cut.exam.2": "응원하는 후배들, 교문 앞에서 기도하는 부모님.",
+      "cut.exam.3": "08:40. 종이 울린다.",
+      "cut.results.0": "12월. 휴대폰이 울린다.",
+      "cut.results.1": "성적표.",
+      "cut.results.2": "표준점수 합계 {t}.",
+      "cut.offers.0": "발표는 10시. 아무도 숨을 쉬지 않는다.",
+      "cut.offers.1": "합격.",
+      "cut.offers.2": "{uni}!",
+      "cut.end.0": "3월. 여행 가방 하나, 새로운 도시.",
+      "cut.end.1": "{uni}.",
+      "cut.end.2": "{name}, {age}. 다음 장이 시작된다.",
+      "cut.endroad.0": "올해는 대학에 가지 않는다. 길은 계속된다.",
+      "cut.endroad.1": "{name}, {age}. 오르는 길은 하나가 아니다.",
+      "cut.move.0": "가진 것 전부를 트럭 한 대에.",
+      "cut.move.1": "{region}의 새 집.",
     },
   };
 
   // ---------- translator ----------
   // ctx() returns { inq: [id, id], track } for the game being shown, so subject names follow it.
+  // Who raises you changes the words: with one parent or grandparents, "your parents" becomes "your
+  // mom" (with a singular verb in English: "your mom takes it hard"), and a mom or dad who isn't there
+  // is replaced by the one who is. Korean particles follow the new word (부모님이 → 엄마가).
+  // Messages about the change itself (FAMILY_KEYS) are written for it and left alone.
+  const FAMILY_KEYS = /^(birth\.parents|ev\.divorce|ev\.bereaved|log\.parents|parents\.)/;
+  const SING = { are: "is", were: "was", have: "has", do: "does", "don't": "doesn't", "aren't": "isn't", "weren't": "wasn't" };
+  const KEEP = new Set(["can", "can't", "will", "won't", "would", "could", "should", "must", "may", "might", "both", "all", "for", "and", "at", "in", "on", "with", "to", "of", "who", "too"]);
+  function singular(w) {
+    if (SING[w]) return SING[w];
+    if (KEEP.has(w) || !/^[a-z]+$/.test(w) || /(ing|ed)$/.test(w)) return w;
+    if (/(s|sh|ch|x|z|o)$/.test(w)) return w + "es";
+    if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + "ies";
+    return w + "s";
+  }
+  function familyWords(s, par, en) {
+    if (!par || par === "both") return s;
+    if (Array.isArray(s)) return s.map((x) => familyWords(x, par, en));
+    if (s && typeof s === "object") { const o = {}; for (const k in s) o[k] = familyWords(s[k], par, en); return o; }
+    if (typeof s !== "string") return s;
+    if (en) {
+      const who = { mom: "mom", dad: "dad", grand: "grandparents", care: "carers" }[par];
+      const plural = par === "grand" || par === "care";
+      // In care the money is the home's, not the carers'.
+      s = s.replace(/\b([Yy])our parents'/g, (m, y) => (par === "care" ? (y === "Y" ? "The" : "the") + " home's" : y + "our " + (plural ? who + "'" : who + "'s")));
+      s = s.replace(/\b([Yy])our parents ((?:still|never|always|also|just|often) )?([a-z']+)/g, (m, y, adv, w) => y + "our " + who + " " + (adv || "") + (plural ? w : singular(w)));
+      s = s.replace(/\b([Yy])our parents\b/g, (m, y) => y + "our " + who);
+      if (par !== "mom") s = s.replace(/\b([Yy])our (mom|mother)\b/g, (m, y) => y + "our " + ({ dad: "dad", grand: "grandma", care: "carer" })[par]);
+      if (par !== "dad") s = s.replace(/\b([Yy])our (dad|father)\b/g, (m, y) => y + "our " + ({ mom: "mom", grand: "grandpa", care: "carer" })[par]);
+    } else {
+      // 선생님 ends in a consonant like 부모님, so its particles stay as they are.
+      if (par === "care") return s.replace(/부모님(의)? ?(교육비|예산)/g, "보육원 $2").replace(/부모님/g, "보육원 선생님").replace(/(^|[^"“])(엄마|아빠)/g, (m, pre) => pre + "선생님");
+      const who = { mom: "엄마", dad: "아빠", grand: "할머니" }[par];
+      s = s.replace(/부모님(이|은|을|과)?/g, (m, j) => who + (j ? { 이: "가", 은: "는", 을: "를", 과: "와" }[j] : ""));
+      if (par !== "mom") s = s.replace(/(^|[^"“])엄마/g, (m, pre) => pre + (par === "dad" ? "아빠" : "할머니"));
+      if (par !== "dad") s = s.replace(/(^|[^"“])아빠/g, (m, pre) => pre + (par === "mom" ? "엄마" : "할아버지"));
+    }
+    return s;
+  }
+
+  // Real school names are Korean only (the national list has no English names), and English text has
+  // no Hangul, so the English version romanizes them (Revised Romanization, syllable by syllable, with
+  // a final consonant carried onto a following vowel) and translates the words a name is built from:
+  // 봉은중학교 → Bongeun Middle School, 잠실여자고등학교 → Jamsil Girls' High School.
+  const RR_I = ["g", "kk", "n", "d", "tt", "r", "m", "b", "pp", "s", "ss", "", "j", "jj", "ch", "k", "t", "p", "h"];
+  const RR_M = ["a", "ae", "ya", "yae", "eo", "e", "yeo", "ye", "o", "wa", "wae", "oe", "yo", "u", "wo", "we", "wi", "yu", "eu", "ui", "i"];
+  const RR_F = ["", "k", "k", "k", "n", "n", "n", "t", "l", "k", "m", "l", "l", "l", "p", "l", "m", "p", "p", "t", "t", "ng", "t", "t", "k", "t", "p", "t"];
+  // A final consonant before a vowel-initial syllable is pronounced as that syllable's initial.
+  const RR_CARRY = { 1: "g", 4: "n", 7: "d", 8: "r", 16: "m", 17: "b", 19: "s", 22: "j", 23: "ch", 24: "k", 25: "t", 26: "p" };
+  function romanize(word) {
+    const sy = [];
+    for (const ch of word) {
+      const c = ch.charCodeAt(0) - 0xac00;
+      if (c < 0 || c > 11171) { sy.push({ raw: ch }); continue; }
+      sy.push({ i: Math.floor(c / 588), m: Math.floor((c % 588) / 28), f: c % 28 });
+    }
+    let out = "";
+    for (let k = 0; k < sy.length; k++) {
+      const x = sy[k], nx = sy[k + 1];
+      if (x.raw) { out += x.raw; continue; }
+      const init = x.carried != null ? x.carried : RR_I[x.i];
+      let fin = RR_F[x.f];
+      if (nx && !nx.raw && nx.i === 11 && RR_CARRY[x.f]) { nx.carried = RR_CARRY[x.f]; fin = ""; }
+      else if (nx && !nx.raw && x.f === 8 && nx.i === 5) fin = "l"; // ㄹ+ㄹ reads ll
+      out += (init === "r" && k === 0 ? "" : init) + RR_M[x.m] + fin;
+    }
+    out = out.replace(/^([^a-z]*)([a-z])/, (m, a, b) => a + b.toUpperCase());
+    return out;
+  }
+  const NAME_LEVEL = [["초등학교", "Elementary School"], ["중학교", "Middle School"], ["고등학교", "High School"], ["학교", "School"]];
+  const NAME_WORDS = [["사범대학부설", "Affiliated"], ["대학교부설", "University Affiliated"], ["대학교부속", "University Affiliated"], ["부설", "Affiliated"], ["부속", "Affiliated"],
+    ["과학예술영재", "Science and Arts Academy"], ["과학영재", "Science Academy"], ["외국어", "Foreign Language"], ["국제", "International"], ["과학", "Science"], ["예술", "Arts"],
+    ["체육", "Physical Education"], ["여자", "Girls'"], ["남자", "Boys'"], ["공업", "Technical"], ["상업", "Commercial"], ["정보", "Information"], ["마이스터", "Meister"], ["사관", "Leadership Academy"]];
+  function schoolNameEn(name) {
+    let rest = name, tail = [];
+    for (const [k, v] of NAME_LEVEL) if (rest.endsWith(k)) { rest = rest.slice(0, -k.length); tail.unshift(v); break; }
+    for (let found = true; found && rest;) {
+      found = false;
+      for (const [k, v] of NAME_WORDS) if (rest.endsWith(k) && rest.length > k.length) { rest = rest.slice(0, -k.length); tail.unshift(v); found = true; break; }
+    }
+    return (romanize(rest) + " " + tail.join(" ")).trim();
+  }
+  // A city, county or district from an address: 횡성군 → Hoengseong-gun.
+  function placeEn(p) {
+    const m = p.match(/^(.*?)(시|군|구)$/);
+    return m && m[1] ? romanize(m[1]) + "-" + { 시: "si", 군: "gun", 구: "gu" }[m[2]] : romanize(p);
+  }
+
   function make(lang, ctx) {
     lang = MSG[lang] ? lang : "en";
     const D = DATA[lang];
@@ -1142,11 +1739,15 @@
     const h = {
       lang,
       t(key, p) {
-        const v = M[key];
+        const c = ctx && ctx();
+        // A life in care reads its own version of a message where one exists (key + ".care").
+        const v = c && c.parents === "care" && M[key + ".care"] != null ? M[key + ".care"] : M[key];
         if (v == null) return key;
-        if (typeof v === "function") return v(p || {}, h);
-        if (typeof v !== "string") return v;
-        return v.replace(/\{(\w+)\}/g, (_, k) => (p && p[k] != null ? p[k] : ""));
+        let out;
+        if (typeof v === "function") out = v(p || {}, h);
+        else if (typeof v !== "string") out = v;
+        else out = v.replace(/\{(\w+)\}/g, (_, k) => (p && p[k] != null ? p[k] : ""));
+        return c && c.parents && !FAMILY_KEYS.test(key) ? familyWords(out, c.parents, en) : out;
       },
       sub(s) {
         if (s === "inq1" || s === "inq2") {
@@ -1187,10 +1788,23 @@
         const [n, st] = g <= 6 ? [g, "elementary"] : g <= 9 ? [g - 6, "middle"] : [g - 9, "high"];
         return "year " + n + " of " + st + " school";
       },
-      school: (id) => D.school[id] || id,
-      schoolNoun: (id) => D.schoolNoun[id] || id,
+      // Staying out of kindergarten in care is staying in the home.
+      school: (id) => (id === "homeCare" && ctx && (ctx() || {}).parents === "care" ? D.homeCareCare : D.school[id]) || id,
+      // A real school's name (or place) in the player's language: as it is in Korean, romanized in English.
+      realSchool: (n) => (en ? schoolNameEn(n) : n),
+      realPlace: (n) => (en ? placeEn(n) : n),
+      parents: (id) => D.parents[id || "both"],
+      job: (id) => D.jobs[id] || id,
+      // English needs an article: "a nurse", "an office worker".
+      jobA: (id) => { const j = D.jobs[id] || id; return en ? (/^[aeiou]/i.test(j) ? "an " : "a ") + j : j; },
+      trait: (id) => D.trait[id] || id,
+      traitFx: (id) => D.traitFx[id] || "",
+      actEarly: (id) => D.actEarly[id],
+      actEarlyLong: (id) => D.actEarlyLong[id],
+      actEarlyHint: (id) => D.actEarlyHint[id],
+      schoolNoun: (id) => (id === "homeCare" && ctx && (ctx() || {}).parents === "care" ? D.homeCareCareNoun : D.schoolNoun[id]) || id,
       phase(ph) {
-        const names = en ? { elem: "Elem", mid: "Middle", high: "High" } : { elem: "초등", mid: "중학교", high: "고1·2" };
+        const names = en ? { early: "Early", elem: "Elem", mid: "Middle", high: "High" } : { early: "영유아", elem: "초등", mid: "중학교", high: "고1·2" };
         if (names[ph]) return names[ph];
         const n = Number(ph.slice(1));
         return n === 1 ? (en ? "High 3" : "고3") : h.attShort(n);
@@ -1237,6 +1851,9 @@
     return h;
   }
 
+  // In care, staying out of kindergarten means staying in the home, not with grandparents.
+  MSG.en["school.desc.care"] = Object.assign({}, MSG.en["school.desc"], { homeCare: "Free. Stay in the home with the carers: few lessons (×0.3), less stress, no kindergarten colds." });
+  MSG.ko["school.desc.care"] = Object.assign({}, MSG.ko["school.desc"], { homeCare: "무상. 보육원 선생님들이 돌봐 주며 수업은 적고(×0.3) 스트레스는 줄고 유치원 감기도 없습니다." });
   const api = { make, LANGS: ["en", "ko"], _MSG: MSG };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SuneungText = api;

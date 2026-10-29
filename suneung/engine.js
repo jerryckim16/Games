@@ -12,6 +12,9 @@
 // player can switch language mid-game and the whole life log follows.
 (function (root) {
   "use strict";
+  // Real places and schools (places.js, generated from the national school list). Optional: without it
+  // the game plays the same, just without real school names.
+  const REAL = typeof module !== "undefined" && module.exports ? (() => { try { return require("./places.js"); } catch (e) { return null; } })() : root.SuneungPlaces || null;
 
   // ---------- seeded RNG ----------
   // mulberry32: tiny, fast, and its whole state is one integer, so a saved game resumes exactly.
@@ -85,7 +88,7 @@
   const PAPER = {
     kor: { base: -0.4, spread: 1.15, killer: 2.3, killers: 5, a: 1.25 },
     math: { base: -0.25, spread: 1.0, killer: 2.0, killers: 4, a: 1.35 },
-    eng: { base: -0.08, spread: 1.0, killer: 2.0, killers: 3, a: 1.3 },
+    eng: { base: 0.24, spread: 1.0, killer: 2.0, killers: 3, a: 1.3 },
     hist: { base: -0.6, spread: 0.9, killer: 1.0, killers: 2, a: 1.2 },
     // Inquiry killers sit high enough that only about 0.5–2% of a pool scores 50/50, as in real years.
     // With softer killers 3–9% of a strong pool tied at a perfect score, so a flawless paper was worth
@@ -120,10 +123,16 @@
     { id: "reading", kind: "life", to: 11 },
     { id: "arts", kind: "life", to: 9, cost: 150000 },
     { id: "mock", kind: "life", from: 10 },
-    { id: "rest", kind: "life" },
-    { id: "exercise", kind: "life" },
-    { id: "friends", kind: "life" },
-    { id: "games", kind: "life" },
+    { id: "rest", kind: "life", alsoEarly: true },
+    { id: "exercise", kind: "life", alsoEarly: true },
+    { id: "friends", kind: "life", alsoEarly: true },
+    { id: "games", kind: "life", alsoEarly: true },
+    // Early childhood (ages 0–5): learning through play. Rest, exercise, friends and games are offered
+    // too, as naps, the playground, playdates and cartoons.
+    { id: "books", kind: "play", early: true },
+    { id: "blocks", kind: "play", early: true },
+    { id: "songs", kind: "play", early: true },
+    { id: "worksheet", kind: "play", early: true, fromAge: 4, cost: 40000 },
     { id: "job", kind: "life", from: 10 },
   ];
   const JOB_PAY = 250000; // won per block per month
@@ -139,6 +148,8 @@
   // School years before grade 12 move in big steps (a year, a semester, a season); grade 12 and every
   // retake year are played month by month, and 수능 month only has half a month.
   const STATUSES = {
+    // Birth to age 5: a year a turn, three blocks, and the parents choose (you're the one growing up).
+    early: { months: 12, blocks: () => 3, school: true, early: true },
     elem: { months: 12, blocks: () => 4, school: true },
     mid: { months: 6, blocks: () => 4, school: true },
     high: { months: 3, blocks: (m) => (m === 6 || m === 12 ? 5 : 4), school: true },
@@ -158,11 +169,11 @@
   // prior: a small head start at age 6 from books at home and parents' schooling.
   // paysAcademy: whether the parents can pay ₩2.9M a month for a retake academy.
   const FAMILIES = {
-    q1: { income: 125, allowance: 150000, prior: -0.1, paysAcademy: false },
-    q2: { income: 300, allowance: 250000, prior: -0.05, paysAcademy: false },
-    q3: { income: 490, allowance: 420000, prior: 0, paysAcademy: true },
-    q4: { income: 770, allowance: 580000, prior: 0.05, paysAcademy: true },
-    q5: { income: 1380, allowance: 900000, prior: 0.1, paysAcademy: true },
+    q1: { income: 125, allowance: 205000, prior: -0.1, paysAcademy: false },
+    q2: { income: 300, allowance: 320000, prior: -0.05, paysAcademy: false },
+    q3: { income: 490, allowance: 470000, prior: 0, paysAcademy: true },
+    q4: { income: 770, allowance: 570000, prior: 0.05, paysAcademy: true },
+    q5: { income: 1380, allowance: 676000, prior: 0.1, paysAcademy: true },
   };
   const FAMILY_IDS = ["q1", "q2", "q3", "q4", "q5"];
 
@@ -227,6 +238,13 @@
   // board: boarding or commuter schools you keep when the family moves; others are swapped for the
   // local public school.
   const SCHOOLS = [
+    // Kindergarten from age 3. Most children go to daycare or kindergarten, free under the national
+    // 누리과정; some stay home with family, some go to a forest kindergarten, and big-city families
+    // with money pay for an English kindergarten (영어유치원).
+    { id: "kinder", stage: "kinder", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
+    { id: "homeCare", stage: "kinder", fee: 0, lessons: { all: 0.3 }, stress: -2, motivation: 0, admit: () => 1 },
+    { id: "forest", stage: "kinder", fee: 150000, lessons: { all: 0.8 }, stress: -3, motivation: 2, health: 3, admit: () => 0.6 },
+    { id: "engKinder", stage: "kinder", fee: 1545000, fromIncome: true, lessons: { all: 1.05, eng: 3 }, stress: 2, motivation: 0, admit: () => 1, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
     { id: "pubElem", stage: "elem", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
     // 사립초: ₩10M a year or so, small classes and English immersion, by lottery (about 2 applicants a seat).
     { id: "privElem", stage: "elem", fee: 800000, lessons: { all: 1.15, eng: 1.5 }, stress: 1, motivation: 2, admit: () => 0.5, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
@@ -249,7 +267,208 @@
     { id: "vocHigh", stage: "high", fee: 0, lessons: { all: 0.4 }, blocks: -1, stress: -3, motivation: -2, job: 1.5, admit: () => 0.95 },
   ];
   const SCHOOL_BY_ID = Object.fromEntries(SCHOOLS.map((x) => [x.id, x]));
-  const DEFAULT_SCHOOL = { elem: "pubElem", mid: "pubMid", high: "pubHigh" };
+  // Which real schools each game school can be: local ones by [level, founding type, kind] from the
+  // home area's list, or the nearest special school of a kind anywhere (places.js "special"). Arts and
+  // vocational schools are local when the area has one.
+  const REAL_LOCAL = {
+    pubElem: ["e", "pub"], privElem: ["e", "priv"], pubMid: ["m", "pub", "gen"], privMid: ["m", "priv", "gen"],
+    pubHigh: ["h", "pub", "gen"], privHigh: ["h", "priv", "gen"], artsHigh: ["h", null, "arts"], vocHigh: ["h", null, "voc"],
+  };
+  const REAL_FAR = { intlMid: "intl", autoHigh: "auto", sciHigh: "sci", langHigh: "lang", artsHigh: "arts", vocHigh: "voc" };
+  const DEFAULT_SCHOOL = { kinder: "kinder", elem: "pubElem", mid: "pubMid", high: "pubHigh" };
+
+  // ---------- early childhood ----------
+  // Life starts at birth. Ability at birth is EARLY_GAP below the age-6 level the rest of the game is
+  // tuned from, and a typical early childhood (sim.js's balanced bot at an ordinary kindergarten)
+  // closes it, so a typical child still starts elementary school where it always did.
+  // EARLY_FEED: what a block of each kind of play feeds, by subject, at EARLY_RATE a block.
+  // KINDER_YEAR: kindergarten lessons a year, like school lessons (ages 3–5).
+  const EARLY_GAP = 0.66;
+  const EARLY_RATE = 0.1;
+  const EARLY_FEED = {
+    books: { kor: 0.6, hist: 0.3, inq1: 0.45 },
+    blocks: { math: 0.7, inq2: 0.5 },
+    songs: { eng: 0.8, kor: 0.15 },
+    worksheet: { kor: 0.5, math: 0.5 },
+  };
+  const KINDER_YEAR = 0.12;
+
+  // ---------- traits ----------
+  // Passive bonuses dealt by two reveal events: your temperament, noticed in your first weeks, and
+  // what you grab at your first-birthday 돌잡이. Each is rolled from its own seeded stream, so the
+  // seed fixes them like the family and talents. fx keys: apt (aptitude per subject, permanent),
+  // healthRest / stressRest (the resting levels health and stress drift to), mot (motivation
+  // baseline), and multipliers: rest, exercise, friends, reading (also picture books), ill (chance of
+  // colds and flu), bully (chance of bullying), nerves (exam-day nerves and stress hit), sebae (New
+  // Year's money), arts (arts & sports lessons toward an arts-school audition).
+  const TEMPERAMENTS = {
+    sturdy: { healthRest: 8, ill: 0.5 },
+    calm: { stressRest: -6 },
+    curious: { mot: 4 },
+    sleeper: { rest: 1.5, insomnia: 0 },
+    steady: { nerves: 0.5 },
+    smiley: { friends: 1.3, bully: 0.6 },
+  };
+  const TEMPERAMENT_IDS = Object.keys(TEMPERAMENTS);
+  // 돌잡이 items. Modern tables add a mouse, a stethoscope, a microphone and a judge's gavel to the
+  // traditional pencil, book, thread, money and brush.
+  const DOLJABI = {
+    pencil: { apt: { kor: 0.25 }, reading: 1.25 },
+    book: { apt: { hist: 0.15, inq1: 0.15 } },
+    mouse: { apt: { math: 0.25 } },
+    stethoscope: { apt: { inq2: 0.25 } },
+    mic: { apt: { eng: 0.25 } },
+    gavel: { apt: { kor: 0.12, inq1: 0.12 } },
+    ball: { exercise: 1.5, healthRest: 3 },
+    thread: { healthRest: 5, ill: 0.6 },
+    money: { sebae: 1.5, cash: 300000 },
+    brush: { arts: 2, stressRest: -2 },
+  };
+  const DOLJABI_IDS = Object.keys(DOLJABI);
+  const TRAIT_FX = Object.assign({}, TEMPERAMENTS, DOLJABI);
+  // The best aptitude a child is dealt is at least this (see rollTalent).
+  const MIN_BEST_APT = 1.1;
+
+  // ---------- who raises you ----------
+  // Most children grow up with both parents; some are born to a single mother or father, and a few are
+  // raised by grandparents (조손가정). Rolled at birth from its own seeded stream. Later, parents can
+  // divorce or a parent can die (the divorce and bereaved events). With one parent, or grandparents,
+  // there is less money and time for your education: PARENT_BUDGET scales the education budget.
+  // The household's income fifth itself is dealt as usual, so the 20%-per-fifth shares stay exact.
+  // Grandparent-grandchild households are under 1% of households (153,000 in 2015); single-parent
+  // household income is 60.3% of the all-household average (2024). See data/korea-stats.md.
+  // A few children have no one to take them and grow up in a children's home (보육원, 아동양육시설):
+  // about 2,300–4,100 children a year come into state care (out of 250,000–270,000 births), 63% of
+  // them into a home, so about 0.6% of a cohort spends time in one; fewer arrive as babies. "care" is
+  // last in the list so adding it only moved the top 0.3% of the stream, which used to be "grand".
+  const PARENTS_AT_BIRTH = [["both", 0.91], ["mom", 0.06], ["dad", 0.02], ["grand", 0.007], ["care", 0.003]];
+  const PARENT_BUDGET = { both: 1, mom: 0.6, dad: 0.6, grand: 0.5, care: 0 };
+  // In care the home, not a household, pays: a small fixed education budget (an estimate: homes get
+  // school costs and some tutoring support, far below even the lowest fifth's ₩205,000). At 18 care
+  // ends (보호종료), or you choose to stay on until 24; leaving pays a one-off settlement (자립정착금,
+  // set by each province) into your savings and a monthly allowance (자립수당, ₩500,000) for 5 years,
+  // which becomes your budget. Figures: NABO 2025; see data/korea-stats.md.
+  const CARE_BUDGET = 150000;
+  const CARE_PAY = 500000, CARE_PAY_MONTHS = 60;
+  const CARE_SETTLE = { seoul: 20000000, suwon: 15000000, daejeon: 15000000, jeju: 15000000, busan: 12000000 };
+  const CARE_SETTLE_ELSE = 10000000;
+  const SEOUL_AREAS = new Set(["gangnam", "nowon", "mokdong", "mapo", "gwanak", "gangdong"]);
+  // Events that need a family household: its fortunes, its moves, its relatives.
+  const CARE_SKIP = new Set(["promotion", "jackpot", "layoff", "jeonse", "parentill", "divorce", "bereaved", "daechi", "med-move", "grandma", "grandstory", "chuseok"]);
+  // Fees paid out of household income rather than the education budget (English kindergarten).
+  const FEE_FROM_INCOME = 0.12;
+  // ...and fewer hands at home: stress settles this much higher, motivation this much lower.
+  // In a children's home stress settles higher and motivation lower (crowded rooms, changing staff);
+  // living alone after care ends is harder still, but it's your own life.
+  const PARENT_STRESS = { both: 0, mom: 4, dad: 4, grand: 3, care: 5, careOut: 7 };
+  const PARENT_MOT = { both: 0, mom: -1, dad: -1, grand: -3, care: -2, careOut: 0 };
+
+  // ---------- parents' jobs ----------
+  // Each working parent's job is rolled at birth from its own seeded stream ("jobs"). JOB_SHARE is the
+  // national share of each job among employed women and men (KSCO major groups, split into named jobs by
+  // official head counts; see data/korea-stats.md "Jobs"); PARENT_PAY their pay against the average. A
+  // household's income fifth is dealt first, so jobs are drawn from JOB_JOINT: for each fifth, weights
+  // fitted (iterative proportional fitting, below) so every fifth holds its share of working parents and each job
+  // keeps its national share, with better-paid jobs leaning to richer fifths (pay ^ JOB_TILT).
+  // fx: small effects through g.trait(): stressRest / mot / healthRest add up; reading, layoff and
+  // promotion multiply (how likely the family's fortune events are, and picture-book reading).
+  const JOBS = {
+    exec: { group: "mgr", fx: { mot: 1, stressRest: 1 } },
+    doctor: { group: "pro", fx: { mot: 2, stressRest: 2 } },
+    pro: { group: "pro", fx: { mot: 1 } },
+    dev: { group: "pro", fx: { mot: 1 } },
+    teacher: { group: "pro", fx: { reading: 1.25, mot: 2, stressRest: 1, layoff: 0.2 } },
+    nurse: { group: "pro", fx: { healthRest: 2, stressRest: 1, layoff: 0.5 } },
+    civil: { group: "clerk", fx: { layoff: 0.2, promotion: 0.7 } },
+    office: { group: "clerk", fx: {} },
+    service: { group: "service", fx: { stressRest: 1 } },
+    shop: { group: "sales", self: true, fx: { layoff: 1.6, promotion: 1.3, stressRest: 1 } },
+    sales: { group: "sales", fx: {} },
+    farmer: { group: "farm", self: true, fx: { healthRest: 3, layoff: 0.7 } },
+    builder: { group: "craft", fx: { stressRest: 1 } },
+    driver: { group: "machine", fx: { stressRest: 1 } },
+    factory: { group: "machine", fx: { stressRest: 1 } },
+    labor: { group: "labor", fx: { stressRest: 1 } },
+    // Not in paid work: a parent at home has more time for you.
+    home: { group: "none", fx: { stressRest: -2, mot: 1 } },
+  };
+  const WORK_IDS = Object.keys(JOBS).filter((id) => id !== "home");
+  // JOB_SHARE: % of employed mothers / fathers in each job. Mothers: married women 15–54 living with a
+  // child under 18 (지역별고용조사, 2025 H1). Fathers: employed men's KSCO mix reweighted to ages 30–49
+  // (same survey; it has no sex × age table). Major groups are split into jobs by official head counts:
+  // doctors, teachers, nurses and software experts within professionals; government clerks (11.9%)
+  // within clerks; drivers within machine operators; owners (non-wage: 43% of sales and 29% of
+  // service workers) become "shop". PARENT_PAY: mean monthly pay against the all-worker mean, from
+  // each group's wage bands (2026 H1); doctors, developers and shop owners from other figures (see
+  // data/korea-stats.md "Jobs").
+  const JOB_SHARE = {
+    f: { exec: 0.60, doctor: 0.38, pro: 25.70, dev: 1.14, teacher: 3.88, nurse: 3.40, civil: 3.43, office: 25.47, service: 9.72, shop: 8.19, sales: 5.79, farmer: 0.80, builder: 1.60, driver: 0.14, factory: 2.46, labor: 7.30 },
+    m: { exec: 1.48, doctor: 0.80, pro: 24.01, dev: 3.57, teacher: 1.20, nurse: 0.25, civil: 2.52, office: 18.70, service: 3.90, shop: 4.66, sales: 4.18, farmer: 1.13, builder: 12.01, driver: 5.59, factory: 9.77, labor: 6.23 },
+  };
+  const PARENT_PAY = { exec: 1.9, doctor: 3.0, pro: 1.2, dev: 1.4, teacher: 1.25, nurse: 1.15, civil: 1.15, office: 1.15, service: 0.67, shop: 1.0, sales: 0.86, farmer: 0.7, builder: 1.09, driver: 1.0, factory: 1.1, labor: 0.55 };
+  const JOB_TILT = 1.5;
+  // Who works, by income fifth: mothers of young children work less in poorer households (dual earners
+  // lift a household up the fifths); fathers mostly work. Fitted to 57.7% of mothers working while the
+  // youngest is under 7 (2025) and about 94% of fathers; the momwork event takes mothers to 70% by
+  // the time the child is 13–17 (see data/korea-stats.md).
+  const MOM_WORKS = [0.43, 0.555, 0.635, 0.695, 0.735];
+  const DAD_WORKS = [0.84, 0.95, 0.97, 0.98, 0.98];
+  const SINGLE_MOM_WORKS = 0.8;
+  // Farming is a rural job: its weight moves with the kind of place, then the row is renormalised.
+  const FARM_BY_KIND = { rural: 8, city: 0.6, metro: 0.15, gangnam: 0.02, seoulAcad: 0.02, seoul: 0.02 };
+  // JOB_JOINT[sex][fifth][job]: P(job | fifth, sex) for working parents.
+  const JOB_JOINT = (() => {
+    const out = {};
+    for (const sex of ["f", "m"]) {
+      const col = WORK_IDS.map((id) => JOB_SHARE[sex][id] / 100);
+      const ct = col.reduce((a, b) => a + b, 0);
+      let m = [0, 1, 2, 3, 4].map((i) => WORK_IDS.map((id) => Math.pow(PARENT_PAY[id], JOB_TILT * (i - 2))));
+      // Rows: each fifth holds its share of the working parents (more mothers work in richer fifths).
+      // Columns: each job its national share.
+      const works = sex === "f" ? MOM_WORKS : DAD_WORKS, wt = works.reduce((a, b) => a + b, 0);
+      for (let it = 0; it < 200; it++) {
+        m = m.map((row, i) => { const t = row.reduce((a, b) => a + b, 0); return row.map((v) => (v / t) * (works[i] / wt)); });
+        for (let j = 0; j < WORK_IDS.length; j++) {
+          const t = m.reduce((a, row) => a + row[j], 0);
+          for (const row of m) row[j] *= col[j] / ct / t;
+        }
+      }
+      out[sex] = m.map((row) => { const t = row.reduce((a, b) => a + b, 0); const o = {}; WORK_IDS.forEach((id, j) => { o[id] = row[j] / t; }); return o; });
+    }
+    return out;
+  })();
+  // Jobs a parent takes after losing one, or on going (back) to work: 치킨집 is a national joke for a
+  // reason; most others drive, sell, care or do day labour.
+  const AFTER_LAYOFF = [["shop", 0.3], ["driver", 0.25], ["sales", 0.15], ["labor", 0.15], ["service", 0.15]];
+  const BACK_TO_WORK = [["office", 0.25], ["sales", 0.25], ["service", 0.3], ["labor", 0.1], ["shop", 0.1]];
+
+  // Roughly one baby in twelve grabs two things at once.
+  const DOUBLE_GRAB = 0.08;
+
+  // ---------- luck ----------
+  // Life is mostly luck. Every life gets a hidden fortune at birth (luck, about −1 to 1, its own seeded
+  // stream), read out by a fortune-teller (사주). It tilts the odds of good and bad events: an event
+  // tagged luck +1 (good) or −1 (bad) has its weight multiplied by 1 + LUCK_BIAS × luck × tag.
+  const LUCK_BIAS = 0.6;
+  // Each 수능 and mock paper fits some students better than others (the killer question is a type you
+  // happened to drill, or one you never saw): a per-subject nudge to ability on the day, rolled from the
+  // seed and the sitting only.
+  const PAPER_LUCK = 0.18;
+  // On 수능 day itself the whole day goes well or badly together (sleep, nerves, the room), a shift on
+  // every subject at once, from the seed and the sitting; your fortune adds a little on top.
+  const DAY_LUCK = 0.35;
+  const FORTUNE_DAY = 0.06;
+  // Middle 2's rewiring (the bloom event): a shift shared by every subject (late bloomer or early
+  // peaker) plus one per subject, in aptitude.
+  const BLOOM_ALL = 0.2;
+  const BLOOM_EACH = 0.18;
+  // Admissions: every university's real cut moves a little each year (a 펑크 when strong applicants
+  // go elsewhere, a 폭발 when everyone piles in), in percentile points, hidden until the results; and
+  // a rejection can still turn into a February waitlist call (추가합격), at WAITLIST × the chance you had.
+  const CUT_SWING = 0.45;
+  const WAITLIST = 0.25;
+  // The family's fortunes change: each step moves it one income fifth (see shiftFamily).
+
   // How far ahead of your year group you are in these subjects, in the units standing() uses.
   function zOf(g, subs) {
     const avg = subs.reduce((a, x) => a + g.skills[x], 0) / subs.length;
@@ -444,6 +663,254 @@
   // it has `choices` options and run(g, i) applies option i. run returns the outcome's key suffix
   // (strings.js has "ev.<id>.<suffix>"), or [suffix, params] when the text names something.
   const EVENTS = [
+    // ----- luck (anyStage: these can happen at any age) -----
+    // The fortune-teller's reading of your hidden luck, pushed at birth.
+    {
+      id: "saju", early: true, weight: 0, when: () => false, choices: 1,
+      run: (g) => {
+        const l = g.luck || 0;
+        return "r." + (l > 0.55 ? "great" : l > 0.18 ? "good" : l > -0.18 ? "even" : l > -0.55 ? "mixed" : "rough");
+      },
+    },
+    // The family's fortunes. Each moves the income fifth (and the education budget) for good.
+    {
+      // A promotion, or a family business that takes off. Safe jobs (civil servants) rise more slowly.
+      id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("promotion") : 0), when: () => true,
+      run: (g) => {
+        const who = g.fortuneParent("promotion");
+        g.shiftFamily(1, "promotion");
+        bump(g, { stress: -4, motivation: 3 });
+        return who ? ["r", { who, job: g.jobs[who] }] : "r";
+      },
+    },
+    {
+      // Mostly an inheritance; a lottery jackpot (1 in 8,145,060 a ticket) is a once-in-a-lifetime fluke.
+      id: "jackpot", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.03 : 0), when: () => true,
+      run: (g) => { const two = g.rng() < 0.01; g.shiftFamily(two ? 2 : 1, "jackpot"); g.money += 500000; bump(g, { stress: -6, motivation: 4 }); return two ? "r2" : "r1"; },
+    },
+    {
+      // A layoff, or a business that goes under (most small shops close within five years). Teachers
+      // and civil servants are rarely let go. The parent finds other work: often a shop or a steering wheel.
+      id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("layoff") : 0), when: () => true,
+      run: (g) => {
+        const who = g.fortuneParent("layoff");
+        const from = who && g.jobs[who];
+        g.shiftFamily(-1, "layoff");
+        bump(g, { stress: 10, motivation: -3 });
+        if (!who) return "r";
+        const to = g.setJob(who, AFTER_LAYOFF, "layoff");
+        return ["r", { who, from, to }];
+      },
+    },
+    {
+      // 전세 사기: the deposit on the family's rented home is gone.
+      // 41,559 victims nationally from mid-2023 to 2026: about 1% of families over a childhood.
+      id: "jeonse", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.006 : 0), when: () => true,
+      run: (g) => { g.shiftFamily(-1, "jeonse"); g.money = Math.max(0, g.money - 300000); bump(g, { stress: 12 }); return "r"; },
+    },
+    {
+      // Cancer in a parent's 40s–50s (414–595 per 100,000 a year): roughly 15–20% of childhoods.
+      id: "parentill", anyStage: true, luck: -1, weight: 0.09, when: (g) => !g.flags.parentIll,
+      run: (g) => { g.flags.parentIll = 1; if (g.family !== "q1") g.shiftFamily(-1, "parentill"); bump(g, { stress: 14, motivation: -5 }); g.lostBlocks += 1; return "r"; },
+    },
+    // Divorce: about one child in eight sees their parents split before they're grown. Custody mostly
+    // goes to the mother. Losing an earner usually drops the household a fifth.
+    {
+      id: "divorce", anyStage: true, luck: -1, weight: (g) => ((g.parents || "both") === "both" && g.grade <= 12 && g.attempt === 1 ? 0.08 : 0), when: () => true,
+      run: (g) => {
+        g.parents = g.rng() < 0.75 ? "mom" : "dad";
+        g.addLog("log.parents", { now: g.parents, why: "divorce" }, "milestone");
+        g.toWork("divorce");
+        g.shiftFamily(-1, "divorce");
+        g.checkFees();
+        bump(g, { stress: 14, motivation: -6 });
+        g.lostBlocks += 1;
+        return ["r", { with: g.parents }];
+      },
+    },
+    // A parent dies (rare). With one parent left you live with them; if it was your only parent, your
+    // grandparents take you in. There is some insurance money, and a long grief.
+    {
+      id: "bereaved", anyStage: true, luck: -1, weight: (g) => ((g.parents || "both") !== "grand" && g.grade <= 12 && g.attempt === 1 && !g.flags.bereaved ? 0.014 : 0), when: () => true,
+      run: (g) => {
+        g.flags.bereaved = 1;
+        const was = g.parents || "both";
+        const lost = was === "both" ? (g.rng() < 0.6 ? "dad" : "mom") : was;
+        // Losing your only parent: grandparents if they can, otherwise a children's home (parental death
+        // is about one in nine of the children who come into care).
+        g.parents = was === "both" ? (lost === "dad" ? "mom" : "dad") : g.rng() < 0.7 ? "grand" : "care";
+        if (g.parents === "care") g.family = "q1";
+        if (g.parents === "grand" || g.parents === "care") g.jobs = null;
+        g.addLog("log.parents", { now: g.parents, why: "bereaved", lost }, "milestone");
+        g.toWork("bereaved");
+        if (was === "both") g.shiftFamily(-1, "bereaved");
+        g.checkFees();
+        g.money += 500000;
+        bump(g, { stress: 25, motivation: -12, health: -6 });
+        g.lostBlocks += 2;
+        return ["r", { lost, now: g.parents }];
+      },
+    },
+    // Growing up in a children's home. University volunteers tutor in most homes; sponsors send a
+    // little money; and at some point classmates find out where you live.
+    {
+      id: "care-tutor", weight: (g) => (g.parents === "care" && g.flags.careLeft == null ? 0.8 : 0), when: (g) => g.grade >= 3 && g.grade <= 12 && !g.flags.careTutor,
+      run: (g) => { g.flags.careTutor = 1; studyBoost(g, "math", 0.04); studyBoost(g, "eng", 0.03); bump(g, { motivation: 5 }); return "r"; },
+    },
+    {
+      id: "care-sponsor", luck: 1, weight: (g) => (g.parents === "care" && g.flags.careLeft == null ? 0.6 : 0), when: (g) => g.grade >= 1 && g.grade <= 12,
+      run: (g) => { g.money += 100000; bump(g, { motivation: 3, stress: -2 }); return "r"; },
+    },
+    {
+      id: "care-found", luck: -1, weight: (g) => (g.parents === "care" ? 0.5 : 0), when: (g) => g.grade >= 4 && g.grade <= 9 && !g.flags.careFound,
+      run: (g) => { g.flags.careFound = 1; bump(g, { stress: 8, motivation: -3 }); return "r"; },
+    },
+    // Care ends at 18 (보호종료): after the first 수능 you leave with the settlement and a monthly
+    // allowance, or stay on in the home (allowed to 24) with a roof and meals but neither payment yet.
+    {
+      id: "careleave", weight: (g) => (g.parents === "care" && g.flags.careLeft == null && !g.flags.careStay ? 100 : 0), when: (g) => g.attempt >= 2, choices: 2,
+      run: (g, i) => {
+        if (i === 1) { g.flags.careStay = g.clock; bump(g, { stress: -4, motivation: 2 }); return "r1"; }
+        return leaveCare(g, "r0");
+      },
+    },
+    { id: "careend", weight: (g) => (g.parents === "care" && g.flags.careLeft == null && g.flags.careStay != null ? 100 : 0), when: (g) => g.age >= 24, run: (g) => leaveCare(g, "r") },
+    // Parents' jobs. A mother at home often goes back to work once school starts (57.7% of mothers work
+    // while the youngest is under 7, 70.4% once they're 13–17), usually in a different, lower-paid job.
+    {
+      id: "momwork", weight: (g) => (g.jobs && g.jobs.mom === "home" && g.workingParents(true).indexOf("mom") >= 0 ? 0.4 : 0), when: (g) => g.grade >= 1 && g.grade <= 12 && g.attempt === 1,
+      run: (g) => { const to = g.setJob("mom", BACK_TO_WORK, "back"); bump(g, { stress: 2, motivation: 1 }); return ["r", { to }]; },
+    },
+    {
+      // The family shop or restaurant needs hands on weekends.
+      id: "job-shop", weight: (g) => (g.hasJob("shop") ? 1 : 0), when: (g) => g.grade >= 4 && g.grade <= 12 && g.attempt === 1, choices: 2,
+      run: (g, i) => {
+        if (i === 0) { g.money += 150000; bump(g, { stress: 4, motivation: 2 }); g.lostBlocks += 1; return ["r0", { who: g.hasJob("shop") }]; }
+        bump(g, { stress: -2, motivation: -2 }); return ["r1", { who: g.hasJob("shop") }];
+      },
+    },
+    {
+      // A teacher at home checks every page of homework.
+      id: "job-teacher", weight: (g) => (g.hasJob("teacher") ? 1.2 : 0), when: (g) => g.grade >= 1 && g.grade <= 9 && !g.flags.jobTeacher,
+      run: (g) => { g.flags.jobTeacher = 1; studyBoost(g, "kor", 0.04); studyBoost(g, "eng", 0.03); bump(g, { stress: 4 }); return ["r", { who: g.hasJob("teacher") }]; },
+    },
+    {
+      // A doctor's child hears about medical school from the start.
+      id: "job-doctor", weight: (g) => (g.hasJob("doctor") ? 1.5 : 0), when: (g) => g.grade >= 7 && g.grade <= 11 && !g.flags.jobDoctor, choices: 2,
+      run: (g, i) => {
+        g.flags.jobDoctor = 1;
+        if (i === 0) { bump(g, { motivation: 6, stress: 6 }); return ["r0", { who: g.hasJob("doctor") }]; }
+        bump(g, { stress: -2, motivation: -1 }); return ["r1", { who: g.hasJob("doctor") }];
+      },
+    },
+    {
+      // Night shifts and early starts: dinner on your own, and you grow up a little faster.
+      id: "job-shift", weight: (g) => (["nurse", "driver", "factory", "labor", "service", "builder"].some((j) => g.hasJob(j)) ? 0.8 : 0), when: (g) => g.grade >= 1 && g.grade <= 9 && !g.flags.jobShift,
+      run: (g) => { g.flags.jobShift = 1; const who = ["nurse", "driver", "factory", "labor", "service", "builder"].map((j) => g.hasJob(j)).find(Boolean); bump(g, { stress: 3, motivation: 2 }); return ["r", { who, job: g.jobs[who] }]; },
+    },
+    {
+      // Harvest weekends on the family farm (or boat).
+      id: "job-farm", weight: (g) => (g.hasJob("farmer") ? 1.2 : 0), when: (g) => g.grade >= 3 && g.grade <= 12 && g.attempt === 1 && g.month >= 6 && g.month <= 11,
+      run: (g) => { g.money += 100000; bump(g, { health: 4, stress: 2 }); g.lostBlocks += 1; return ["r", { who: g.hasJob("farmer") }]; },
+    },
+    {
+      // Long hours at the office: the school play goes on without them.
+      id: "job-overtime", weight: (g) => (["office", "exec", "dev", "pro"].some((j) => g.hasJob(j)) ? 0.6 : 0), when: (g) => g.grade >= 1 && g.grade <= 6 && !g.flags.jobOvertime,
+      run: (g) => { g.flags.jobOvertime = 1; const who = ["office", "exec", "dev", "pro"].map((j) => g.hasJob(j)).find(Boolean); bump(g, { stress: 3, motivation: -1 }); return ["r", { who, job: g.jobs[who] }]; },
+    },
+    // Your own body: an accident or a long illness costs time you can't get back.
+    // About 0.25% of children are hurt in traffic each year: a few percent over a childhood.
+    { id: "accident", luck: -1, weight: 0.03, when: (g) => !g.flags.accident, run: (g) => { g.flags.accident = 1; bump(g, { health: -35, stress: 10, motivation: -4 }); g.lostBlocks += 3; return "r"; } },
+    { id: "hospital", luck: -1, weight: 0.3, when: (g) => g.grade >= 4, run: (g) => { bump(g, { health: -22, stress: 6, motivation: -4 }); g.lostBlocks += 2; return "r"; } },
+    // And the lucky breaks: a teacher who changes everything, or a subject that suddenly clicks.
+    {
+      id: "greatteacher", luck: 1, weight: 0.5, when: (g) => g.inClass(),
+      run: (g) => { const s = SUBJECTS[Math.floor(g.rng() * SUBJECTS.length)]; g.aptitude[s] = Math.round(Math.min(1.8, g.aptitude[s] + 0.2) * 100) / 100; studyBoost(g, s, 0.05); bump(g, { motivation: 8 }); return ["r", { s }]; },
+    },
+    {
+      id: "spark", luck: 1, weight: 0.4, when: (g) => g.grade >= 3 && !g.flags.spark,
+      run: (g) => { g.flags.spark = 1; const s = SUBJECTS[Math.floor(g.rng() * SUBJECTS.length)]; g.aptitude[s] = Math.round(Math.min(1.8, g.aptitude[s] + 0.3) * 100) / 100; studyBoost(g, s, 0.08); bump(g, { motivation: 10 }); return ["r", { s }]; },
+    },
+    // Puberty rewires everyone (Middle 2): aptitudes drift, some up, some down, from their own stream.
+    {
+      id: "bloom", weight: 100, when: (g) => g.grade === 8 && !g.flags.bloom,
+      run: (g) => {
+        g.flags.bloom = 1;
+        const r = makeRng(hashSeed(g.seed, "bloom"));
+        let up = null, down = null, net = 0;
+        const all = r.normal() * BLOOM_ALL;
+        for (const s of SUBJECTS) {
+          const d = Math.round((all + r.normal() * BLOOM_EACH) * 100) / 100;
+          g.aptitude[s] = Math.round(clamp(g.aptitude[s] + d, 0.5, 1.8) * 100) / 100;
+          net += d;
+          if (!up || d > up.d) up = { s, d };
+          if (!down || d < down.d) down = { s, d };
+        }
+        return [net > 0.12 ? "up" : net < -0.12 ? "down" : "mixed", { up: up.s, down: down.s }];
+      },
+    },
+    // Exam-day luck, pushed by advance() before every 수능 (see examLuckEvent). Never rolled.
+    { id: "examluck", weight: 0, when: () => false, run: () => "r" },
+    // ----- early childhood (ages 0–5; stageFits keeps these before school and the rest after) -----
+    // Your first weeks: your parents notice your temperament. Pushed at birth, never rolled.
+    {
+      id: "newborn", early: true, weight: 0, when: () => false, choices: 1,
+      run: (g) => {
+        const r = makeRng(hashSeed(g.seed, "temperament"));
+        const t = TEMPERAMENT_IDS[Math.floor(r() * TEMPERAMENT_IDS.length)];
+        g.addTrait(t);
+        return "r." + t;
+      },
+    },
+    // 돌잡이 at the first-birthday party: whatever you grab is said to foretell your future, and here
+    // it gives you a head start. Pushed by nextTurn at age 1.
+    {
+      id: "doljabi", early: true, weight: 0, when: () => false, choices: 1,
+      run: (g) => {
+        const r = makeRng(hashSeed(g.seed, "doljabi"));
+        const first = DOLJABI_IDS[Math.floor(r() * DOLJABI_IDS.length)];
+        g.addTrait(first);
+        if (r() < DOUBLE_GRAB) {
+          const rest = DOLJABI_IDS.filter((x) => x !== first);
+          const second = rest[Math.floor(r() * rest.length)];
+          g.addTrait(second);
+          return ["two", { a: first, b: second }];
+        }
+        return ["r." + first, { a: first }];
+      },
+    },
+    { id: "firstword", early: true, weight: 3, when: (g) => g.age <= 2 && !g.flags.firstWord, run: (g) => { g.flags.firstWord = 1; studyBoost(g, "kor", 0.03); bump(g, { motivation: 4 }); return "r"; } },
+    { id: "firststeps", early: true, weight: 3, when: (g) => g.age <= 1 && !g.flags.firstSteps, run: (g) => { g.flags.firstSteps = 1; bump(g, { health: 6, motivation: 3 }); return "r"; } },
+    {
+      id: "daycarecold", early: true, weight: (g) => 2 * g.trait("ill"), when: (g) => g.atKinder() && g.schoolInfo().id !== "homeCare",
+      run: (g) => { bump(g, { health: -12, stress: 3 }); return "r"; },
+    },
+    { id: "bump", early: true, weight: 1.5, when: (g) => g.age >= 1 && !g.flags.bump, run: (g) => { g.flags.bump = 1; bump(g, { health: -8, stress: 3 }); return "r"; } },
+    {
+      id: "sibling", early: true, weight: 1, when: (g) => g.age >= 2 && !g.flags.sibling,
+      run: (g) => { g.flags.sibling = g.rng() < 0.5 ? "m" : "f"; bump(g, { stress: 8, motivation: -3 }); return ["r", { sib: g.flags.sibling }]; },
+    },
+    { id: "grandstory", early: true, weight: 1.5, when: (g) => g.age >= 2 && !g.flags.grandstory, run: (g) => { g.flags.grandstory = 1; studyBoost(g, "hist", 0.03); studyBoost(g, "inq1", 0.02); bump(g, { stress: -4 }); return "r"; } },
+    {
+      // Learning to read 한글 before school: common, and a choice for the parents.
+      id: "hangul", early: true, weight: 3, when: (g) => g.age >= 4 && !g.flags.hangul, choices: 2,
+      run: (g, i) => {
+        g.flags.hangul = 1;
+        if (i === 0) { studyBoost(g, "kor", 0.05); bump(g, { stress: 5 }); return "r0"; }
+        bump(g, { stress: -5, motivation: 3 }); return "r1";
+      },
+    },
+    { id: "kinderplay", early: true, weight: 2, when: (g) => g.atKinder() && g.schoolInfo().id !== "homeCare" && !g.flags.kinderplay, run: (g) => { g.flags.kinderplay = 1; bump(g, { motivation: 6, stress: -3 }); return "r"; } },
+    {
+      // A 영재 (gifted) test the year before school.
+      id: "prodigy", early: true, weight: 2, when: (g) => g.age === 5 && !g.flags.prodigy, choices: 2,
+      run: (g, i) => {
+        g.flags.prodigy = 1;
+        if (i === 1) return "r1";
+        if (zOf(g, ["kor", "math", "eng", "inq1", "inq2"]) > 0.6 || g.rng() < 0.15) { bump(g, { motivation: 10 }); return "r0a"; }
+        bump(g, { stress: 6, motivation: -2 }); return "r0b";
+      },
+    },
     // ----- childhood -----
     { id: "sportsday", weight: 1.5, when: (g) => g.grade <= 6, run: (g) => { bump(g, { health: 6, stress: -6, motivation: 4 }); return "r"; } },
     { id: "bookworm", weight: 1.5, when: (g) => g.grade <= 8, run: (g) => { studyBoost(g, "kor", 0.05); bump(g, { motivation: 3 }); return "r"; } },
@@ -526,7 +993,8 @@
       run: (g, i) => {
         g.flags.gedTry = g.clock;
         g.flags.gedN = (g.flags.gedN || 0) + 1;
-        let p = 0.6 + 0.3 * g.standing() + (g.flags.gedN - 1) * 0.15;
+        // Pass rates run 85–90% a sitting (Seoul, 2024–25): an average candidate passes first time.
+        let p = 0.78 + 0.15 * g.standing() + (g.flags.gedN - 1) * 0.1;
         // Cramming for it pays off, but takes a block from next turn.
         if (i === 0) { p += 0.25; g.lostBlocks += 1; }
         if (g.status === "hs3" && g.month >= 8) p = 1;
@@ -692,8 +1160,8 @@
         bump(g, { stress: 4, motivation: 3 }); studyBoost(g, pickWeak(g), 0.03); return "r1";
       },
     },
-    { id: "cold", weight: 2, when: () => true, run: (g) => { bump(g, { health: -18, stress: 4 }); return "r"; } },
-    { id: "flu", weight: 1, when: (g) => g.health < 45, run: (g) => { bump(g, { health: -25, stress: 6 }); g.lostBlocks += 2; return "r"; } },
+    { id: "cold", luck: -1, weight: (g) => 2 * g.trait("ill"), when: () => true, run: (g) => { bump(g, { health: -18, stress: 4 }); return "r"; } },
+    { id: "flu", luck: -1, weight: (g) => g.trait("ill"), when: (g) => g.health < 45, run: (g) => { bump(g, { health: -25, stress: 6 }); g.lostBlocks += 2; return "r"; } },
     {
       id: "star", weight: 2, when: (g) => g.grade >= 10 && g.money >= 300000, choices: 2,
       run: (g, i) => {
@@ -733,8 +1201,8 @@
       id: "family-money", weight: 1, when: (g) => g.grade >= 4 && (g.family === "q1" || g.family === "q2"),
       run: (g) => { bump(g, { stress: 6 }); g.money = Math.max(0, g.money - 200000); return "r"; },
     },
-    { id: "grandma", weight: 1, when: () => true, run: (g) => { g.money += 200000; bump(g, { motivation: 5, stress: -4 }); return "r"; } },
-    { id: "insomnia", weight: 1.2, when: (g) => g.grade >= 7 && g.stress > 55, run: (g) => { bump(g, { health: -10 }); return "r"; } },
+    { id: "grandma", luck: 1, weight: 1, when: () => true, run: (g) => { g.money += 200000; bump(g, { motivation: 5, stress: -4 }); return "r"; } },
+    { id: "insomnia", weight: (g) => 1.2 * g.trait("insomnia"), when: (g) => g.grade >= 7 && g.stress > 55, run: (g) => { bump(g, { health: -10 }); return "r"; } },
     {
       id: "festival", weight: 1, when: (g) => !g.dropoutActive() && ((g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high"), choices: 2,
       run: (g, i) => {
@@ -762,7 +1230,7 @@
         studyBoost(g, pickWeak(g), 0.03); bump(g, { stress: 5 }); return "r1";
       },
     },
-    { id: "insight", weight: 1, when: (g) => g.motivation > 60, run: (g) => { const s = pickWeak(g); studyBoost(g, s, 0.04); return ["r", { s }]; } },
+    { id: "insight", luck: 1, weight: 1, when: (g) => g.motivation > 60, run: (g) => { const s = pickWeak(g); studyBoost(g, s, 0.04); return ["r", { s }]; } },
   ];
   // run() result → { key, p } message.
   function outcome(id, r) {
@@ -781,6 +1249,16 @@
     const pool = SUBJECTS.filter((s) => s !== "hist");
     return pool[Math.floor(g.rng() * pool.length)];
   }
+  // Leaving care: the settlement goes into your savings, and the 자립수당 starts (see grossBudget).
+  function leaveCare(g, key) {
+    g.flags.careLeft = g.clock;
+    const a = g.careSettlement();
+    g.money += a;
+    g.addLog("log.careLeave", { a, pay: CARE_PAY }, "milestone");
+    bump(g, { stress: 6, motivation: 4 });
+    g.lostBlocks += 1;
+    return [key, { a, pay: CARE_PAY }];
+  }
   function studyBoost(g, s, amount) {
     g.skills[s] += amount * headroom(g.skills[s]) * 1.5;
   }
@@ -791,12 +1269,15 @@
   // move, a transfer) doubles it for a year, having no time for friends makes you an easier target,
   // and each earlier episode halves it. Tuned so roughly a quarter to a third of lives meet it.
   function bullyWeight(g) {
-    const stage = g.status === "elem" ? 1.4 : g.status === "mid" ? 1 : 0.3;
+    // Victimization peaks in elementary school (4.2% a year in 2024, then 1.6% middle, 0.5% high), so
+    // per turn: a year in elementary, a semester in middle school, a season in high school.
+    const stage = g.status === "elem" ? BULLY_STAGE.elem : g.status === "mid" ? BULLY_STAGE.mid : BULLY_STAGE.high;
     const newKid = g.flags.moved != null && g.clock - g.flags.moved <= 12 ? 2 : 1;
     const alone = g.lastPlan && !g.lastPlan.friends ? 1.4 : 1;
-    return BULLY_BASE * stage * newKid * alone * Math.pow(0.5, g.flags.bullyN || 0);
+    return BULLY_BASE * stage * newKid * alone * Math.pow(0.5, g.flags.bullyN || 0) * g.trait("bully");
   }
   const BULLY_BASE = 0.25;
+  const BULLY_STAGE = { elem: 2.3, mid: 0.43, high: 0.07 };
   // Leaving school: extra blocks a turn, the motivation baseline it costs, and stress a turn spent alone.
   const DROPOUT_BLOCKS = 2;
   const DROPOUT_MOTIVATION = 8;
@@ -826,7 +1307,12 @@
   // Saves from before regions existed have none; they play as the capital-region suburbs.
   function regionKind(g) { return (REGION_BY_ID[g.region] || REGION_BY_ID.suwon).kind; }
   // An event's weight is a number or a function of the game.
-  const weightOf = (e, g) => (typeof e.weight === "function" ? e.weight(g) : e.weight);
+  const weightOf = (e, g) => {
+    if (g.parents === "care" && CARE_SKIP.has(e.id)) return 0;
+    const w = typeof e.weight === "function" ? e.weight(g) : e.weight;
+    // Good and bad events lean with your fortune (forced events, weight 100+, are never tagged).
+    return e.luck ? w * Math.max(0.2, 1 + LUCK_BIAS * (g.luck || 0) * e.luck) : w;
+  };
 
   function inquiryInfo(id) {
     return INQUIRY.soc.concat(INQUIRY.sci).find((x) => x.id === id);
@@ -876,18 +1362,30 @@
       this.family = FAMILIES[opts.family] ? opts.family : Game.rollFamily(seed, bornIn);
       this.track = null; // chosen at the end of grade 10
       this.inq = null;
+      // startYear is the year you start elementary school; life starts six years earlier, at birth.
       this.startYear = opts.startYear || 2026;
-      this.year = this.startYear;
+      this.year = this.startYear - 6;
       this.month = 3;
-      this.grade = 1;
+      // Grade 0 until elementary school; the early years count age instead.
+      this.grade = 0;
       this.attempt = 1;
       // International age (만 나이): most children start grade 1 in March at 6 and turn 7 that year.
-      this.age = 6;
-      this.status = "elem";
+      this.age = 0;
+      this.status = "early";
+      this.traits = []; // temperament and 돌잡이 ids (see TEMPERAMENTS, DOLJABI); absent in old saves
+      // opts.parents exists for sim.js only, like opts.family.
+      this.parents = PARENT_BUDGET[opts.parents] != null ? opts.parents : Game.rollParents(seed); // "both" | "mom" | "dad" | "grand" | "care"; absent in old saves = both
+      // A child in care has no household: count it in the lowest fifth (for the head start and the
+      // retake academy), which moves the fifth shares by a rounding error.
+      if (this.parents === "care") this.family = "q1";
+      // Each parent's job ({ mom, dad }: a JOBS id, or null for a parent not in your life); absent in
+      // old saves and for grandparents and children's homes.
+      this.jobs = Game.rollJobs(seed, this.family, bornIn, this.parents);
       this.method = "self";
       const talent = Game.rollTalent(seed, this.family);
       this.aptitude = Object.assign({}, talent.aptitude);
       this.skills = Object.assign({}, talent.skills);
+      for (const sub in this.skills) this.skills[sub] = Math.round((this.skills[sub] - EARLY_GAP) * 100) / 100;
       this.practice = 0.1;
       this.health = 80;
       this.stress = 15;
@@ -899,8 +1397,10 @@
       this.log = [];
       this.history = []; // finished 수능 results
       this.mocks = []; // mock exam results
-      this.trace = [{ t: this.t(), att: 1, ph: "elem", skills: Object.assign({}, this.skills) }];
-      this.queue = [{ type: "birth" }, { type: "school", stage: "elem" }];
+      this.trace = [{ t: this.t(), att: 1, ph: "early", skills: Object.assign({}, this.skills) }];
+      this.queue = [{ type: "birth" }, { type: "event", id: "newborn", choices: 1 }, { type: "event", id: "saju", choices: 1 }];
+      // Hidden fortune, from its own stream; the saju event reads it out. Old saves have none (neutral).
+      this.luck = Game.rollLuck(seed);
       this.examMods = { shift: 0 };
       this.enrolled = null; // university id kept while doing 반수
       this.ending = null;
@@ -911,10 +1411,15 @@
       // there (from grade 7).
       this.region = bornIn;
       this.regionFrom = 1;
-      this.addLog("log.born", { fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex, reg: this.region }, "milestone");
+      this.addLog("log.born", { early: 1, fam: this.family, y: this.year, inc: FAMILIES[this.family].income, sex: this.sex, reg: this.region, care: this.parents === "care" ? 1 : undefined }, "milestone");
     }
 
     // Birth region, weighted only by population share.
+    // A fortune between −1 and 1, most lives near the middle.
+    static rollLuck(seed) {
+      const r = makeRng(hashSeed(seed, "saju"));
+      return Math.round(clamp(r.normal() * 0.45, -1, 1) * 100) / 100;
+    }
     static rollRegion(seed) {
       let x = makeRng(hashSeed(seed, "region"))() * REGIONS.reduce((a, r) => a + r.pop, 0);
       for (const r of REGIONS) { x -= r.pop; if (x <= 0) return r.id; }
@@ -932,6 +1437,27 @@
       return FAMILY_IDS[row.length - 1];
     }
     // Starting talent: a general knack plus per-subject quirks. Aptitude multiplies study gains.
+    static rollJobs(seed, family, region, parents) {
+      if (parents === "grand" || parents === "care") return null;
+      const r = makeRng(hashSeed(seed, "jobs"));
+      const fi = Math.max(0, FAMILY_IDS.indexOf(family));
+      const farm = FARM_BY_KIND[(REGION_BY_ID[region] || {}).kind];
+      const pick = (sex) => {
+        const row = Object.assign({}, JOB_JOINT[sex][fi]);
+        if (farm != null) row.farmer *= farm;
+        let x = r() * WORK_IDS.reduce((a, id) => a + row[id], 0);
+        for (const id of WORK_IDS) { x -= row[id]; if (x <= 0) return id; }
+        return "office";
+      };
+      const mom = parents === "both" || parents === "mom" ? (r() < (parents === "mom" ? SINGLE_MOM_WORKS : MOM_WORKS[fi]) ? pick("f") : "home") : null;
+      const dad = parents === "both" || parents === "dad" ? (r() < DAD_WORKS[fi] ? pick("m") : "home") : null;
+      return { mom, dad };
+    }
+    static rollParents(seed) {
+      let x = makeRng(hashSeed(seed, "parents"))();
+      for (const [id, p] of PARENTS_AT_BIRTH) { x -= p; if (x < 0) return id; }
+      return "both";
+    }
     static rollTalent(seed, family) {
       const r = makeRng(hashSeed(seed, "talent"));
       const general = r.normal() * 0.55;
@@ -942,6 +1468,11 @@
         skills[s] = Math.round((general + quirk + prior - START_GAP) * 100) / 100;
         aptitude[s] = Math.round(clamp(1 + general * 0.25 + r.normal() * 0.18, 0.6, 1.5) * 100) / 100;
       }
+      // Every child is good at something: the best subject is at least a little quicker than average,
+      // so no life starts with no strength at all.
+      let best = SUBJECTS[0];
+      for (const s of SUBJECTS) if (aptitude[s] > aptitude[best]) best = s;
+      if (aptitude[best] < MIN_BEST_APT) aptitude[best] = MIN_BEST_APT;
       return { skills, aptitude };
     }
 
@@ -959,6 +1490,72 @@
     phase() { return STATUSES[this.status].school ? this.status : "a" + this.attempt; }
 
     inSchool() { return !!STATUSES[this.status].school; }
+    isEarly() { return !!STATUSES[this.status].early; }
+    // The combined effect of your traits on one fx key: a sum for levels, a product for multipliers.
+    trait(key) {
+      const add = key === "healthRest" || key === "stressRest" || key === "mot" || key === "cash";
+      let v = add ? 0 : 1;
+      // Your own traits, then the jobs of the parents you live with.
+      const fxs = (this.traits || []).map((id) => TRAIT_FX[id]).concat(this.workingParents(true).map((w) => JOBS[this.jobs[w]].fx));
+      for (const fx of fxs) if (fx && fx[key] != null) v = add ? v + fx[key] : v * fx[key];
+      return v;
+    }
+    // The parents you live with who have a job on record ("mom", "dad"); with home true, also one at home.
+    workingParents(home) {
+      if (!this.jobs) return [];
+      const p = this.parents || "both";
+      return ["mom", "dad"].filter((w) => this.jobs[w] && (home || this.jobs[w] !== "home") && (p === "both" || p === w));
+    }
+    // A parent's new job, from its own stream (so it never moves the main RNG), logged.
+    setJob(who, table, why) {
+      const r = makeRng(hashSeed(this.seed, "jobchange", this.clock, who, why))();
+      const from = this.jobs[who];
+      let x = r * table.reduce((a, e) => a + (e[0] === from ? 0 : e[1]), 0), to = table[0][0];
+      for (const [id, w] of table) { if (id === from) continue; x -= w; if (x <= 0) { to = id; break; } }
+      this.jobs[who] = to;
+      this.addLog("log.job", { who, from, to, why }, "event");
+      return to;
+    }
+    // The parent you live with who has this job ("mom" / "dad"), or null.
+    hasJob(id) { return this.workingParents().find((w) => this.jobs[w] === id) || null; }
+    // A parent left on their own who stayed at home goes (back) to work.
+    toWork(why) {
+      for (const w of this.workingParents(true)) if (this.jobs[w] === "home") this.setJob(w, BACK_TO_WORK, why);
+    }
+    // Which working parent a promotion or a layoff happens to: the better paid one, usually.
+    fortuneParent(why) {
+      const ws = this.workingParents();
+      if (!ws.length) return null;
+      if (ws.length === 1) return ws[0];
+      const a = PARENT_PAY[this.jobs[ws[0]]], b = PARENT_PAY[this.jobs[ws[1]]];
+      return makeRng(hashSeed(this.seed, "jobwho", this.clock, why))() < a / (a + b) ? ws[0] : ws[1];
+    }
+    // The family's fortunes move it up or down the income fifths (and with them the education budget and
+    // whether a retake academy is affordable). Returns how many steps it actually moved.
+    shiftFamily(d, why) {
+      const i = FAMILY_IDS.indexOf(this.family);
+      const j = clamp(i + d, 0, FAMILY_IDS.length - 1);
+      if (j === i) return 0;
+      const from = this.family;
+      this.family = FAMILY_IDS[j];
+      this.addLog("log.fortune", { from, to: this.family, why }, "milestone");
+      this.checkFees();
+      return j - i;
+    }
+    // A school the family can no longer pay for: back to the public one (or ordinary kindergarten).
+    checkFees() {
+      const st = this.status === "hs3" ? "high" : this.status === "early" ? "kinder" : this.status;
+      if ((this.inClass() || this.atKinder()) && this.schoolInfo().fee > this.feeLimit(this.schoolInfo()) && DEFAULT_SCHOOL[st]) {
+        this.school = DEFAULT_SCHOOL[st];
+        this.addLog("log.schoolFee", { id: this.school }, "event");
+      }
+    }
+    addTrait(id) {
+      this.traits = (this.traits || []).concat(id);
+      const fx = TRAIT_FX[id];
+      for (const sub in fx.apt || {}) this.aptitude[sub] = Math.round(Math.min(1.7, this.aptitude[sub] + fx.apt[sub]) * 100) / 100;
+      if (fx.cash) this.money += fx.cash;
+    }
     turnMonths() { return STATUSES[this.status].months; }
     blocks() { return Math.max(1, this.baseBlocks() - this.lostBlocks); }
     // Out of school, the hours that went to classes are yours: two more blocks a turn in grades 7–11. Grade
@@ -988,32 +1585,94 @@
       this.addLog("log.dropout", { g: this.grade }, "milestone");
       if (this.bully) { endBully(this); this.addLog("log.bullyEnd", { why: "quit" }, "event"); }
     }
-    activities() { return ACTIVITIES.filter((a) => (a.from || 1) <= this.grade && this.grade <= (a.to || 12)); }
-    allowance() {
-      const a = FAMILIES[this.family].allowance;
-      // School fees come out of the same education budget while you're there.
-      return (this.attempt >= 4 ? Math.round(a / 2) : a) - (this.inClass() ? this.schoolInfo().fee : 0);
+    activities() {
+      if (this.isEarly()) return ACTIVITIES.filter((a) => (a.early && (a.fromAge || 0) <= this.age) || a.alsoEarly);
+      return ACTIVITIES.filter((a) => !a.early && (a.from || 1) <= this.grade && this.grade <= (a.to || 12));
     }
+    allowance() {
+      const a = this.grossBudget();
+      // School fees come out of the same education budget while you're there.
+      // From the fourth try the parents pay half; the 자립수당 is the state's and doesn't shrink.
+      return Math.max(0, (this.attempt >= 4 && this.parents !== "care" ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0));
+    }
+    // What a family can pay for a school: its education budget, or, for fees families pay out of
+    // income (an English kindergarten), FEE_FROM_INCOME of household income.
+    feeLimit(x) { return x && x.fromIncome ? FAMILIES[this.family].income * 10000 * FEE_FROM_INCOME * PARENT_BUDGET[this.parents || "both"] : this.grossBudget(); }
+    // The family's monthly education money before fees: less with one parent or grandparents. In care,
+    // the home's small budget, then the 자립수당 for five years once you've left.
+    grossBudget() {
+      if (this.parents === "care") return this.flags.careLeft != null ? (this.clock - this.flags.careLeft < CARE_PAY_MONTHS ? CARE_PAY : 0) : CARE_BUDGET;
+      return Math.round(FAMILIES[this.family].allowance * PARENT_BUDGET[this.parents || "both"] / 1000) * 1000;
+    }
+    // Who you live with, for the resting stress and motivation: care splits into in the home and out.
+    home() { const p = this.parents || "both"; return p === "care" && this.flags.careLeft != null ? "careOut" : p; }
+    // Whether someone pays ₩2.9M a month for a retake academy. Nobody does for a child in care.
+    paysAcademy() { return this.parents !== "care" && FAMILIES[this.family].paysAcademy; }
+    // The one-off settlement on leaving care, which each province sets.
+    careSettlement() { return CARE_SETTLE[SEOUL_AREAS.has(this.region) ? "seoul" : this.region] || CARE_SETTLE_ELSE; }
 
     // ----- schools -----
     // At one of these schools right now (and still going to classes).
     atSchool(...ids) { return this.inClass() && ids.indexOf(this.schoolInfo().id) >= 0; }
     // The school you're at. Saves from before schools existed have none: the public one for the stage.
     schoolInfo() {
-      const st = this.status === "hs3" ? "high" : this.status;
+      const st = this.status === "hs3" ? "high" : this.status === "early" ? "kinder" : this.status;
       const x = SCHOOL_BY_ID[this.school];
       return x && x.stage === st ? x : SCHOOL_BY_ID[DEFAULT_SCHOOL[st] || "pubHigh"];
     }
-    // Every school for the stage on the current school screen, with its chance and why it's closed.
+    // Every school for the stage on the current school screen, with its chance, why it's closed, and the
+    // real school it would be (see realSchoolFor). A private school that doesn't exist where you live
+    // is closed like any school that isn't there.
     schoolOptions() {
       const top = this.queue[0];
       if (!top || top.type !== "school") return [];
       const kind = this.regionInfo().kind;
-      const can = FAMILIES[this.family].allowance;
       return SCHOOLS.filter((x) => x.stage === top.stage).map((x) => {
-        const blocked = x.where && x.where.indexOf(kind) < 0 ? "region" : x.fee > can ? "cost" : x.admit(this) <= 0 ? "admit" : null;
-        return { id: x.id, fee: x.fee, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def: x.id === DEFAULT_SCHOOL[top.stage] };
+        const real = this.realSchoolFor(x.id);
+        const missing = REAL && REAL.areas[this.region] && REAL_LOCAL[x.id] && !real;
+        const blocked = (x.where && x.where.indexOf(kind) < 0) || missing ? "region" : x.fee > this.feeLimit(x) ? "cost" : x.admit(this) <= 0 ? "admit" : null;
+        return { id: x.id, fee: x.fee, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def: x.id === DEFAULT_SCHOOL[top.stage], real };
       });
+    }
+    // The real school a game school would be for this life: a local one picked from the area's schools
+    // of that kind (its own seeded stream, so the same life always gets the same school), or the
+    // nearest one in the country for special schools. null without places.js, for kindergartens, or
+    // when the area has none. { name, lat, lon, prov, city } (prov and city only for far schools).
+    realSchoolFor(id) {
+      const area = REAL && REAL.areas[this.region];
+      if (!area) return null;
+      const local = REAL_LOCAL[id];
+      if (local) {
+        const list = area.schools.filter((e) => e[1] === local[0] && (local[1] == null || e[2] === local[1]) && (local[2] == null || e[3] === local[2]));
+        if (!list.length) return id === "artsHigh" || id === "vocHigh" ? this.nearestSpecial(REAL_FAR[id], area) : null;
+        const e = list[Math.floor(makeRng(hashSeed(this.seed, "realschool", id, this.region))() * list.length)];
+        return { name: e[0], lat: e[4], lon: e[5] };
+      }
+      return REAL_FAR[id] ? this.nearestSpecial(REAL_FAR[id], area) : null;
+    }
+    nearestSpecial(kind, area) {
+      const list = (REAL.special[kind] || []);
+      let best = null, bd = 1e9;
+      const [la, lo] = area.center;
+      for (const e of list) {
+        const d = (e[2] - la) ** 2 + ((e[3] - lo) * 0.8) ** 2;
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (!best) return null;
+      // Straight-line distance from the middle of your area, for the dialog ("120 km away").
+      const rad = Math.PI / 180, dLa = (best[2] - la) * rad, dLo = (best[3] - lo) * rad;
+      const h = Math.sin(dLa / 2) ** 2 + Math.cos(la * rad) * Math.cos(best[2] * rad) * Math.sin(dLo / 2) ** 2;
+      return { name: best[0], lat: best[2], lon: best[3], prov: best[4], city: best[5], km: Math.round(12742 * Math.asin(Math.sqrt(h))) };
+    }
+    // The real school you attend now: the one picked on the school screen, or (older saves, or after
+    // a move) the local one for your school.
+    realSchool() {
+      if (!this.inClass()) return null;
+      const id = this.schoolInfo().id;
+      const r = this.real;
+      if (r && r.id === id && r.region === this.region || r && r.id === id && SCHOOL_BY_ID[id].board) return r;
+      const x = this.realSchoolFor(id);
+      return x ? Object.assign({ id, region: this.region }, x) : null;
     }
     // Apply to a school. Anything but the default public school is a lottery or a selection; missing
     // out means the public school. Returns the outcome message { key, p }.
@@ -1024,10 +1683,12 @@
       if (!o || o.blocked) throw new Error("school.closed");
       const got = o.def || this.rng() < o.p;
       this.school = got ? id : DEFAULT_SCHOOL[top.stage];
+      const real = this.realSchoolFor(this.school);
+      this.real = real ? Object.assign({ id: this.school, region: this.region }, real) : null;
       this.queue.shift();
-      this.addLog("log.school", { id: this.school, want: id, got }, "milestone");
+      this.addLog("log.school", { id: this.school, want: id, got, real: real && real.name }, "milestone");
       this.flush();
-      return { key: o.def ? "school.r.def" : got ? "school.r.in" : "school.r.out", p: { id, def: DEFAULT_SCHOOL[top.stage] } };
+      return { key: o.def ? "school.r.def" : got ? "school.r.in" : "school.r.out", p: { id, def: DEFAULT_SCHOOL[top.stage], real: real && real.name } };
     }
     // The parents' education money for this turn. Whatever isn't spent stays with them.
     budget() { return this.allowance() * this.turnMonths(); }
@@ -1065,6 +1726,8 @@
       if (!r || id === this.region) return "same";
       if (this.ending || this.queue.length) return "busy";
       if (this.flags.lastMove != null && this.clock - this.flags.lastMove < MOVE_COOLDOWN) return "cooldown";
+      // The home decides where a child in care lives; once you've left, you can move like anyone.
+      if (this.parents === "care" && this.flags.careLeft == null) return "care";
       if (r.need && FAMILY_IDS.indexOf(this.family) + 1 < r.need) return "cost";
       return null;
     }
@@ -1085,7 +1748,8 @@
       // A new home means the local public school, unless yours is a boarding or commuter school.
       if (this.inClass() && !this.schoolInfo().board && this.schoolInfo().id !== DEFAULT_SCHOOL[this.status === "hs3" ? "high" : this.status]) {
         this.school = DEFAULT_SCHOOL[this.status === "hs3" ? "high" : this.status];
-        this.addLog("log.schoolMove", { id: this.school }, "event");
+        const r = this.realSchoolFor(this.school);
+        this.addLog("log.schoolMove", { id: this.school, real: r && r.name }, "event");
       }
       // In school, the quotas count from the grade you arrive in; after school, you're past them.
       this.regionFrom = this.inSchool() ? this.grade : 13;
@@ -1096,7 +1760,7 @@
     // Retake options after the latest 수능, with the reason any of them is closed. The parents pay a
     // retake academy if they can; otherwise only a scholarship gets you in.
     retakeOptions(score) {
-      const pays = FAMILIES[this.family].paysAcademy;
+      const pays = this.paysAcademy();
       return ["academy", "selfstudy", "halfretake"].map((id) => ({
         id,
         blocked: id === "academy" && !pays && score < 85 ? "academyFee" : null,
@@ -1180,7 +1844,20 @@
       const reading = plan.reading || 0;
       if (reading) {
         const share = { kor: 0.6, hist: 0.25, inq1: 0.25 };
-        for (const s in share) this.skills[s] += reading * 0.24 * share[s] * this.aptitude[s] * eff * headroom(this.skills[s]) * k;
+        for (const s in share) this.skills[s] += reading * 0.24 * share[s] * this.aptitude[s] * eff * headroom(this.skills[s]) * k * this.trait("reading");
+      }
+      // Early childhood: play feeds the subjects it touches, and kindergarten adds lessons of its own.
+      if (this.isEarly()) {
+        for (const id in EARLY_FEED) {
+          const n = plan[id] || 0;
+          if (!n) continue;
+          const tm = id === "books" ? this.trait("reading") : 1;
+          for (const s in EARLY_FEED[id]) this.skills[s] += n * EARLY_RATE * EARLY_FEED[id][s] * this.aptitude[s] * eff * headroom(this.skills[s]) * tm;
+        }
+        if (this.atKinder()) {
+          const kl = this.schoolInfo().lessons;
+          for (const s of SUBJECTS) this.skills[s] += KINDER_YEAR * SUBJECT_INFO[s].rate * this.aptitude[s] * eff * headroom(this.skills[s]) * (kl[s] || kl.all || 1);
+        }
       }
       // Lessons: being at school teaches every subject a little each turn, whatever you do with your
       // free blocks. Classes are pitched at the grade, so they help most when you're behind the class
@@ -1206,32 +1883,35 @@
 
       // Condition. Study is stressful; in grade 12 the pressure rises as November gets closer.
       const drop = this.dropoutActive();
-      const pressure = this.status === "elem" || drop ? 0 : school ? 1 : this.month >= 9 ? 4 + (this.month - 9) * 2 : 2;
+      const pressure = this.status === "elem" || this.isEarly() || drop ? 0 : school ? 1 : this.month >= 9 ? 4 + (this.month - 9) * 2 : 2;
       // Stress and health also recover on their own toward a baseline, so a steady workload settles
       // at a level instead of spiralling; heavy turns push the level up.
       const d = {
-        stress: pressure + studied * 1.6 + mock * 3 + (25 - this.stress) * 0.25,
-        health: -1 - studied * 0.6 + (72 - this.health) * 0.15,
+        stress: pressure + studied * 1.6 + mock * 3 + (25 + this.trait("stressRest") + PARENT_STRESS[this.home()] - this.stress) * 0.25 + (plan.worksheet || 0) * 4,
+        health: -1 - studied * 0.6 + (72 + this.trait("healthRest") - this.health) * 0.15,
         motivation: 0,
       };
-      d.stress -= (plan.rest || 0) * 9 + (plan.exercise || 0) * 6 + (plan.friends || 0) * 14 + (plan.games || 0) * 10 + (plan.arts || 0) * 8 + reading * 3;
-      d.health += (plan.rest || 0) * 7 + (plan.exercise || 0) * 11 + (plan.arts || 0) * 8 - (plan.job || 0) * 4;
+      // Traits make some of these go further (a good sleeper rests better, a smiley child gets more out
+      // of friends).
+      const tRest = this.trait("rest"), tEx = this.trait("exercise");
+      d.stress -= (plan.rest || 0) * 9 * tRest + (plan.exercise || 0) * 6 * tEx + (plan.friends || 0) * 14 * this.trait("friends") + (plan.games || 0) * 10 + (plan.arts || 0) * 8 + reading * 3 + (plan.books || 0) * 2;
+      d.health += (plan.rest || 0) * 7 * tRest + (plan.exercise || 0) * 11 * tEx + (plan.arts || 0) * 8 - (plan.job || 0) * 4;
       // Where you live: Gangnam's pressure, the countryside's quiet.
       const rk = this.regionKindInfo();
       d.stress += rk.stress;
       d.health += rk.health;
       // The school you're at: a special school's pace, or an arts school's breathing room.
-      const sch = this.inClass() ? this.schoolInfo() : null;
-      if (sch) d.stress += sch.stress;
+      const sch = this.inClass() || this.atKinder() ? this.schoolInfo() : null;
+      if (sch) { d.stress += sch.stress; d.health += sch.health || 0; }
       // Arts & sports lessons over the years are what an arts high school audition looks at.
-      if (plan.arts) this.flags.artsN = (this.flags.artsN || 0) + plan.arts * months / 12 * 2;
+      if (plan.arts) this.flags.artsN = (this.flags.artsN || 0) + plan.arts * months / 12 * 2 * this.trait("arts");
       d.stress += (plan.job || 0) * 5;
       d.motivation += (plan.friends || 0) * 3 - (plan.games || 0) * 4 + (plan.arts || 0) * 4;
       // Out of school, nobody sets the pace and nobody's around: a lower baseline, and loneliness
       // without time for friends.
       if (drop && !plan.friends) d.stress += DROPOUT_LONELY;
       // Motivation drifts back toward a baseline that sags with every extra year.
-      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
+      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) + this.trait("mot") + PARENT_MOT[this.home()] - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
       // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
       // softens the toll on your body.
@@ -1254,7 +1934,8 @@
       if (this.status === "mid" && !drop) this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
       if (school && (this.month === 3 && months === 12 || this.month + months > 12)) {
-        const gift = Math.min(300000, 60000 + this.age * 10000);
+        // In care it comes from the staff and sponsors, and there's less of it.
+        const gift = Math.round(Math.min(300000, 60000 + this.age * 10000) * this.trait("sebae") * (this.parents === "care" ? 0.4 : 1));
         this.money += gift;
         this.addLog("log.sebae", { a: gift }, "");
       }
@@ -1265,7 +1946,7 @@
       const seen = new Set();
       // Fixed milestones (D-100, free-semester career week, 중2) always fire when their time comes, and so
       // does the bullying follow-up while it lasts.
-      for (const e of EVENTS) if (weightOf(e, this) >= 100 && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
+      for (const e of EVENTS) if (weightOf(e, this) >= 100 && this.stageFits(e) && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
       for (let i = 0; i < n; i++) this.rollEvent(seen);
       if ((plan.friends || 0) > 0 && rng() < 0.35 && !seen.has("pcbang") && this.grade >= 7 && this.clock - (this.flags["ev-pcbang"] || -99) >= 4) {
         this.fireEvent(EVENTS.find((e) => e.id === "pcbang"));
@@ -1278,6 +1959,8 @@
       if (this.status !== "elem" && !school && this.month === 11) {
         this.queue.push(this.examEveEvent());
         this.queue.push(this.lunchEvent());
+        const luckEv = this.examLuckEvent();
+        if (luckEv) this.queue.push(luckEv);
         this.queue.push({ type: "exam" });
       } else {
         this.queue.push({ type: "nextMonth" });
@@ -1295,27 +1978,61 @@
     }
     typicalLevel() { return -START_GAP + TYPICAL_CLIMB * (this.grade - 1); }
     // Sitting in classes this turn: school years and grade 12, unless you've left school.
-    inClass() { return (this.inSchool() || this.status === "hs3") && this.dropout == null; }
+    inClass() { return (this.inSchool() || this.status === "hs3") && this.dropout == null && !this.isEarly(); }
+    // Ages 3–5, at whatever kindergarten (or home) was picked.
+    atKinder() { return this.isEarly() && this.age >= 3; }
     classRank() { return clamp(Math.round((1 - this.standing()) * 30) + 1, 1, 30); }
     classLevel() { const s = this.standing(); return s > 0.8 ? 3 : s > 0.4 ? 2 : 1; }
 
     rollEvent(seen) {
       // An event that just happened waits at least four months before it can happen again.
-      const pool = EVENTS.filter((e) => !seen.has(e.id) && weightOf(e, this) < 100 && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
+      const pool = EVENTS.filter((e) => !seen.has(e.id) && weightOf(e, this) < 100 && this.stageFits(e) && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
       let total = 0;
       for (const e of pool) total += weightOf(e, this);
       let r = this.rng() * total;
+      // Nothing that can happen: no event (otherwise the first weight-0 event would fire).
+      if (!(total > 0)) return;
       for (const e of pool) {
+        if (!(weightOf(e, this) > 0)) continue;
         r -= weightOf(e, this);
         if (r <= 0) { seen.add(e.id); this.fireEvent(e); return; }
       }
     }
+    // Early-childhood events only happen before school, and every other event only after.
+    stageFits(e) { return e.anyStage || !!e.early === this.isEarly(); }
     fireEvent(e) {
       this.flags["ev-" + e.id] = this.clock;
       if (e.choices) this.queue.push({ type: "event", id: e.id, choices: e.choices });
       else this.queue.push({ type: "event", id: e.id, choices: 0, result: outcome(e.id, e.run(this)) });
     }
 
+    // What the day itself deals you, from a stream of the seed and the sitting (so a given exam day is
+    // the same however you played), tilted by your fortune. Often nothing happens; otherwise a stuffy
+    // room, a sniffling neighbour, a lucky guess, a killer question you'd drilled, or (rarely) answers
+    // marked one row off on the OMR card, caught with minutes to spare.
+    examLuckEvent() {
+      const r = makeRng(hashSeed(this.seed, this.year, this.attempt, "examluck"));
+      const l = this.luck || 0;
+      const odds = [
+        ["sniffler", 0.12 - 0.05 * l], ["guess", 0.1 + 0.05 * l], ["drilled", 0.1 + 0.05 * l], ["omr", 0.04 - 0.02 * l], ["calm", 0.1 + 0.04 * l],
+      ];
+      let x = r();
+      for (const [id, w] of odds) {
+        if (x < w) {
+          const s = SUBJECTS[Math.floor(r() * SUBJECTS.length)];
+          const m = this.examMods;
+          m.subj = m.subj || {};
+          if (id === "sniffler") m.shift -= 0.1;
+          else if (id === "calm") m.shift += 0.08;
+          else if (id === "guess") m.subj[s] = (m.subj[s] || 0) + 0.3;
+          else if (id === "drilled") m.subj[s] = (m.subj[s] || 0) + 0.4;
+          else m.subj[s] = (m.subj[s] || 0) - 0.6;
+          return { type: "event", id: "examluck", choices: 0, result: { key: "ev.examluck." + id, p: { s } } };
+        }
+        x -= w;
+      }
+      return null;
+    }
     examEveEvent() { return { type: "event", id: "eve", choices: 3 }; }
     lunchEvent() { return { type: "event", id: "lunch", choices: 3 }; }
 
@@ -1393,6 +2110,18 @@
     nextTurn() {
       this.month += this.turnMonths();
       if (this.month > 12) { this.month -= 12; this.year += 1; }
+      // Early childhood: a birthday a year, the 돌잡이 at one, kindergarten at three, school at six.
+      if (this.isEarly()) {
+        this.age += 1;
+        if (this.age === 1) this.queue.push({ type: "event", id: "doljabi", choices: 1 });
+        if (this.age === 3) this.queue.push({ type: "school", stage: "kinder" });
+        if (this.age < 6) { this.addLog("log.birthday", { a: this.age, y: this.year }, ""); return; }
+        this.grade = 1;
+        this.status = "elem";
+        this.addLog("log.stage", { g: 1, st: "elem", y: this.year }, "milestone");
+        this.queue.push({ type: "school", stage: "elem" });
+        return;
+      }
       if (this.month === 3 && this.inSchool()) {
         const was = this.status;
         this.grade += 1;
@@ -1459,13 +2188,16 @@
     sitExam(kind, month) {
       const real = kind === "suneung";
       const rng = this.rng;
-      const stressHit = this.stress > 65 ? -0.25 * (this.stress - 65) / 35 : 0;
+      const stressHit = (this.stress > 65 ? -0.25 * (this.stress - 65) / 35 : 0) * this.trait("nerves");
       const healthHit = this.health < 45 ? -0.25 * (45 - this.health) / 45 : 0;
-      const nerves = real ? -0.08 * (1 - this.practice) : 0;
+      const nerves = real ? -0.08 * (1 - this.practice) * this.trait("nerves") : 0;
       const sigma = 0.32 - 0.22 * this.practice;
-      const dayForm = rng.normal() * sigma * 0.6 + (real ? this.examMods.shift : 0);
+      const dayForm = rng.normal() * sigma * 0.6 + (real ? this.examMods.shift + this.dayLuck() : 0);
       const examKey = hashSeed(this.seed, this.year, kind, month);
       const diffRng = makeRng(hashSeed(examKey, "difficulty"));
+      // How well this paper happens to fit you (see PAPER_LUCK): its own stream, so the cohort and the
+      // paper's difficulty don't change.
+      const fitRng = makeRng(hashSeed(examKey, "fit"));
       const subjects = {};
       const shifts = {};
       for (const s of SUBJECTS) {
@@ -1474,6 +2206,7 @@
         shifts[s] = shift;
         let theta = this.skills[s] + stressHit + healthHit + nerves + dayForm + rng.normal() * sigma * 0.8;
         if (real && (s === "eng" || s === "hist" || s === "inq1" || s === "inq2")) theta += this.examMods.lunch || 0;
+        theta += fitRng.normal() * PAPER_LUCK + (real && this.examMods.subj ? this.examMods.subj[s] || 0 : 0);
         const pop = this.inq && (s === "inq1" || s === "inq2") ? inquiryInfo(this.inq[s === "inq1" ? 0 : 1]).pop : 0;
         const kindG = s === "eng" || s === "hist" ? "absolute" : "relative";
         subjects[s] = gradeSubject(s, theta, pop, shift, examKey, kindG);
@@ -1487,6 +2220,10 @@
       };
     }
 
+    // How 수능 day itself goes (see DAY_LUCK): the same for a given seed and sitting however you played.
+    dayLuck() { return makeRng(hashSeed(this.seed, this.year, this.attempt, "day")).normal() * DAY_LUCK + FORTUNE_DAY * (this.luck || 0); }
+    // This year's hidden move in a university's cut, in percentile points (positive: easier this year).
+    cutSwing(u) { return makeRng(hashSeed(this.seed, this.year, "cut", u.id)).normal() * CUT_SWING; }
     // Admission chances for the latest 수능.
     options() {
       const top = this.queue[0];
@@ -1506,7 +2243,13 @@
         const u = UNI_BY_ID[id];
         const q = this.quotaFor(u);
         const p = admitChance(top.score + (q ? q.pts : 0), u, this.track);
-        return { id, p, admitted: this.rng() < p, quota: q ? q.kind : null };
+        // The real cut this year differs from the expected one (hidden until now), and a rejection can
+        // still come good off the waitlist in February.
+        const real = admitChance(top.score + (q ? q.pts : 0) + this.cutSwing(u), u, this.track);
+        let admitted = this.rng() < real, wait = false;
+        if (!admitted && this.rng() < WAITLIST * real) { admitted = true; wait = true; }
+        if (wait) this.addLog("log.waitlist", { uni: id }, "milestone");
+        return { id, p, admitted, quota: q ? q.kind : null, wait };
       });
       this.queue.shift();
       const offers = results.filter((r) => r.admitted).map((r) => r.id);
@@ -1554,8 +2297,8 @@
       this.motivation = clamp(this.motivation + 10, 0, 100);
       this.stress = clamp(this.stress - 15, 0, 100);
       this.health = clamp(this.health + 15, 0, 100);
-      if (this.attempt === 4) this.addLog("log.halfpay", null, "event");
-      this.addLog("log.newyear", { y: this.year, att: this.attempt, st: d.action, sch: this.scholarship, pays: FAMILIES[this.family].paysAcademy, uni: this.enrolled }, "milestone");
+      if (this.attempt === 4 && this.parents !== "care") this.addLog("log.halfpay", null, "event");
+      this.addLog("log.newyear", { y: this.year, att: this.attempt, st: d.action, sch: this.scholarship, pays: this.paysAcademy(), uni: this.enrolled }, "milestone");
       this.trace.push({ t: this.t(), att: this.attempt, ph: this.phase(), skills: Object.assign({}, this.skills) });
     }
 
@@ -1610,7 +2353,7 @@
   }
 
   const api = {
-    Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SCHOOLS, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
+    Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SCHOOLS, TEMPERAMENTS, DOLJABI, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
     inquiryInfo, admissionScore, admitChance, chanceLabel, gradeSubject, makeRng, hashSeed,
     skillScore: (theta) => clamp(Math.round(50 + theta * 16.67), 0, 100),
   };

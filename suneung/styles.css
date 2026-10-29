@@ -28,6 +28,8 @@
   /* Artwork (art.js): scenes, the avatar and event illustrations. Dark mode turns day to dusk. */
   --a-sky: #a9dcff; --a-sky2: #e8f6ff; --a-night: #16224a; --a-night2: #34457e; --a-moon: #fff3c4;
   --a-star: #fff7d6; --a-sun: #ffcf4a; --a-cloud: #ffffff; --a-dusk: #ff9e7a; --a-dusk2: #ffd9a0;
+  --a-homeLand: #f6d98a; --a-muniLine: #a9c59a; --a-school: #e0533d; --a-schNum: #ffffff;
+  --a-land: #dcebc6; --a-land2: #b9c2b0; --a-coast: #6f9a5e; --a-mapSea: #cfe7f3; --a-dmz: #c0504d; --a-inset: #5b6b8c; --a-route: #2f5bea; --a-pin: #e0533d; --a-pinOpen: #2f5bea; --a-pinOff: #a6adb9; --a-sel: #f0a020; --a-mapLbl: #1c2a3a; --a-mapHalo: #ffffff;
   --a-sea: #5fb3d9; --a-sea2: #3d8fbd; --a-hill: #9fc78a; --a-city: #9fb3cc; --a-wall: #f6ecda; --a-wall2: #ead9bb; --a-floor: #d9b083;
   --a-floor2: #c49568; --a-tile: #e3e7ee; --a-tile2: #cfd5df; --a-nightwall: #3a3d5c;
   --a-nightfloor: #4a3a34; --a-dark: #2a2e3b; --a-dark2: #3a3f52; --a-locker: #8fb3d9;
@@ -47,6 +49,7 @@
   --a-stone: #e6dfd3; --a-stone2: #c9bba6; --a-sofa: #d26d5a; --a-sofa2: #b55543;
   --a-trackred: #e0765c; --a-road: #6d7280; --a-bully: #4b3f63; --a-storm: #7d879a; --a-cup: #f3f3f3;
   --a-omr: #ffe3e3; --a-river: #6fb0e6; --a-glass: #8fb7dc;
+  --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -79,6 +82,8 @@
     --g6: #ff6b6b;
     --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
     --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
+    --a-homeLand: #7a6a2e; --a-muniLine: #4f6a52; --a-school: #ff7a63; --a-schNum: #1b1b1b;
+    --a-land: #3c5440; --a-land2: #3a3f48; --a-coast: #87b27a; --a-mapSea: #1b2f40; --a-dmz: #e07a6f; --a-inset: #9aa9c8; --a-route: #7d9cff; --a-pin: #ff7a63; --a-pinOpen: #7d9cff; --a-pinOff: #6b7280; --a-sel: #f5b941; --a-mapLbl: #eef2f7; --a-mapHalo: #10161f;
     --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
     --a-floor2: #4a382c; --a-tile: #343a48; --a-tile2: #2b303c; --a-nightwall: #24263a;
     --a-nightfloor: #33282a; --a-dark: #171a22; --a-dark2: #222634; --a-locker: #3d5578;
@@ -98,6 +103,7 @@
     --a-stone: #6b6672; --a-stone2: #57505e; --a-sofa: #9a4b3e; --a-sofa2: #7d3a2f;
     --a-trackred: #a8513f; --a-road: #2f323c; --a-bully: #1d1828; --a-storm: #4d5568; --a-cup: #c9c9d2;
     --a-omr: #e8c8cc; --a-river: #2d5a8a; --a-glass: #3d5a80;
+    --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
     color-scheme: dark;
   }
 }
@@ -130,7 +136,9 @@
   --g6: #ff6b6b;
   --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
   --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
-  --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
+  --a-homeLand: #7a6a2e; --a-muniLine: #4f6a52; --a-school: #ff7a63; --a-schNum: #1b1b1b;
+    --a-land: #3c5440; --a-land2: #3a3f48; --a-coast: #87b27a; --a-mapSea: #1b2f40; --a-dmz: #e07a6f; --a-inset: #9aa9c8; --a-route: #7d9cff; --a-pin: #ff7a63; --a-pinOpen: #7d9cff; --a-pinOff: #6b7280; --a-sel: #f5b941; --a-mapLbl: #eef2f7; --a-mapHalo: #10161f;
+    --a-sea: #24506e; --a-sea2: #1a3a52; --a-hill: #3d5a45; --a-city: #2d3552; --a-wall: #3a3a4c; --a-wall2: #313142; --a-floor: #5a4536;
   --a-floor2: #4a382c; --a-tile: #343a48; --a-tile2: #2b303c; --a-nightwall: #24263a;
   --a-nightfloor: #33282a; --a-dark: #171a22; --a-dark2: #222634; --a-locker: #3d5578;
   --a-locker2: #2f4462; --a-cork: #8a6440; --a-frame: #c8cad6; --a-board: #1f4a37;
@@ -149,6 +157,7 @@
   --a-stone: #6b6672; --a-stone2: #57505e; --a-sofa: #9a4b3e; --a-sofa2: #7d3a2f;
   --a-trackred: #a8513f; --a-road: #2f323c; --a-bully: #1d1828; --a-storm: #4d5568; --a-cup: #c9c9d2;
   --a-omr: #e8c8cc; --a-river: #2d5a8a; --a-glass: #3d5a80;
+  --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
   color-scheme: dark;
 }
 
@@ -264,6 +273,12 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .bar .fill { display: block; height: 100%; border-radius: 5px; transition: width 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
 /* Shown under the condition bars while the player is being bullied. */
 .cond-note { margin: 2px 0 0; padding: 6px 10px; border-left: 3px solid var(--neg); border-radius: 6px; background: var(--track); color: var(--neg); font-size: 0.8rem; line-height: 1.4; }
+/* Traits: chips under the ability bars, each with its effect as a tooltip and a second line. */
+.traits { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
+.traits:empty { display: none; }
+.trait-chip { display: inline-flex; flex-direction: column; padding: 4px 10px; border-radius: 10px; background: var(--accent-soft); color: var(--text); font-size: 0.8rem; line-height: 1.3; max-width: 100%; }
+.trait-chip b { font-weight: 600; }
+.trait-chip small { color: var(--muted); font-size: 0.72rem; }
 .lesson-note { display: block; margin: 2px 0 6px; color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
 .cond-note.drop { border-left-color: var(--accent); color: var(--text); }
 /* Leaving school: what you gain beside what it costs, stacked on a phone. */
@@ -282,6 +297,13 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 .talent { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; }
 .talent .bar { grid-template-columns: minmax(0, 8rem) 1fr 2.4rem 3.2rem; }
 .apt { font-size: 0.75rem; color: var(--muted); text-align: right; white-space: nowrap; }
+/* Ability bars carry aptitude stars in a fourth column; strong subjects stand out in gold. */
+#skills .bar { grid-template-columns: minmax(0, 9.5rem) 1fr 2.6rem 3.4rem; }
+@media (max-width: 480px) { #skills .bar { grid-template-columns: minmax(0, 7rem) 1fr 2.4rem 3.2rem; gap: 8px; } }
+.apt.hi { color: var(--warn); font-weight: 700; }
+.apt.lo { opacity: 0.7; }
+.lbl .apt { font-size: 0.78rem; margin-left: 2px; }
+.apt-note { margin: 4px 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; }
 
 /* ---------- plan ---------- */
 .plan-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
@@ -336,6 +358,12 @@ table.grid td.l { text-align: left; }
 .uni { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--border); font-size: 0.88rem; cursor: pointer; }
 .uni.off { opacity: 0.45; cursor: not-allowed; }
 .uni .nm small.why { color: var(--neg); }
+.uni .nm small.real { color: var(--text); font-weight: 600; }
+.uni .nm small.real .num { display: inline-block; min-width: 1.4em; padding: 0 4px; margin-right: 2px; border-radius: 999px; background: var(--a-pinOpen); color: var(--a-schNum); text-align: center; font-size: 0.7rem; }
+.uni.off .nm small.real .num { background: var(--a-pinOff); }
+.school-map { margin: 8px 0; }
+.school-map .kmap { max-height: 220px; border-radius: 10px; }
+.school-map figcaption { color: var(--muted); font-size: 0.75rem; text-align: center; margin-top: 2px; }
 .uni.region .nm { min-width: 0; }
 .uni .nm small { color: var(--muted); display: block; font-size: 0.75rem; }
 .chance { font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; color: var(--panel); }
@@ -418,6 +446,16 @@ table.grid td.l { text-align: left; }
 
 /* ---------- your life: the scene, mood bubble and basics ---------- */
 .life { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+/* The scene and, beside it (below it on phones), the map of where you live. */
+.life-top { display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .life-top { grid-template-columns: minmax(0, 1fr) clamp(230px, 27vw, 320px); } .map-side { border-left: 1px solid var(--border); } }
+.map-side { display: flex; flex-direction: column; min-width: 0; background: var(--a-mapSea); border-top: 1px solid var(--border); }
+@media (min-width: 760px) { .map-side { border-top: 0; height: clamp(180px, 31vw, 330px); } }
+.map-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 10px 0; font-size: 0.82rem; font-weight: 700; color: var(--a-mapLbl); }
+.map-head small { font-weight: 500; color: var(--a-inset); text-align: right; }
+.main-map { flex: none; height: 250px; padding: 2px 4px 4px; }
+@media (min-width: 760px) { .main-map { flex: 1; min-height: 0; height: auto; } }
+.main-map .kmap { width: 100%; height: 100%; max-height: none; border-radius: 0; }
 .scene-wrap { position: relative; height: clamp(180px, 31vw, 330px); background: var(--a-wall); }
 .scene-box { position: absolute; inset: 0; }
 .bubble {
@@ -434,6 +472,18 @@ table.grid td.l { text-align: left; }
 .bubble[data-mood="happy"] b { color: var(--pos); }
 .bubble[data-mood="tired"] b { color: var(--warn); }
 .bubble[data-mood="stressed"] b, .bubble[data-mood="sick"] b { color: var(--neg); }
+/* The family card is a full-width strip under the other four, so the class name never gets cut off. */
+.life .stat.fam { grid-column: 1 / -1; display: flex; flex-direction: row; justify-content: flex-start; flex-wrap: wrap; align-items: center; column-gap: 10px; row-gap: 2px; padding-top: 8px; padding-bottom: 8px; }
+.life .stat.fam .ic { grid-row: auto; font-size: 1.2rem; }
+.life .stat.fam .v { font-size: 1rem; }
+.fam-meter { display: inline-flex; gap: 2px; vertical-align: middle; margin-left: 4px; }
+.fam-meter i { width: 7px; height: 12px; border-radius: 2px; background: var(--border); }
+.fam-meter i.on { background: var(--accent); }
+.stat.fam.fam-up .s { color: var(--pos); }
+.stat.fam.fam-down .s { color: var(--neg); }
+.stat.fam.flash { animation: fam-flash 1.6s ease-out; }
+@keyframes fam-flash { 0%, 30% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (prefers-reduced-motion: reduce) { .stat.fam.flash { animation: none; } }
 .life .stats { margin: 0; padding: 12px; gap: 10px; border-top: 1px solid var(--border); }
 .life .stat { background: var(--bg); border: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: center; }
 .life .stat .ic { grid-row: span 3; font-size: 1.5rem; line-height: 1; }
@@ -592,3 +642,101 @@ table.grid td.l { text-align: left; }
   .gain, .turn, .confetti { display: none !important; }
   .bar .fill, .act, .choices button { transition: none !important; }
 }
+
+/* ---------- cutscenes ----------
+   A letterboxed film over everything (z-index above the modal). app.js swaps .cut-shot layers; each
+   new one dissolves in over the last. Inside the SVG, .cam pans and zooms over the shot (--t) and the
+   c-* groups walk, pop, ring and grow at --at seconds. Reduced motion turns it all into still frames. */
+.cut { position: fixed; inset: 0; z-index: 40; background: var(--cut-bg); color: var(--cut-text); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; animation: cut-open 0.5s ease both; }
+.cut.hidden { display: none; }
+body.cutting { overflow: hidden; }
+.cut-frame { position: relative; width: 100%; height: max(56.25vw, min(64vh, 400px)); max-height: calc(100vh - 150px); overflow: hidden; background: var(--cut-bg); }
+.cut-shot { position: absolute; inset: 0; animation: cut-shot-in 0.7s ease both; }
+.cut-shot .art { width: 100%; height: 100%; }
+.cut-cap { min-height: 3.2em; max-width: 46rem; margin: 18px 20px 0; padding: 0 16px; text-align: center; font-size: clamp(1rem, 2.6vw, 1.3rem); line-height: 1.5; font-weight: 600; letter-spacing: 0.01em; }
+.cut-cap.in { animation: cut-cap 0.6s 0.15s ease both; }
+.cut-hint { margin-top: 6px; font-size: 0.75rem; color: var(--cut-dim); }
+.cut-progress { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); left: 16px; right: 120px; display: flex; gap: 6px; }
+.cut-progress i { flex: 1; height: 3px; border-radius: 2px; background: var(--cut-bar); overflow: hidden; }
+.cut-progress i b { display: block; height: 100%; width: 0; background: var(--cut-text); }
+.cut-progress i.done b { width: 100%; }
+.cut-progress i.now b { animation: cut-prog var(--t, 3s) linear both; }
+.cut-skip { position: absolute; top: max(8px, env(safe-area-inset-top, 0px)); right: 12px; background: transparent; color: var(--cut-text); border: 1px solid var(--cut-bar); border-radius: 999px; padding: 6px 14px; font-size: 0.85rem; cursor: pointer; }
+.cut-skip:hover, .cut-skip:focus-visible { border-color: var(--cut-accent); color: var(--cut-accent); }
+.cut-toggle { flex: 0 0 auto; margin-left: auto; padding: 6px 12px; font-size: 0.82rem; }
+@keyframes cut-open { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cut-shot-in { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: none; } }
+@keyframes cut-cap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes cut-prog { from { width: 0; } to { width: 100%; } }
+
+/* Positioning groups (a transform attribute, no animation class) scale from their own origin here, as
+   SVG means them to, so a figure scaled at its feet keeps its feet on the ground. */
+.cut-art g[transform]:not([class]) { transform-box: view-box; transform-origin: 0 0; }
+.cut-art .cam { transform-box: view-box; transform-origin: var(--ox, 400px) var(--oy, 260px); animation: cut-cam var(--t, 3s) cubic-bezier(0.45, 0, 0.55, 1) both; }
+.cut-art .c-walk { transform-box: view-box; animation: cut-walk var(--d, 2s) var(--at, 0s) cubic-bezier(0.35, 0, 0.45, 1) both; }
+.cut-art .c-pop { animation: cut-pop 0.7s var(--at, 0s) cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.cut-art .c-fade { animation: cut-fade 0.6s var(--at, 0s) ease both; }
+.cut-art .c-out { animation: cut-out 0.4s var(--at, 0s) ease both; }
+.cut-art .c-stamp { animation: cut-stamp 0.45s var(--at, 0s) cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+.cut-art .c-ring { animation: shake 0.16s var(--at, 0s) linear 10; }
+.cut-art .c-grow { transform-origin: center bottom; animation: cut-grow 0.9s var(--at, 0s) cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+.cut-art .c-flash { animation: cut-flash 0.6s var(--at, 0s) ease both; }
+.cut-art .c-thud { animation: cut-thud 0.4s var(--at, 0s) ease; }
+@keyframes cut-cam { from { transform: translate(var(--x0, 0px), var(--y0, 0px)) scale(var(--s0, 1)); } to { transform: translate(var(--x1, 0px), var(--y1, 0px)) scale(var(--s1, 1)); } }
+@keyframes cut-walk { from { transform: translateX(var(--wx0, 0px)); } to { transform: translateX(var(--wx1, 0px)); } }
+@keyframes cut-pop { from { opacity: 0; transform: scale(0.1); } to { opacity: 1; transform: scale(1); } }
+@keyframes cut-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cut-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes cut-stamp { from { opacity: 0; transform: scale(3) rotate(-30deg); } to { opacity: 1; transform: scale(1) rotate(-10deg); } }
+@keyframes cut-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes cut-flash { 0% { opacity: 0; } 25% { opacity: 0.85; } 100% { opacity: 0; } }
+@keyframes cut-thud { 0%, 100% { transform: none; } 30% { transform: translate(-6px, 4px); } 60% { transform: translate(5px, -3px); } }
+@media (max-width: 560px) {
+  .cut-frame { height: min(62vh, 440px); }
+  .cut-cap { margin-top: 14px; }
+}
+/* Still frames: the shots stay where they end, the caption is the story. */
+@media (prefers-reduced-motion: reduce) {
+  .cut, .cut-shot, .cut-cap.in, .cut-progress i.now b { animation: none !important; }
+  .cut-progress i.now b { width: 100%; }
+  .cut-art .c-out, .cut-art .c-flash { display: none; }
+}
+
+/* The Korea map (birth screen, move dialog). Dot colours by state; the home pin pulses. */
+.kmap { display: block; width: 100%; height: auto; max-height: 62vh; border-radius: 12px; }
+.kmap .kmap-pt .kd { stroke: var(--a-mapHalo); stroke-width: 3; }
+.kmap .kmap-pt.open circle:nth-child(2) { fill: var(--a-pinOpen); }
+.kmap .kmap-pt.closed circle:nth-child(2) { fill: var(--a-pinOff); }
+.kmap .kmap-pt.home circle:nth-child(2) { fill: var(--a-pin); }
+.kmap .kmap-pt[tabindex] { cursor: pointer; outline: none; }
+.kmap .kmap-pt[tabindex]:hover circle:nth-child(2), .kmap .kmap-pt[tabindex]:focus-visible circle:nth-child(2) { stroke: var(--a-sel); stroke-width: 5; }
+.kmap .kmap-lbl { fill: var(--a-mapLbl); font-weight: 700; paint-order: stroke; stroke: var(--a-mapHalo); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.kmap .kmap-lbl.home, .kmap .kmap-lbl.sel { font-weight: 900; }
+.kmap .kmap-seoul { fill: var(--a-inset); }
+.kmap .kmap-pulse { transform-box: fill-box; transform-origin: center; animation: kmap-pulse 1.6s ease-out infinite; }
+@keyframes kmap-pulse { from { transform: scale(0.7); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .kmap .kmap-pulse { animation: none; } }
+.map-wrap { margin: 6px 0 10px; }
+.map-card { margin: 8px 0; padding: 10px 12px; border-radius: 10px; background: var(--track); font-size: 0.86rem; line-height: 1.45; }
+.map-card b { display: block; font-size: 0.95rem; }
+.map-card small { display: block; color: var(--muted); }
+.map-card small.why { color: var(--neg); }
+.map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.76rem; color: var(--muted); margin: 2px 0 6px; }
+.map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.map-legend .lh { background: var(--a-pin); } .map-legend .lo { background: var(--a-pinOpen); } .map-legend .lc { background: var(--a-pinOff); }
+.map-list summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); margin: 6px 0; }
+
+/* Real geography on the map (places.js): municipalities as land, provinces drawn over them, the home
+   area tinted; school markers. Borders keep their width at any zoom. */
+.kmap .kmap-muni { fill: var(--a-land); stroke: var(--a-muniLine); stroke-width: 0.5px; vector-effect: non-scaling-stroke; }
+.kmap .kmap-muni.home { fill: var(--a-homeLand); }
+.kmap .kmap-prov { fill: none; stroke: var(--a-coast); stroke-width: 1.2px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.kmap .kmap-school path { fill: var(--a-school); stroke: var(--a-mapHalo); stroke-width: 1.5px; }
+.kmap-focus .kmap-muni { stroke-width: 1px; }
+.kmap-focus .kmap-prov { stroke-width: 2px; }
+.kmap .kmap-sch circle { fill: var(--a-pinOpen); stroke: var(--a-mapHalo); stroke-width: 2px; }
+.kmap .kmap-sch.def circle { fill: var(--a-pin); }
+.kmap .kmap-sch.closed circle { fill: var(--a-pinOff); }
+.kmap .kmap-sch.sel circle { stroke: var(--a-sel); stroke-width: 4px; }
+.kmap .kmap-sch { cursor: pointer; }
+.kmap .kmap-sch text { fill: var(--a-schNum); font-size: 11px; font-weight: 800; pointer-events: none; }

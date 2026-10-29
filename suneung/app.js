@@ -13,14 +13,15 @@
     lang: $("lang"),
     setup: $("setup"), game: $("game"), name: $("name"), sex: $("sex"), startBtn: $("startBtn"), resumeBtn: $("resumeBtn"), fame: $("fame"),
     sDate: $("sDate"), sDday: $("sDday"), sAttempt: $("sAttempt"), sStatus: $("sStatus"), sAge: $("sAge"),
-    sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"),
+    sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"), sFam: $("sFam"), sFamSub: $("sFamSub"), sFamCard: $("sFamCard"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
-    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"),
+    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"), traits: $("traits"), mainMap: $("mainMap"), mapHome: $("mapHome"), mapHint: $("mapHint"),
     chart: $("chart"), legend: $("legend"), log: $("log"), history: $("history"), newLifeBtn: $("newLifeBtn"),
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
     slots: $("slots"), turn: $("turn"), turnCap: $("turnCap"), turnDate: $("turnDate"), turnAge: $("turnAge"), confetti: $("confetti"),
+    cut: $("cut"), cutFrame: $("cutFrame"), cutCap: $("cutCap"), cutProg: $("cutProg"), cutSkip: $("cutSkip"), cutHint: $("cutHint"), cutToggle: $("cutToggle"),
   };
   const Art = window.SuneungArt;
   // Animations are decoration: with reduced motion the page skips the turn page, confetti and count-ups
@@ -28,6 +29,12 @@
   const calm = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   // Emoji icons for activities, study methods and condition. Inquiry icons follow the track.
+  // Early childhood relabels some activities (naps, the playground, playdates, cartoons).
+  const EARLY_ICON = { books: "📚", blocks: "🧩", songs: "🎵", worksheet: "📝", rest: "😴", exercise: "🛝", friends: "🧸", games: "📺" };
+  const TRAIT_ICON = {
+    sturdy: "💪", calm: "😌", curious: "👀", sleeper: "🌙", steady: "🛡️", smiley: "😊",
+    pencil: "✏️", book: "📕", mouse: "🖱️", stethoscope: "🩺", mic: "🎤", gavel: "⚖️", ball: "⚽", thread: "🧵", money: "💴", brush: "🖌️",
+  };
   const ACT_ICON = { kor: "📖", math: "📐", eng: "🔤", hist: "🏯", reading: "📚", arts: "🎹", mock: "⏱️", rest: "😴", exercise: "🏃", friends: "🧑‍🤝‍🧑", games: "🎮", job: "🏪" };
   const ACT_COLOR = { reading: "--a-c5", arts: "--a-c4", mock: "--a-c1", rest: "--a-c3", exercise: "--pos", friends: "--a-c2", games: "--a-c4", job: "--a-gold" };
   const METHOD_ICON = { self: "✏️", online: "💻", hagwon: "🏫", tutor: "🧑‍🏫" };
@@ -35,11 +42,23 @@
     const tr = game && game.track;
     if (id === "inq1") return tr === "sci" ? "🔬" : "🌏";
     if (id === "inq2") return tr === "soc" ? "🏛️" : tr === "sci" ? "🧪" : "🔬";
+    if (game && game.isEarly() && EARLY_ICON[id]) return EARLY_ICON[id];
     return ACT_ICON[id] || "•";
   }
-  function actColor(a) { return a.kind === "study" ? subColor[a.subject] : ACT_COLOR[a.id] || "--accent"; }
+  function actColor(a) { return a.kind === "study" ? subColor[a.subject] : ACT_COLOR[a.id] || PLAY_COLOR[a.id] || "--accent"; }
+  const PLAY_COLOR = { books: "--s-kor", blocks: "--s-math", songs: "--s-eng", worksheet: "--a-c1" };
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // Aptitude multiplies every study gain in a subject, so the time it takes to max it out is
+  // 1 / aptitude of the average. Stars everywhere a subject shows, and the saving in words.
+  function aptStars(apt) { return apt >= 1.45 ? "★★★★" : apt >= 1.25 ? "★★★" : apt >= 1.05 ? "★★" : apt >= 0.88 ? "★" : "·"; }
+  function aptTime(apt) {
+    const pct = Math.round((1 - 1 / apt) * 100);
+    return Math.abs(pct) < 5 ? T("apt.even") : pct > 0 ? T("apt.less", { p: pct }) : T("apt.more", { p: -pct });
+  }
+  function aptBadge(apt) {
+    return '<span class="apt' + (apt >= 1.25 ? " hi" : apt < 0.88 ? " lo" : "") + '" title="' + esc(T("ability.tip", { a: apt }) + " · " + aptTime(apt)) + '">' + aptStars(apt) + "</span>";
+  }
   const gradeChip = (g) => '<span class="gr gr' + g + '">' + g + "</span>";
   const subColor = { kor: "--s-kor", math: "--s-math", eng: "--s-eng", hist: "--s-hist", inq1: "--s-inq1", inq2: "--s-inq2" };
 
@@ -64,7 +83,7 @@
 
   // ---------- language ----------
   // Subject names follow the game being shown: before the track choice there is none.
-  function ctx() { return game ? { inq: game.inq, track: game.track } : { inq: null, track: null }; }
+  function ctx() { return game ? { inq: game.inq, track: game.track, parents: game.parents || "both" } : { inq: null, track: null, parents: "both" }; }
   let lang = store.get(LANG_KEY);
   if (lang !== "en" && lang !== "ko") lang = /^ko\b/i.test(navigator.language || "") ? "ko" : "en";
   let L = window.SuneungText.make(lang, ctx);
@@ -76,6 +95,8 @@
     for (const el of document.querySelectorAll("[data-t]")) el.textContent = T(el.dataset.t);
     els.name.placeholder = T("setup.namePh." + sex);
     for (const b of els.lang.querySelectorAll("button")) b.classList.toggle("on", b.dataset.v === lang);
+    els.cutToggle.textContent = T(cutsOn ? "cut.toggle.on" : "cut.toggle.off");
+    els.cutToggle.setAttribute("aria-pressed", cutsOn ? "true" : "false");
   }
   els.lang.addEventListener("click", (e) => {
     const b = e.target.closest("button[data-v]");
@@ -128,7 +149,9 @@
     renderSetup();
   });
   els.startBtn.addEventListener("click", () => {
-    game = new Game({ name: els.name.value.trim() || T("setup.namePh." + sex), sex, startYear: new Date().getFullYear() });
+    // Born this year, so elementary school starts six years on.
+    game = new Game({ name: els.name.value.trim() || T("setup.namePh." + sex), sex, startYear: new Date().getFullYear() + 6 });
+    game.seenCuts = [];
     plan = {};
     save();
     showGame();
@@ -186,6 +209,7 @@
     // Once the month's screens are cleared, start the next plan from last month's.
     if (!game.queue.length && !game.ending && !planTotal() && !outcome) plan = defaultPlan();
     renderScene();
+    renderMap();
     renderStats();
     renderBars();
     renderPlan();
@@ -201,12 +225,16 @@
     const g = game;
     return Object.assign({
       // Out of school you study at a study café in a hoodie, up to the Suneung.
-      stage: g.ending ? "uni" : g.dropout != null && (g.inSchool() || g.status === "hs3") ? "dropout" : g.status,
+      stage: g.ending ? "uni" : g.isEarly() ? (g.age <= 2 ? "baby" : "kinder") : g.dropout != null && (g.inSchool() || g.status === "hs3") ? "dropout" : g.status,
+      // A child kept at home from 3 stays in the nursery scene.
+      home: g.isEarly() && g.atKinder() && g.schoolInfo().id === "homeCare",
       season: Art.seasonOf(g.month),
       look: Art.lookFor(g.seed, g.sex),
       mood: Art.moodOf(g),
       family: g.family,
       view: g.regionInfo().view || "city",
+      parents: g.parents || "both",
+      jobs: presentJobs(g),
     }, extra || {});
   }
   let sceneKey = "";
@@ -237,24 +265,65 @@
     els.moodName.parentElement.dataset.mood = c.mood;
   }
 
+  // The family's wealth class right now: its income fifth as a five-step meter, and how far it has moved
+  // since birth (family-fortune events move it). The card flashes when the class changes.
+  let shownFam = null;
+  // The jobs of the parents you live with ({ mom, dad }, null for one who isn't there), or null.
+  function presentJobs(g) {
+    if (!g.jobs) return null;
+    const here = g.workingParents(true);
+    return { mom: here.indexOf("mom") >= 0 ? g.jobs.mom : null, dad: here.indexOf("dad") >= 0 ? g.jobs.dad : null };
+  }
+  function renderFamily(g) {
+    const n = S.FAMILY_IDS.indexOf(g.family) + 1;
+    const born = (g.log.find((l) => l.key === "log.born") || { p: {} }).p.fam || g.family;
+    const diff = n - (S.FAMILY_IDS.indexOf(born) + 1);
+    let meter = "";
+    for (let i = 1; i <= 5; i++) meter += '<i class="' + (i <= n ? "on" : "") + '"></i>';
+    // A child in care has no household class: the card names the home and what it pays instead.
+    if (g.parents === "care") {
+      els.sFam.textContent = L.parents("care");
+      els.sFamSub.textContent = g.flags.careLeft != null ? T("stat.careOut", { a: g.grossBudget() }) : T("stat.careSub", { a: g.grossBudget() });
+    } else {
+      els.sFam.innerHTML = esc(L.family(g.family)) + ' <span class="fam-meter" aria-hidden="true">' + meter + "</span>";
+      const jobs = presentJobs(g);
+      els.sFamSub.textContent = (diff ? T("stat.familyMoved", { up: diff > 0, from: born, fam: g.family }) : T("stat.familySub", { fam: g.family })) + " · " + T("stat.parents", { par: g.parents || "both" }) +
+        (jobs && (jobs.mom || jobs.dad) ? " · " + T("stat.jobs", jobs) : "");
+    }
+    els.sFamCard.classList.toggle("fam-up", diff > 0);
+    els.sFamCard.classList.toggle("fam-down", diff < 0);
+    const key = g.seed + ":" + g.family;
+    if (shownFam && shownFam.split(":")[0] === String(g.seed) && shownFam !== key && !calm()) {
+      els.sFamCard.classList.remove("flash");
+      void els.sFamCard.offsetWidth;
+      els.sFamCard.classList.add("flash");
+    }
+    shownFam = key;
+  }
   function renderStats() {
     const g = game;
     els.sDate.textContent = L.date(g.year, g.month);
     const d = g.daysToExam();
     const school = g.inSchool();
-    els.sDday.textContent = g.ending ? T("stat.over") : school ? T("stat.years", { n: 12 - g.grade }) :
+    els.sDday.textContent = g.ending ? T("stat.over") : school ? T("stat.years", { n: g.isEarly() ? 17 - g.age : 12 - g.grade }) :
       g.month <= 11 ? (d > 0 ? T("stat.dday", { n: d }) : T("stat.examMonth")) : T("stat.results");
-    els.sAttempt.textContent = school ? L.schoolGrade(g.grade) : L.att(g.attempt);
-    els.sStatus.textContent = g.dropout != null && (school || g.status === "hs3") ? T("st.dropout", { ged: g.flags.ged != null }) : g.inClass() ? L.school(g.schoolInfo().id) : L.status(g.status);
+    els.sAttempt.textContent = g.isEarly() ? T("early.stage", { a: g.age }) : school ? L.schoolGrade(g.grade) : L.att(g.attempt);
+    els.sStatus.textContent = g.dropout != null && (school || g.status === "hs3") ? T("st.dropout", { ged: g.flags.ged != null }) : g.inClass() || g.atKinder() ? L.school(g.schoolInfo().id) : L.status(g.status);
+    // Name the real school this one stands for; its type shows on hover.
+    const rs = g.dropout == null || !school ? g.realSchool() : null;
+    if (rs) els.sStatus.textContent = L.realSchool(rs.name);
+    els.sStatus.title = rs ? L.school(g.schoolInfo().id) : "";
     els.sAge.textContent = L.age(g.age);
     els.sName.textContent = g.name + " · " + L.regionShort(g.regionInfo().id) + (g.track ? " · " + L.track(g.track) : "");
     els.sMoney.textContent = L.wonShort(g.money);
     els.sAllowance.textContent = T("stat.allowance", { a: L.wonShort(g.allowance()) });
+    renderFamily(g);
   }
 
   // from: where the fill starts, so a fresh turn can grow the bar from last turn's value.
   // shown: text in place of the number (e.g. "100+"); over: ability past the top of the scale.
-  function bar(name, value, color, delta, title, icon, from, shown, over) {
+  // tail: extra HTML in a last column (the aptitude stars on ability bars).
+  function bar(name, value, color, delta, title, icon, from, shown, over, tail) {
     const v = Math.max(0, Math.min(100, value));
     const start = from == null ? v : Math.max(0, Math.min(100, from));
     let d = "", pop = "";
@@ -264,7 +333,7 @@
       if (from != null) pop = '<span class="gain ' + (delta > 0 ? "up" : "down") + '" aria-hidden="true">' + txt + "</span>";
     }
     return '<div class="bar"' + (title ? ' title="' + esc(title) + '"' : "") + '><span class="name">' + (icon ? '<span class="bi" aria-hidden="true">' + icon + "</span>" : "") + esc(name) +
-      '</span><span class="track"><span class="fill" data-w="' + v + '" style="width:' + start + "%;background:" + color + '"></span></span><span class="val' + (over ? " over" : "") + '">' + (shown != null ? shown : Math.round(value)) + d + pop + "</span></div>";
+      '</span><span class="track"><span class="fill" data-w="' + v + '" style="width:' + start + "%;background:" + color + '"></span></span><span class="val' + (over ? " over" : "") + '">' + (shown != null ? shown : Math.round(value)) + d + pop + "</span>" + (tail || "") + "</div>";
   }
   // Ability gains animate once, on the render right after a turn: bars grow and the gain floats up.
   let shownTrace = 0;
@@ -282,9 +351,9 @@
       // The bar tops out at 100 (θ = 3), but ability keeps counting past it, and it still matters for
       // SNU and 의대, so say so instead of looking stuck.
       const over = 50 + g.skills[s] * 16.67 >= 100.5;
-      const tip = T("ability.tip", { a: g.aptitude[s] }) + (over ? " · " + T("ability.over") : "");
-      return bar(L.sub(s), S.skillScore(g.skills[s]), "var(" + subColor[s] + ")", delta, tip, actIcon(s), from, over ? "100+" : null, over);
-    }).join("");
+      const tip = T("ability.tip", { a: g.aptitude[s] }) + " · " + aptTime(g.aptitude[s]) + (over ? " · " + T("ability.over") : "");
+      return bar(L.sub(s), S.skillScore(g.skills[s]), "var(" + subColor[s] + ")", delta, tip, actIcon(s), from, over ? "100+" : null, over, aptBadge(g.aptitude[s]));
+    }).join("") + '<p class="apt-note">' + esc(T(g.isEarly() ? "ability.earlyNote" : "ability.aptNote")) + "</p>";
     const lvl = (v, goodHigh) => {
       const x = goodHigh ? v : 100 - v;
       return x >= 60 ? "var(--pos)" : x >= 35 ? "var(--warn)" : "var(--neg)";
@@ -295,6 +364,8 @@
       bar(T("cond.motivation"), g.motivation, lvl(g.motivation, true), 0, T("cond.motivation.tip"), "🔥") +
       bar(T("cond.practice"), g.practice * 100, "var(--accent)", 0, T("cond.practice.tip"), "⏱️") +
       bullyNote(g) + dropoutNote(g);
+    // Traits from the newborn and 돌잡이 reveals, with what each does.
+    els.traits.innerHTML = (g.traits || []).map((id) => '<span class="trait-chip" title="' + esc(L.traitFx(id)) + '"><b><span aria-hidden="true">' + (TRAIT_ICON[id] || "✨") + " </span>" + esc(L.trait(id)) + "</b><small>" + esc(L.traitFx(id)) + "</small></span>").join("");
     if (animate) {
       // Two frames: the first paints the old width, the second lets the CSS transition run.
       requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -323,11 +394,13 @@
     els.planTitle.parentElement.parentElement.classList.toggle("ended", done);
     const mock = MOCKS[g.month] && !(g.month === 3 && g.status !== "hs3");
     els.planTitle.textContent = done ? T("plan.done") :
-      T("plan.title", { m: g.month, mock, exam: g.month === 11, st: g.status, g: g.grade, track: g.grade === 10 && g.month === 12 });
+      T("plan.title", { m: g.month, mock, exam: g.month === 11, st: g.status, g: g.grade, a: g.age, track: g.grade === 10 && g.month === 12 });
     els.blocksLeft.textContent = done ? "" : T("plan.left", { l: n - used, n });
     els.blocksLeft.classList.toggle("done", used === n);
     els.blocksLeft.classList.toggle("hidden", done);
 
+    // Small children don't pick study methods.
+    els.method.parentElement.classList.toggle("hidden", g.isEarly());
     const fixed = g.methodFixed();
     // After a move to the countryside there may be no tutor to keep: fall back to online lectures.
     if (!fixed && !g.methodAvailable(method)) method = "online";
@@ -344,22 +417,23 @@
 
     // Activities are cards: tap the card (or +) to give it a block, − to take one back.
     const acts = g.activities();
-    const name = (a) => (a.kind === "study" ? L.sub(a.subject) : L.actLong(a.id));
+    const early = g.isEarly();
+    const name = (a) => (a.kind === "study" ? L.sub(a.subject) : early && L.actEarlyLong(a.id) ? L.actEarlyLong(a.id) : L.actLong(a.id));
     const card = (a) => {
       const k = plan[a.id] || 0;
       const study = a.kind === "study";
       const nm = name(a);
-      const hint = study ? T("plan.studyHint", { v: 50 + g.skills[a.subject] * 16.67 >= 100.5 ? "100+" : S.skillScore(g.skills[a.subject]), s: a.subject }) : L.actHint(a.id);
+      const hint = study ? T("plan.studyHint", { v: 50 + g.skills[a.subject] * 16.67 >= 100.5 ? "100+" : S.skillScore(g.skills[a.subject]), s: a.subject }) + " · " + aptTime(g.aptitude[a.subject]) : early && L.actEarlyHint(a.id) ? L.actEarlyHint(a.id) : L.actHint(a.id);
       const pips = k ? '<span class="pips" aria-hidden="true">' + "●".repeat(Math.min(k, 8)) + "</span>" : "";
       return '<div class="act' + (k ? " has" : "") + (used < n && !done ? " open" : "") + '" data-card="' + a.id + '" style="--c:var(' + actColor(a) + ')">' +
         '<span class="ic" aria-hidden="true">' + actIcon(a.id) + "</span>" +
-        '<div class="lbl">' + esc(nm) + "<small>" + esc(hint) + "</small>" + pips + '</div><div class="stepper">' +
+        '<div class="lbl">' + esc(nm) + (study ? " " + aptBadge(g.aptitude[a.subject]) : "") + "<small>" + esc(hint) + "</small>" + pips + '</div><div class="stepper">' +
         '<button type="button" data-a="' + a.id + '" data-d="-1" aria-label="' + esc(T("plan.less", { a: nm })) + '"' + (k && !done ? "" : " disabled") + ">−</button>" +
         '<span class="n">' + k + "</span>" +
         '<button type="button" data-a="' + a.id + '" data-d="1" aria-label="' + esc(T("plan.more", { a: nm })) + '"' + (used < n && !done ? "" : " disabled") + ">+</button></div></div>";
     };
-    const study = acts.filter((a) => a.kind === "study"), life = acts.filter((a) => a.kind !== "study");
-    els.activities.innerHTML = '<h3 class="grp">' + esc(T("plan.study")) + "</h3>" + study.map(card).join("") +
+    const study = acts.filter((a) => a.kind === "study" || a.kind === "play"), life = acts.filter((a) => a.kind !== "study" && a.kind !== "play");
+    els.activities.innerHTML = '<h3 class="grp">' + esc(T(early ? "plan.play" : "plan.study")) + "</h3>" + study.map(card).join("") +
       '<h3 class="grp">' + esc(T("plan.life")) + "</h3>" + life.map(card).join("");
 
     // The turn's time as a row of slots, filled in activity order.
@@ -386,7 +460,7 @@
     els.clearBtn.disabled = done || !used;
     els.moveBtn.classList.toggle("hidden", done);
     // School lessons add to every subject on their own; say so, and say when they're gone.
-    els.lessonNote.textContent = done ? "" : g.inClass() ? T("plan.lessons") : g.dropout != null && (g.inSchool() || g.status === "hs3") ? T("plan.noLessons") : "";
+    els.lessonNote.textContent = done ? "" : g.isEarly() ? T("plan.early") + (g.atKinder() && g.schoolInfo().id !== "homeCare" ? " " + T("plan.kinder") : "") : g.inClass() ? T("plan.lessons") : g.dropout != null && (g.inSchool() || g.status === "hs3") ? T("plan.noLessons") : "";
     els.lessonNote.classList.toggle("hidden", !els.lessonNote.textContent);
     // Leaving school is offered from grade 7 until you do it.
     const qb = g.quitBlock();
@@ -428,6 +502,7 @@
   els.clearBtn.addEventListener("click", () => { plan = {}; renderPlan(); });
   els.nextBtn.addEventListener("click", () => {
     const was = game.status;
+    lastMove = null; // the route of a move stays on the map until the next turn
     try {
       game.advance(plan, method);
     } catch (err) {
@@ -466,10 +541,55 @@
   }
   let holdTimer = 0;
   // Moving: every region with what it changes, why you can't go there, and the quotas it would bring.
-  els.moveBtn.addEventListener("click", () => {
+  // The map's place names, translated (the art draws none of its own).
+  function mapLabels() {
+    const o = { seoul: T("map.seoul") };
+    for (const r of S.REGIONS) o[r.id] = L.regionShort(r.id);
+    return o;
+  }
+  // Moving: a map of Korea to pick a place on, a card with what moving there would change, and the same
+  // places as a list for anyone who'd rather not tap dots.
+  // The map in the main frame: home, where you could move right now, and the route of the last move
+  // until the next turn. Tapping a place opens the move dialog on it.
+  let mapKey = "", lastMove = null;
+  // The school you go to now, as a star on the national map where it really is.
+  function schoolStar(g) {
+    const r = g.realSchool();
+    return r ? [{ lat: r.lat, lon: r.lon }] : [];
+  }
+  function moveStates(g) {
+    const o = {};
+    for (const r of S.REGIONS) o[r.id] = r.id === g.region ? "home" : g.moveBlock(r.id) ? "closed" : "open";
+    return o;
+  }
+  function renderMap() {
+    const g = game;
+    const states = moveStates(g);
+    const canMove = Object.keys(states).some((id) => states[id] === "open");
+    els.mapHome.textContent = "📍 " + L.region(g.region);
+    els.mapHint.textContent = g.ending ? "" : canMove ? T("map.tapHint") : T("map.noMove");
+    // Redrawing restarts the pin's pulse, so only redraw when something on it changed.
+    const route = lastMove && lastMove.to === g.region ? lastMove : null;
+    const rs = g.realSchool();
+    const key = JSON.stringify([states, route, lang, rs && rs.name]);
+    if (key === mapKey) return;
+    mapKey = key;
+    els.mainMap.innerHTML = Art.koreaMap({ states, sel: route ? route.to : null, from: route ? route.from : null, home: g.region, schools: schoolStar(g), labels: mapLabels(), aria: T("map.aria", { reg: g.region }) });
+  }
+  els.mainMap.addEventListener("click", (e) => {
+    const pt = e.target.closest("[data-place]");
+    openMove(pt ? pt.dataset.place : null);
+  });
+  els.mainMap.addEventListener("keydown", (e) => {
+    const pt = e.target.closest("[data-place]");
+    if (pt && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openMove(pt.dataset.place); }
+  });
+  els.moveBtn.addEventListener("click", () => openMove(null));
+  function openMove(preselect) {
     const g = game;
     if (!g || g.ending || g.queue.length) return;
     const pick = { id: null };
+    const info = {};
     const rows = S.REGIONS.map((r) => {
       const k = S.REGION_KINDS[r.kind];
       const here = r.id === g.region;
@@ -481,6 +601,7 @@
       // A short status pill on the right; the reason goes under the name so phones keep the name readable.
       const note = here ? T("move.here") : why ? T("move." + why) : "";
       const tag = here ? '<span class="chance ch-safe">' + esc(T("move.hereTag")) + "</span>" : why ? '<span class="chance ch-long">' + esc(T("move.noTag")) + "</span>" : "<span></span>";
+      info[r.id] = { here, why, kind: L.regionKind(r.kind) + " · " + fx, quota, note };
       return '<label class="uni region' + (here || why ? " off" : "") + '"><input type="radio" name="moveTo" value="' + r.id + '"' + (here || why ? " disabled" : "") + ">" +
         '<span class="nm">' + esc(L.region(r.id)) + "<small>" + esc(L.regionKind(r.kind) + " · " + fx) + "</small>" + (quota ? "<small>" + esc(quota) + "</small>" : "") +
         (note ? "<small" + (why ? ' class="why"' : "") + ">" + esc(note) + "</small>" : "") + "</span>" + tag + "</label>";
@@ -488,14 +609,35 @@
     // Leaving a private day school behind is worth a warning.
     const sch = g.inClass() ? g.schoolInfo() : null;
     const warn = sch && !sch.board && !/^pub/.test(sch.id) ? '<p class="muted">' + esc(T("move.school")) + "</p>" : "";
-    openModal(T("move.title"), "<p>" + esc(T("move.text")) + "</p>" + warn + '<div class="unis">' + rows + "</div>", [
+    const states = {};
+    for (const r of S.REGIONS) states[r.id] = info[r.id].here ? "home" : info[r.id].why ? "closed" : "open";
+    const legend = '<div class="map-legend"><span><i class="lh"></i>' + esc(T("map.home")) + '</span><span><i class="lo"></i>' + esc(T("map.open")) + '</span><span><i class="lc"></i>' + esc(T("map.closed")) + "</span></div>";
+    openModal(T("move.title"), "<p>" + esc(T("move.text")) + "</p>" + warn + legend + '<div class="map-wrap" id="moveMap"></div><div class="map-card" id="moveCard"></div>' +
+      '<details class="map-list"><summary>' + esc(T("move.list")) + '</summary><div class="unis">' + rows + "</div></details>", [
       { label: T("move.stay"), run: () => render() },
-      { label: T("move.go"), primary: true, run: () => { if (!pick.id) return; g.move(pick.id); save(); render(); } },
+      { label: T("move.go"), primary: true, run: () => { if (!pick.id) return; lastMove = { from: g.region, to: pick.id }; g.move(pick.id); save(); render(); } },
     ]);
     const go = els.modalButtons.querySelector("button.primary");
-    go.disabled = true;
-    for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.addEventListener("change", () => { pick.id = inp.value; go.disabled = false; });
-  });
+    const mapBox = $("moveMap"), card = $("moveCard");
+    // Any place can be looked at; only an open one can be moved to.
+    const select = (id, refocus) => {
+      const x = info[id];
+      pick.id = x && !x.here && !x.why ? id : null;
+      go.disabled = !pick.id;
+      mapBox.innerHTML = Art.koreaMap({ states, sel: id, from: pick.id ? g.region : null, home: g.region, schools: schoolStar(g), labels: mapLabels(), aria: T("map.aria", { reg: g.region }) });
+      card.innerHTML = id ? "<b>" + esc(L.region(id)) + "</b><small>" + esc(x.kind) + "</small>" + (x.quota ? "<small>" + esc(x.quota) + "</small>" : "") +
+        (x.note ? "<small" + (x.why ? ' class="why"' : "") + ">" + esc(x.note) + "</small>" : "") : esc(T("move.pick"));
+      for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.checked = inp.value === pick.id;
+      if (refocus) { const pt = mapBox.querySelector('[data-place="' + id + '"]'); if (pt) pt.focus({ preventScroll: true }); }
+    };
+    select(preselect && info[preselect] ? preselect : null);
+    mapBox.addEventListener("click", (e) => { const pt = e.target.closest("[data-place]"); if (pt) select(pt.dataset.place, true); });
+    mapBox.addEventListener("keydown", (e) => {
+      const pt = e.target.closest("[data-place]");
+      if (pt && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); select(pt.dataset.place, true); }
+    });
+    for (const inp of els.modalBody.querySelectorAll("input[name=moveTo]")) inp.addEventListener("change", () => select(inp.value));
+  }
 
   // Leaving school: what it gives and what it takes, then a confirmation.
   els.quitBtn.addEventListener("click", () => {
@@ -525,7 +667,7 @@
   // with your age, and an icon for each kind of entry.
   const LOG_ICON = {
     "log.born": "👶", "log.stage": "🏫", "log.grade": "🎒", "log.teacher": "🍎", "log.report": "📊", "log.sebae": "🧧", "log.track": "🔀",
-    "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩", "log.school": "🏫", "log.schoolMove": "🏫",
+    "log.birthday": "🎂", "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩", "log.school": "🏫", "log.schoolMove": "🏫",
     "log.month": "🗓️", "log.mock": "📝", "log.suneung": "🎯", "log.apply": "📮", "log.enroll": "🎓", "log.quit": "🚪", "log.halfpay": "💸", "log.newyear": "🌱",
   };
   function logIcon(l) {
@@ -670,6 +812,15 @@
 
   function renderModal() {
     const g = game;
+    // A milestone plays its cutscene first; the screen it belongs to opens when the film ends.
+    if (cut) return;
+    const c = cutsOn ? pendingCut() : null;
+    if (c) {
+      g.seenCuts.push(c.id);
+      save();
+      playCut(c);
+      return;
+    }
     if (outcome) {
       // The outcome keeps the event's picture, redrawn with how things turned out.
       const art = outcome.id ? Art.eventArt(artCtx({ id: outcome.id, variant: outcome.variant })) : "";
@@ -694,22 +845,32 @@
     closeModal();
   }
 
+  // At birth, ability is near 0 everywhere (it's on the Suneung scale), so the talents a baby shows
+  // are its aptitudes: how fast each subject will come. The bar runs from the slowest aptitude a child
+  // can be dealt (×0.6) to the fastest (×1.7), and the number is the multiplier itself.
   function talentBars(g) {
     return '<div class="talent">' + SUBJECTS.map((s) => {
-      const v = S.skillScore(g.skills[s]);
       const apt = g.aptitude[s];
-      const stars = apt >= 1.25 ? "★★★" : apt >= 1.05 ? "★★" : apt >= 0.88 ? "★" : "·";
-      return '<div class="bar"><span class="name"><span class="bi" aria-hidden="true">' + actIcon(s) + "</span>" + esc(L.sub(s)) + '</span><span class="track"><span class="fill" style="width:' + v +
-        "%;background:var(" + subColor[s] + ')"></span></span><span class="val">' + v + '</span><span class="apt" title="' + esc(T("setup.apt")) + '">' + stars + "</span></div>";
+      const w = Math.round(Math.max(4, Math.min(100, ((apt - 0.6) / 1.1) * 100)));
+      return '<div class="bar"><span class="name"><span class="bi" aria-hidden="true">' + actIcon(s) + "</span>" + esc(L.sub(s)) + '</span><span class="track"><span class="fill" style="width:' + w +
+        "%;background:var(" + subColor[s] + ')"></span></span><span class="val" title="' + esc(aptTime(apt)) + '">×' + apt.toFixed(2) + "</span>" + aptBadge(apt) + "</div>";
     }).join("") + "</div>";
+  }
+  function bornStates(g) {
+    const o = {};
+    for (const r of S.REGIONS) o[r.id] = r.id === g.region ? "home" : "closed";
+    return o;
   }
   function showBirth() {
     const g = game;
     openModal(T("birth.title"),
-      "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region })) + "</p>" +
+      "<p>" + esc(T("birth.text", { name: g.name, fam: g.family, inc: FAMILIES[g.family].income, a: g.allowance(), sex: g.sex, reg: g.region }) +
+        ((g.parents || "both") !== "both" ? " " + T("birth.parents", { par: g.parents }) : "") + (g.jobs ? " " + T("birth.jobs", g.jobs) : "")) + "</p>" +
+      // Where on the peninsula the family starts.
+      "<h3>" + esc(T("map.born")) + '</h3><div class="map-wrap">' + Art.koreaMap({ states: bornStates(g), static: true, home: g.region, labels: mapLabels(), aria: T("map.aria", { reg: g.region }) }) + "</div>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",
       [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }],
-      Art.screenArt("birth", artCtx({ stage: "elem" })));
+      Art.screenArt("birth", artCtx({ stage: "baby" })));
   }
   // Picking a school: every option for the stage with what it does, what it costs, the chance of
   // getting in, and why it's closed. The default public school is always open.
@@ -718,24 +879,41 @@
     const opts = g.schoolOptions();
     const pick = { id: opts.find((o) => o.def).id };
     const desc = T("school.desc");
+    // Options with a real school get a number, shared by the row and its marker on the area map.
+    let n = 0;
+    for (const o of opts) if (o.real) o.n = ++n;
     const rows = opts.map((o) => {
       const why = o.blocked ? T("school.no." + (o.blocked === "admit" && o.id === "artsHigh" ? "arts" : o.blocked)) : "";
       const cls = o.def ? "ch-safe" : o.blocked ? "ch-long" : o.p >= 0.55 ? "ch-match" : o.p >= 0.25 ? "ch-reach" : "ch-long";
       const tag = '<span class="chance ' + cls + '" title="' + esc(T("school.chance", { p: o.p, def: o.def })) + '">' + esc(o.def ? T("school.tag.def") : o.blocked ? T("school.tag.no") : Math.round(o.p * 100) + "%") + "</span>";
       const facts = [T("school.fee", { fee: o.fee }), o.track ? T("school.track", { t: o.track }) : ""].filter(Boolean).join(" · ");
+      // A special school is the nearest one in the country, which can be a long way from home.
+      const where = o.real ? (o.real.city && o.real.km >= 15 ? T("school.realFar", { city: o.real.city, km: o.real.km }) : T("school.realHere")) : "";
+      const real = o.real ? '<small class="real"><b class="num">' + o.n + "</b> " + esc(L.realSchool(o.real.name)) + " · " + esc(where) + "</small>" : "";
       return '<label class="uni region' + (o.blocked ? " off" : "") + '"><input type="radio" name="schoolPick" value="' + o.id + '"' + (o.blocked ? " disabled" : "") + (o.def ? " checked" : "") + ">" +
-        '<span class="nm">' + esc(L.school(o.id)) + "<small>" + esc(desc[o.id]) + "</small><small>" + esc(facts) + "</small>" +
+        '<span class="nm">' + esc(L.school(o.id)) + real + "<small>" + esc(desc[o.id]) + "</small><small>" + esc(facts) + "</small>" +
         (why ? '<small class="why">' + esc(why) + "</small>" : "") + "</span>" + tag + "</label>";
     }).join("");
     const t = T("school.title"), x = T("school.text");
-    openModal(t[top.stage], "<p>" + esc(x[top.stage]) + '</p><div class="unis">' + rows + "</div>", [
+    const drawMap = () => Art.koreaMap({ focus: g.region, home: g.region, aria: T("school.mapTitle"),
+      schools: opts.filter((o) => o.real).map((o) => ({ lat: o.real.lat, lon: o.real.lon, n: o.n, id: o.blocked ? null : o.id, cls: (o.blocked ? "closed" : o.def ? "def" : "") + (o.id === pick.id ? " sel" : "") })) });
+    const map = n && Art.areaBox && Art.areaBox(g.region) ? '<figure class="school-map"><div id="schoolMap">' + drawMap() + "</div><figcaption>" + esc(T("school.mapTitle")) + "</figcaption></figure>" : "";
+    openModal(t[top.stage], "<p>" + esc(x[top.stage]) + "</p>" + map + '<div class="unis">' + rows + "</div>", [
       { label: T("school.go"), primary: true, run: () => {
         const msg = game.pickSchool(pick.id);
         outcome = { title: t[top.stage], msg, id: "school", variant: msg.key.split(".").pop() };
         after();
       } },
     ], Art.eventArt(artCtx({ id: "school", stage: top.stage })));
-    for (const inp of els.modalBody.querySelectorAll("input[name=schoolPick]")) inp.addEventListener("change", () => { pick.id = inp.value; });
+    const box = $("schoolMap");
+    const choose = (id) => {
+      pick.id = id;
+      for (const inp of els.modalBody.querySelectorAll("input[name=schoolPick]")) inp.checked = inp.value === id;
+      if (box) box.innerHTML = drawMap();
+    };
+    for (const inp of els.modalBody.querySelectorAll("input[name=schoolPick]")) inp.addEventListener("change", () => choose(inp.value));
+    // Tapping an open school's marker picks it, the same as its row.
+    if (box) box.addEventListener("click", (e) => { const m = e.target.closest("[data-pick]"); if (m) choose(m.dataset.pick); });
   }
 
   function showTrack() {
@@ -748,6 +926,8 @@
       '<div class="seg track-seg" id="trackSeg"><button type="button" data-v="soc"><span aria-hidden="true">🌏 </span>' + esc(L.track("soc")) +
       '</button><button type="button" data-v="sci"><span aria-hidden="true">🔬 </span>' + esc(L.track("sci")) + "</button></div>" +
       '<small class="muted" id="trackNote"></small>' +
+      // Humanities closes medical school for good, so say so loudly while it's selected.
+      '<p class="cond-note hidden" id="trackWarn" role="alert"></p>' +
       '<div class="field"><div class="two"><select id="inqA" aria-label="' + esc(L.subShort("inq1")) + '"></select><select id="inqB" aria-label="' + esc(L.subShort("inq2")) + '"></select></div>' +
       "<small>" + esc(T("track.inqNote")) + "</small></div>",
       [{ label: T("track.go"), primary: true, run: () => { game.chooseTrack(track, [$("inqA").value, $("inqB").value]); plan = {}; after(); } }],
@@ -756,6 +936,9 @@
     const fill = () => {
       for (const btn of seg.querySelectorAll("button")) { btn.classList.toggle("on", btn.dataset.v === track); btn.disabled = !!only && btn.dataset.v !== only; }
       $("trackNote").textContent = (only ? T("track.forced", { t: only }) + " " : "") + T("track.note." + track);
+      $("trackWarn").textContent = track === "soc" ? T("track.warnSoc") : "";
+      $("trackWarn").classList.toggle("hidden", track !== "soc");
+      els.modalButtons.querySelector("button.primary").textContent = T(track === "soc" ? "track.goSoc" : "track.go");
       const opts = INQUIRY[track].map((x) => '<option value="' + x.id + '">' + esc(L.inq(x.id)) + "</option>").join("");
       a.innerHTML = opts; b.innerHTML = opts;
       a.value = INQUIRY[track][0].id; b.value = INQUIRY[track][1].id;
@@ -770,6 +953,7 @@
 
   function eventTitle(ev) {
     if (ev.id === "eve" || ev.id === "lunch") return T("ev." + ev.id + ".title");
+    if (game.isEarly()) return T("turn.age", { a: L.age(game.age) }) + " · " + L.date(game.year, game.month);
     return game.inSchool() && !game.dropoutActive() ? L.schoolGrade(game.grade) + " · " + L.date(game.year, game.month) : L.date(game.year, game.month);
   }
   // The suffix of an outcome key ("ev.bully.r1a" → "r1a") picks the art's variant.
@@ -995,9 +1179,123 @@
       Art.screenArt("ending", artCtx({ stage: "uni", label: u ? L.uni(u.id) : "", mood: u ? "happy" : "ok" })));
   }
 
+  // ---------- cutscenes ----------
+  // Short animated films (art.js draws the shots) for life's milestones. Which have played is kept on
+  // the save as game.seenCuts, so a reload never replays one; the engine never reads it. The header
+  // button turns them off, remembered per browser.
+  const CUTS_KEY = "suneung.cuts";
+  let cutsOn = store.get(CUTS_KEY) !== "off";
+  let cut = null; // { name, shots, i, timer } while one plays
+  els.cutToggle.addEventListener("click", () => {
+    cutsOn = !cutsOn;
+    store.set(CUTS_KEY, cutsOn ? "on" : "off");
+    applyStatic();
+  });
+  // The milestone the current screen belongs to, if its film hasn't played: { id, name, ctx, p }.
+  function pendingCut() {
+    const g = game;
+    if (!g || !Array.isArray(g.seenCuts)) return null;
+    const top = g.queue[0];
+    // cap: the caption set, when it differs from the id's first part.
+    const film = (id, name, extra, p, cap) => (g.seenCuts.indexOf(id) < 0 ? { id, name, ctx: artCtx(extra || {}), p: p || {}, cap: cap || id.split("-")[0] } : null);
+    if (top && top.type === "birth") return film("birth", "birth", { stage: "baby" }, { y: g.year, name: g.name, region: L.region(g.region) });
+    if (outcome && outcome.id === "doljabi") {
+      const items = (g.traits || []).filter((t) => S.DOLJABI[t]);
+      return film("dol", "dol", { stage: "baby", items }, { a: L.trait(items[0] || "pencil"), b: items[1] ? L.trait(items[1]) : "", two: items.length > 1 });
+    }
+    if (outcome) return null;
+    if (top && top.type === "exam") {
+      const r = top.result;
+      // A 수능 test site is some other school, numbered on its gate.
+      if (examStep === 0) return film("exam-" + r.year, "exam", { label: T("cut.site", { n: 3 + (Math.abs(g.seed + r.year) % 27) }) }, { y: r.year });
+      const gr = [r.subjects.kor.grade, r.subjects.math.grade, r.subjects.inq1.grade, r.subjects.inq2.grade];
+      const avg = gr.reduce((a, b) => a + b, 0) / 4;
+      return film("results-" + r.year, "results", { grades: gr, react: avg <= 2.5 ? "happy" : avg <= 4.5 ? "ok" : "tired" }, { t: r.total });
+    }
+    if (top && top.type === "offers" && top.offers.length) {
+      const best = top.offers.slice().sort((a, b) => UNIVERSITIES.findIndex((u) => u.id === a) - UNIVERSITIES.findIndex((u) => u.id === b))[0];
+      return film("offers-" + g.year + "-" + g.attempt, "offers", {}, { uni: L.uni(best) });
+    }
+    if (top) return null;
+    if (g.ending) {
+      if (g.endingSeen) return null;
+      const uni = g.ending.uni ? L.uni(g.ending.uni) : "";
+      return film("end", "end", { stage: "uni", label: uni }, { uni, name: g.name, age: L.age(g.ending.age) }, uni ? "end" : "endroad");
+    }
+    // Moving house (by choice or by an event) this turn.
+    if (g.flags.lastMove != null && g.flags.lastMove === g.clock) return film("move-" + g.clock, "move", {}, { region: L.region(g.region) });
+    // The first plan screen of each school stage.
+    const school = g.inClass() ? L.school(g.schoolInfo().id) : "";
+    if (g.status === "elem" && g.grade === 1) return film("elem", "elem", { label: school }, { school });
+    if (g.status === "mid" && g.grade === 7 && g.dropout == null) return film("mid", "school", { label: school }, { school, st: "mid" });
+    if (g.status === "high" && g.grade === 10 && g.dropout == null) return film("high", "school", { label: school }, { school, st: "high" });
+    return null;
+  }
+  function playCut(c) {
+    const shots = Art.cutscene(c.name, c.ctx);
+    if (!shots.length) return;
+    cut = { c, shots, i: -1, timer: 0, capKey: c.cap };
+    els.cutFrame.innerHTML = "";
+    els.cutProg.innerHTML = shots.map(() => "<i><b></b></i>").join("");
+    els.cutSkip.textContent = T("cut.skip");
+    els.cutHint.textContent = T("cut.next");
+    els.cut.setAttribute("aria-label", T("cut.label"));
+    els.cut.classList.remove("hidden");
+    document.body.classList.add("cutting");
+    els.cutSkip.focus({ preventScroll: true });
+    nextShot();
+  }
+  function nextShot() {
+    if (!cut) return;
+    clearTimeout(cut.timer);
+    cut.i++;
+    if (cut.i >= cut.shots.length) return endCut();
+    const shot = cut.shots[cut.i];
+    // The new shot fades in over the last one (a cross-dissolve), which then goes.
+    const layer = document.createElement("div");
+    layer.className = "cut-shot";
+    layer.innerHTML = shot.svg;
+    els.cutFrame.appendChild(layer);
+    while (els.cutFrame.children.length > 2) els.cutFrame.firstChild.remove();
+    const cap = els.cutCap;
+    cap.textContent = T("cut." + cut.capKey + "." + cut.i, cut.c.p);
+    cap.classList.remove("in");
+    void cap.offsetWidth;
+    cap.classList.add("in");
+    els.cutProg.querySelectorAll("i").forEach((el, k) => {
+      el.className = k < cut.i ? "done" : k === cut.i ? "now" : "";
+      el.style.setProperty("--t", shot.t + "s");
+    });
+    // Still frames (reduced motion) stay up a little longer, to be read.
+    cut.timer = setTimeout(nextShot, shot.t * 1000 + (calm() ? 1600 : 250));
+  }
+  function endCut() {
+    if (!cut) return;
+    clearTimeout(cut.timer);
+    cut = null;
+    els.cut.classList.add("hidden");
+    els.cutFrame.innerHTML = "";
+    document.body.classList.remove("cutting");
+    render();
+  }
+  els.cutSkip.addEventListener("click", (e) => { e.stopPropagation(); endCut(); });
+  els.cut.addEventListener("click", () => nextShot());
+  document.addEventListener("keydown", (e) => {
+    if (!cut) return;
+    if (e.key === "Escape") { e.preventDefault(); endCut(); }
+    else if ((e.key === "Enter" || e.key === " ") && e.target !== els.cutSkip) { e.preventDefault(); nextShot(); }
+  });
+
   // ---------- boot ----------
   applyStatic();
   game = loadSave();
+  // Saves from before cutscenes start with none seen, except the one the save is sitting on, so loading
+  // an old game doesn't open with a film.
+  if (game && !Array.isArray(game.seenCuts)) {
+    game.seenCuts = [];
+    const c = pendingCut();
+    if (c) game.seenCuts.push(c.id);
+  }
   // A finished life reopens on its ending (or the look-back view), not the new-life screen; "Start a
   // new life" is right there on the page.
   if (game) showGame();

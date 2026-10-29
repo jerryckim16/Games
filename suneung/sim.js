@@ -37,7 +37,7 @@ function calibration() {
       "  ", f(r0), "  ", f(r2), "  ", f(r3)
     );
   }
-  console.log("Real targets: 국어 1등급 cut 84–92, std max 135–150 · 수학 cut 84–88, std max 135–148 · 영어 1등급 4–10% · 한국사 1등급 15–35% · 탐구 cut 44–50, std max 63–77\n");
+  console.log("Real targets: 국어 1등급 cut 84–92, std max 135–150 · 수학 cut 84–88, std max 135–148 · 영어 1등급 4.7–6.2% (2024–25) · 한국사 1등급 15–35% · 탐구 cut 44–50, std max 63–77\n");
   topEnd();
 }
 
@@ -78,11 +78,13 @@ function topEnd() {
 
 // ---------- 2. strategy bots ----------
 // Each bot returns a plan for the turn from the activities on offer. Events always get option 0.
+// In early childhood (ages 0–5) each bot plays its own way: a balanced mix, cartoons and playdates,
+// learning through play only, or play with a break when stress runs high.
 const BOTS = {
-  balanced: (g) => spread(g, ["kor", "math", "eng", "friends", "inq1", "inq2", "reading", "hist", "math", "exercise"]),
-  slacker: (g) => spread(g, ["games", "friends", "math", "kor"]),
-  grinder: (g) => spread(g, ["math", "kor", "eng", "inq1", "inq2", "math", "kor", "hist"]),
-  smart: (g) => smartPlan(g),
+  balanced: (g) => spread(g, g.isEarly() ? ["books", "blocks", "songs", "friends", "exercise"] : ["kor", "math", "eng", "friends", "inq1", "inq2", "reading", "hist", "math", "exercise"]),
+  slacker: (g) => spread(g, g.isEarly() ? ["games", "friends", "exercise"] : ["games", "friends", "math", "kor"]),
+  grinder: (g) => spread(g, g.isEarly() ? ["books", "blocks", "songs", "worksheet"] : ["math", "kor", "eng", "inq1", "inq2", "math", "kor", "hist"]),
+  smart: (g) => (g.isEarly() ? spread(g, g.stress > 62 ? ["friends", "books", "blocks", "songs"] : ["books", "blocks", "songs"]) : smartPlan(g)),
 };
 function offered(g) { return new Set(g.activities().map((a) => a.id)); }
 function spread(g, order) {
@@ -132,7 +134,14 @@ function pickTrack(g, opts) {
 }
 
 function playCareer(seed, bot, opts) {
-  const g = new S.Game({ seed, family: opts.family });
+  const g = new S.Game({ seed, family: opts.family, parents: opts.parents });
+  // opts.trait: a paired test. The life gets only that trait (or none, for null) instead of what its
+  // newborn and 돌잡이 reveals would have dealt.
+  if (opts.trait !== undefined) {
+    const add = g.addTrait.bind(g);
+    let given = false;
+    g.addTrait = () => { if (!given && opts.trait) add(opts.trait); given = true; };
+  }
   const results = [];
   let at12 = null;
   let guard = 0;
@@ -216,6 +225,9 @@ function strategies() {
   // By region kind: the smart bot's first try, and how often the 의대 chaser gets in (local quotas).
   const byKind = {};
   for (const k of Object.keys(S.REGION_KINDS)) byKind[k] = { n: 0, start: 0, std: 0, sky: 0, seoul: 0, mn: 0, med: 0 };
+  // Every life's first 수능 total, per strategy, for the spread table.
+  const firsts = configs.map(() => []), starts = configs.map(() => []);
+
   for (let i = 0; i < seeds; i++) {
     configs.forEach((c, ci) => {
       const a = acc[ci];
@@ -225,6 +237,8 @@ function strategies() {
       const f = results[0].subjects;
       a.kor += f.kor.grade; a.math += f.math.grade; a.eng += f.eng.grade; a.std += results[0].total;
       a.lastStd += results[results.length - 1].total;
+      firsts[ci].push(results[0].total);
+      starts[ci].push(avg);
       a.tries += g.attempt;
       const uni = g.ending && g.ending.uni;
       const idx = S.UNIVERSITIES.findIndex((u) => u.id === uni);
@@ -252,6 +266,23 @@ function strategies() {
       "|", p(a.sky), "|", p(a.med), "|", p(a.seoul)
     );
   });
+  // How far luck spreads lives that follow the same strategy: their ability entering High 3 and their
+  // first 수능 totals, from the unluckiest tenth to the luckiest.
+  const sdOf = (xs) => { const m = xs.reduce((t, x) => t + x, 0) / xs.length; return Math.sqrt(xs.reduce((t, x) => t + (x - m) * (x - m), 0) / xs.length); };
+  console.log("\nSpread (same strategy, different lives): ability entering High 3, and the first 수능 total");
+  // skill r²: how much of the spread in totals ability entering High 3 explains; the rest is luck
+  // (exam day, the paper, illness and accidents in High 3, family money for the last year's tutors).
+  console.log("strategy".padEnd(42) + "start sd |  mean |   sd |  p10 |  p90 | p90-p10 | skill r²");
+  for (const ci of [0, 4]) {
+    const xs = firsts[ci].slice().sort((x, y) => x - y);
+    const q = (f) => xs[Math.min(xs.length - 1, Math.floor(f * xs.length))];
+    const mean = xs.reduce((t, x) => t + x, 0) / xs.length;
+    const ms = starts[ci].reduce((t, x) => t + x, 0) / starts[ci].length;
+    let cov = 0;
+    for (let k = 0; k < firsts[ci].length; k++) cov += (firsts[ci][k] - mean) * (starts[ci][k] - ms);
+    const r = cov / firsts[ci].length / (sdOf(firsts[ci]) * sdOf(starts[ci]));
+    console.log(configs[ci].label.padEnd(42), sdOf(starts[ci]).toFixed(1).padStart(8), "|", mean.toFixed(0).padStart(5), "|", sdOf(xs).toFixed(1).padStart(4), "|", String(q(0.1)).padStart(4), "|", String(q(0.9)).padStart(4), "|", String(q(0.9) - q(0.1)).padStart(7), "|", (r * r).toFixed(2).padStart(8));
+  }
   console.log("\nBy family (smart bot, best affordable method, 1 try):");
   console.log("family   lives | start | 1st std | SKY+  | in-Seoul+");
   for (const f of S.FAMILY_IDS) {
@@ -268,7 +299,56 @@ function strategies() {
   }
 }
 
+// ---------- 3. traits ----------
+// What each trait is worth: the same lives (smart bot, best affordable method, first try) replayed
+// with only that trait, against the same lives with none. Paired, so small effects show.
+function traits() {
+  const cfg = { bot: "smart", method: "tutor", maxAttempts: 1, goal: "college" };
+  const run = (t) => {
+    let start = 0, std = 0, seoul = 0;
+    for (let i = 0; i < seeds; i++) {
+      const { g, results, at12 } = playCareer(1000 + i, "smart", Object.assign({ trait: t }, cfg));
+      start += S.SUBJECTS.reduce((a, s) => a + S.skillScore(at12[s]), 0) / S.SUBJECTS.length;
+      std += results[0].total;
+      const idx = S.UNIVERSITIES.findIndex((u) => u.id === (g.ending && g.ending.uni));
+      if (idx >= 0 && idx <= 19) seoul++;
+    }
+    return { start: start / seeds, std: std / seeds, seoul: (100 * seoul) / seeds };
+  };
+  const base = run(null);
+  console.log("\nTraits, paired (" + seeds + " lives each, smart bot, best affordable method, 1 try; each trait alone vs none):");
+  console.log("trait        Δ start | Δ 1st std | in-Seoul+ (none: " + base.seoul.toFixed(0) + "%)");
+  for (const t of Object.keys(S.TEMPERAMENTS).concat(Object.keys(S.DOLJABI))) {
+    const r = run(t);
+    const f = (v) => (v >= 0 ? "+" : "") + v.toFixed(1);
+    console.log(t.padEnd(12), f(r.start - base.start).padStart(7), "|", f(r.std - base.std).padStart(9), "|", (r.seoul.toFixed(0) + "%").padStart(9));
+  }
+}
+
+// ---------- 4. who raises you ----------
+// The same lives (smart bot, best affordable method, first try) with each family setup at birth.
+// Divorce and bereavement can still happen later in the "both parents" lives.
+function parents() {
+  const cfg = { bot: "smart", method: "tutor", maxAttempts: 1, goal: "college" };
+  console.log("\nWho raises you (" + seeds + " lives each, smart bot, best affordable method, 1 try; same lives, setup forced at birth):");
+  console.log("setup     start | 1st std | in-Seoul+");
+  for (const par of ["both", "mom", "dad", "grand", "care"]) {
+    let start = 0, std = 0, seoul = 0;
+    for (let i = 0; i < seeds; i++) {
+      const { g, results, at12 } = playCareer(1000 + i, "smart", Object.assign({ parents: par }, cfg));
+      start += S.SUBJECTS.reduce((a, s) => a + S.skillScore(at12[s]), 0) / S.SUBJECTS.length;
+      std += results[0].total;
+      const idx = S.UNIVERSITIES.findIndex((u) => u.id === (g.ending && g.ending.uni));
+      if (idx >= 0 && idx <= 19) seoul++;
+    }
+    console.log(par.padEnd(8), (start / seeds).toFixed(0).padStart(6), "|", (std / seeds).toFixed(0).padStart(7), "|", (((100 * seoul) / seeds).toFixed(0) + "%").padStart(9));
+  }
+}
+
 const t0 = Date.now();
 calibration();
 strategies();
+parents();
+// The paired trait test is the slowest part; --no-traits skips it while tuning.
+if (args.indexOf("--no-traits") < 0) traits();
 console.log("\n(" + ((Date.now() - t0) / 1000).toFixed(1) + "s)");
