@@ -31,6 +31,63 @@
   /* The Friends panel: a colour per role, and the closeness bar. */
   --r-best: #12a150; --r-partner: #d1489b; --r-crush: #e86f9c; --r-rival: #c98200; --r-bully: #6b5b8c;
   --r-friend: #2f5bea; --r-other: #8b93a3; --r-focus: #f0a020; --cl-fill: #ef6b8a; --cl-track: #f1e3e7;
+  /* environments (v6.4): scenes, skies, rooms, event backdrops, cutscenes, the map and the share card (art.js). Light is day, dark is night. */
+  /* light and air */
+  --a-aoC: #1e2230; --a-hiE: #ffffff; --a-glowOp: 0.5; --a-vigOp: 0.32; --a-starOp: 0; --a-litOp: 0.22; --a-sunOp: 0.34; --a-moteOp: 0.5;
+  --a-veilOp: 0.16; --a-nightVeilOp: 0.55; --a-bgVeil: #f1f0ec;
+  /* skies by time of day */
+  --a-skyTop: #8ea7bd; --a-skyMid: #b8c8d3; --a-skyLow: #dcdfdc; --a-dawnTop: #334566; --a-dawnMid: #6f84a2; --a-dawnLow: #c3c8cf;
+  --a-goldTop: #6d84a0; --a-goldMid: #d7a47c; --a-goldLow: #efcf9f; --a-nightTop: #0f1724; --a-nightMid: #1b2537; --a-nightLow: #3a3c48;
+  --a-rainTop: #8d979e; --a-rainMid: #a8afb3; --a-rainLow: #c3c6c5; --a-sunDisc: #fff6e2; --a-sunGlow: #fff0cf; --a-goldSun: #ffd9a0;
+  --a-moonE: #efe9d6; --a-starE: #fff8e6; --a-cloudE: #f2f3f1; --a-dawnCloud: #8f9db2; --a-goldCloud: #e8b896; --a-nightCloud: #2c3445;
+  --a-rainCloud: #7f888e; --a-haze: #dfe2e0; --a-rainE: #c9d3db;
+  /* land, plants and water */
+  --a-mtnFar: #a6b2ba; --a-mtnMid: #8a9a96; --a-mtnNear: #6f7f74; --a-vegSp: #9fb184; --a-vegSu: #5e7a54; --a-vegFa: #b07d4c; --a-vegFa2: #cfae55;
+  --a-vegWi: #8d8c86; --a-blossomE: #e9cdd1; --a-trunk: #58493f; --a-snowE: #f3f5f7; --a-lawnSp: #a9b98c; --a-lawnSu: #78926a; --a-lawnFa: #b5a26e;
+  --a-dirt: #c8b596; --a-pathE: #d9d2c2; --a-seaFar: #8fa6b2; --a-seaNear: #6c8c9b; --a-foam: #eef2f2; --a-sand: #d8cdb6; --a-basalt: #4a4a4c;
+  --a-vinyl: #e7ebe8; --a-roofOr: #b06c4e;
+  /* buildings and streets */
+  --a-bldFar: #aeb8c0; --a-bldMid: #c3c6c4; --a-bldNear: #d6d1c8; --a-aptWall: #e3dfd6; --a-aptShade: #b7b4ac; --a-aptLine: #c6c2b9;
+  --a-winDay: #8ea2b1; --a-winLit: #f2d79c; --a-nightWin: #2a3446; --a-nightBld: #454a57; --a-nightBld2: #3a3f4c; --a-concrete: #c4c2bc;
+  --a-concrete2: #a3a19c; --a-brick: #a5715c; --a-brick2: #86594a; --a-roofGreen: #6d8d7c; --a-rooftop: #d9d5cb; --a-schoolWall: #d9d4c6;
+  --a-hospWall: #dfe1df; --a-careWall: #e3d8c4; --a-granite: #c9c6bf; --a-granite2: #a9a69f; --a-towerGlass: #8fa5b6; --a-towerGlass2: #71879a;
+  --a-plate: #f1eee6; --a-plateInk: #23262b; --a-asphalt: #6a6d71; --a-pavement: #b6b3ab; --a-curb: #c8c5bd; --a-lane: #ebe7da; --a-sodium: #f0b45e;
+  --a-neonA: #5e9d97; --a-neonB: #b56a7e; --a-neonC: #c7a24c; --a-signW: #e9e6dd; --a-signBox: #3b4149; --a-storeGlow: #e7efe9;
+  --a-storeShelf: #c9cfc9; --a-signGreen: #3f6d55; --a-signBlue: #3b5a85;
+  /* rooms */
+  --a-wallpaper: #e4dfd5; --a-wallpaper2: #e9e5dc; --a-ceiling: #ecebe6; --a-wallKinder: #ece4d3; --a-wallSchool: #e6e4da; --a-wallSchool2: #d8d6cc;
+  --a-wainscot: #9fb0a3; --a-wallAcad: #dfe0dc; --a-wardWall: #e3e8e6; --a-wardWall2: #bccbc7; --a-kitchenWall: #e8e4da; --a-officeWall: #dcdddb;
+  --a-banquetWall: #e6d9c2; --a-banquetCeil: #efe6d6; --a-nWall: #4b4d58; --a-nWall2: #3d3f49; --a-nCeil: #3e404a; --a-nFloor: #5b4a3e;
+  --a-nFloor2: #4a3c32; --a-nBase: #3a3433; --a-floorWood: #b8916b; --a-floorSeam: #8f6c4c; --a-baseboard: #8d8679; --a-lino: #b8c1b4;
+  --a-lino2: #a2ab9f; --a-tileE: #d3d5d2; --a-tileE2: #babdba; --a-bathTile: #dfe4e4; --a-bathTile2: #c4cbcb; --a-porcelain: #f4f4f0;
+  --a-sunLight: #fff1cf; --a-fluoro: #f8faf4; --a-fluoroGlow: #f2f6ee; --a-lampWarm: #ffd79e; --a-lampShade: #3f4a46; --a-candle: #ffc46e;
+  --a-screenE: #d5e4ec; --a-screenOff: #2e333a; --a-monitorGlow: #a9cbe6; --a-phoneScreen: #dce8f0; --a-tvE: #2a2e33; --a-alum: #c9ccce;
+  --a-alum2: #a6aaad; --a-glassTint: #cfdfe7; --a-blind: #e6e3dc; --a-curtain: #cfc5b2; --a-curtain2: #b5ab98; --a-curtainWard: #c7d6d2;
+  --a-mirror: #c9d7de; --a-steel: #8f969d; --a-steel2: #6f767d; --a-chairW: #b08a62; --a-formica: #ddd3bd; --a-formica2: #c3b69c;
+  --a-woodDark: #6c5442; --a-woodLight: #d8c4a6; --a-woodLight2: #bfa785; --a-woodDesk: #c9a985; --a-woodDesk2: #a98966; --a-cribW: #efe9de;
+  --a-cribW2: #d9d1c3; --a-beddingE: #d9dce0; --a-beddingE2: #aeb6bf; --a-duvet: #c7d0d8; --a-wardBlanket: #b7cbd0; --a-towel: #e8eef0;
+  --a-sofaE: #8c7f72; --a-sofaE2: #776b5f; --a-cabinet: #e3ddd1; --a-counterTop: #bdb7ab; --a-counterTop2: #a5a095; --a-riceCooker: #eceae4;
+  --a-boardE: #3c574a; --a-boardFrame: #8a7458; --a-chalkE: #e9ebe4; --a-boardWhite: #f1f2ef; --a-cork2: #b99569; --a-clockRim: #3d4248;
+  --a-lockerE: #a3afb5; --a-lockerE2: #8a979d; --a-doorE: #a98966; --a-doorE2: #b59675; --a-doorFrame: #8a7158; --a-partition: #b4a68e;
+  --a-partition2: #998b73; --a-chairBlack: #3a3d42; --a-timer: #7fd3b8; --a-tape: #efe8d0; --a-cardboard: #c8a87e; --a-cardboard2: #ae8f66;
+  --a-fridge: #e4e5e2; --a-fridge2: #c4c6c3; --a-screenPanel: #7d5a3e; --a-silk: #efe6d2; --a-lacquer: #8a3b32; --a-lacquer2: #6b2b25;
+  --a-tteok: #f3ece0; --a-tteok2: #d7b8a8;
+  /* things */
+  --a-paperE: #f4f2ec; --a-paperE2: #dedad0; --a-inkE: #353a42; --a-accentRed: #a84d45; --a-accentBlue: #3e5c86; --a-brass: #c09a4e;
+  --a-brass2: #8f7034; --a-fabric1: #8296a8; --a-fabric2: #b39a84; --a-fabric3: #8a9a7c; --a-fabric4: #ab8488; --a-matA: #cdb995; --a-matB: #9fb4a8;
+  --a-matC: #bea2a8; --a-bear: #a88866; --a-bear2: #d6c2a6; --a-stickyY: #ecd88a; --a-stickyP: #e3b2b8; --a-stickyB: #a9c6d6; --a-posterE: #2e3540;
+  --a-uniformE: #3a4560; --a-hoodieE: #7c8492; --a-hairE: #2a2420; --a-suitE: #3a3f4a; --a-silhouette: #3c3a46; --a-olive: #5f6648;
+  --a-olive2: #4c5239; --a-steamE: #d6dbe0; --a-heartE: #c27a80; --a-bubbleE: #e7ebee; --a-bubbleMe: #e9dda6; --a-cupNoodle: #efe9de;
+  --a-kimchi: #c45e45; --a-ivBag: #dfe9ec; --a-thermos: #9aa3aa; --a-bill: #a9b796; --a-bill2: #e8ecdf; --a-stampRed: #b33a32; --a-suitcase: #5e6f80;
+  --a-omr: #f6efe9; --a-omrBubble: #e7c8c4; --a-omrRed: #c46a64; --a-stallE: #9a5a4a; --a-awning: #b2534a; --a-bannerE: #8f3c37; --a-busE: #5f8a72;
+  --a-busE2: #e9e6dc; --a-busTour: #e6e3da;
+  /* the map */
+  --a-landHi: #f3f0e8; --a-landE: #e8e3d7; --a-landLo: #d7d0c0; --a-reliefE: #8a7c62; --a-mapShallow: #dbe5e8; --a-mapSeaE: #c8d5dc;
+  --a-mapSeaDeep: #adbfc9; --a-coastE: #7f8f94; --a-muniE: #d4cdbf; --a-provE: #8c9792; --a-homeE: #e2c68f; --a-kPinOpen: #3e5c86;
+  --a-kPinHome: #a84d45; --a-kPinOff: #a3a6a8; --a-kSel: #c09a4e;
+  /* the share card */
+  --a-cardBg: #f5f2eb; --a-cardPanel: #e7e1d4; --a-cardInk2: #1e2024; --a-cardMute: #78736a; --a-cardRule: #d6cfc0; --a-cardAccent: #9a4a3c;
+  /* end of environments (v6.4) */
   /* Artwork (art.js): scenes, the avatar and event illustrations. Dark mode turns day to dusk. */
   --a-sky: #a9dcff; --a-sky2: #e8f6ff; --a-night: #16224a; --a-night2: #34457e; --a-moon: #fff3c4;
   --a-star: #fff7d6; --a-sun: #ffcf4a; --a-cloud: #ffffff; --a-dusk: #ff9e7a; --a-dusk2: #ffd9a0;
@@ -90,6 +147,63 @@
     --gold-text: #f0c040; --danger-text: #1b1e26; --coach-dim: rgba(0, 0, 0, 0.55); --bar-shadow: rgba(0, 0, 0, 0.5);
     --r-best: #3ccf7a; --r-partner: #f06cb8; --r-crush: #f58fb5; --r-rival: #f0b23a; --r-bully: #a594d0;
     --r-friend: #6b8cff; --r-other: #8a91a0; --r-focus: #ffbf47; --cl-fill: #f07a98; --cl-track: #3a2c33;
+    /* environments (v6.4): scenes, skies, rooms, event backdrops, cutscenes, the map and the share card (art.js). Light is day, dark is night. */
+    /* light and air */
+    --a-aoC: #000000; --a-hiE: #d8e2f0; --a-glowOp: 0.9; --a-vigOp: 0.55; --a-starOp: 0.85; --a-litOp: 0.95; --a-sunOp: 0.1; --a-moteOp: 0.15;
+    --a-veilOp: 0.18; --a-nightVeilOp: 0.15; --a-bgVeil: #0b0e14;
+    /* skies by time of day */
+    --a-skyTop: #0b1220; --a-skyMid: #172235; --a-skyLow: #2b3346; --a-dawnTop: #0a1120; --a-dawnMid: #1d2a42; --a-dawnLow: #4a5266;
+    --a-goldTop: #1b2036; --a-goldMid: #5b3c48; --a-goldLow: #a0644e; --a-nightTop: #080d16; --a-nightMid: #121a28; --a-nightLow: #2a2b35;
+    --a-rainTop: #10161d; --a-rainMid: #1b222a; --a-rainLow: #2a3037; --a-sunDisc: #e9e4d0; --a-sunGlow: #a9b8cc; --a-goldSun: #f0a070;
+    --a-moonE: #e4dcc0; --a-starE: #f4ecd2; --a-cloudE: #2a3446; --a-dawnCloud: #2a3550; --a-goldCloud: #6a4650; --a-nightCloud: #1c2433;
+    --a-rainCloud: #262d36; --a-haze: #1f2735; --a-rainE: #7f93a8;
+    /* land, plants and water */
+    --a-mtnFar: #1a2333; --a-mtnMid: #161e2a; --a-mtnNear: #121920; --a-vegSp: #2c3a2d; --a-vegSu: #1d2b22; --a-vegFa: #4a3424; --a-vegFa2: #5e4f26;
+    --a-vegWi: #2b2e31; --a-blossomE: #6e5762; --a-trunk: #1a1513; --a-snowE: #c3cad5; --a-lawnSp: #28362a; --a-lawnSu: #1f2d24; --a-lawnFa: #3d3624;
+    --a-dirt: #3a3229; --a-pathE: #3a3a3c; --a-seaFar: #17273a; --a-seaNear: #122131; --a-foam: #5b7083; --a-sand: #3b362e; --a-basalt: #141416;
+    --a-vinyl: #4a5258; --a-roofOr: #5a3529;
+    /* buildings and streets */
+    --a-bldFar: #1a2231; --a-bldMid: #222a37; --a-bldNear: #2a303b; --a-aptWall: #2e343e; --a-aptShade: #1d222b; --a-aptLine: #252a33;
+    --a-winDay: #1a2230; --a-winLit: #f2c27a; --a-nightWin: #1a2230; --a-nightBld: #232834; --a-nightBld2: #1d222c; --a-concrete: #383b41;
+    --a-concrete2: #2a2d33; --a-brick: #3c2a25; --a-brick2: #2c1f1b; --a-roofGreen: #22322c; --a-rooftop: #33373e; --a-schoolWall: #30333a;
+    --a-hospWall: #2f343b; --a-careWall: #3a352f; --a-granite: #3b3d42; --a-granite2: #2b2d31; --a-towerGlass: #1c2738; --a-towerGlass2: #141c2a;
+    --a-plate: #d8d4c8; --a-plateInk: #1b1d22; --a-asphalt: #1b1d21; --a-pavement: #2b2d31; --a-curb: #3c3d41; --a-lane: #8a8779; --a-sodium: #ffad4a;
+    --a-neonA: #4fd1c0; --a-neonB: #ef5f8f; --a-neonC: #f3c14d; --a-signW: #e8e4d6; --a-signBox: #1b1f26; --a-storeGlow: #d9f2e6;
+    --a-storeShelf: #7f8f88; --a-signGreen: #2e5442; --a-signBlue: #2c4468;
+    /* rooms */
+    --a-wallpaper: #2b2d35; --a-wallpaper2: #2e3038; --a-ceiling: #202228; --a-wallKinder: #302e30; --a-wallSchool: #2a2e33; --a-wallSchool2: #24282d;
+    --a-wainscot: #26302b; --a-wallAcad: #26292e; --a-wardWall: #262c30; --a-wardWall2: #20282a; --a-kitchenWall: #2c2d33; --a-officeWall: #272a2f;
+    --a-banquetWall: #3a3029; --a-banquetCeil: #2e2722; --a-nWall: #24262e; --a-nWall2: #1d1f26; --a-nCeil: #1b1d23; --a-nFloor: #2a221d;
+    --a-nFloor2: #211b17; --a-nBase: #17151a; --a-floorWood: #3a2e26; --a-floorSeam: #261e19; --a-baseboard: #1c1c20; --a-lino: #2a302c;
+    --a-lino2: #222824; --a-tileE: #2c2f33; --a-tileE2: #25282c; --a-bathTile: #2b3134; --a-bathTile2: #22282b; --a-porcelain: #c9cbc6;
+    --a-sunLight: #c7d4ea; --a-fluoro: #eef5f2; --a-fluoroGlow: #cfe2dc; --a-lampWarm: #ffc775; --a-lampShade: #2a322f; --a-candle: #ffb04f;
+    --a-screenE: #9fc8e8; --a-screenOff: #14171c; --a-monitorGlow: #6fb2ff; --a-phoneScreen: #bfe0ff; --a-tvE: #121418; --a-alum: #4c5158;
+    --a-alum2: #383c42; --a-glassTint: #3a4b5e; --a-blind: #3a3a3d; --a-curtain: #3a3836; --a-curtain2: #2c2a28; --a-curtainWard: #2f3c3b;
+    --a-mirror: #2f3b48; --a-steel: #3d424a; --a-steel2: #2c3037; --a-chairW: #3e3127; --a-formica: #4b443a; --a-formica2: #39332b;
+    --a-woodDark: #2a211b; --a-woodLight: #4a4034; --a-woodLight2: #3a3229; --a-woodDesk: #4a3b2f; --a-woodDesk2: #352a21; --a-cribW: #bdb8ad;
+    --a-cribW2: #8e897f; --a-beddingE: #3a4048; --a-beddingE2: #2b3138; --a-duvet: #394552; --a-wardBlanket: #2f3f45; --a-towel: #9fb0b8;
+    --a-sofaE: #3a332e; --a-sofaE2: #2d2824; --a-cabinet: #33333a; --a-counterTop: #45444a; --a-counterTop2: #38373c; --a-riceCooker: #8d8c88;
+    --a-boardE: #1c2a23; --a-boardFrame: #3a3127; --a-chalkE: #b8bdb4; --a-boardWhite: #c9cdc9; --a-cork2: #4d3e2c; --a-clockRim: #1d2025;
+    --a-lockerE: #2e373e; --a-lockerE2: #232a30; --a-doorE: #3a2e24; --a-doorE2: #3c3027; --a-doorFrame: #2a221b; --a-partition: #3a332a;
+    --a-partition2: #2b261f; --a-chairBlack: #1a1c20; --a-timer: #5ff2c4; --a-tape: #cfc7ad; --a-cardboard: #5a4935; --a-cardboard2: #473a2b;
+    --a-fridge: #4a4d52; --a-fridge2: #36393e; --a-screenPanel: #3a291d; --a-silk: #bdb39d; --a-lacquer: #5a2620; --a-lacquer2: #421a16;
+    --a-tteok: #cfc6b6; --a-tteok2: #9e8476;
+    /* things */
+    --a-paperE: #cac7bd; --a-paperE2: #9e9a90; --a-inkE: #13161b; --a-accentRed: #b44c44; --a-accentBlue: #47669a; --a-brass: #b48a3a;
+    --a-brass2: #806024; --a-fabric1: #3a4a5e; --a-fabric2: #5a4a3e; --a-fabric3: #3e4a36; --a-fabric4: #5a4044; --a-matA: #5a4e3c; --a-matB: #3e4e46;
+    --a-matC: #54444a; --a-bear: #5a4836; --a-bear2: #8a7a64; --a-stickyY: #b8a456; --a-stickyP: #a87c84; --a-stickyB: #6a8a9e; --a-posterE: #1a1f27;
+    --a-uniformE: #1f2638; --a-hoodieE: #30353f; --a-hairE: #0f0d0c; --a-suitE: #1c1f26; --a-silhouette: #0c0b10; --a-olive: #2c3022;
+    --a-olive2: #22261a; --a-steamE: #8e98a6; --a-heartE: #b8606a; --a-bubbleE: #3b4350; --a-bubbleMe: #8f8250; --a-cupNoodle: #bdb6a8;
+    --a-kimchi: #8e3e2e; --a-ivBag: #9fb1b8; --a-thermos: #4a5058; --a-bill: #5a6650; --a-bill2: #b9bfae; --a-stampRed: #d9524a;
+    --a-suitcase: #2e3a48; --a-omr: #d7cfc8; --a-omrBubble: #b39491; --a-omrRed: #a24f49; --a-stallE: #5a3229; --a-awning: #7a3029;
+    --a-bannerE: #6e2b27; --a-busE: #2e4a3c; --a-busE2: #a8a597; --a-busTour: #8c8a82;
+    /* the map */
+    --a-landHi: #363c41; --a-landE: #2c3236; --a-landLo: #23282c; --a-reliefE: #05070a; --a-mapShallow: #1b2a39; --a-mapSeaE: #142131;
+    --a-mapSeaDeep: #0d1724; --a-coastE: #7d93a0; --a-muniE: #3a4045; --a-provE: #62706f; --a-homeE: #6a5833; --a-kPinOpen: #86a6d6;
+    --a-kPinHome: #e0796e; --a-kPinOff: #5d6268; --a-kSel: #e2b75c;
+    /* the share card */
+    --a-cardBg: #16181d; --a-cardPanel: #262930; --a-cardInk2: #ecebe6; --a-cardMute: #8f8b84; --a-cardRule: #34373e; --a-cardAccent: #d98a6c;
+    /* end of environments (v6.4) */
     --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
     --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
     --a-homeLand: #7a6a2e; --a-muniLine: #4f6a52; --a-school: #ff7a63; --a-schNum: #1b1b1b;
@@ -148,6 +262,63 @@
   --gold-text: #f0c040; --danger-text: #1b1e26; --coach-dim: rgba(0, 0, 0, 0.55); --bar-shadow: rgba(0, 0, 0, 0.5);
   --r-best: #3ccf7a; --r-partner: #f06cb8; --r-crush: #f58fb5; --r-rival: #f0b23a; --r-bully: #a594d0;
   --r-friend: #6b8cff; --r-other: #8a91a0; --r-focus: #ffbf47; --cl-fill: #f07a98; --cl-track: #3a2c33;
+  /* environments (v6.4): scenes, skies, rooms, event backdrops, cutscenes, the map and the share card (art.js). Light is day, dark is night. */
+  /* light and air */
+  --a-aoC: #000000; --a-hiE: #d8e2f0; --a-glowOp: 0.9; --a-vigOp: 0.55; --a-starOp: 0.85; --a-litOp: 0.95; --a-sunOp: 0.1; --a-moteOp: 0.15;
+  --a-veilOp: 0.18; --a-nightVeilOp: 0.15; --a-bgVeil: #0b0e14;
+  /* skies by time of day */
+  --a-skyTop: #0b1220; --a-skyMid: #172235; --a-skyLow: #2b3346; --a-dawnTop: #0a1120; --a-dawnMid: #1d2a42; --a-dawnLow: #4a5266;
+  --a-goldTop: #1b2036; --a-goldMid: #5b3c48; --a-goldLow: #a0644e; --a-nightTop: #080d16; --a-nightMid: #121a28; --a-nightLow: #2a2b35;
+  --a-rainTop: #10161d; --a-rainMid: #1b222a; --a-rainLow: #2a3037; --a-sunDisc: #e9e4d0; --a-sunGlow: #a9b8cc; --a-goldSun: #f0a070;
+  --a-moonE: #e4dcc0; --a-starE: #f4ecd2; --a-cloudE: #2a3446; --a-dawnCloud: #2a3550; --a-goldCloud: #6a4650; --a-nightCloud: #1c2433;
+  --a-rainCloud: #262d36; --a-haze: #1f2735; --a-rainE: #7f93a8;
+  /* land, plants and water */
+  --a-mtnFar: #1a2333; --a-mtnMid: #161e2a; --a-mtnNear: #121920; --a-vegSp: #2c3a2d; --a-vegSu: #1d2b22; --a-vegFa: #4a3424; --a-vegFa2: #5e4f26;
+  --a-vegWi: #2b2e31; --a-blossomE: #6e5762; --a-trunk: #1a1513; --a-snowE: #c3cad5; --a-lawnSp: #28362a; --a-lawnSu: #1f2d24; --a-lawnFa: #3d3624;
+  --a-dirt: #3a3229; --a-pathE: #3a3a3c; --a-seaFar: #17273a; --a-seaNear: #122131; --a-foam: #5b7083; --a-sand: #3b362e; --a-basalt: #141416;
+  --a-vinyl: #4a5258; --a-roofOr: #5a3529;
+  /* buildings and streets */
+  --a-bldFar: #1a2231; --a-bldMid: #222a37; --a-bldNear: #2a303b; --a-aptWall: #2e343e; --a-aptShade: #1d222b; --a-aptLine: #252a33;
+  --a-winDay: #1a2230; --a-winLit: #f2c27a; --a-nightWin: #1a2230; --a-nightBld: #232834; --a-nightBld2: #1d222c; --a-concrete: #383b41;
+  --a-concrete2: #2a2d33; --a-brick: #3c2a25; --a-brick2: #2c1f1b; --a-roofGreen: #22322c; --a-rooftop: #33373e; --a-schoolWall: #30333a;
+  --a-hospWall: #2f343b; --a-careWall: #3a352f; --a-granite: #3b3d42; --a-granite2: #2b2d31; --a-towerGlass: #1c2738; --a-towerGlass2: #141c2a;
+  --a-plate: #d8d4c8; --a-plateInk: #1b1d22; --a-asphalt: #1b1d21; --a-pavement: #2b2d31; --a-curb: #3c3d41; --a-lane: #8a8779; --a-sodium: #ffad4a;
+  --a-neonA: #4fd1c0; --a-neonB: #ef5f8f; --a-neonC: #f3c14d; --a-signW: #e8e4d6; --a-signBox: #1b1f26; --a-storeGlow: #d9f2e6;
+  --a-storeShelf: #7f8f88; --a-signGreen: #2e5442; --a-signBlue: #2c4468;
+  /* rooms */
+  --a-wallpaper: #2b2d35; --a-wallpaper2: #2e3038; --a-ceiling: #202228; --a-wallKinder: #302e30; --a-wallSchool: #2a2e33; --a-wallSchool2: #24282d;
+  --a-wainscot: #26302b; --a-wallAcad: #26292e; --a-wardWall: #262c30; --a-wardWall2: #20282a; --a-kitchenWall: #2c2d33; --a-officeWall: #272a2f;
+  --a-banquetWall: #3a3029; --a-banquetCeil: #2e2722; --a-nWall: #24262e; --a-nWall2: #1d1f26; --a-nCeil: #1b1d23; --a-nFloor: #2a221d;
+  --a-nFloor2: #211b17; --a-nBase: #17151a; --a-floorWood: #3a2e26; --a-floorSeam: #261e19; --a-baseboard: #1c1c20; --a-lino: #2a302c;
+  --a-lino2: #222824; --a-tileE: #2c2f33; --a-tileE2: #25282c; --a-bathTile: #2b3134; --a-bathTile2: #22282b; --a-porcelain: #c9cbc6;
+  --a-sunLight: #c7d4ea; --a-fluoro: #eef5f2; --a-fluoroGlow: #cfe2dc; --a-lampWarm: #ffc775; --a-lampShade: #2a322f; --a-candle: #ffb04f;
+  --a-screenE: #9fc8e8; --a-screenOff: #14171c; --a-monitorGlow: #6fb2ff; --a-phoneScreen: #bfe0ff; --a-tvE: #121418; --a-alum: #4c5158;
+  --a-alum2: #383c42; --a-glassTint: #3a4b5e; --a-blind: #3a3a3d; --a-curtain: #3a3836; --a-curtain2: #2c2a28; --a-curtainWard: #2f3c3b;
+  --a-mirror: #2f3b48; --a-steel: #3d424a; --a-steel2: #2c3037; --a-chairW: #3e3127; --a-formica: #4b443a; --a-formica2: #39332b;
+  --a-woodDark: #2a211b; --a-woodLight: #4a4034; --a-woodLight2: #3a3229; --a-woodDesk: #4a3b2f; --a-woodDesk2: #352a21; --a-cribW: #bdb8ad;
+  --a-cribW2: #8e897f; --a-beddingE: #3a4048; --a-beddingE2: #2b3138; --a-duvet: #394552; --a-wardBlanket: #2f3f45; --a-towel: #9fb0b8;
+  --a-sofaE: #3a332e; --a-sofaE2: #2d2824; --a-cabinet: #33333a; --a-counterTop: #45444a; --a-counterTop2: #38373c; --a-riceCooker: #8d8c88;
+  --a-boardE: #1c2a23; --a-boardFrame: #3a3127; --a-chalkE: #b8bdb4; --a-boardWhite: #c9cdc9; --a-cork2: #4d3e2c; --a-clockRim: #1d2025;
+  --a-lockerE: #2e373e; --a-lockerE2: #232a30; --a-doorE: #3a2e24; --a-doorE2: #3c3027; --a-doorFrame: #2a221b; --a-partition: #3a332a;
+  --a-partition2: #2b261f; --a-chairBlack: #1a1c20; --a-timer: #5ff2c4; --a-tape: #cfc7ad; --a-cardboard: #5a4935; --a-cardboard2: #473a2b;
+  --a-fridge: #4a4d52; --a-fridge2: #36393e; --a-screenPanel: #3a291d; --a-silk: #bdb39d; --a-lacquer: #5a2620; --a-lacquer2: #421a16;
+  --a-tteok: #cfc6b6; --a-tteok2: #9e8476;
+  /* things */
+  --a-paperE: #cac7bd; --a-paperE2: #9e9a90; --a-inkE: #13161b; --a-accentRed: #b44c44; --a-accentBlue: #47669a; --a-brass: #b48a3a;
+  --a-brass2: #806024; --a-fabric1: #3a4a5e; --a-fabric2: #5a4a3e; --a-fabric3: #3e4a36; --a-fabric4: #5a4044; --a-matA: #5a4e3c; --a-matB: #3e4e46;
+  --a-matC: #54444a; --a-bear: #5a4836; --a-bear2: #8a7a64; --a-stickyY: #b8a456; --a-stickyP: #a87c84; --a-stickyB: #6a8a9e; --a-posterE: #1a1f27;
+  --a-uniformE: #1f2638; --a-hoodieE: #30353f; --a-hairE: #0f0d0c; --a-suitE: #1c1f26; --a-silhouette: #0c0b10; --a-olive: #2c3022;
+  --a-olive2: #22261a; --a-steamE: #8e98a6; --a-heartE: #b8606a; --a-bubbleE: #3b4350; --a-bubbleMe: #8f8250; --a-cupNoodle: #bdb6a8;
+  --a-kimchi: #8e3e2e; --a-ivBag: #9fb1b8; --a-thermos: #4a5058; --a-bill: #5a6650; --a-bill2: #b9bfae; --a-stampRed: #d9524a; --a-suitcase: #2e3a48;
+  --a-omr: #d7cfc8; --a-omrBubble: #b39491; --a-omrRed: #a24f49; --a-stallE: #5a3229; --a-awning: #7a3029; --a-bannerE: #6e2b27; --a-busE: #2e4a3c;
+  --a-busE2: #a8a597; --a-busTour: #8c8a82;
+  /* the map */
+  --a-landHi: #363c41; --a-landE: #2c3236; --a-landLo: #23282c; --a-reliefE: #05070a; --a-mapShallow: #1b2a39; --a-mapSeaE: #142131;
+  --a-mapSeaDeep: #0d1724; --a-coastE: #7d93a0; --a-muniE: #3a4045; --a-provE: #62706f; --a-homeE: #6a5833; --a-kPinOpen: #86a6d6;
+  --a-kPinHome: #e0796e; --a-kPinOff: #5d6268; --a-kSel: #e2b75c;
+  /* the share card */
+  --a-cardBg: #16181d; --a-cardPanel: #262930; --a-cardInk2: #ecebe6; --a-cardMute: #8f8b84; --a-cardRule: #34373e; --a-cardAccent: #d98a6c;
+  /* end of environments (v6.4) */
   --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
   --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
   --a-homeLand: #7a6a2e; --a-muniLine: #4f6a52; --a-school: #ff7a63; --a-schNum: #1b1b1b;
@@ -375,8 +546,8 @@ table.grid td.l { text-align: left; }
 .uni.off { opacity: 0.45; cursor: not-allowed; }
 .uni .nm small.why { color: var(--neg); }
 .uni .nm small.real { color: var(--text); font-weight: 600; }
-.uni .nm small.real .num { display: inline-block; min-width: 1.4em; padding: 0 4px; margin-right: 2px; border-radius: 999px; background: var(--a-pinOpen); color: var(--a-schNum); text-align: center; font-size: 0.7rem; }
-.uni.off .nm small.real .num { background: var(--a-pinOff); }
+.uni .nm small.real .num { display: inline-block; min-width: 1.4em; padding: 0 4px; margin-right: 2px; border-radius: 999px; background: var(--a-kPinOpen); color: var(--a-schNum); text-align: center; font-size: 0.7rem; }
+.uni.off .nm small.real .num { background: var(--a-kPinOff); }
 .school-map { margin: 8px 0; }
 .school-map .kmap { max-height: 220px; border-radius: 10px; }
 .school-map figcaption { color: var(--muted); font-size: 0.75rem; text-align: center; margin-top: 2px; }
@@ -424,6 +595,9 @@ table.grid td.l { text-align: left; }
 .art .bob { animation: bob 3.2s ease-in-out infinite; transform-origin: center bottom; }
 .art .blink { animation: blink 4.6s infinite; }
 .art .fall { animation: fall var(--d, 8s) linear infinite; animation-delay: var(--del, 0s); }
+/* v6.4: rain falls straight, without the tumble of petals and leaves. */
+.art .fall.rain { animation-name: rain-fall; }
+@keyframes rain-fall { from { transform: translate(0, 0); } to { transform: translate(var(--dx, -20px), var(--fy, 260px)); } }
 .art .rise { animation: rise 3s ease-out infinite; animation-delay: var(--del, 0s); }
 .art .twinkle { animation: twinkle 2.6s ease-in-out infinite; animation-delay: var(--del, 0s); }
 .art .twinkle.slow { animation-duration: 7s; }
@@ -465,7 +639,7 @@ table.grid td.l { text-align: left; }
 /* The scene and, beside it (below it on phones), the map of where you live. */
 .life-top { display: grid; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 760px) { .life-top { grid-template-columns: minmax(0, 1fr) clamp(230px, 27vw, 320px); } .map-side { border-left: 1px solid var(--border); } }
-.map-side { display: flex; flex-direction: column; min-width: 0; background: var(--a-mapSea); border-top: 1px solid var(--border); }
+.map-side { display: flex; flex-direction: column; min-width: 0; background: var(--a-mapSeaE); border-top: 1px solid var(--border); }
 @media (min-width: 760px) { .map-side { border-top: 0; height: clamp(180px, 31vw, 330px); } }
 .map-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 6px 10px 0; font-size: 0.82rem; font-weight: 700; color: var(--a-mapLbl); }
 .map-head small { font-weight: 500; color: var(--a-inset); text-align: right; }
@@ -711,14 +885,16 @@ body.cutting { overflow: hidden; }
 
 /* The Korea map (birth screen, move dialog). Dot colours by state; the home pin pulses. */
 .kmap { display: block; width: 100%; height: auto; max-height: 62vh; border-radius: 12px; }
-.kmap .kmap-pt .kd { stroke: var(--a-mapHalo); stroke-width: 3; }
-.kmap .kmap-pt.open .kd { fill: var(--a-pinOpen); }
-.kmap .kmap-pt.closed .kd { fill: var(--a-pinOff); }
-.kmap .kmap-pt.home .kd { fill: var(--a-pin); }
+/* v6.4: markers are a coloured disc in a pale ring with a pale centre, over a soft shadow. */
+.kmap .kmap-pt .kd { stroke: var(--a-mapHalo); stroke-width: 2.5; }
+.kmap .kmap-pt .kc { fill: var(--a-mapHalo); }
+.kmap .kmap-pt.open .kd { fill: var(--a-kPinOpen); }
+.kmap .kmap-pt.closed .kd { fill: var(--a-kPinOff); }
+.kmap .kmap-pt.home .kd { fill: var(--a-kPinHome); }
 .kmap .kmap-pt[tabindex] { cursor: pointer; outline: none; }
-.kmap .kmap-pt[tabindex]:hover .kd, .kmap .kmap-pt[tabindex]:focus-visible .kd { stroke: var(--a-sel); stroke-width: 5; }
-.kmap .kmap-lbl { fill: var(--a-mapLbl); font-weight: 700; paint-order: stroke; stroke: var(--a-mapHalo); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
-.kmap .kmap-lbl.home, .kmap .kmap-lbl.sel { font-weight: 900; }
+.kmap .kmap-pt[tabindex]:hover .kd, .kmap .kmap-pt[tabindex]:focus-visible .kd { stroke: var(--a-kSel); stroke-width: 4.5; }
+.kmap .kmap-lbl { fill: var(--a-mapLbl); font-weight: 600; letter-spacing: 0.01em; paint-order: stroke; stroke: var(--a-mapHalo); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.kmap .kmap-lbl.home, .kmap .kmap-lbl.sel { font-weight: 800; }
 .kmap .kmap-seoul { fill: var(--a-inset); }
 .kmap .kmap-pulse { transform-box: fill-box; transform-origin: center; animation: kmap-pulse 1.6s ease-out infinite; }
 @keyframes kmap-pulse { from { transform: scale(0.7); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
@@ -730,21 +906,24 @@ body.cutting { overflow: hidden; }
 .map-card small.why { color: var(--neg); }
 .map-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.76rem; color: var(--muted); margin: 2px 0 6px; }
 .map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
-.map-legend .lh { background: var(--a-pin); } .map-legend .lo { background: var(--a-pinOpen); } .map-legend .lc { background: var(--a-pinOff); }
+.map-legend .lh { background: var(--a-kPinHome); } .map-legend .lo { background: var(--a-kPinOpen); } .map-legend .lc { background: var(--a-kPinOff); }
 .map-list summary { cursor: pointer; font-size: 0.85rem; color: var(--muted); margin: 6px 0; }
 
 /* Real geography on the map (places.js): municipalities as land, provinces drawn over them, the home
    area tinted; school markers. Borders keep their width at any zoom. */
-.kmap .kmap-muni { fill: var(--a-land); stroke: var(--a-muniLine); stroke-width: 0.5px; vector-effect: non-scaling-stroke; }
-.kmap .kmap-muni.home { fill: var(--a-homeLand); }
-.kmap .kmap-prov { fill: none; stroke: var(--a-coast); stroke-width: 1.2px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-.kmap .kmap-school path { fill: var(--a-school); stroke: var(--a-mapHalo); stroke-width: 1.5px; }
+/* v6.4: one north-west light across the land (--kland, a gradient in map space), fine borders, a pale
+   shallow-water halo along the coast. */
+.kmap .kmap-muni { fill: var(--kland, var(--a-landE)); stroke: var(--a-muniE); stroke-width: 0.4px; vector-effect: non-scaling-stroke; }
+.kmap .kmap-muni.home { fill: var(--a-homeE); }
+.kmap .kmap-halo { fill: none; stroke: var(--a-mapShallow); stroke-width: 7px; stroke-linejoin: round; }
+.kmap .kmap-prov { fill: none; stroke: var(--a-provE); stroke-width: 1px; stroke-linejoin: round; }
+.kmap .kmap-school path { fill: var(--a-kPinHome); stroke: var(--a-mapHalo); stroke-width: 1.5px; }
 .kmap-focus .kmap-muni { stroke-width: 1px; }
-.kmap-focus .kmap-prov { stroke-width: 2px; }
-.kmap .kmap-sch circle { fill: var(--a-pinOpen); stroke: var(--a-mapHalo); stroke-width: 2px; }
-.kmap .kmap-sch.def circle { fill: var(--a-pin); }
-.kmap .kmap-sch.closed circle { fill: var(--a-pinOff); }
-.kmap .kmap-sch.sel circle { stroke: var(--a-sel); stroke-width: 4px; }
+.kmap-focus .kmap-prov { stroke-width: 1.6px; }
+.kmap .kmap-sch circle { fill: var(--a-kPinOpen); stroke: var(--a-mapHalo); stroke-width: 2px; }
+.kmap .kmap-sch.def circle { fill: var(--a-kPinHome); }
+.kmap .kmap-sch.closed circle { fill: var(--a-kPinOff); }
+.kmap .kmap-sch.sel circle { stroke: var(--a-kSel); stroke-width: 4px; }
 .kmap .kmap-sch { cursor: pointer; }
 .kmap .kmap-sch text { fill: var(--a-schNum); font-size: 11px; font-weight: 800; pointer-events: none; }
 

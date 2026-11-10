@@ -267,6 +267,8 @@
       mood: Art.moodOf(g),
       family: g.family,
       view: g.regionInfo().view || "city",
+      // v6.4: the windows and skylines show your region (Seoul, Busan, Jeju ...).
+      region: g.region || "",
       parents: g.parents || "both",
       jobs: presentJobs(g),
     }, extra || {});

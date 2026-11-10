@@ -1139,7 +1139,7 @@
       "art.place.desk": "Your desk, late at night", "art.place.cubicle": "A study-café cubicle", "art.place.academy": "The retake academy's lecture room",
       "art.place.campus": "The university campus", "art.place.examhall": "The exam hall", "art.place.home": "Home, waiting for results",
       "art.place.gate": "The university gate", "art.place.road": "The road ahead", "art.place.start": "A city at night, about to welcome a new life",
-      "art.place.baby": "A baby's first days at home", "art.place.nursery": "The nursery at home", "art.place.kinder": "The kindergarten playroom", "art.place.city": "The neighbourhood streets",
+      "art.place.baby": "A baby's first days at home", "art.place.nursery": "The nursery at home", "art.place.kinder": "The kindergarten playroom", "art.place.yaja": "Your high-school classroom at night study", "art.place.city": "The neighbourhood streets",
 
       // ----- cutscenes (app.js plays them; each film's captions are numbered by shot) -----
       "cut.label": "Cutscene",
@@ -2025,7 +2025,7 @@
       "art.place.desk": "늦은 밤 내 책상", "art.place.cubicle": "독서실 칸막이 자리", "art.place.academy": "재종반 강의실",
       "art.place.campus": "대학 캠퍼스", "art.place.examhall": "수능 시험장", "art.place.home": "결과를 기다리는 집",
       "art.place.gate": "대학교 정문", "art.place.road": "앞으로 이어진 길", "art.place.start": "새 생명을 기다리는 밤의 도시",
-      "art.place.baby": "집에서 보내는 아기의 첫날들", "art.place.nursery": "집 안의 아기 방", "art.place.kinder": "유치원 놀이방", "art.place.city": "동네 거리",
+      "art.place.baby": "집에서 보내는 아기의 첫날들", "art.place.nursery": "집 안의 아기 방", "art.place.kinder": "유치원 놀이방", "art.place.yaja": "야간 자율 학습 중인 고등학교 교실", "art.place.city": "동네 거리",
 
       // ----- 컷신 -----
       "cut.label": "컷신",

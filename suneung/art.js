@@ -59,85 +59,260 @@
 
   function seasonOf(m) { return m >= 3 && m <= 5 ? "spring" : m >= 6 && m <= 8 ? "summer" : m >= 9 && m <= 11 ? "fall" : "winter"; }
 
+  // ---------- light, sky, weather and the world outside (environments v6.4) ----------
+  // The places are drawn like a Korean drama's sets rather than a picture book: rooms in one-point
+  // perspective with real materials (linoleum, wood strip floors, aluminium window frames, steel desks
+  // with formica tops), a desaturated, slightly cool daylight and warm practical lights (desk lamps,
+  // window glow, sodium street lights). Light comes from the upper left. Depth and light are carried
+  // by gradients; there are no filters, so a phone redraws a scene cheaply.
+  //
+  // Gradients a drawing needs are registered once (def) and written into its <defs> by the wrapper
+  // that started it (begin / defsOut), with ids unique to that drawing.
+  let DEFS = {}, PFX = "e";
+  function begin() { DEFS = {}; PFX = nid("e"); }
+  function def(name, make) {
+    if (!DEFS[name]) DEFS[name] = make(PFX + name);
+    return "url(#" + PFX + name + ")";
+  }
+  const tidy = (s) => s.replace(/(\.\d\d)\d+/g, "$1");
+  const defsOut = () => { const k = Object.keys(DEFS); return k.length ? "<defs>" + k.map((n) => DEFS[n]).join("") + "</defs>" : ""; };
+  const stp = (s) => '<stop offset="' + s[0] + '" style="stop-color:' + C(s[1]) + (s[2] != null ? ";stop-opacity:" + s[2] : "") + '"/>';
+  // stops: [[offset, token, opacity?]]; dir: vertical by default, "h" left to right, or [x1, y1, x2, y2].
+  function lin(id, stops, dir) {
+    const d = dir === "h" ? [0, 0, 1, 0] : Array.isArray(dir) ? dir : [0, 0, 0, 1];
+    return '<linearGradient id="' + id + '" x1="' + d[0] + '" y1="' + d[1] + '" x2="' + d[2] + '" y2="' + d[3] + '">' + stops.map(stp).join("") + "</linearGradient>";
+  }
+  function rad(id, stops, cx, cy, r) {
+    return '<radialGradient id="' + id + '"' + (cx != null ? ' cx="' + cx + '" cy="' + cy + '" r="' + r + '"' : "") + ">" + stops.map(stp).join("") + "</radialGradient>";
+  }
+  const fill = (u, extra) => "fill:" + u + (extra ? ";" + extra : "");
+  const poly = (pts) => "M" + pts.map((p) => (+p[0]).toFixed(1) + " " + (+p[1]).toFixed(1)).join(" L") + " Z";
+  // Shared fills: a soft contact shadow, a light's glow, ambient occlusion fading off an edge.
+  const shadowF = () => def("sh", (id) => rad(id, [[0, "aoC", 0.5], [0.6, "aoC", 0.22], [1, "aoC", 0]]));
+  const glowF = (tok) => def("gl" + tok, (id) => rad(id, [[0, tok, 0.95], [0.3, tok, 0.45], [1, tok, 0]]));
+  const aoF = (dir) => def("ao" + dir, (id) => lin(id, [[0, "aoC", 0], [1, "aoC", 1]], { d: [0, 0, 0, 1], u: [0, 1, 0, 0], r: [0, 0, 1, 0], l: [1, 0, 0, 0] }[dir]));
+  // A soft shadow on the ground under something (cx, cy: its centre).
+  const shadow = (cx, cy, rx, ry, op) => E(cx, cy, rx, ry, null, null, 0, fill(shadowF(), op != null ? "opacity:" + op : ""));
+  // A pool of light (lamps, screens, street lights); stronger at night (--a-glowOp).
+  const pool = (cx, cy, rx, ry, tok, op) => E(cx, cy, rx, ry, null, null, 0, fill(glowF(tok || "lampWarm"), "opacity:" + (op != null ? op : "var(--a-glowOp)")));
+  // Ambient occlusion: a band darkening toward one edge of the box (dir: d down, u up, l left, r right).
+  const ao = (x, y, w, h, dir, op) => R(x, y, w, h, null, 0, null, 0, fill(aoF(dir), "opacity:" + (op || 0.22)));
+  // The whole frame darkens a little toward its corners, like a lens.
+  const vignette = (w, h, op) => R(0, 0, w, h, null, 0, null, 0, fill(def("vig", (id) => rad(id, [[0.5, "aoC", 0], [1, "aoC", 0.6]], 0.5, 0.42, 0.78)), "opacity:" + (op || "var(--a-vigOp)")));
+  // Where the art is set (see viewKind). Set per drawing.
+  let REGION = "";
+  // How bright the lit windows of other buildings are: by theme (--a-litOp), or fully lit at night.
+  let LIT = "var(--a-litOp)";
+  function withLit(v, f) { const p = LIT; LIT = v; try { return f(); } finally { LIT = p; } }
+
+  // Skies by time of day: day (which dark mode's tokens turn into night), dawn, gold (golden hour),
+  // night, and rain (the flat grey of the monsoon, 장마).
+  const SKY = { day: ["skyTop", "skyMid", "skyLow"], dawn: ["dawnTop", "dawnMid", "dawnLow"], gold: ["goldTop", "goldMid", "goldLow"], night: ["nightTop", "nightMid", "nightLow"], rain: ["rainTop", "rainMid", "rainLow"] };
+  const skyF = (tod) => def("sky" + tod, (id) => lin(id, [[0, SKY[tod][0]], [0.6, SKY[tod][1]], [1, SKY[tod][2]]]));
+  function sky(x, y, w, h, o) {
+    const tod = SKY[o.tod] ? o.tod : "day", r = rand(o.seed || 5);
+    let s = R(x, y, w, h, null, 0, null, 0, fill(skyF(tod)));
+    // Stars at night, and in dark mode, where the day sky is a night sky.
+    if (tod !== "rain" && tod !== "gold") {
+      let st = "";
+      for (let i = 0; i < Math.round(w / 34); i++) st += O((x + r() * w).toFixed(0), (y + r() * h * 0.5).toFixed(0), (0.5 + r() * 0.7).toFixed(1), "starE");
+      s += A("twinkle slow", st, "opacity:" + (tod === "night" ? 0.85 : tod === "dawn" ? 0.3 : "var(--a-starOp)"));
+    }
+    // The sun (dark mode: the moon), a low gold sun, or the moon.
+    const bx = x + w * (o.sunX != null ? o.sunX : 0.8), by = y + h * (o.sunY != null ? o.sunY : 0.22), br = o.sunR || Math.max(6, Math.min(w, h) * 0.06);
+    if (tod === "day" && o.sun !== false) s += O(bx, by, br * 5, null, null, 0, fill(glowF("sunGlow"), "opacity:0.7")) + O(bx, by, br, "sunDisc");
+    if (tod === "gold" && o.sun !== false) s += O(bx, by, br * 7, null, null, 0, fill(glowF("goldSun"), "opacity:0.8")) + O(bx, by, br * 1.2, "goldSun");
+    if (tod === "night" && o.sun !== false) s += O(bx, by, br * 4, null, null, 0, fill(glowF("moonE"), "opacity:0.35")) + O(bx, by, br * 0.8, "moonE");
+    // Long, low clouds, lit from below at dusk; a heavy grey deck in the rain.
+    const ct = { day: "cloudE", dawn: "dawnCloud", gold: "goldCloud", night: "nightCloud", rain: "rainCloud" }[tod];
+    const n = tod === "rain" ? 5 : 3;
+    for (let i = 0; i < n; i++) {
+      const cx = x + w * (0.1 + r() * 0.8), cy = y + h * (tod === "rain" ? 0.05 + r() * 0.25 : 0.12 + r() * 0.3), cw = w * (0.18 + r() * 0.22), ch = Math.max(2, h * (tod === "rain" ? 0.07 : 0.035));
+      s += G(cx.toFixed(0), cy.toFixed(0), A("drift slow", E(0, 0, cw, ch, ct) + E(cw * 0.3, -ch * 0.8, cw * 0.45, ch * 0.9, ct) + E(-cw * 0.35, ch * 0.3, cw * 0.4, ch * 0.6, ct)), 1, "", "opacity:" + (tod === "rain" ? 0.75 : 0.6));
+    }
+    return s;
+  }
+  // A haze band that thickens toward the horizon (atmospheric perspective).
+  const haze = (x, y, w, h, op) => R(x, y, w, h, null, 0, null, 0, fill(def("hz", (id) => lin(id, [[0, "haze", 0], [1, "haze", 1]])), "opacity:" + (op || 0.6)));
+  // A mountain ridge: seeded peaks joined by curves, hazier toward its foot; snow-capped in winter.
+  function ridge(x, w, base, peak, seed, tok, season, n) {
+    const r = rand(seed), k = n || 6;
+    let px = x, py = base - peak * (0.3 + r() * 0.3), d = "M" + x + " " + (base + 2) + " L" + px.toFixed(1) + " " + py.toFixed(1);
+    for (let i = 1; i <= k; i++) {
+      const nx = x + (w * i) / k, ny = base - peak * (0.35 + r() * 0.65);
+      d += " Q" + ((px + nx) / 2 + (r() - 0.5) * (w / k) * 0.5).toFixed(1) + " " + (Math.min(py, ny) - peak * 0.25 * r()).toFixed(1) + " " + nx.toFixed(1) + " " + ny.toFixed(1);
+      px = nx; py = ny;
+    }
+    const snow = season === "winter";
+    const f = def("rg" + tok + (snow ? "w" : ""), (id) => lin(id, snow ? [[0, "snowE"], [0.3, tok], [1, "haze", 0.9]] : [[0, tok], [1, "haze", 0.9]]));
+    return P(d + " L" + (x + w) + " " + (base + 2) + " Z", null, null, 0, fill(f));
+  }
+  // Vegetation by season: tree crowns, hills and fields.
+  const vegTok = (season, kind) => ({ spring: kind === "cherry" ? "blossomE" : "vegSp", summer: "vegSu", fall: kind === "ginkgo" ? "vegFa2" : "vegFa", winter: "vegWi" }[season] || "vegSu");
+
   // ---------- weather and outdoor bits ----------
-  // Falling particles for the season, inside the box (x, y, w, h).
+  // Falling weather for the season inside the box (x, y, w, h): spring petals, the summer monsoon's
+  // rain, autumn leaves, winter snow. Small and slow; off with reduced motion like all art motion.
   function particles(season, x, y, w, h, night, n, seed) {
     const r = rand(seed || 7);
     let s = "";
-    const count = n || 9;
+    const count = Math.round((n || 9) * (season === "summer" ? 2 : 1));
     for (let i = 0; i < count; i++) {
-      const px = x + r() * w, dur = 6 + r() * 6, del = -r() * dur, dx = (r() * 50 - 15).toFixed(0);
-      const style = "--d:" + dur.toFixed(1) + "s;--del:" + del.toFixed(1) + "s;--dx:" + dx + "px;--fy:" + (h + 30) + "px";
+      const px = x + r() * w, dur = season === "summer" ? 0.8 + r() * 0.6 : 7 + r() * 7, del = -r() * dur;
+      const dx = season === "summer" ? -18 : (r() * 40 - 10).toFixed(0);
+      const py = y + r() * h * 0.85, style = "--d:" + dur.toFixed(1) + "s;--del:" + del.toFixed(1) + "s;--dx:" + dx + "px;--fy:" + (y + h + 20 - py).toFixed(0) + "px";
       let shape;
-      if (season === "spring") shape = E(0, 0, 4, 2.4, "blossom", null, 0, "opacity:0.9");
-      else if (season === "fall") shape = P("M0 -5 L4 0 L0 5 L-4 0 Z", i % 2 ? "fall" : "fall2");
-      else if (season === "winter") shape = O(0, 0, 1.8 + r() * 2, "snow");
-      else if (night) { s += G(px, y + 20 + r() * (h - 30), A("pulse", O(0, 0, 2, "lamp")), 1, "", ""); continue; }
-      else continue;
-      s += G(px.toFixed(0), y - 8, A("fall", shape, style));
+      if (season === "spring") shape = E(0, 0, 2.4, 1.4, "blossomE", null, 0, "opacity:0.9");
+      else if (season === "fall") shape = P("M0 -3 L2.2 0 L0 3 L-2.2 0 Z", i % 2 ? "vegFa" : "vegFa2");
+      else if (season === "winter") shape = O(0, 0, (0.9 + r() * 1.3).toFixed(1), "snowE", null, 0, "opacity:0.9");
+      else shape = L(0, 0, -2, 11, "rainE", 1, "opacity:0.55");
+      s += G(px.toFixed(0), py.toFixed(0), A(season === "summer" ? "fall rain" : "fall", shape, style));
     }
     return s;
   }
-  function tree(x, y, season, s) {
-    const crown = { spring: "blossom", summer: "leaf", fall: "fall", winter: null }[season];
-    let b = P("M-4 0 L-3 -46 L-12 -66 M-3 -46 L3 -60 L10 -74 M2 -30 L14 -50", null, "wood2", 5) + R(-5, -46, 10, 46, "wood2", 3);
-    if (crown) {
-      b += A("sway", O(-14, -64, 20, crown) + O(10, -78, 22, crown) + O(16, -52, 18, season === "fall" ? "fall2" : crown) + O(-4, -88, 18, crown) +
-        (season === "spring" ? O(-10, -70, 4, "blossom2") + O(12, -84, 4, "blossom2") + O(18, -56, 3, "blossom2") : season === "summer" ? O(6, -70, 16, "leaf2", null, 0, "opacity:0.5") : ""));
+  // A street tree (zelkova, ginkgo or cherry): a tapering trunk and a crown of leaf masses, lit from
+  // the upper left; bare branches with snow along them in winter.
+  function tree(x, y, season, s, kind) {
+    const r = rand(Math.round(x * 7 + y));
+    let b = shadow(0, 0, 26, 5, 0.6) + P("M-5 0 Q-3 -30 -2 -48 L-14 -70 L-11 -72 L0 -54 L9 -76 L12 -74 L3 -46 Q4 -24 6 0 Z", "trunk") + P("M1 -2 Q3 -26 2 -46 L5 -46 Q5 -24 6 0 Z", "aoC", null, 0, "opacity:0.3");
+    if (season !== "winter") {
+      const tok = vegTok(season, kind || (season === "fall" && r() < 0.5 ? "ginkgo" : season === "spring" && r() < 0.6 ? "cherry" : ""));
+      let crown = "";
+      const blobs = [[-16, -66, 20, 16], [10, -78, 22, 17], [18, -58, 18, 14], [-4, -90, 19, 15], [-22, -82, 14, 12], [4, -64, 22, 16]];
+      for (const [bx, by, rx, ry] of blobs) crown += E(bx, by, rx, ry, tok);
+      // Shade on the lower right, light on the upper left (one step each, as cel shading).
+      crown += E(10, -60, 20, 13, "aoC", null, 0, "opacity:0.2") + E(-12, -86, 13, 9, "hiE", null, 0, "opacity:0.22") + E(-20, -72, 9, 7, "hiE", null, 0, "opacity:0.15");
+      b += A("sway", crown);
     } else {
-      b += P("M-3 -46 L-14 -70 M3 -60 L12 -80 M-8 -58 L-20 -64", null, "wood2", 3) + P("M-16 -70 q4 -4 8 0 M8 -80 q4 -4 8 0", null, "snow", 3);
+      b += P("M-12 -70 L-22 -84 M-12 -70 L-8 -90 M10 -75 L4 -96 M10 -75 L22 -88 M0 -54 L-6 -66", null, "trunk", 2) + P("M-22 -85 L-17 -79 M-8 -91 L-9 -84 M22 -89 L16 -83", null, "snowE", 2.5);
     }
     return G(x, y, b, s || 1);
   }
-  // A window onto the season: sky, sun or moon, a tree, maybe the city, and falling particles.
-  // What you see outside: "city", "sea" (Busan, Pohang, Haenam) or "country" (rural counties). Set
-  // once per drawing from ctx.view by scene/eventArt/screenArt, so every window in a picture agrees.
-  let VIEW = "city";
-  function windowView(x, y, w, h, o) {
-    const view = o.view || VIEW;
-    const id = nid("win"), gid = nid("sky");
-    const night = o.night, season = o.season;
-    let inner = grad(gid, night ? "night" : "sky", night ? "night2" : "sky2") + R(x, y, w, h, null, 0, null, 0, "fill:url(#" + gid + ")");
-    if (night) {
-      inner += G(x + w * 0.75, y + h * 0.25, O(0, 0, 9, "moon") + O(4, -3, 8, "night"), 1);
-      const r = rand(o.seed || 3);
-      for (let i = 0; i < 6; i++) inner += G((x + r() * w).toFixed(0), (y + r() * h * 0.6).toFixed(0), A("twinkle", O(0, 0, 1.2, "star"), "--del:-" + (r() * 3).toFixed(1) + "s"));
+  // Korean apartment slabs (아파트): a wall face, the shaded end, balcony bands floor by floor and a
+  // few lit windows (bright at night, --a-litOp). x, base: bottom left; fh: one floor's height.
+  function aptSlab(x, base, w, h, fh, seed, tok) {
+    const r = rand(seed || 3), side = Math.max(2, w * 0.14);
+    const pat = def("ap" + fh, (id) => '<pattern id="' + id + '" width="12" height="' + fh + '" patternUnits="userSpaceOnUse"><rect width="12" height="' + fh + '" style="fill:' + C("aptWall") + '"/><rect y="' + (fh * 0.3).toFixed(1) + '" width="12" height="' + (fh * 0.42).toFixed(1) + '" style="fill:' + C("winDay") + '"/><rect y="' + (fh * 0.72).toFixed(1) + '" width="12" height="' + Math.max(0.6, fh * 0.1).toFixed(1) + '" style="fill:' + C("aptLine") + '"/></pattern>');
+    let s = R(x, base - h, w - side, h, null, 0, null, 0, "fill:" + pat) + R(x + w - side, base - h, side, h, tok || "aptShade") + R(x - 1, base - h - fh * 0.5, w + 1, fh * 0.6, "aptShade");
+    let lit = "";
+    const floors = Math.floor(h / fh), cols = Math.max(1, Math.floor((w - side) / 9));
+    for (let f = 1; f < floors; f++) for (let c = 0; c < cols; c++) if (r() < 0.15) lit += R((x + 1 + c * ((w - side - 2) / cols)).toFixed(1), (base - h + f * fh + fh * 0.3).toFixed(1), Math.max(0.5, (w - side - 2) / cols - 1).toFixed(1), (fh * 0.42).toFixed(1), "winLit");
+    return s + G(0, 0, lit, 1, "", "opacity:" + LIT);
+  }
+  // A plain building block with a grid of windows (offices, academies, villas, schools).
+  function block(x, base, w, h, tok, seed, cell, win) {
+    const r = rand(seed || 9), c = cell || 10;
+    let s = R(x, base - h, w, h, tok || "bldMid") + R(x + w * 0.86, base - h, w * 0.14, h, "aoC", 0, null, 0, "opacity:0.18");
+    // The window grid is a pattern (one rect however tall the building); only the lit ones are drawn.
+    const wt = win || "winDay", pat = def("bk" + c + wt, (id) => '<pattern id="' + id + '" width="' + c + '" height="' + c + '" patternUnits="userSpaceOnUse"><rect x="' + (c * 0.25) + '" y="' + (c * 0.3) + '" width="' + (c * 0.5) + '" height="' + (c * 0.45) + '" style="fill:' + C(wt) + '"/></pattern>');
+    if (w > c * 1.5 && h > c * 1.5) s += R(x + c * 0.2, base - h + c * 0.3, w - c * 0.9, h - c * 1.1, null, 0, null, 0, "fill:" + pat);
+    let lit = "";
+    const x0 = Math.ceil((x + c * 0.2) / c) * c, y0 = Math.ceil((base - h + c * 0.3) / c) * c;
+    for (let yy = y0; yy < base - c * 1.2; yy += c) for (let xx = x0; xx < x + w - c * 0.9; xx += c) if (r() < 0.16) lit += R(+(xx + c * 0.25).toFixed(1), +(yy + c * 0.3).toFixed(1), +(c * 0.5).toFixed(1), +(c * 0.45).toFixed(1), "winLit");
+    return s + G(0, 0, lit, 1, "", "opacity:" + LIT);
+  }
+  // Namsan Tower on its hill, in the haze.
+  const namsan = (x, base, s) => G(x, base, P("M-60 0 Q-30 -26 0 -30 Q30 -26 60 0 Z", "mtnMid") + R(-1.6, -78, 3.2, 50, "bldFar") + R(-5, -84, 10, 8, "bldFar", 2) + R(-3.4, -92, 6.8, 8, "bldFar", 1) + L(0, -92, 0, -112, "bldFar", 1.2) +
+    A("pulse", O(0, -112, 1.4, "neonB"), "opacity:" + LIT), s || 1);
+  // A red neon cross on a church roof: half the skylines of Korean towns have one, lit at night.
+  const cross = (x, y, s) => G(x, y, R(-0.8, -10, 1.6, 10, "neonB") + R(-3, -7.5, 6, 1.4, "neonB"), s || 1, "", "opacity:" + LIT);
+  // What the windows look out on, by region. Seoul: the skyline with Namsan Tower; Busan: the hillside
+  // houses, the sea and Gwangan Bridge; the coast (Pohang, Haenam); Jeju: Hallasan over low roofs and
+  // stone walls; the country (Pyeongchang): ridges, fields and plastic greenhouses; elsewhere a city's
+  // apartment complexes against the hills.
+  const SEOUL_AREAS = ["gangnam", "nowon", "mokdong", "mapo", "gwanak", "gangdong"];
+  function viewKind(o) {
+    const reg = o.region || REGION, v = o.view || VIEW;
+    if (SEOUL_AREAS.indexOf(reg) >= 0) return "seoul";
+    if (reg === "busan" || reg === "jeju") return reg;
+    if (v === "sea") return "coast";
+    if (v === "country") return "country";
+    return "town";
+  }
+  // The land in a box (x, y, w, h) under the sky: far, middle and near layers. o: season, seed, kind.
+  function landscape(x, y, w, h, o) {
+    const k = o.kind || viewKind(o), season = o.season, sd = o.seed || 11, hz = y + h * (o.horizon || 0.62);
+    const veg = vegTok(season);
+    let s = "";
+    if (k === "seoul") {
+      s += ridge(x, w, hz - h * 0.05, h * 0.3, sd, "mtnFar", season, 5) + namsan(x + w * 0.64, hz - h * 0.08, h / 150) + haze(x, hz - h * 0.3, w, h * 0.3, 0.5);
+      const r = rand(sd + 1);
+      for (let i = 0; i < 6; i++) { const bw = w * (0.08 + r() * 0.07), bh = h * (0.12 + r() * 0.2); s += block(x + w * (i / 6) + r() * 4, hz + h * 0.06, bw, bh, i % 2 ? "bldFar" : "bldMid", sd + i, Math.max(4, h / 26)); }
+      for (let i = 0; i < 3; i++) s += aptSlab(x + w * (0.04 + i * 0.36), y + h, w * 0.24, h * (0.36 + (i % 2) * 0.08), Math.max(3, h / 24), sd + 20 + i);
+    } else if (k === "busan") {
+      s += ridge(x, w, hz - h * 0.02, h * 0.28, sd, "mtnFar", season, 5) + haze(x, hz - h * 0.25, w, h * 0.25, 0.5);
+      s += R(x, hz, w, h * 0.4, "seaFar") + R(x, hz + h * 0.12, w, h * 0.3, "seaNear", 0, null, 0, "opacity:0.6");
+      // Gwangan Bridge: a long deck, two towers and their cables, lit at night.
+      const by = hz + h * 0.06, bx = x + w * 0.1, bw = w * 0.9;
+      s += R(bx, by, bw, Math.max(1.5, h * 0.012), "bldFar") + [0.35, 0.65].map((t) => R(bx + bw * t - 1, by - h * 0.18, 2, h * 0.18, "bldFar")).join("") +
+        P("M" + bx + " " + by + " Q" + (bx + bw * 0.2) + " " + (by - h * 0.02) + " " + (bx + bw * 0.35) + " " + (by - h * 0.18) + " Q" + (bx + bw * 0.5) + " " + (by - h * 0.04) + " " + (bx + bw * 0.65) + " " + (by - h * 0.18) + " Q" + (bx + bw * 0.8) + " " + (by - h * 0.02) + " " + (bx + bw) + " " + by, null, "bldFar", 1) +
+        G(0, 0, L(bx, by + 1, bx + bw, by + 1, "neonA", 1, "stroke-dasharray:2 3"), 1, "", "opacity:" + LIT);
+      // Hillside houses on the left, stacked up the slope.
+      const r = rand(sd + 2);
+      for (let i = 0; i < 10; i++) { const hx = x + r() * w * 0.4, hy = hz - h * 0.02 - r() * h * 0.22 * (1 - (hx - x) / (w * 0.4)); s += R(hx.toFixed(1), hy.toFixed(1), (w * 0.03).toFixed(1), (h * 0.05).toFixed(1), ["bldNear", "fabric1", "fabric4", "bldMid"][i % 4]); }
+      s += aptSlab(x + w * 0.7, hz + h * 0.02, w * 0.1, h * 0.38, Math.max(3, h / 26), sd + 5);
+    } else if (k === "coast") {
+      s += ridge(x + w * 0.4, w * 0.6, hz, h * 0.16, sd, "mtnFar", season, 4) + R(x, hz, w, h - (hz - y), "seaFar") + R(x, hz + h * 0.15, w, h, "seaNear", 0, null, 0, "opacity:0.6");
+      s += L(x, hz + h * 0.1, x + w, hz + h * 0.1, "foam", 1, "opacity:0.5") + L(x + w * 0.1, hz + h * 0.22, x + w * 0.7, hz + h * 0.22, "foam", 1, "opacity:0.4");
+      s += P("M" + x + " " + (y + h) + " L" + x + " " + (hz - h * 0.08) + " Q" + (x + w * 0.2) + " " + (hz - h * 0.14) + " " + (x + w * 0.34) + " " + (hz + h * 0.05) + " L" + (x + w * 0.34) + " " + (y + h) + " Z", "mtnNear");
+      s += block(x + w * 0.04, hz + h * 0.02, w * 0.12, h * 0.16, "bldNear", sd, Math.max(3, h / 30)) + block(x + w * 0.17, hz + h * 0.04, w * 0.1, h * 0.1, "bldMid", sd + 1, Math.max(3, h / 30));
+      s += G(x + w * 0.62, hz + h * 0.08, P("M-8 0 L8 0 L6 3 L-6 3 Z", "bldNear") + R(-1, -6, 2, 6, "bldNear"), Math.max(0.6, h / 120));
+    } else if (k === "jeju") {
+      // Hallasan: one broad, gentle dome, snow on top in winter.
+      const f = def("hl" + (season === "winter" ? "w" : ""), (id) => lin(id, season === "winter" ? [[0, "snowE"], [0.25, "mtnFar"], [1, "haze", 0.9]] : [[0, "mtnFar"], [1, "haze", 0.9]]));
+      s += P("M" + x + " " + hz + " Q" + (x + w * 0.3) + " " + (hz - h * 0.36) + " " + (x + w * 0.55) + " " + (hz - h * 0.4) + " Q" + (x + w * 0.8) + " " + (hz - h * 0.36) + " " + (x + w) + " " + (hz - h * 0.06) + " L" + (x + w) + " " + (hz + 2) + " L" + x + " " + (hz + 2) + " Z", null, null, 0, fill(f));
+      s += haze(x, hz - h * 0.2, w, h * 0.2, 0.5) + R(x, hz, w, h - (hz - y), season === "winter" ? "vegWi" : veg);
+      s += R(x, hz + h * 0.02, w, h * 0.05, "seaFar", 0, null, 0, "opacity:0.8");
+      // Low houses with coloured roofs, and black basalt walls around the fields.
+      const r = rand(sd + 3);
+      for (let i = 0; i < 5; i++) { const hx = x + w * (0.05 + i * 0.2 + r() * 0.06), hy = hz + h * 0.16 + r() * h * 0.1; s += R(hx, hy, w * 0.08, h * 0.05, "bldNear") + P("M" + (hx - 2) + " " + hy + " L" + (hx + w * 0.04) + " " + (hy - h * 0.04) + " L" + (hx + w * 0.08 + 2) + " " + hy + " Z", ["fabric1", "roofOr", "fabric1", "fabric3"][i % 4]); }
+      for (let i = 0; i < 3; i++) s += L(x, hz + h * (0.3 + i * 0.1), x + w, hz + h * (0.28 + i * 0.11), "basalt", Math.max(1.2, h / 70), "stroke-dasharray:3 1.5");
+    } else if (k === "country") {
+      s += ridge(x, w, hz - h * 0.04, h * 0.34, sd, "mtnFar", season, 5) + haze(x, hz - h * 0.25, w, h * 0.22, 0.5) + ridge(x, w, hz + h * 0.04, h * 0.2, sd + 4, "mtnMid", season, 4);
+      const field = season === "winter" ? "snowE" : season === "fall" ? "vegFa2" : veg;
+      s += R(x, hz + h * 0.04, w, h, field) + R(x, hz + h * 0.04, w, h, "aoC", 0, null, 0, "opacity:0.06");
+      for (let i = 0; i < 5; i++) s += L(x, hz + h * (0.08 + i * i * 0.025), x + w, hz + h * (0.07 + i * i * 0.027), season === "winter" ? "vegWi" : "vegSu", 1, "opacity:0.45");
+      // A farmhouse and two plastic greenhouses (비닐하우스).
+      const fx = x + w * 0.62, fy = hz + h * 0.14;
+      s += R(fx, fy - h * 0.06, w * 0.1, h * 0.06, "bldNear") + P("M" + (fx - 3) + " " + (fy - h * 0.06) + " L" + (fx + w * 0.05) + " " + (fy - h * 0.11) + " L" + (fx + w * 0.1 + 3) + " " + (fy - h * 0.06) + " Z", "roofOr");
+      for (let i = 0; i < 2; i++) { const gx = x + w * (0.12 + i * 0.16), gy = hz + h * 0.2; s += P("M" + gx + " " + gy + " Q" + (gx + w * 0.07) + " " + (gy - h * 0.12) + " " + (gx + w * 0.14) + " " + gy + " Z", "vinyl") + L(gx + w * 0.02, gy - h * 0.04, gx + w * 0.12, gy - h * 0.04, "hiE", 1, "opacity:0.5"); }
     } else {
-      inner += O(x + w * 0.78, y + h * 0.22, season === "summer" ? 13 : 10, "sun");
-      inner += G(x + w * 0.25, y + h * 0.3, A("drift", E(0, 0, 16, 6, "cloud") + E(10, -4, 10, 6, "cloud")));
+      s += ridge(x, w, hz - h * 0.02, h * 0.3, sd, "mtnFar", season, 5) + haze(x, hz - h * 0.24, w, h * 0.24, 0.5) + ridge(x, w, hz + h * 0.04, h * 0.12, sd + 3, "mtnMid", season, 4);
+      for (let i = 0; i < 4; i++) s += aptSlab(x + w * (0.02 + i * 0.25), hz + h * (0.14 + (i % 2) * 0.04), w * 0.17, h * (0.28 + (i % 3) * 0.05), Math.max(3, h / 26), sd + 30 + i);
+      s += cross(x + w * 0.9, hz - h * 0.02, h / 90);
     }
-    if (view === "country") {
-      // Hills and a field instead of buildings.
-      inner += P("M" + x + " " + (y + h * 0.7) + " Q" + (x + w * 0.25) + " " + (y + h * 0.42) + " " + (x + w * 0.5) + " " + (y + h * 0.66) + " T" + (x + w) + " " + (y + h * 0.6) + " L" + (x + w) + " " + (y + h) + " L" + x + " " + (y + h) + " Z", "hill");
-      inner += R(x, y + h * 0.8, w, h * 0.2, "grass");
-    } else if (view === "sea") {
-      // The sea along the bottom, with a small headland when the scene wants a city.
-      inner += R(x, y + h * 0.66, w, h * 0.34, "sea") + P("M" + x + " " + (y + h * 0.74) + " q" + (w / 8) + " -4 " + (w / 4) + " 0 t" + (w / 4) + " 0 t" + (w / 4) + " 0 t" + (w / 4) + " 0", null, "sea2", 2);
-      if (o.city) inner += R(x + w * 0.66, y + h * 0.5, w * 0.14, h * 0.17, "city") + R(x + w * 0.82, y + h * 0.44, w * 0.12, h * 0.23, "city");
-    } else if (o.city) {
-      inner += R(x, y + h * 0.62, w * 0.18, h * 0.4, "city") + R(x + w * 0.2, y + h * 0.5, w * 0.16, h * 0.5, "city") + R(x + w * 0.62, y + h * 0.56, w * 0.2, h * 0.5, "city");
-      if (night) for (let i = 0; i < 5; i++) inner += R((x + w * (0.04 + i * 0.17)).toFixed(0), (y + h * (0.7 + (i % 2) * 0.1)).toFixed(0), 3, 3, "lamp");
-    }
-    if (o.tree !== false) inner += tree(x + w * (o.treeX || 0.3), y + h + 4, season, (h / 140));
-    if (season === "winter") inner += R(x, y + h - 6, w, 6, "snow");
-    inner += particles(season, x, y, w, h, night, Math.round(w / 18), o.seed);
-    let s = '<clipPath id="' + id + '"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"/></clipPath><g clip-path="url(#' + id + ')">' + inner + "</g>";
-    s += R(x, y, w, h, null, 0, "frame", 6) + L(x + w / 2, y, x + w / 2, y + h, "frame", 4) + R(x - 6, y + h, w + 12, 6, "frame", 2);
+    // Trees along the bottom in the season's colours.
+    if (o.trees !== false) { const r = rand(sd + 9); for (let i = 0; i < 2; i++) s += tree(x + w * (0.15 + i * 0.6 + r() * 0.1), y + h + 6, season, h / 180); }
     return s;
   }
-  // Full-bleed outdoor sky with weather (for campus, gate, field and so on).
+  // A window onto the season and the region: an aluminium sliding frame, the view, a sheen on the glass,
+  // rain on it in the monsoon and snow on the sill in winter. o: { season, night, tod, seed, view, region,
+  // tree, blind, curtain } (city and treeX are accepted for older callers and ignored).
+  let VIEW = "city";
+  function windowView(x, y, w, h, o) {
+    const id = nid("win"), season = o.season;
+    const tod = o.tod || (o.night ? "night" : season === "summer" ? "rain" : "day");
+    let inner = sky(x, y, w, h, { tod, seed: o.seed, sunX: 0.8, sunY: 0.2 }) + withLit(tod === "night" ? 0.95 : LIT, () => landscape(x, y + h * 0.1, w, h * 0.9, { season, seed: o.seed, view: o.view, region: o.region, trees: o.tree !== false, horizon: 0.55 }));
+    if (season === "winter") inner += R(x, y + h - 4, w, 4, "snowE");
+    // At night the land outside falls into shadow (dark mode's tokens are already night).
+    if (tod === "night") inner += R(x, y + h * 0.3, w, h * 0.7, "nightTop", 0, null, 0, "opacity:var(--a-nightVeilOp)");
+    inner += particles(season, x, y, w, h, o.night, Math.round(w / 22), o.seed);
+    // The glass: a cool sheen with one diagonal reflection.
+    inner += R(x, y, w, h, "glassTint", 0, null, 0, "opacity:0.12") + P(poly([[x + w * 0.1, y], [x + w * 0.32, y], [x + w * 0.02, y + h], [x - w * 0.2, y + h]]), "hiE", null, 0, "opacity:0.1");
+    if (season === "summer") { const r = rand(o.seed || 4); for (let i = 0; i < Math.round(w / 14); i++) { const rx = x + r() * w, ry = y + r() * h * 0.7; inner += L(rx.toFixed(0), ry.toFixed(0), rx.toFixed(0), (ry + 4 + r() * 10).toFixed(0), "hiE", 1, "opacity:0.35"); } }
+    let s = '<clipPath id="' + id + '"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"/></clipPath><g clip-path="url(#' + id + ')">' + inner + "</g>";
+    // Frame: two sliding sashes overlapping in the middle, a sill, a soft inner shadow.
+    const fw = Math.max(3, w * 0.03);
+    s += R(x, y, w, h, null, 0, "alum", fw) + R(x + w / 2 - fw * 0.9, y, fw * 1.8, h, "alum2") + L(x + w / 2 - fw * 0.9, y, x + w / 2 - fw * 0.9, y + h, "aoC", 1, "opacity:0.3");
+    s += R(x - fw * 1.5, y + h + fw / 2, w + fw * 3, fw * 1.4, "alum", 1) + R(x - fw * 1.5, y + h + fw * 1.9, w + fw * 3, fw * 0.8, "aoC", 0, null, 0, "opacity:0.18");
+    if (o.blind) { let b = ""; for (let yy = y + fw; yy < y + h * 0.3; yy += 4) b += R(x + fw / 2, yy, w - fw, 2.6, "blind"); s += b; }
+    if (o.curtain) s += P("M" + (x - fw * 3) + " " + (y - fw * 2) + " L" + (x + w * 0.16) + " " + (y - fw * 2) + " Q" + (x + w * 0.1) + " " + (y + h * 0.5) + " " + (x + w * 0.14) + " " + (y + h + fw * 3) + " L" + (x - fw * 3) + " " + (y + h + fw * 3) + " Z", "curtain") +
+      P("M" + (x + w * 0.04) + " " + (y - fw) + " Q" + (x + w * 0.0) + " " + (y + h * 0.5) + " " + (x + w * 0.05) + " " + (y + h + fw * 2), null, "curtain2", 2);
+    return s;
+  }
+  // Full-bleed outdoor sky (campus, gate, field ...). o: { season, night, tod, seed, moon }.
   function outdoorSky(w, h, o) {
-    const gid = nid("sky");
-    let s = grad(gid, o.night ? "night" : "sky", o.night ? "night2" : "sky2") + R(0, 0, w, h, null, 0, null, 0, "fill:url(#" + gid + ")");
-    if (o.night) {
-      if (o.moon !== false) s += G(w * 0.82, 40, O(0, 0, 16, "moon") + O(7, -5, 14, "night"));
-      const r = rand(o.seed || 5);
-      for (let i = 0; i < 14; i++) s += G((r() * w).toFixed(0), (r() * h * 0.5).toFixed(0), A("twinkle", O(0, 0, 1.4, "star"), "--del:-" + (r() * 3).toFixed(1) + "s"));
-    } else {
-      s += A("pulse-slow", O(w * 0.85, 42, o.season === "summer" ? 24 : 18, "sun"));
-      s += G(w * 0.2, 46, A("drift", E(0, 0, 30, 10, "cloud") + E(18, -7, 18, 10, "cloud") + E(-16, -4, 14, 8, "cloud")));
-      s += G(w * 0.58, 30, A("drift slow", E(0, 0, 22, 7, "cloud") + E(12, -5, 13, 8, "cloud")));
-    }
+    let s = sky(0, 0, w, h, { tod: o.tod || (o.night ? "night" : "day"), seed: o.seed, sun: o.moon !== false, sunY: 0.16 });
     return s;
   }
 
@@ -340,426 +515,743 @@
     return G(x, y, avatar(o), (s || 1) * (f.scale || 1));
   }
 
-  // ---------- room furniture ----------
-  function crib(x, y) {
-    let s = R(x - 80, y - 90, 160, 8, "wood", 3) + R(x - 80, y - 40, 160, 8, "wood", 3) + R(x - 86, y - 100, 10, 100, "wood2", 3) + R(x + 76, y - 100, 10, 100, "wood2", 3);
-    for (let i = 0; i < 9; i++) s += R(x - 70 + i * 17, y - 84, 4, 46, "wood2", 2);
-    return s + R(x - 76, y - 48, 152, 10, "paper", 4);
-  }
-  function toyBlocks(x, y) {
-    return R(x - 30, y - 22, 22, 22, "c1", 3) + R(x - 6, y - 22, 22, 22, "c3", 3) + R(x - 18, y - 44, 22, 22, "c5", 3) + O(x + 36, y - 10, 10, "c2");
-  }
-  function floorPlanks(y, w, h, tok) {
-    let s = R(0, y, w, h, tok || "floor");
-    for (let i = 1; i < 4; i++) s += L(0, y + (h * i) / 4, w, y + (h * i) / 4, "floor2", 1);
+  // ---------- rooms in one-point perspective ----------
+  // A camera for spaces measured in metres (long corridors, halls): x across, y up from the floor, z
+  // away from the lens. (cx, vy) is the vanishing point, f the focal length in pixels, the eye at
+  // ex across and eh high. Returns the screen point of (x, y, z).
+  const proj = (cx, vy, f, ex, eh) => (x, y, z) => [cx + (f * (x - ex)) / z, vy + (f * (eh - y)) / z];
+  // A room seen from inside. b = [x0, y0, x1, y1] is the back wall (y1 where it meets the floor) and
+  // vp = [vx, vy] the vanishing point at eye level; the side walls, ceiling and floor run out from it
+  // past the frame. o: { wall, side, ceil, floor: wood | lino | tile | dark, lower: [height, token]
+  // (a wainscot band), night }.
+  function room(fw, fh, b, vp, o) {
+    const [x0, y0, x1, y1] = b, [vx, vy] = vp, n = o.night;
+    const out = (px, py) => [vx + (px - vx) * 9, vy + (py - vy) * 9];
+    const wall = o.wall || (n ? "nWall" : "wallpaper"), ceil = o.ceil || (n ? "nCeil" : "ceiling");
+    let s = R(-20, -20, fw + 40, fh + 40, ceil);
+    s += P(poly([[x0, y0], [x1, y0], out(x1, y0), out(x0, y0)]), ceil) + ao(-20, -20, fw + 40, y0 + 20, "d", 0.1);
+    const lw = poly([[x0, y0], [x0, y1], out(x0, y1), out(x0, y0)]), rw = poly([[x1, y0], [x1, y1], out(x1, y1), out(x1, y0)]);
+    s += P(lw, o.side || wall) + P(lw, "aoC", null, 0, "opacity:0.14") + P(rw, o.side || wall) + P(rw, "hiE", null, 0, "opacity:0.05");
+    s += floorMat(o.floor || "wood", b, vp, fh, n);
+    s += R(x0, y0, x1 - x0, y1 - y0, wall);
+    if (o.lower) {
+      const [lh, lt] = o.lower;
+      s += R(x0, y1 - lh, x1 - x0, lh, lt) + P(poly([[x0, y1 - lh], [x0, y1], out(x0, y1), out(x0, y1 - lh)]), lt) + P(poly([[x1, y1 - lh], [x1, y1], out(x1, y1), out(x1, y1 - lh)]), lt) +
+        R(x0, y1 - lh - 2, x1 - x0, 2, "aoC", 0, null, 0, "opacity:0.12");
+    }
+    // Ambient occlusion where planes meet, and a baseboard.
+    s += ao(x0, y1 - 18, x1 - x0, 18, "d", 0.2) + ao(x0, y0, x1 - x0, 12, "u", 0.14) + ao(x0, y0, 16, y1 - y0, "l", 0.16) + ao(x1 - 16, y0, 16, y1 - y0, "r", 0.16);
+    s += R(x0, y1 - 4, x1 - x0, 4, n ? "nBase" : "baseboard") + P(poly([[x0, y1 - 4], [x0, y1], out(x0, y1), out(x0, y1 - 4)]), n ? "nBase" : "baseboard");
     return s;
   }
-  function deskSmall(x, y) {
-    return R(x - 32, y - 30, 64, 7, "wood", 2) + R(x - 28, y - 23, 5, 25, "metal") + R(x + 23, y - 23, 5, 25, "metal") +
-      R(x - 10, y - 50, 20, 18, "c5", 2, null, 0, "opacity:0.85") + R(x - 14, y - 32, 28, 3, "paper");
+  // Floors: wood strips, school linoleum, hallway tiles, the dark carpet of a study café. Seams run to
+  // the vanishing point; cross joints get closer together with distance.
+  function floorMat(kind, b, vp, fh, night) {
+    const [x0, , x1, y1] = b, [vx, vy] = vp;
+    const tok = { wood: night ? "nFloor" : "floorWood", lino: "lino", tile: "tileE", dark: "nFloor" }[kind] || "floorWood";
+    const seam = { wood: "floorSeam", lino: "lino2", tile: "tileE2", dark: "nFloor2" }[kind] || "floorSeam";
+    const at = (px, t) => [vx + (px - vx) * t, vy + (y1 - vy) * t];
+    let s = P(poly([[x0, y1], [x1, y1], at(x1, 9), at(x0, 9)]), tok);
+    const step = kind === "wood" ? 22 : kind === "tile" ? 48 : 60;
+    let d = "";
+    for (let xb = x0 + step; xb < x1; xb += step) { const e = at(xb, 9); d += "M" + xb + " " + y1 + " L" + e[0].toFixed(1) + " " + e[1].toFixed(1) + " "; }
+    if (kind !== "wood") for (let t = 1.18, i = 0; i < 10; t += 0.22 + i * 0.07, i++) { const a = at(x0 - 400, t), c = at(x1 + 400, t); if (a[1] > fh + 10) break; d += "M" + a[0].toFixed(1) + " " + a[1].toFixed(1) + " L" + c[0].toFixed(1) + " " + c[1].toFixed(1) + " "; }
+    else { const r = rand(5); for (let t = 1.12, i = 0; i < 9; t += 0.16 + i * 0.05, i++) { const xa = x0 + r() * (x1 - x0), a = at(xa, t), c = at(xa + step, t); if (a[1] > fh + 10) break; d += "M" + a[0].toFixed(1) + " " + a[1].toFixed(1) + " L" + c[0].toFixed(1) + " " + c[1].toFixed(1) + " "; } }
+    s += P(d, null, seam, 1, "opacity:0.7");
+    // Darker toward the back wall; a soft sheen in the middle of a polished floor.
+    s += R(x0 - 400, y1, x1 - x0 + 800, 40, null, 0, null, 0, fill(aoF("u"), "opacity:0.16"));
+    if (kind !== "dark") s += E(vx, y1 + (fh - y1) * 0.55, (x1 - x0) * 0.4, (fh - y1) * 0.35, null, null, 0, fill(def("sheen", (id) => rad(id, [[0, "hiE", 0.22], [1, "hiE", 0]]))));
+    return s;
   }
-  function lamp(x, y, gid) {
-    return O(x + 22, y - 40, 60, null, null, 0, "fill:url(#" + gid + ")") + P("M" + x + " " + y + " L" + (x + 6) + " " + (y - 30) + " L" + (x + 22) + " " + (y - 42), null, "metal", 3) +
-      P("M" + (x + 12) + " " + (y - 46) + " L" + (x + 34) + " " + (y - 50) + " L" + (x + 30) + " " + (y - 36) + " Z", "c1") + E(x, y, 9, 3, "metal");
+  // Sunlight from a window on the left falling across the floor (x, y: where it lands; w, h: its size).
+  const sunPatch = (x, y, w, h, skew) => P(poly([[x, y], [x + w, y], [x + w + skew, y + h], [x + skew, y + h]]), null, null, 0,
+    fill(def("sunp", (id) => lin(id, [[0, "sunLight", 0.9], [1, "sunLight", 0.25]])), "opacity:var(--a-sunOp)"));
+  // A shaft of light through the air from a window (a soft quad with dust drifting in it).
+  function shaft(pts, seed) {
+    const r = rand(seed || 3);
+    let s = P(poly(pts), null, null, 0, fill(def("shf", (id) => lin(id, [[0, "sunLight", 0.5], [1, "sunLight", 0]], [0, 0, 0.6, 1])), "opacity:var(--a-sunOp)"));
+    let m = "";
+    for (let i = 0; i < 7; i++) { const t = r(), u = r(); const px = pts[0][0] + (pts[1][0] - pts[0][0]) * t + (pts[3][0] - pts[0][0]) * u, py = pts[0][1] + (pts[3][1] - pts[0][1]) * u; m += O(px.toFixed(0), py.toFixed(0), 0.9, "hiE"); }
+    return s + A("drift slow", m, "opacity:var(--a-moteOp)");
   }
-  function books(x, y, n, seed) {
-    const r = rand(seed || 11);
+  // A box in one-point perspective: the front face (x, y - h)–(x + w, y), and the top (or bottom) and side
+  // that recede toward vp by d (the share of the way there). f: front, t: top, sd: side.
+  function boxP(x, y, w, h, d, vp, f, t, sd) {
+    const [vx, vy] = vp, k = (p) => [p[0] + (vx - p[0]) * d, p[1] + (vy - p[1]) * d];
+    const a = [x, y - h], b = [x + w, y - h], c = [x + w, y], e = [x, y];
+    let s = "";
+    if (vy < y - h) s += P(poly([a, b, k(b), k(a)]), t);
+    else if (vy > y) s += P(poly([e, c, k(c), k(e)]), t);
+    if (vx > x + w) s += P(poly([b, k(b), k(c), c]), sd);
+    else if (vx < x) s += P(poly([a, k(a), k(e), e]), sd);
+    return s + R(x, y - h, w, h, f);
+  }
+  // A school desk (formica top, steel frame) and its chair, standing on the floor at y, scaled for depth.
+  function deskP(x, y, sc, vp, o) {
+    const w = 52 * sc, th = 40 * sc, o2 = o || {};
+    const [vx, vy] = vp, k = (p, d) => [p[0] + (vx - p[0]) * d, p[1] + (vy - p[1]) * d];
+    let s = shadow(x, y - 2 * sc, w * 0.7, 6 * sc);
+    const bl = k([x - w / 2 + 3 * sc, y], 0.12), br = k([x + w / 2 - 3 * sc, y], 0.12), tl = k([x - w / 2 + 3 * sc, y - th], 0.12), tr = k([x + w / 2 - 3 * sc, y - th], 0.12);
+    s += P("M" + tl[0].toFixed(1) + " " + tl[1].toFixed(1) + " L" + bl[0].toFixed(1) + " " + bl[1].toFixed(1) + " M" + tr[0].toFixed(1) + " " + tr[1].toFixed(1) + " L" + br[0].toFixed(1) + " " + br[1].toFixed(1), null, "steel2", 2.2 * sc);
+    // The chair, pushed in behind the desk.
+    if (o2.chair !== false) s += G(x, y - 6 * sc, R(-14 * sc, -50 * sc, 28 * sc, 14 * sc, "chairW", 2 * sc) + L(-11 * sc, -36 * sc, -11 * sc, 6 * sc, "steel2", 2 * sc) + L(11 * sc, -36 * sc, 11 * sc, 6 * sc, "steel2", 2 * sc));
+    s += R(x - w / 2 + 3 * sc, y - th, 2.6 * sc, th, "steel") + R(x + w / 2 - 5.6 * sc, y - th, 2.6 * sc, th, "steel") + R(x - w / 2 + 4 * sc, y - th * 0.55, w - 8 * sc, 2 * sc, "steel2");
+    s += R(x - w / 2 + 4 * sc, y - th + 3 * sc, w - 8 * sc, 8 * sc, "steel2", 0, null, 0, "opacity:0.6");
+    s += boxP(x - w / 2, y - th, w, 3.5 * sc, 0.14, vp, "formica2", "formica", "formica2");
+    if (o2.books) s += stack(x + (o2.bx || 6) * sc, y - th - 2 * sc, o2.books, sc, o2.seed);
+    if (o2.paper) s += P(poly([k([x - 14 * sc, y - th - 3.5 * sc], 0.02), k([x + 10 * sc, y - th - 3.5 * sc], 0.02), k([x + 12 * sc, y - th - 3.5 * sc], 0.1), k([x - 12 * sc, y - th - 3.5 * sc], 0.1)]), "paperE");
+    if (o2.tape) s += R(x - 7 * sc, y - th + 5 * sc, 14 * sc, 5 * sc, "tape", 0.5) + L(x - 4 * sc, y - th + 7.5 * sc, x + 4 * sc, y - th + 7.5 * sc, "inkE", 1, "opacity:0.7");
+    return s;
+  }
+  // A stack of workbooks and textbooks (muted covers, white page edges), base at (x, y).
+  function stack(x, y, n, sc, seed) {
+    const r = rand(seed || 11), cov = ["fabric1", "fabric2", "fabric3", "fabric4", "paperE2", "accentBlue"];
     let s = "", yy = y;
     for (let i = 0; i < n; i++) {
-      const w = 34 + r() * 14, h = 7 + r() * 3;
-      s += R((x - w / 2 + r() * 6 - 3).toFixed(1), (yy - h).toFixed(1), w.toFixed(1), h.toFixed(1), ["c1", "c3", "c4", "c5", "c2"][i % 5], 1.5) + L(x - w / 2 + 3, yy - h / 2, x + w / 2 - 6, yy - h / 2, "paper", 1, "opacity:0.6");
+      const w = (22 + r() * 9) * sc, h = (3 + r() * 2.2) * sc, dx = (r() * 4 - 2) * sc;
+      s += R((x - w / 2 + dx).toFixed(1), (yy - h).toFixed(1), w.toFixed(1), h.toFixed(1), cov[Math.floor(r() * cov.length)], 0.6) + R((x - w / 2 + dx + w * 0.82).toFixed(1), (yy - h + h * 0.2).toFixed(1), (w * 0.16).toFixed(1), (h * 0.6).toFixed(1), "paperE");
       yy -= h;
     }
     return s;
   }
-  function shelf(x, y, w, seed) {
-    const r = rand(seed || 4);
-    let s = R(x, y, w, 6, "wood2");
-    let xx = x + 4;
-    while (xx < x + w - 10) {
-      const bw = 6 + r() * 6, bh = 22 + r() * 12;
-      s += R(xx.toFixed(1), (y - bh).toFixed(1), bw.toFixed(1), bh.toFixed(1), ["c1", "c3", "c4", "c5", "c2"][Math.floor(r() * 5)], 1);
-      xx += bw + 1.5;
+  // Books on a shelf, spines of varying height.
+  function shelfRow(x, y, w, seed, sc) {
+    const r = rand(seed || 4), k = sc || 1, cov = ["fabric1", "fabric2", "fabric3", "fabric4", "paperE2", "accentBlue", "woodDark"];
+    let s = R(x, y, w, 3 * k, "woodDark") + R(x, y + 3 * k, w, 2 * k, "aoC", 0, null, 0, "opacity:0.2");
+    let xx = x + 2 * k;
+    while (xx < x + w - 8 * k) {
+      const bw = (3 + r() * 4) * k, bh = (13 + r() * 9) * k, lean = r() < 0.08;
+      s += lean ? P(poly([[xx, y], [xx + bw, y], [xx + bw + bh * 0.4, y - bh * 0.9], [xx + bh * 0.4, y - bh * 0.9]]), cov[Math.floor(r() * cov.length)]) : R(xx.toFixed(1), (y - bh).toFixed(1), bw.toFixed(1), bh.toFixed(1), cov[Math.floor(r() * cov.length)]);
+      xx += bw + (lean ? bh * 0.4 : 0.6 * k) + (r() < 0.1 ? 6 * k : 0);
     }
     return s;
   }
+  // A bookcase against the back wall: a dark frame and rows of books.
+  const bookcase = (x, y, w, h, rows, seed) => {
+    let s = shadow(x + w / 2, y, w * 0.6, 4) + R(x, y - h, w, h, "woodDark") + R(x + 3, y - h + 3, w - 6, h - 6, "aoC", 0, null, 0, "opacity:0.35");
+    for (let i = 1; i <= rows; i++) s += shelfRow(x + 3, y - h + (h * i) / (rows + 0.2), w - 6, (seed || 1) + i);
+    return s + R(x, y - h, 3, h, "hiE", 0, null, 0, "opacity:0.12");
+  };
+  // A wall clock: white face, dark rim, hands at the hour (minute hand creeps round).
   function clock(x, y, r, hour) {
-    const h = hour == null ? 9 : hour;
-    const ha = (h % 12) * 30 - 90, ma = -90;
-    const hx = x + Math.cos((ha * Math.PI) / 180) * r * 0.5, hyy = y + Math.sin((ha * Math.PI) / 180) * r * 0.5;
-    return O(x, y, r, "paper", "frame", 3) + L(x, y, hx.toFixed(1), hyy.toFixed(1), "ink", 2.5) +
-      '<g style="transform-origin:' + x + "px " + y + 'px" class="spin">' + L(x, y, x + Math.cos((ma * Math.PI) / 180) * r * 0.75, y + Math.sin((ma * Math.PI) / 180) * r * 0.78, "c1", 1.6) + "</g>" + O(x, y, 2, "ink");
+    const h = hour == null ? 9 : hour, ha = ((h % 12) * 30 - 90) * Math.PI / 180;
+    let s = O(x + 1.5, y + 2, r, "aoC", null, 0, "opacity:0.18") + O(x, y, r, "clockRim") + O(x, y, r * 0.84, "paperE");
+    for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; s += L((x + Math.cos(a) * r * 0.7).toFixed(1), (y + Math.sin(a) * r * 0.7).toFixed(1), (x + Math.cos(a) * r * 0.78).toFixed(1), (y + Math.sin(a) * r * 0.78).toFixed(1), "inkE", i % 3 ? 0.6 : 1.2); }
+    s += L(x, y, (x + Math.cos(ha) * r * 0.45).toFixed(1), (y + Math.sin(ha) * r * 0.45).toFixed(1), "inkE", Math.max(1.2, r * 0.1));
+    s += '<g style="transform-origin:' + x + "px " + y + 'px" class="spin">' + L(x, y, x, (y - r * 0.68).toFixed(1), "inkE", Math.max(0.8, r * 0.06)) + "</g>" + O(x, y, Math.max(1, r * 0.08), "accentRed");
+    return s;
   }
-  function bunting(x1, x2, y, seed) {
-    let s = P("M" + x1 + " " + y + " Q" + (x1 + x2) / 2 + " " + (y + 18) + " " + x2 + " " + y, null, "line", 1.5);
-    const n = Math.floor((x2 - x1) / 26);
-    for (let i = 0; i < n; i++) {
-      const t = (i + 0.5) / n, px = x1 + (x2 - x1) * t, py = y + 18 * 4 * t * (1 - t) * 0.5 * 2 * 0.5 + 2;
-      s += P("M" + (px - 8).toFixed(1) + " " + py.toFixed(1) + " L" + (px + 8).toFixed(1) + " " + py.toFixed(1) + " L" + px.toFixed(1) + " " + (py + 15).toFixed(1) + " Z", ["c1", "c2", "c3", "c5", "c4"][(i + (seed || 0)) % 5]);
+  // A framed Taegukgi above the board, as in every Korean classroom.
+  const flag = (x, y, w) => G(x, y, R(-2, -2, w + 4, w * 0.68 + 4, "woodDark") + R(0, 0, w, w * 0.68, "paperE") + O(w / 2, w * 0.34, w * 0.15, "accentBlue") +
+    P("M" + (w / 2 - w * 0.15) + " " + w * 0.34 + " A" + w * 0.15 + " " + w * 0.15 + " 0 0 1 " + (w / 2 + w * 0.15) + " " + w * 0.34 + " A" + w * 0.075 + " " + w * 0.075 + " 0 0 1 " + w / 2 + " " + w * 0.34 + " A" + w * 0.075 + " " + w * 0.075 + " 0 0 0 " + (w / 2 - w * 0.15) + " " + w * 0.34 + " Z", "accentRed") +
+    [[0.18, 0.16], [0.82, 0.16], [0.18, 0.52], [0.82, 0.52]].map(([u, v]) => R(w * u - w * 0.06, w * v, w * 0.12, w * 0.12, "inkE", 0, null, 0, "opacity:0.75")).join(""));
+  // A green board with a chalk tray, faint ghosts of erased work, and some chalk writing (scribbled lines).
+  function board(x, y, w, h, o) {
+    const r = rand((o && o.seed) || 6);
+    let s = R(x - 5, y - 5, w + 10, h + 10, "boardFrame") + R(x, y, w, h, "boardE") + R(x, y, w, h, null, 0, null, 0, fill(def("bdg", (id) => lin(id, [[0, "hiE", 0.1], [1, "hiE", 0]], [0, 0, 1, 1]))));
+    for (let i = 0; i < 5; i++) s += E((x + r() * w).toFixed(0), (y + r() * h).toFixed(0), (20 + r() * 40).toFixed(0), (6 + r() * 10).toFixed(0), "chalkE", null, 0, "opacity:0.06");
+    if (!o || o.writing !== false) {
+      let d = "";
+      for (let row = 0; row < 3; row++) { let xx = x + 14 + (row % 2) * 10; const yy = y + 18 + row * (h - 30) / 3; while (xx < x + w * (0.5 - row * 0.08)) { const n = 2 + Math.floor(r() * 5); d += "M" + xx.toFixed(0) + " " + yy.toFixed(0); for (let k = 0; k < n; k++) d += " l1.6 " + (k % 2 ? 2.2 : -2.6) + " l1.4 " + (k % 2 ? -0.6 : 1.4); xx += n * 3 + 5 + r() * 3; } }
+      s += P(d, null, "chalkE", 1.1, "opacity:0.6");
+      // The date and duty column on the right edge.
+      s += L(x + w * 0.86, y + 6, x + w * 0.86, y + h - 6, "chalkE", 1, "opacity:0.4") + L(x + w * 0.89, y + 14, x + w * 0.97, y + 14, "chalkE", 1.2, "opacity:0.7") + L(x + w * 0.89, y + 24, x + w * 0.95, y + 24, "chalkE", 1.2, "opacity:0.7");
     }
-    return A("sway-slow", s);
+    s += R(x - 6, y + h + 4, w + 12, 4, "boardFrame") + R(x + w * 0.2, y + h + 2, 8, 2.5, "chalkE") + R(x + w * 0.24, y + h + 2, 6, 2.5, "accentRed", 0, null, 0, "opacity:0.7") + R(x + w * 0.7, y + h + 1, 14, 4, "woodDark", 1);
+    return s;
   }
-  function sparkle(x, y, s, tok) {
-    return G(x, y, A("twinkle", P("M0 -10 L2.5 -2.5 L10 0 L2.5 2.5 L0 10 L-2.5 2.5 L-10 0 L-2.5 -2.5 Z", tok || "gold")), s || 1);
+  // A cork notice board with papers, a timetable grid and pins.
+  function notices(x, y, w, h, seed) {
+    const r = rand(seed || 8);
+    let s = R(x - 3, y - 3, w + 6, h + 6, "woodDark") + R(x, y, w, h, "cork2");
+    for (let i = 0; i < 4; i++) {
+      const pw = w * (0.24 + r() * 0.12), ph = h * (0.3 + r() * 0.2), px = x + 4 + r() * (w - pw - 8), py = y + 4 + r() * (h - ph - 8);
+      s += R(px.toFixed(1), py.toFixed(1), pw.toFixed(1), ph.toFixed(1), i % 3 ? "paperE" : "paperE2") + L(px + 3, py + ph * 0.3, px + pw - 4, py + ph * 0.3, "inkE", 0.8, "opacity:0.35") + L(px + 3, py + ph * 0.5, px + pw * 0.6, py + ph * 0.5, "inkE", 0.8, "opacity:0.35") + O(px + pw / 2, py + 2, 1.4, ["accentRed", "accentBlue", "neonC"][i % 3]);
+    }
+    return s;
   }
-  function heart(x, y, s, tok, del) {
-    return G(x, y, A("rise", P("M0 4 C-8 -2 -6 -10 0 -6 C6 -10 8 -2 0 4 Z", tok || "c1"), "--del:" + (del || 0) + "s"), s || 1);
-  }
+  // A desk lamp on a desk top at (x, y): the arm, the shade and a warm pool on the desk and wall.
+  const deskLamp = (x, y, s, op) => pool(x + 30 * s, y - 6 * s, 120 * s, 60 * s, "lampWarm", op) + G(x, y, E(0, 0, 9, 2.5, "steel2") + P("M0 0 L5 -28 L22 -40", null, "steel", 2.6) + P("M14 -46 L34 -48 L30 -34 Z", "lampShade") + O(28, -38, 3, "lampWarm"), s);
+  // A phone face down or lit, a mug of coffee (with a wisp of steam) and sticky notes.
+  const mug = (x, y, s) => G(x, y, R(-6, -12, 12, 12, "paperE", 2) + R(2, -12, 4, 12, "aoC", 0, null, 0, "opacity:0.15") + P("M6 -10 q5 0 5 4 q0 4 -5 4", null, "paperE", 1.8) + G(0, -14, A("rise", P("M0 0 q-3 -5 0 -10 q3 -5 0 -10", null, "steamE", 1.2), "--del:-1s")), s || 1);
+  const sticky = (x, y, seed, n) => { const r = rand(seed || 2); let s = ""; for (let i = 0; i < (n || 5); i++) s += G((x + (i % 3) * 16 + r() * 4).toFixed(0), (y + Math.floor(i / 3) * 15 + r() * 3).toFixed(0), '<g transform="rotate(' + ((r() - 0.5) * 8).toFixed(1) + ' 6 6)">' + R(0, 0, 12, 12, ["stickyY", "stickyP", "stickyB", "stickyY"][i % 4]) + L(2, 4, 10, 4, "inkE", 0.6, "opacity:0.4") + L(2, 7, 8, 7, "inkE", 0.6, "opacity:0.4") + "</g>"); return s; };
+  // A fluorescent tube on the ceiling, with its glow.
+  const tube = (x, y, w, s) => pool(x + w / 2, y + 4, w * 0.8, 18 * (s || 1), "fluoroGlow", 0.5) + R(x, y, w, 3 * (s || 1), "fluoro", 1.5) + R(x - 2, y - 1, w + 4, 1.5, "steel2");
+  // The backs of other students: hair and shoulders, heads bowed.
+  const backHead = (x, y, s, tok) => G(x, y, P("M-22 0 Q-22 -20 0 -22 Q22 -20 22 0 Z", tok || "fabric1") + E(0, -30, 11, 12, "hairE") + E(-3, -34, 5, 4, "hiE", null, 0, "opacity:0.12"), s || 1);
 
-  // ---------- life-stage scenes (800 × 260, floor at about 215) ----------
+  // ---------- the sets (800 × 260: the back wall meets the floor near 200, feet at 240) ----------
+  // Each set is the place without you; SCENES puts you in it. Event art and cutscenes reuse the sets.
   const W = 800, H = 260, FLOOR = 215, FEET = 240;
-  const SCENES = {
-    classroom(ctx) {
-      let s = R(0, 0, W, FLOOR, "wall") + R(0, 168, W, FLOOR - 168, "wall2") + floorPlanks(FLOOR, W, H - FLOOR);
-      // Bulletin board with children's drawings.
-      s += R(50, 52, 150, 96, "cork", 4, "frame", 4);
-      s += G(78, 80, R(-18, -16, 36, 32, "paper", 2) + O(0, -2, 8, "sun") + L(-12, 10, 12, 10, "leaf", 3), 1, "", "") + G(126, 76, R(-16, -14, 32, 30, "paper", 2) + P("M-10 8 L0 -6 L10 8 Z", "c1"), 1) +
-        G(170, 84, R(-14, -16, 28, 32, "paper", 2) + O(0, -4, 6, "c5") + L(0, 2, 0, 12, "c5", 2), 1) + G(102, 124, R(-30, -10, 60, 18, "c2", 2, null, 0, "opacity:0.9"), 1) + O(78, 63, 2.5, "c1") + O(126, 61, 2.5, "c3") + O(170, 67, 2.5, "c4");
-      // Chalkboard with doodles and sums.
-      s += R(236, 36, 330, 118, "board", 4, "wood", 7) + R(244, 154, 314, 6, "wood2", 2);
-      s += G(300, 82, O(0, 0, 13, null, "chalk", 2) + L(-20, 0, -16, 0, "chalk", 2) + L(16, 0, 20, 0, "chalk", 2) + L(0, -20, 0, -16, "chalk", 2) + L(0, 16, 0, 20, "chalk", 2));
-      s += T(420, 82, "1 + 2 = 3", "chalk", 22, "opacity:0.9") + T(420, 122, "3 + 4 = 7", "chalk", 22, "opacity:0.9");
-      s += P("M500 120 q10 -20 20 0 q10 -20 20 0", null, "chalk", 2) + R(470, 150, 18, 4, "chalk", 1) + R(500, 150, 10, 4, "c2", 1);
-      s += clock(612, 44, 15, 9);
-      s += windowView(640, 70, 130, 100, { season: ctx.season, seed: 21 });
-      s += G(140, 233, deskSmall(0, 0)) + G(660, 236, deskSmall(0, 0));
-      s += person(ctx, 352, FEET, 1.15);
-      return s;
-    },
-    // Ages 0–2 (and 3–5 at home): a sunny room with a crib, a mobile, a rug and toy blocks.
+  const VP = [400, 112], BACK = [60, 22, 740, 200];
+  const SETS = {
+    // The baby's room in a Korean apartment: a crib, a mobile, a foam play mat, light from the window.
     nursery(ctx) {
-      let s = R(0, 0, W, FLOOR, "wall") + R(0, 150, W, FLOOR - 150, "wall2") + floorPlanks(FLOOR, W, H - FLOOR);
-      s += windowView(80, 40, 150, 110, { season: ctx.season, city: true, seed: 91 });
-      s += crib(560, FLOOR) + toyBlocks(430, FLOOR + 14);
-      s += E(360, FLOOR + 16, 150, 14, "c5", null, 0, "opacity:0.35");
-      s += G(620, 40, A("sway", L(0, 0, 0, 16, "line", 1.5) + L(-30, 16, 30, 16, "line", 2) + L(-30, 16, -30, 30, "line", 1) + L(30, 16, 30, 30, "line", 1) + L(0, 16, 0, 34, "line", 1) +
-        O(-30, 36, 7, "c1") + P("M0 34 l7 12 l-14 0 Z", "c3") + O(30, 36, 7, "gold")));
-      s += person(ctx, 340, FEET, 1.1);
-      return s;
+      let s = room(W, H, BACK, VP, { wall: "wallpaper", floor: "wood" });
+      s += windowView(92, 46, 170, 118, { season: ctx.season, seed: 91, curtain: true });
+      s += sunPatch(170, 206, 150, 26, 60) + shaft([[96, 50], [262, 50], [360, 230], [190, 230]], 4);
+      // A low shelf of picture books and a stuffed bear.
+      s += boxP(300, 200, 110, 34, 0.08, VP, "woodLight", "woodLight2", "woodLight2") + G(320, 166, R(0, -16, 9, 16, "fabric4") + R(10, -14, 8, 14, "fabric1") + R(19, -18, 10, 18, "fabric3"));
+      s += G(380, 166, O(0, -10, 9, "bear") + O(-7, -18, 3.5, "bear") + O(7, -18, 3.5, "bear") + E(0, -8, 3, 2, "bear2"));
+      // Puzzle play mat in perspective.
+      const m = (u, v) => [400 + (u - 400) * (1 + v * 0.18), 210 + v * 13];
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) s += P(poly([m(260 + i * 60, j), m(320 + i * 60, j), m(320 + i * 60, j + 1), m(260 + i * 60, j + 1)]), ["matA", "matB", "matC", "matB"][(i + j) % 4], "aoC", 0.5);
+      // The crib: pale wood rails, a mattress, a blanket.
+      s += shadow(600, 236, 110, 8) + boxP(520, 232, 170, 18, 0.14, VP, "cribW2", "paperE", "cribW2") + boxP(512, 216, 186, 6, 0.14, VP, "cribW", "cribW", "cribW2");
+      for (let i = 0; i < 11; i++) s += R(516 + i * 17, 158, 4, 58, "cribW");
+      s += R(508, 150, 194, 8, "cribW", 2) + R(506, 146, 8, 92, "cribW2", 2) + R(696, 146, 8, 92, "cribW2", 2) + E(620, 200, 50, 8, "fabric1", null, 0, "opacity:0.7");
+      s += G(600, 30, A("sway", L(0, 0, 0, 18, "steel2", 1) + L(-28, 18, 28, 18, "steel2", 1.4) + L(-28, 18, -28, 30, "steel2", 0.8) + L(28, 18, 28, 32, "steel2", 0.8) + L(0, 18, 0, 36, "steel2", 0.8) +
+        O(-28, 34, 5, "matC") + P("M0 36 l5 9 l-10 0 Z", "matB") + E(28, 36, 6, 4, "matA")));
+      return s + vignette(W, H);
     },
+    // Kindergarten: cubbies with little bags, picture books face out, a rainbow-striped mat, low chairs.
+    kinder(ctx) {
+      let s = room(W, H, BACK, VP, { wall: "wallKinder", floor: "wood", lower: [46, "wainscot"] });
+      s += windowView(560, 44, 156, 100, { season: ctx.season, seed: 93 });
+      s += sunPatch(520, 206, 150, 24, -60);
+      // Cubbies: a grid of boxes, a bag or a coat in some.
+      s += boxP(90, 200, 200, 96, 0.06, VP, "woodLight", "woodLight2", "woodLight2");
+      for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) { const cx = 96 + i * 39, cy = 110 + j * 30; s += R(cx, cy, 34, 25, "aoC", 0, null, 0, "opacity:0.35") + (((i + j) % 3) ? R(cx + 6, cy + 6, 22, 19, ["fabric1", "fabric4", "fabric3", "stickyY"][(i * 3 + j) % 4], 4) : ""); }
+      // A row of picture books on a ledge, and a strip of drawings on the wall.
+      s += R(310, 128, 200, 4, "woodLight2");
+      for (let i = 0; i < 7; i++) s += G(318 + i * 27, 128, '<g transform="rotate(' + (i % 2 ? 2 : -2) + ' 11 0)">' + R(0, -24, 22, 24, ["fabric4", "stickyY", "fabric1", "matB", "fabric2", "matC", "fabric3"][i]) + O(11, -14, 5, "paperE", null, 0, "opacity:0.6") + "</g>");
+      for (let i = 0; i < 6; i++) s += R(320 + i * 34, 52, 26, 30, "paperE") + O(333 + i * 34, 64, 6, ["stickyY", "fabric1", "matB", "fabric4", "matC", "stickyB"][i], null, 0, "opacity:0.8") + L(312, 50, 520, 50, "steel2", 0.8);
+      // The rainbow mat: concentric half rings flattened by perspective.
+      ["matC", "stickyY", "matB", "stickyB", "matA"].forEach((t, i) => { s += P("M" + (250 + i * 18) + " 238 A" + (150 - i * 18) + " " + (24 - i * 3.5) + " 0 0 1 " + (550 - i * 18) + " 238 Z", t); });
+      s += G(660, 236, shadow(0, 0, 22, 4) + R(-14, -24, 28, 4, "stickyB", 2) + L(-11, -20, -12, 0, "steel2", 2) + L(11, -20, 12, 0, "steel2", 2) + R(-14, -44, 28, 18, "stickyB", 3));
+      return s + vignette(W, H);
+    },
+    // An elementary classroom: the green board under the Taegukgi, a clock and the TV, a cork board of
+    // drawings, a window wall, wooden floor, rows of small desks, and a mop and broom in the corner.
+    classroom(ctx) {
+      let s = room(W, H, BACK, VP, { wall: "wallSchool", floor: "wood", lower: [52, "wainscot"] });
+      s += tube(170, 6, 90) + tube(360, 4, 90) + tube(550, 6, 90);
+      s += board(222, 62, 300, 92, { seed: 6 }) + flag(355, 30, 34) + clock(560, 44, 11, 9);
+      s += boxP(600, 70, 52, 34, 0.04, VP, "tvE", "tvE", "tvE") + R(604, 40, 44, 26, "screenOff");
+      s += notices(86, 64, 112, 74, 8) + R(98, 72, 24, 20, "stickyY") + R(130, 70, 22, 24, "matB") + R(160, 74, 26, 18, "fabric4");
+      s += windowView(640, 54, 92, 102, { season: ctx.season, seed: 21, blind: true });
+      s += sunPatch(560, 206, 170, 26, -70) + shaft([[640, 60], [732, 60], [600, 230], [470, 230]], 5);
+      // Cleaning tools in the corner: a broom and a mop leaning on the wall.
+      s += L(70, 198, 82, 130, "woodLight2", 2.4) + P("M64 200 L76 200 L74 186 L66 186 Z", "fabric2") + L(92, 200, 100, 120, "steel", 2) + E(92, 200, 9, 3, "fabric1");
+      for (const [x, y, sc] of [[170, 218, 0.95], [630, 222, 1.0], [96, 252, 1.25], [712, 256, 1.3]]) s += deskP(x, y, sc, VP, { books: 2, seed: x });
+      return s + vignette(W, H);
+    },
+    // A middle-school corridor, measured in metres and projected: classroom doors with glass and lockers
+    // down the left wall, tall windows down the right with sun lying across the linoleum, tubes overhead.
     hallway(ctx) {
-      let s = R(0, 0, W, FLOOR, "wall") + R(0, FLOOR, W, H - FLOOR, "tile");
-      for (let x = 0; x < W; x += 40) s += L(x, FLOOR, x - 30, H, "tile2", 1);
-      for (let i = 0; i < 6; i++) {
-        const x = 18 + i * 44;
-        s += R(x, 60, 42, 155, i === 2 ? "c5" : "locker", 2, "locker2", 2) + L(x + 8, 74, x + 34, 74, "locker2", 2) + L(x + 8, 80, x + 34, 80, "locker2", 2) + R(x + 32, 130, 4, 14, "metal", 2);
+      const p = proj(500, 104, 560, 0.35, 1.6), q = (pts, tok, ex) => P(poly(pts.map((v) => p(...v))), tok, null, 0, ex);
+      const Z0 = 1.6, Z1 = 34, hw = 1.6, ht = 3;
+      let s = R(-10, -10, W + 20, H + 20, "ceiling");
+      s += q([[-hw, ht, Z0], [hw, ht, Z0], [hw, ht, Z1], [-hw, ht, Z1]], "ceiling") + q([[-hw, 0, Z0], [hw, 0, Z0], [hw, 0, Z1], [-hw, 0, Z1]], "lino");
+      s += q([[-hw, 0, Z0], [-hw, ht, Z0], [-hw, ht, Z1], [-hw, 0, Z1]], "wallSchool") + q([[-hw, 0, Z0], [-hw, 1, Z0], [-hw, 1, Z1], [-hw, 0, Z1]], "wainscot");
+      s += q([[hw, 0, Z0], [hw, ht, Z0], [hw, ht, Z1], [hw, 0, Z1]], "wallSchool2") + q([[hw, 0, Z0], [hw, 0.9, Z0], [hw, 0.9, Z1], [hw, 0, Z1]], "wainscot");
+      // Floor tiles: seams along the corridor and across it, closer together with distance.
+      let d = "";
+      for (let x = -hw + 0.6; x < hw; x += 0.6) { const a = p(x, 0, Z0), b = p(x, 0, Z1); d += "M" + a[0].toFixed(1) + " " + a[1].toFixed(1) + " L" + b[0].toFixed(1) + " " + b[1].toFixed(1) + " "; }
+      for (let z = 2.4; z < Z1; z += 1.2) { const a = p(-hw, 0, z), b = p(hw, 0, z); d += "M" + a[0].toFixed(1) + " " + a[1].toFixed(1) + " L" + b[0].toFixed(1) + " " + b[1].toFixed(1) + " "; }
+      s += P(d, null, "lino2", 0.8, "opacity:0.8");
+      // The far end: a window onto the day.
+      const e0 = p(-hw, ht, Z1), e1 = p(hw, 0, Z1);
+      s += R(e0[0], e0[1], e1[0] - e0[0], e1[1] - e0[1], "wallSchool");
+      const w0 = p(-0.9, 2.5, Z1), w1 = p(0.9, 0.9, Z1);
+      s += windowView(w0[0], w0[1], w1[0] - w0[0], w1[1] - w0[1], { season: ctx.season, seed: 30, tree: false });
+      // Right wall: tall windows; their light falls across the floor toward the left wall.
+      const sky2 = skyF(ctx.season === "summer" ? "rain" : "day");
+      for (let z = 3; z < Z1 - 3; z += 4.2) {
+        s += q([[hw, 1.05, z], [hw, 2.6, z], [hw, 2.6, z + 2.8], [hw, 1.05, z + 2.8]], null, "fill:" + sky2) + q([[hw, 1.05, z], [hw, 2.6, z], [hw, 2.6, z + 2.8], [hw, 1.05, z + 2.8]], "glassTint", "opacity:0.3");
+        s += P(poly([[hw, 1.05, z], [hw, 2.6, z], [hw, 2.6, z + 2.8], [hw, 1.05, z + 2.8]].map((v) => p(...v))), null, "alum", 2) + P(poly([[hw, 1.05, z + 1.4], [hw, 2.6, z + 1.4]].map((v) => p(...v))).replace(" Z", ""), null, "alum", 1.5);
+        s += q([[hw, 0, z + 0.6], [hw, 0, z + 3.2], [-0.4, 0, z + 4.4], [-0.4, 0, z + 1.8]], null, fill(def("sunp", (id) => lin(id, [[0, "sunLight", 0.9], [1, "sunLight", 0.25]])), "opacity:var(--a-sunOp)"));
       }
-      s += R(300, 64, 100, 70, "cork", 3, "frame", 4) + R(312, 74, 30, 38, "paper", 1) + R(350, 72, 38, 26, "c2", 1, null, 0, "opacity:0.85") + R(352, 104, 34, 22, "paper", 1);
-      s += windowView(450, 54, 150, 110, { season: ctx.season, seed: 31, city: true }) + windowView(624, 54, 150, 110, { season: ctx.season, seed: 37, treeX: 0.6 });
-      s += R(0, 200, W, 15, "wall2");
-      s += person(ctx, 360, FEET, 1.0);
-      return s;
+      // Left wall: classroom doors with a strip of glass, lockers between them, a notice board.
+      for (let z = 6.2; z < Z1 - 2; z += 6) {
+        s += q([[-hw, 0, z], [-hw, 2.1, z], [-hw, 2.1, z + 1.1], [-hw, 0, z + 1.1]], "doorE") + q([[-hw, 1.25, z + 0.12], [-hw, 1.85, z + 0.12], [-hw, 1.85, z + 0.98], [-hw, 1.25, z + 0.98]], "glassTint", "opacity:0.8") +
+          q([[-hw, 2.1, z - 0.05], [-hw, 2.18, z - 0.05], [-hw, 2.18, z + 1.15], [-hw, 2.1, z + 1.15]], "doorFrame");
+        s += q([[-hw, 0, z + 1.6], [-hw, 1.15, z + 1.6], [-hw, 1.15, z + 4.6], [-hw, 0, z + 4.6]], "lockerE");
+        let lk = "";
+        for (let k = 1; k < 8; k++) { const a = p(-hw, 0.02, z + 1.6 + k * 0.375), b = p(-hw, 1.13, z + 1.6 + k * 0.375); lk += "M" + a[0].toFixed(1) + " " + a[1].toFixed(1) + " L" + b[0].toFixed(1) + " " + b[1].toFixed(1) + " "; }
+        s += P(lk, null, "lockerE2", 1) + q([[-hw, 1.15, z + 1.6], [-hw, 1.2, z + 1.6], [-hw, 1.2, z + 4.6], [-hw, 1.15, z + 4.6]], "lockerE2");
+      }
+      s += q([[-hw, 1.4, 4.0], [-hw, 2.1, 4.0], [-hw, 2.1, 5.8], [-hw, 1.4, 5.8]], "cork2") + q([[-hw, 1.5, 4.2], [-hw, 2.0, 4.2], [-hw, 2.0, 4.8], [-hw, 1.5, 4.8]], "paperE") + q([[-hw, 1.48, 5.0], [-hw, 1.95, 5.0], [-hw, 1.95, 5.6], [-hw, 1.48, 5.6]], "paperE2") + q([[-hw, 0, 2.6], [-hw, 1.15, 2.6], [-hw, 1.15, 5.8], [-hw, 0, 5.8]], "lockerE");
+      // Tubes down the middle of the ceiling.
+      for (let z = 3; z < Z1; z += 3.5) s += q([[-0.1, ht - 0.02, z], [0.1, ht - 0.02, z], [0.1, ht - 0.02, z + 1.2], [-0.1, ht - 0.02, z + 1.2]], "fluoro");
+      // Where the walls meet the floor and ceiling, a little darker.
+      s += P(poly([p(-hw, 0, Z0), p(-hw, 0, Z1), p(-hw + 0.25, 0, Z1), p(-hw + 0.25, 0, Z0)]), "aoC", null, 0, "opacity:0.12") + P(poly([p(hw, 0, Z0), p(hw, 0, Z1), p(hw - 0.25, 0, Z1), p(hw - 0.25, 0, Z0)]), "aoC", null, 0, "opacity:0.1");
+      s += E(p(0, 0, 9)[0], p(0, 0, 9)[1], 160, 20, null, null, 0, fill(def("sheen", (id) => rad(id, [[0, "hiE", 0.22], [1, "hiE", 0]]))));
+      s += G(...p(-hw + 0.1, 0, 2.6), R(-6, -30, 12, 30, "accentRed", 4) + R(-3, -36, 6, 6, "inkE"));
+      return s + vignette(W, H);
     },
+    // 야자: the high-school classroom at night. Fluorescent light, dark windows onto lit apartments,
+    // towers of workbooks on every desk, a few heads bent over them.
+    yaja(ctx) {
+      let s = room(W, H, BACK, VP, { wall: "wallSchool", floor: "lino", lower: [52, "wainscot"] });
+      s += R(-20, -20, W + 40, H + 40, "fluoroGlow", 0, null, 0, "opacity:0.06");
+      s += tube(170, 6, 90) + tube(360, 4, 90) + tube(550, 6, 90);
+      s += board(222, 62, 300, 92, { seed: 9 }) + flag(355, 30, 34) + clock(560, 44, 11, 10);
+      s += notices(86, 64, 112, 74, 12);
+      s += windowView(630, 54, 102, 102, { season: ctx.season, seed: 22, night: true });
+      for (const [x, y, sc, n] of [[160, 218, 0.95, 5], [300, 214, 0.9, 4], [640, 222, 1.0, 6], [96, 252, 1.25, 6], [712, 256, 1.3, 4]]) s += deskP(x, y, sc, VP, { books: n, seed: x, bx: -10 });
+      s += backHead(300, 196, 0.8, "uniformE") + backHead(640, 204, 0.95, "uniformE");
+      return s + vignette(W, H, 0.6);
+    },
+    // Your desk at home late at night: the lamp's pool of light, sticky notes, a D-day calendar in the
+    // exam year, towers of workbooks, a mug, the window onto the lit apartments across the way.
     desk(ctx) {
-      const gid = nid("lamp");
-      let s = '<defs>' + glow(gid, "lamp") + "</defs>" + R(0, 0, W, FLOOR, "nightwall") + floorPlanks(FLOOR, W, H - FLOOR, "nightfloor");
-      s += windowView(470, 40, 150, 110, { season: ctx.season, night: true, city: true, seed: 41, tree: ctx.season !== "winter" });
-      s += shelf(40, 100, 140, 3) + shelf(40, 160, 140, 9);
-      s += R(70, 26, 34, 50, "c5", 0, null, 0, "opacity:0.8") + P("M70 26 L104 26 L87 46 Z", "c1", null, 0, "opacity:0.8");
-      if (ctx.dday != null) {
-        s += R(250, 34, 120, 74, "paper", 4, "frame", 3) + R(250, 34, 120, 18, "c1", 4) + T(310, 92, "D-" + ctx.dday, "c1", 30);
-      } else {
-        s += R(262, 40, 70, 54, "paper", 2, "frame", 3) + O(285, 60, 8, "sun") + P("M266 90 L290 70 L306 84 L318 74 L330 90 Z", "leaf");
-      }
-      // Desk with a lamp, a tower of workbooks, an open book and a mug.
-      s += R(440, 160, 330, 10, "wood", 2) + R(450, 170, 10, 46, "wood2") + R(750, 170, 10, 46, "wood2") + R(610, 170, 140, 40, "wood", 2) + L(620, 190, 740, 190, "wood2", 2);
-      s += lamp(480, 160, gid);
-      s += books(580, 160, ctx.dday != null ? 7 : 4, 12) + G(680, 156, P("M-26 0 L0 -6 L26 0 L26 4 L0 -2 L-26 4 Z", "paper", "line", 1)) + G(740, 160, R(-8, -16, 16, 16, "c3", 3) + P("M8 -12 q6 0 6 5 q0 5 -6 5", null, "c3", 2.5));
-      s += G(720, 130, A("rise", P("M0 0 q-4 -6 0 -12 q4 -6 0 -12", null, "steam", 2), "--del:-1s"));
-      s += person(ctx, 350, FEET, 1.05);
-      return s;
+      let s = room(W, H, BACK, VP, { night: true, floor: "wood" });
+      s += windowView(452, 40, 160, 104, { season: ctx.season, night: true, seed: 41, curtain: true });
+      s += bookcase(80, 200, 120, 150, 4, 3);
+      // The bed's corner, low on the left.
+      s += boxP(-20, 250, 120, 30, 0.1, VP, "fabric1", "beddingE", "fabric1");
+      if (ctx.dday != null) s += G(270, 44, R(2, 2, 92, 66, "aoC", 2, null, 0, "opacity:0.25") + R(0, 0, 92, 66, "paperE", 2) + R(0, 0, 92, 15, "accentRed", 2) + O(20, 7, 2, "paperE") + O(72, 7, 2, "paperE") + T(46, 52, "D-" + ctx.dday, "accentRed", 26));
+      else s += G(276, 50, R(0, 0, 74, 52, "paperE2") + R(4, 4, 66, 30, "mtnFar") + P("M4 34 L24 18 L40 28 L54 16 L70 34 Z", "mtnMid"));
+      s += sticky(380, 70, 3, 5);
+      // The desk: a long top, a drawer unit, the lamp, books, an open workbook, the mug.
+      s += shadow(600, 214, 200, 10) + boxP(430, 160, 340, 7, 0.07, VP, "woodDesk2", "woodDesk", "woodDesk2") + R(436, 167, 8, 44, "woodDesk2") + boxP(640, 210, 120, 43, 0.05, VP, "woodDesk2", "woodDesk", "woodDesk2") + L(650, 188, 750, 188, "aoC", 1, "opacity:0.3");
+      s += deskLamp(470, 154, 1.1, 0.85) + stack(580, 154, ctx.dday != null ? 8 : 4, 1.4, 12) + G(670, 152, P("M-26 0 L0 -5 L26 0 L26 3 L0 -2 L-26 3 Z", "paperE") + L(-20, -2, -4, -4, "inkE", 0.6, "opacity:0.4")) + mug(740, 154, 1.1);
+      s += G(530, 153, R(-8, -2, 16, 3, "inkE", 1));
+      return s + vignette(W, H, 0.7);
     },
+    // A study café (독서실): a dim aisle between two rows of carrels, each with its own warm lamp; the
+    // near one on the right open to us, with a timer and a stack of books.
     cubicle(ctx) {
-      const gid = nid("lamp");
-      let s = '<defs>' + glow(gid, "lamp") + "</defs>" + R(0, 0, W, FLOOR, "dark2") + R(0, FLOOR, W, H - FLOOR, "nightfloor");
-      s += R(0, 18, W, 6, "dark") + R(120, 14, 80, 6, "lamp", 2, null, 0, "opacity:0.5") + R(560, 14, 80, 6, "lamp", 2, null, 0, "opacity:0.5");
-      for (let i = 0; i < 5; i++) {
-        const x = 10 + i * 160;
-        s += R(x, 70, 150, 145, "cubicle", 2) + R(x, 66, 6, 150, "cubicle2") + R(x + 144, 66, 6, 150, "cubicle2") + R(x + 6, 150, 138, 8, "wood", 1) + R(x + 6, 100, 138, 6, "cubicle2");
-        s += O(x + 40, 140, 40, null, null, 0, "fill:url(#" + gid + ")") + R(x + 20, 132, 30, 6, "lamp", 2) + books(x + 110, 100, 3, i + 2);
-        if (i !== 2) s += O(x + 75, 132, 12, "hair") + R(x + 60, 140, 30, 12, "hoodie", 5);
+      const p = proj(400, 96, 520, 0, 1.5), q = (pts, tok, ex) => P(poly(pts.map((v) => p(...v))), tok, null, 0, ex);
+      const Z0 = 1.2, Z1 = 16, hw = 2.6, ht = 2.6;
+      let s = R(-10, -10, W + 20, H + 20, "nCeil") + q([[-hw, 0, Z0], [hw, 0, Z0], [hw, 0, Z1], [-hw, 0, Z1]], "nFloor") + q([[-hw, 0, Z0], [-hw, ht, Z0], [-hw, ht, Z1], [-hw, 0, Z1]], "nWall2") + q([[hw, 0, Z0], [hw, ht, Z0], [hw, ht, Z1], [hw, 0, Z1]], "nWall2");
+      const e0 = p(-hw, ht, Z1), e1 = p(hw, 0, Z1);
+      s += R(e0[0], e0[1], e1[0] - e0[0], e1[1] - e0[1], "nWall") + R(p(-0.4, 2.1, Z1)[0], p(0, 2.1, Z1)[1], 520 * 0.8 / Z1, 520 * 2.1 / Z1, "doorE2", 0, null, 0, "opacity:0.7");
+      for (let z = 2.5; z < Z1; z += 2.4) { const c = p(0, ht, z); s += pool(c[0], c[1] + 4, 200 / z, 60 / z, "lampWarm", 0.4) + O(c[0], c[1], Math.max(1, 14 / z), "lampWarm"); }
+      // Carrels down both sides, far to near: desk top, the panels between them, a lamp's pool on each desk.
+      for (const side of [-1, 1]) for (let z = Z1 - 1.0; z >= 2.2; z -= 1.0) {
+        const x0 = side * hw, x1 = side * (hw - 0.75), lit = (Math.round(z * 3) % 4) !== 1;
+        s += q([[x0, 0.75, z], [x1, 0.75, z], [x1, 0.75, z + 1], [x0, 0.75, z + 1]], "partition2");
+        s += q([[x0, 0, z], [x0, 1.45, z], [x1, 1.45, z], [x1, 0, z]], "partition") + q([[x1, 0, z], [x1, 1.45, z], [x1, 1.45, z + 0.04], [x1, 0, z + 0.04]], "partition2");
+        if (lit) { const c = p((x0 + x1) / 2, 0.8, z + 0.5); s += pool(c[0], c[1], 260 / z, 80 / z, "lampWarm", 0.7); }
+        if (lit && (Math.round(z * 7) % 3) === 0) { const c = p(x1 + side * -0.05, 0, z + 0.55); s += backHead(c[0], c[1] - 520 * 0.75 / z, 1.1 / z * 2.2, "hoodieE"); }
       }
-      s += clock(400, 44, 14, 11);
-      s += person(ctx, 330, FEET, 1.02, { prop: "book" });
-      return s;
+      // The near carrel on the right, open toward us.
+      s += G(560, 240, boxP(0, 0, 220, 70, 0.08, [400 - 560, 96 - 240], "partition", "partition2", "partition2") + R(4, -146, 6, 146, "partition2") + R(4, -146, 212, 76, "partition") + R(8, -118, 204, 5, "partition2") + stack(120, -118, 5, 1.1, 7) + deskLamp(30, -70, 1, 0.9) +
+        R(170, -84, 26, 14, "inkE", 3) + R(173, -81, 20, 8, "timer", 1));
+      return s + vignette(W, H, 0.75);
     },
+    // A retake academy's lecture hall from the back: rows of heads and long desks down to the stage, a
+    // whiteboard with the countdown and a projector screen.
     academy(ctx) {
-      let s = R(0, 0, W, FLOOR, "wall") + R(0, FLOOR, W, H - FLOOR, "tile");
-      s += R(80, 14, 120, 8, "lamp", 2) + R(340, 14, 120, 8, "lamp", 2) + R(600, 14, 120, 8, "lamp", 2);
-      s += R(170, 40, 460, 120, "paper", 4, "metal", 6) + R(180, 160, 440, 6, "metal", 2);
-      s += P("M200 130 L250 70 L300 110 L360 60", null, "c5", 3) + O(250, 70, 4, "c5") + O(360, 60, 4, "c5") + L(200, 140, 380, 140, "line", 2);
-      s += T(520, 112, "D-" + (ctx.dday != null ? ctx.dday : 100), "c1", 38);
-      for (const x of [70, 150, 560, 650, 740]) s += O(x, 214, 16, "hair") + R(x - 24, 226, 48, 34, ["hoodie", "c5", "pants", "c4", "hoodie"][Math.floor(x / 150) % 5], 10);
-      s += person(ctx, 360, FEET, 1.02);
-      return s;
+      const p = proj(400, 86, 600, 0, 1.7), q = (pts, tok, ex) => P(poly(pts.map((v) => p(...v))), tok, null, 0, ex);
+      const Z0 = 1.5, Z1 = 15, hw = 6.5, ht = 3.4;
+      let s = R(-10, -10, W + 20, H + 20, "ceiling") + q([[-hw, 0, Z0], [hw, 0, Z0], [hw, 0, Z1], [-hw, 0, Z1]], "tileE") + q([[-hw, 0, Z0], [-hw, ht, Z0], [-hw, ht, Z1], [-hw, 0, Z1]], "wallAcad") + q([[hw, 0, Z0], [hw, ht, Z0], [hw, ht, Z1], [hw, 0, Z1]], "wallAcad") +
+        q([[-hw, 0, Z0], [-hw, ht, Z0], [-hw, ht, Z1], [-hw, 0, Z1]], "aoC", "opacity:0.08");
+      const e0 = p(-hw, ht, Z1), e1 = p(hw, 0, Z1);
+      s += R(e0[0], e0[1], e1[0] - e0[0], e1[1] - e0[1], "wallAcad") + ao(e0[0], e1[1] - 10, e1[0] - e0[0], 10, "d", 0.2);
+      for (let z = 3; z < Z1; z += 2.6) for (const x of [-3, 3]) s += q([[x - 0.6, ht, z], [x + 0.6, ht, z], [x + 0.6, ht, z + 0.25], [x - 0.6, ht, z + 0.25]], "fluoro");
+      // The stage: a whiteboard with a chart and the countdown, the projector screen and its beam.
+      const b0 = p(-5.4, 2.7, Z1 - 0.01), b1 = p(-0.6, 0.9, Z1 - 0.01), c0 = p(0.4, 2.9, Z1 - 0.01), c1 = p(5.4, 0.8, Z1 - 0.01);
+      s += R(b0[0], b0[1], b1[0] - b0[0], b1[1] - b0[1], "boardWhite", 1, "steel", 2) + P("M" + (b0[0] + 10) + " " + (b1[1] - 10) + " l26 -18 l20 8 l30 -24", null, "accentBlue", 1.6) + L(b0[0] + 10, b0[1] + 12, b0[0] + 70, b0[1] + 12, "inkE", 1, "opacity:0.5");
+      s += T((b0[0] + b1[0]) / 2 + 40, (b0[1] + b1[1]) / 2 + 8, "D-" + (ctx.dday != null ? ctx.dday : 100), "accentRed", 20);
+      s += R(c0[0], c0[1], c1[0] - c0[0], c1[1] - c0[1], "screenE") + R(c0[0] - 2, c0[1] - 4, c1[0] - c0[0] + 4, 4, "steel2") + P("M" + (c0[0] + 14) + " " + (c0[1] + 30) + " l30 -8 l30 16 l40 -14", null, "accentBlue", 1.4, "opacity:0.7");
+      const pr = p(2.9, ht - 0.2, 5);
+      s += P(poly([[pr[0] - 3, pr[1]], [pr[0] + 3, pr[1]], [c1[0], c1[1]], [c0[0], c1[1]], [c0[0], c0[1]]]), "fluoroGlow", null, 0, "opacity:0.12") + R(pr[0] - 10, pr[1] - 4, 20, 8, "steel2", 2);
+      // Rows of long desks and the heads behind them, far to near.
+      for (let z = Z1 - 3; z >= 3.6; z -= 1.3) {
+        for (let i = 0; i < 9; i++) { const x = -hw + 1.0 + i * 1.4 + (z % 2.6 > 1.3 ? 0.3 : 0); if (Math.abs(x) < 0.8 && z < 6) continue; const c = p(x, 0.5, z + 0.7); s += backHead(c[0], c[1], 1.1 / (z + 0.7) * 2.6, ["hoodieE", "fabric1", "fabric3", "hoodieE", "fabric2", "fabric1"][(i + Math.round(z)) % 6]); }
+        s += q([[-hw + 0.4, 0.74, z], [hw - 0.4, 0.74, z], [hw - 0.4, 0.74, z + 0.5], [-hw + 0.4, 0.74, z + 0.5]], "formica") + q([[-hw + 0.4, 0, z], [-hw + 0.4, 0.74, z], [hw - 0.4, 0.74, z], [hw - 0.4, 0, z]], "formica2");
+      }
+      return s + vignette(W, H, 0.6);
     },
+    // The university campus: granite and brick halls, a lawn, a path running away, trees in season.
     campus(ctx) {
-      let s = outdoorSky(W, H, { season: ctx.season, seed: 8 }) + R(0, 180, W, 80, "grass") + P("M300 260 Q380 200 470 180 L520 180 Q450 210 420 260 Z", "path");
-      s += R(470, 70, 300, 112, "stone") + P("M455 74 L620 26 L785 74 Z", "stone2") + R(470, 172, 300, 10, "stone2");
-      for (let i = 0; i < 6; i++) s += R(490 + i * 48, 84, 14, 88, "paper", 2);
-      s += R(596, 120, 48, 52, "wood2", 2);
-      s += tree(110, 196, ctx.season, 1.3) + tree(230, 200, ctx.season, 1.0) + tree(780, 196, ctx.season, 1.1);
-      s += particles(ctx.season, 0, 0, W, 200, false, 16, 9);
+      let s = outdoorSky(W, H, { season: ctx.season, seed: 8 });
+      s += ridge(0, W, 150, 46, 3, "mtnFar", ctx.season) + haze(0, 100, W, 60, 0.6);
+      s += boxP(430, 186, 340, 120, 0.1, [380, 120], "granite", "granite2", "granite2") + R(430, 66, 340, 8, "granite2");
+      for (let f = 0; f < 4; f++) for (let i = 0; i < 9; i++) s += R(446 + i * 36, 80 + f * 26, 20, 16, "winDay") + R(446 + i * 36, 80 + f * 26, 20, 3, "aoC", 0, null, 0, "opacity:0.25");
+      s += boxP(40, 176, 180, 90, 0.08, [380, 120], "brick", "brick2", "brick2");
+      for (let f = 0; f < 3; f++) for (let i = 0; i < 6; i++) s += R(54 + i * 28, 96 + f * 24, 14, 14, "winDay");
+      s += R(0, 172, W, 88, season2(ctx.season, "lawn"));
+      s += P("M300 260 Q370 210 470 186 L520 186 Q450 214 430 260 Z", "pathE") + P("M300 260 Q370 210 470 186", null, "aoC", 1, "opacity:0.15");
+      s += tree(110, 196, ctx.season, 1.2, "cherry") + tree(260, 192, ctx.season, 0.9) + tree(770, 200, ctx.season, 1.2);
+      s += particles(ctx.season, 0, 0, W, 200, false, 14, 9);
       s += G(560, 210, avatar({ age: "adult", outfit: "casual", look: { hair: 2, shirt: 2 }, mood: "happy" }), 0.5) + G(600, 214, avatar({ age: "adult", outfit: "casual", look: { hair: 0, shirt: 3 }, mood: "ok" }), 0.5);
-      s += person(ctx, 340, FEET, 1.0, { prop: "book" });
       return s;
     },
+    // The 수능 hall: a classroom emptied for the exam, desks spaced apart with seat numbers taped on,
+    // the board with the start time, a cold morning outside.
     examhall(ctx) {
-      let s = R(0, 0, W, FLOOR, "wall") + R(0, 168, W, FLOOR - 168, "wall2") + floorPlanks(FLOOR, W, H - FLOOR);
-      s += R(236, 36, 330, 110, "board", 4, "wood", 7) + T(490, 106, "08:40", "chalk", 40, "opacity:0.9");
-      s += clock(600, 50, 18, 8);
-      s += windowView(640, 72, 130, 96, { season: "fall", seed: 51 });
-      for (const [x, y, sc] of [[90, 210, 0.95], [180, 214, 1], [560, 214, 1], [680, 216, 1.05]]) {
-        s += G(x, y, R(-34, -10, 68, 8, "wood", 2) + R(-30, -2, 5, 22, "metal") + R(25, -2, 5, 22, "metal") + R(-14, -14, 28, 5, "paper", 1) + O(-16, -26, 13, "hair") + R(-32, -16, 30, 20, "hoodie", 8, null, 0, "opacity:0.95"), sc);
-      }
-      s += G(60, 120, R(-10, 0, 20, 30, "paper", 2) + R(-7, 6, 14, 2, "line") + R(-7, 12, 14, 2, "line"));
-      s += person(ctx, 340, FEET, 1.02);
-      return s;
+      let s = room(W, H, BACK, VP, { wall: "wallSchool", floor: "lino", lower: [52, "wainscot"] });
+      s += tube(170, 6, 90) + tube(360, 4, 90) + tube(550, 6, 90);
+      s += board(222, 62, 300, 92, { seed: 4, writing: false }) + T(440, 124, "08:40", "chalkE", 34, "opacity:0.9") + L(250, 86, 360, 86, "chalkE", 2, "opacity:0.6") + L(250, 104, 340, 104, "chalkE", 2, "opacity:0.6") + flag(355, 30, 34) + clock(560, 44, 11, 8);
+      s += windowView(640, 54, 92, 102, { season: "winter", seed: 51, tod: "dawn" });
+      s += G(100, 70, R(0, 0, 40, 56, "paperE") + R(4, 6, 32, 3, "inkE", 0, null, 0, "opacity:0.4") + R(4, 14, 24, 3, "inkE", 0, null, 0, "opacity:0.3") + R(4, 22, 28, 3, "inkE", 0, null, 0, "opacity:0.3"));
+      for (const [x, y, sc] of [[150, 214, 0.9], [270, 210, 0.85], [640, 220, 1.0], [96, 252, 1.25], [712, 256, 1.3]]) s += deskP(x, y, sc, VP, { tape: true, paper: x > 600 || x < 120 });
+      s += backHead(150, 194, 0.78, "hoodieE") + backHead(640, 200, 0.95, "uniformE");
+      return s + vignette(W, H, 0.55);
     },
+    // Results night: the living room of the family apartment, the TV's blue glow, a floor lamp, the
+    // balcony window onto the complex across the way.
     home(ctx) {
-      const gid = nid("glow");
-      let s = '<defs>' + glow(gid, "screen") + "</defs>" + R(0, 0, W, FLOOR, "nightwall") + floorPlanks(FLOOR, W, H - FLOOR, "nightfloor");
-      s += windowView(80, 40, 160, 120, { season: ctx.season, night: true, city: true, seed: 61 });
-      s += R(300, 50, 40, 50, "paper", 2, "frame", 3) + R(306, 56, 28, 30, "sky") + R(356, 60, 34, 40, "paper", 2, "frame", 3) + R(362, 66, 22, 22, "blossom");
-      s += R(470, 150, 300, 60, "sofa", 16) + R(480, 130, 280, 40, "sofa2", 14) + R(470, 196, 300, 16, "sofa2", 6);
-      s += O(560, 150, 70, null, null, 0, "fill:url(#" + gid + ")") + R(520, 178, 90, 8, "wood", 2) + P("M528 176 L540 140 L600 140 L606 176 Z", "dark") + R(544, 144, 52, 28, "screen", 1);
-      s += person(ctx, 360, FEET, 1.02);
-      return s;
+      let s = room(W, H, BACK, VP, { night: true, floor: "wood" });
+      s += windowView(90, 34, 190, 132, { season: ctx.season, night: true, seed: 61, curtain: true });
+      s += G(330, 70, R(0, 0, 34, 42, "woodDark") + R(3, 3, 28, 36, "mtnFar") + O(17, 18, 6, "fabric2", null, 0, "opacity:0.7"), 1) + G(376, 78, R(0, 0, 28, 32, "woodDark") + R(3, 3, 22, 26, "blossomE"));
+      // A floor lamp's warm pool and the TV's cold one.
+      s += pool(300, 170, 130, 90, "lampWarm", 0.7) + G(300, 214, L(0, 0, 0, -120, "steel2", 2) + P("M-12 -118 L12 -118 L8 -136 L-8 -136 Z", "lampShade") + E(0, 0, 10, 3, "steel2"));
+      s += pool(640, 130, 120, 70, "screenE", 0.45) + boxP(570, 196, 150, 24, 0.06, VP, "woodDesk2", "woodDesk", "woodDesk2") + R(586, 108, 118, 64, "inkE", 2) + R(590, 112, 110, 56, "screenE", 1, null, 0, "opacity:0.75");
+      // The sofa, low in the foreground.
+      s += shadow(520, 252, 200, 10) + boxP(380, 258, 300, 34, 0.06, VP, "sofaE", "sofaE2", "sofaE2") + R(384, 196, 292, 32, "sofaE2", 8) + R(370, 214, 22, 44, "sofaE", 6) + R(668, 214, 22, 44, "sofaE", 6);
+      return s + vignette(W, H, 0.7);
     },
+    // The university's main gate in spring: granite pillars, a name plate, cherry trees, banners.
     gate(ctx) {
-      let s = outdoorSky(W, H, { season: "spring", seed: 13 }) + R(0, 190, W, 70, "grass") + P("M330 260 L370 190 L430 190 L470 260 Z", "path");
-      s += tree(110, 196, "spring", 1.3) + tree(700, 196, "spring", 1.35) + tree(200, 200, "spring", 1.0);
-      s += R(240, 70, 44, 130, "stone", 3) + R(516, 70, 44, 130, "stone", 3) + R(228, 62, 68, 14, "stone2", 3) + R(504, 62, 68, 14, "stone2", 3);
-      s += P("M262 80 Q400 34 538 80 L538 100 Q400 54 262 100 Z", "stone2");
-      // The school's name sits high on the arch, clear of the mood bubble.
-      s += R(296, 18, 208, 32, "paper", 6, "gold", 3) + (ctx.label ? T(400, 41, ctx.label, "ink", ctx.label.length > 16 ? 12 : 17) : "");
-      s += bunting(262, 538, 104, 1);
-      s += particles("spring", 0, 0, W, 210, false, 18, 17);
-      s += person(ctx, 340, FEET, 1.02, { pose: "cheer", mood: "happy" });
+      let s = outdoorSky(W, H, { season: "spring", seed: 13 }) + ridge(0, W, 160, 50, 6, "mtnFar", "spring") + haze(0, 110, W, 60, 0.6);
+      s += boxP(250, 176, 300, 70, 0.08, [400, 120], "granite", "granite2", "granite2");
+      for (let i = 0; i < 8; i++) s += R(262 + i * 36, 120, 22, 40, "winDay");
+      s += R(0, 186, W, 74, "lawnSp") + P("M330 260 L380 186 L420 186 L470 260 Z", "pathE");
+      s += tree(90, 196, "spring", 1.35, "cherry") + tree(190, 200, "spring", 1.0, "cherry") + tree(700, 196, "spring", 1.4, "cherry") + tree(620, 200, "spring", 1.0, "cherry");
+      // The gate: two granite pillars and a beam; the name plate high on the beam, clear of the bubble.
+      s += shadow(270, 200, 40, 6) + shadow(530, 200, 40, 6);
+      s += boxP(240, 200, 52, 150, 0.05, [400, 120], "granite", "granite2", "granite2") + boxP(508, 200, 52, 150, 0.05, [400, 120], "granite", "granite2", "granite2") + R(226, 40, 348, 22, "granite2") + R(226, 62, 348, 4, "aoC", 0, null, 0, "opacity:0.25");
+      s += R(296, 14, 208, 32, "plate", 2, "granite2", 2) + (ctx.label ? T(400, 37, ctx.label, "plateInk", ctx.label.length > 16 ? 12 : 16) : "");
+      // Banners on poles on both sides (shapes only).
+      s += G(160, 186, L(0, 0, 0, -100, "steel2", 2) + R(2, -98, 18, 56, "accentRed", 1, null, 0, "opacity:0.75")) + G(640, 186, L(0, 0, 0, -100, "steel2", 2) + R(2, -98, 18, 56, "accentBlue", 1, null, 0, "opacity:0.75"));
+      s += particles("spring", 0, 0, W, 210, false, 16, 17);
       return s;
     },
+    // No university: a country road at the golden hour, telephone poles running to the hills.
     road(ctx) {
-      const gid = nid("dusk");
-      let s = grad(gid, "dusk", "dusk2") + R(0, 0, W, H, null, 0, null, 0, "fill:url(#" + gid + ")") + O(560, 170, 40, "sun", null, 0, "opacity:0.9");
-      s += P("M0 170 Q200 130 400 168 T800 150 L800 260 L0 260 Z", "hill") + P("M0 200 Q240 170 520 196 T800 190 L800 260 L0 260 Z", "grass");
-      s += P("M380 260 Q420 220 520 196 L540 196 Q460 226 460 260 Z", "path");
-      s += person(ctx, 330, FEET, 1.0);
+      let s = sky(0, 0, W, H, { tod: "gold", seed: 4, sunX: 0.7, sunY: 0.62, sunR: 12 });
+      s += ridge(0, W, 176, 60, 8, "mtnFar", ctx.season) + haze(0, 130, W, 50, 0.7) + ridge(0, W, 186, 26, 9, "mtnMid", ctx.season);
+      s += R(0, 184, W, 76, season2(ctx.season, "field"));
+      s += P("M330 260 L420 184 L432 184 L480 260 Z", "asphalt") + L(405, 260, 426, 184, "lane", 1.5, "stroke-dasharray:8 8");
+      for (let i = 0; i < 5; i++) { const t = 1 - i * 0.2, x = 520 + 240 * t, h = 120 * t; s += L(x, 190 + 60 * t, x, 190 + 60 * t - h, "trunk", 2.6 * t) + L(x - 12 * t, 196 + 60 * t - h, x + 12 * t, 196 + 60 * t - h, "trunk", 2 * t); }
+      s += P("M770 140 Q640 150 520 160 Q470 164 434 170", null, "inkE", 0.8, "opacity:0.4");
+      return s + vignette(W, H, 0.5);
+    },
+    // The setup banner: a city at night under a low moon, Namsan Tower in the haze, lit apartment windows.
+    start() {
+      let s = sky(0, 0, W, H, { tod: "night", seed: 2, sunX: 0.51, sunY: 0.45, sunR: 16 });
+      s += withLit(0.9, () => namsan(560, 200, 1.3)) + haze(0, 120, W, 90, 0.4);
+      const r = rand(99);
+      s += withLit(0.9, () => { let b = ""; for (let i = 0; i < 12; i++) b += block(i * 70 - 10, H, 56, 60 + r() * 50, "bldFar", i, 8); for (let i = 0; i < 9; i++) { const x = i * 92 + 10, h = 50 + r() * 60; b += aptSlab(x, H, 70, h, 7, i + 40); } return b; });
       return s;
     },
-    start() {
-      // Low rooftops and a low moon: the setup banner is wide and shows only the bottom of the frame.
-      let s = outdoorSky(W, H, { night: true, seed: 2, moon: false }) + A("pulse-slow", O(408, 118, 18, "moon") + O(416, 112, 15, "night"));
-      const r = rand(99);
-      for (let i = 0; i < 9; i++) {
-        const x = i * 92 + 10, h = 50 + r() * 60;
-        s += R(x, H - h, 74, h, "city");
-        for (let yy = H - h + 12; yy < H - 10; yy += 16) for (let xx = x + 8; xx < x + 66; xx += 16) if (r() < 0.4) s += G(xx, yy, A("twinkle slow", R(0, 0, 8, 7, "lamp")), 1, "", "--del:-" + (r() * 6).toFixed(1) + "s");
+    // Neighbourhood streets: 학원가 at ten at night, the academies' signboards lit, street lights, cars.
+    city(ctx) {
+      let s = sky(0, 0, W, H, { tod: "night", seed: 75, sun: false }) + haze(0, 40, W, 140, 0.3);
+      const r = rand(8);
+      s += withLit(0.85, () => { let b = ""; for (let i = 0; i < 8; i++) { const x = i * 104 - 14, h = 150 + r() * 70; b += block(x, H - 46, 98, h, i % 2 ? "nightBld" : "nightBld2", i + 20, 13, "nightWin"); } return b; });
+      // Signboards: dark boxes with a lit edge and pale bars where the letters would be; a vertical sign.
+      const r2 = rand(12);
+      for (let i = 0; i < 8; i++) {
+        const x = i * 104 - 6;
+        for (let k = 0; k < 3; k++) {
+          if (r2() < 0.25) continue;
+          const sy = H - 196 + k * 44 + r2() * 10, col = ["neonA", "neonB", "neonC", "signW"][(i + k) % 4], w = 60 + r2() * 20;
+          s += G(x, sy.toFixed(0), R(0, 0, w, 16, "signBox", 1) + R(0, 0, w, 16, col, 1, null, 0, "opacity:0.28") + R(0, 14, w, 2, col, 0, null, 0, "opacity:0.9") + R(6, 5, w * (0.4 + r2() * 0.4), 5, col, 1, null, 0, "opacity:0.85") + pool(w / 2, 20, w * 0.7, 10, col, 0.35));
+        }
+        if (i % 3 === 1) s += R(x + 80, H - 200, 10, 80, "signBox", 1) + R(x + 82, H - 194, 6, 68, ["neonB", "neonA", "neonC"][i % 3], 1, null, 0, "opacity:0.75");
+        s += R(x, H - 70, 92, 24, "winLit", 0, null, 0, "opacity:0.45");
       }
-      return s;
+      s += R(0, H - 46, W, 46, "asphalt") + R(0, H - 46, W, 5, "curb") + L(0, H - 18, W, H - 18, "lane", 1.2, "stroke-dasharray:14 10");
+      for (let i = 0; i < 4; i++) { const x = 60 + i * 220; s += pool(x + 16, H - 40, 90, 22, "sodium", 0.7) + L(x, H - 46, x, H - 170, "steel2", 3) + L(x, H - 168, x + 22, H - 168, "steel2", 2) + O(x + 22, H - 166, 3, "sodium") + pool(x + 22, H - 162, 30, 26, "sodium", 0.6); }
+      // Parents' cars waiting at the kerb with their lights on.
+      for (const x of [150, 520]) s += G(x, H - 24, shadow(0, 2, 50, 4) + R(-44, -20, 88, 18, "suitE", 5) + P("M-28 -20 L-18 -32 L18 -32 L28 -20 Z", "suitE") + R(-16, -30, 30, 9, "winDay", 1) + O(-30, -2, 6, "inkE") + O(30, -2, 6, "inkE") + R(40, -16, 4, 4, "lampWarm") + R(-44, -16, 4, 4, "accentRed"));
+      return s + vignette(W, H, 0.6);
     },
   };
+  // Seasonal ground: lawns and fields.
+  const season2 = (season, kind) => (kind === "lawn" ? { spring: "lawnSp", summer: "lawnSu", fall: "lawnFa", winter: "snowE" } : { spring: "lawnSp", summer: "vegSu", fall: "vegFa2", winter: "snowE" })[season] || "lawnSu";
+  // You in the place: where you stand in each set, and what you hold.
+  const SCENES = {};
+  for (const n in SETS) SCENES[n] = (ctx) => SETS[n](ctx) + (n === "start" ? "" : person(ctx, n === "kinder" ? 380 : n === "hallway" ? 330 : n === "cubicle" ? 330 : 350, FEET, n === "cubicle" ? 1.02 : 1.05,
+    n === "gate" ? { pose: "cheer", mood: "happy" } : n === "cubicle" || n === "campus" ? { prop: "book" } : null));
   function sceneName(stage, ctx) {
     if (ctx.ending) return ctx.label ? "gate" : "road";
     if (ctx.examMonth) return "examhall";
     if (ctx.results) return "home";
     if (stage === "baby") return "nursery";
-    if (stage === "kinder") return ctx.home ? "nursery" : "classroom";
-    return { elem: "classroom", mid: "hallway", high: "desk", hs3: "desk", academy: "academy", selfstudy: "cubicle", halfretake: "campus", dropout: "cubicle" }[stage] || "desk";
+    if (stage === "kinder") return ctx.home ? "nursery" : "kinder";
+    return { elem: "classroom", mid: "hallway", high: "yaja", hs3: "desk", academy: "academy", selfstudy: "cubicle", halfretake: "campus", dropout: "cubicle" }[stage] || "desk";
   }
+  // Drawings start a fresh set of gradients (begin) and write them into their own <defs>.
   function scene(ctx) {
     VIEW = (ctx && ctx.view) || "city";
+    REGION = (ctx && ctx.region) || "";
+    begin();
     const name = ctx.scene || sceneName(ctx.stage, ctx);
-    return svg("0 0 " + W + " " + H, SCENES[name](ctx), "scene scene-" + name, ctx.aria);
+    const body = (SCENES[name] || SCENES.desk)(ctx);
+    return svg("0 0 " + W + " " + H, tidy(defsOut() + body), "scene scene-" + name, ctx.aria);
   }
 
-  // ---------- event illustrations (600 × 220, floor at 178) ----------
-  const EW = 600, EH = 220, EF = 178, EFEET = 204;
-  const BACKDROPS = {
-    nursery(ctx) {
-      let s = R(0, 0, EW, EF, "wall") + R(0, 130, EW, EF - 130, "wall2") + floorPlanks(EF, EW, EH - EF);
-      s += windowView(420, 26, 120, 90, { season: ctx.season, city: true, seed: 92 });
-      return s + E(300, EF + 14, 200, 12, "c5", null, 0, "opacity:0.3");
+  // More sets, mostly behind events: a teenager's bedroom, the school yard, a hospital ward, a PC방, the
+  // apartment kitchen, an alley with a convenience store, Busan's beach, farmland, a bathroom.
+  Object.assign(SETS, {
+    bedroom(ctx, night) {
+      let s = room(W, H, BACK, VP, { night, floor: "wood" });
+      s += windowView(470, 40, 170, 110, { season: ctx.season, night, seed: 71, curtain: true });
+      if (!night) s += sunPatch(400, 206, 170, 26, 70) + shaft([[470, 44], [640, 44], [610, 232], [420, 232]], 7);
+      s += bookcase(80, 200, 110, 140, 4, 5) + G(220, 52, R(0, 0, 54, 74, "posterE") + R(4, 4, 46, 46, "fabric1", 0, null, 0, "opacity:0.7") + R(4, 54, 30, 4, "paperE", 0, null, 0, "opacity:0.7") + R(4, 62, 20, 3, "paperE", 0, null, 0, "opacity:0.5"));
+      s += shadow(360, 214, 140, 8) + boxP(250, 214, 220, 30, 0.1, VP, "beddingE2", "beddingE", "beddingE2") + R(252, 168, 50, 20, "paperE", 6) + R(236, 120, 14, 94, "woodDark");
+      s += boxP(660, 200, 60, 46, 0.06, VP, "woodDesk2", "woodDesk", "woodDesk2") + (night ? deskLamp(670, 154, 0.9, 0.85) : "");
+      return s + vignette(W, H, night ? 0.7 : null);
     },
-    room(ctx, night) {
-      let s = R(0, 0, EW, EF, night ? "nightwall" : "wall") + floorPlanks(EF, EW, EH - EF, night ? "nightfloor" : "floor");
-      s += windowView(400, 30, 130, 92, { season: ctx.season, night, city: true, seed: 71 });
-      return s + shelf(40, 80, 110, 5);
-    },
-    class(ctx) {
-      return R(0, 0, EW, EF, "wall") + R(0, 140, EW, EF - 140, "wall2") + floorPlanks(EF, EW, EH - EF) + R(170, 24, 260, 96, "board", 4, "wood", 6) + windowView(480, 40, 100, 86, { season: ctx.season, seed: 72 });
-    },
+    // The school yard: a dirt ground with track lines, the four-storey school building, trees, a stand.
     field(ctx) {
-      return outdoorSky(EW, EH, { season: ctx.season, seed: 73 }) + R(0, 150, EW, 70, "grass") + P("M0 180 Q300 150 600 180 L600 196 Q300 166 0 196 Z", "trackred") +
-        P("M0 186 Q300 156 600 186", null, "snow", 1.5, "opacity:0.8") + tree(40, 154, ctx.season, 0.9) + tree(560, 154, ctx.season, 1);
-    },
-    hall(ctx) {
-      let s = R(0, 0, EW, EF, "wall") + R(0, EF, EW, EH - EF, "tile");
-      for (let i = 0; i < 5; i++) s += R(330 + i * 52, 40, 50, 138, "locker", 2, "locker2", 2) + L(338 + i * 52, 54, 372 + i * 52, 54, "locker2", 2);
-      return s + windowView(40, 34, 120, 90, { season: ctx.season, seed: 74 });
-    },
-    city(ctx) {
-      let s = outdoorSky(EW, EH, { night: true, seed: 75 });
-      const r = rand(8);
-      for (let i = 0; i < 7; i++) {
-        const x = i * 88, h = 90 + r() * 70;
-        s += R(x, EH - h, 80, h, "city");
-        for (let k = 0; k < 3; k++) s += G(x + 8, EH - h + 12 + k * 26, A("pulse", R(0, 0, 64, 16, ["c1", "c2", "c3", "c4", "c5"][(i + k) % 5], 3, null, 0, "opacity:0.85") + R(8, 6, 40, 4, "paper", 1, null, 0, "opacity:0.8")), 1, "", "--del:-" + (r() * 3).toFixed(1) + "s");
-      }
-      return s + R(0, 196, EW, 24, "road");
-    },
-    hospital() {
-      return R(0, 0, EW, EF, "paper") + R(0, EF, EW, EH - EF, "tile") + R(0, 120, EW, 6, "c3", 0, null, 0, "opacity:0.5") +
-        G(470, 70, R(-22, -22, 44, 44, "paper", 6, "line", 2) + R(-6, -16, 12, 32, "c1") + R(-16, -6, 32, 12, "c1"));
-    },
-    pcbang() {
-      let s = R(0, 0, EW, EH, "dark2") + R(0, EF, EW, EH - EF, "dark");
-      for (let i = 0; i < 5; i++) {
-        const x = 280 + i * 64;
-        s += G(x, 128, A("pulse", R(-26, -40, 52, 36, "screen", 3, null, 0, "opacity:0.9") + R(-20, -34, 18, 10, "c4", 1) + R(2, -30, 16, 14, "c1", 1)), 1, "", "--del:-" + i * 0.6 + "s") + R(x - 4, 92, 8, 14, "metal") + R(x - 30, 106, 60, 6, "metal", 2);
-      }
-      return s + R(260, 112, 340, 8, "dark", 0) + R(0, 30, EW, 4, "c4", 0, null, 0, "opacity:0.6");
-    },
-    kitchen(ctx) {
-      return R(0, 0, EW, EF, "wall") + floorPlanks(EF, EW, EH - EF) + R(330, 100, 270, 78, "wood", 2) + R(330, 92, 270, 10, "stone2") + R(350, 30, 90, 50, "paper", 3, "frame", 2) +
-        windowView(470, 24, 100, 62, { season: ctx.season, seed: 76, tree: false }) + G(380, 92, R(-14, -16, 28, 16, "metal", 3) + R(-18, -18, 36, 4, "dark", 2));
-    },
-    street(ctx) {
-      return outdoorSky(EW, EH, { season: ctx.season, seed: 77 }) + R(0, 50, 330, 140, "stone") + R(0, 190, EW, 30, "road") + R(20, 40, 290, 20, "c1", 3) +
-        R(30, 70, 270, 120, "metal", 0) + (function () { let x = ""; for (let i = 0; i < 9; i++) x += L(30, 76 + i * 8, 300, 76 + i * 8, "metal2", 2); return x; })() + R(30, 150, 270, 40, "dark2");
-    },
-    cubicle(ctx) {
-      const gid = nid("lamp");
-      return '<defs>' + glow(gid, "lamp") + "</defs>" + R(0, 0, EW, EH, "dark2") + R(250, 50, 300, 128, "cubicle", 2) + R(250, 50, 8, 128, "cubicle2") + R(542, 50, 8, 128, "cubicle2") + R(258, 130, 284, 8, "wood") +
-        O(300, 120, 50, null, null, 0, "fill:url(#" + gid + ")") + R(280, 114, 34, 6, "lamp", 2) + R(0, EF, EW, EH - EF, "nightfloor");
-    },
-    // Region backgrounds: the coast (Busan, Pohang, Haenam) and the countryside (rural counties).
-    beach(ctx) {
-      return outdoorSky(EW, EH, { season: ctx.season, seed: 77 }) + R(0, 120, EW, 50, "sea") + P("M0 130 q40 -5 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0", null, "sea2", 2) +
-        R(0, 166, EW, EH - 166, "path") + O(520, 60, 18, "sun");
-    },
-    farm(ctx) {
-      let s = outdoorSky(EW, EH, { season: ctx.season, seed: 78 }) + P("M0 140 Q150 80 300 130 T600 110 L600 220 L0 220 Z", "hill") + R(0, 160, EW, 60, "grass");
-      for (let i = 0; i < 6; i++) s += L(0, 168 + i * 9, EW, 168 + i * 9, "hill", 2);
-      return s + tree(60, 162, ctx.season, 0.9) + tree(540, 160, ctx.season, 1);
-    },
-    bath() {
-      let s = R(0, 0, EW, EH, "tile");
-      for (let x = 0; x < EW; x += 30) s += L(x, 0, x, EH, "tile2", 1);
-      for (let y = 0; y < EH; y += 30) s += L(0, y, EW, y, "tile2", 1);
+      let s = outdoorSky(W, H, { season: ctx.season, seed: 73, tod: ctx.season === "summer" ? "rain" : "day" }) + ridge(0, W, 120, 40, 5, "mtnFar", ctx.season) + haze(0, 80, W, 50, 0.5);
+      s += boxP(140, 160, 520, 112, 0.06, [400, 110], "schoolWall", "concrete", "concrete2");
+      for (let f = 0; f < 4; f++) for (let i = 0; i < 13; i++) s += R(150 + i * 39, 58 + f * 25, 26, 16, "winDay") + R(150 + i * 39, 58 + f * 25, 26, 3, "aoC", 0, null, 0, "opacity:0.2");
+      s += R(372, 44, 56, 12, "concrete2") + clock(400, 36, 8, 9);
+      s += R(0, 160, W, 100, "dirt") + R(0, 160, W, 100, null, 0, null, 0, fill(aoF("u"), "opacity:0.12"));
+      s += P("M-20 250 Q400 168 820 250", null, "lane", 2, "opacity:0.7") + P("M-20 236 Q400 176 820 236", null, "lane", 1.4, "opacity:0.5");
+      s += tree(60, 168, ctx.season, 1.0) + tree(740, 168, ctx.season, 1.05) + tree(680, 166, ctx.season, 0.8, "ginkgo");
+      s += particles(ctx.season, 0, 0, W, 200, false, 10, 6);
       return s;
     },
-    campus(ctx) { return SCENES_SMALL.campus(ctx); },
-  };
-  const SCENES_SMALL = {
-    campus(ctx) {
-      let s = outdoorSky(EW, EH, { season: ctx.season, seed: 78 }) + R(0, 160, EW, 60, "grass") + R(300, 60, 280, 104, "stone") + P("M290 64 L440 22 L590 64 Z", "stone2");
-      for (let i = 0; i < 5; i++) s += R(318 + i * 52, 74, 12, 86, "paper", 2);
-      return s + tree(60, 168, ctx.season, 1);
+    // A hospital ward: curtained beds, an IV stand, the window, cool light.
+    hospital(ctx) {
+      let s = room(W, H, BACK, VP, { wall: "wardWall", floor: "tile", lower: [40, "wardWall2"] });
+      s += R(-20, -20, W + 40, H + 40, "fluoroGlow", 0, null, 0, "opacity:0.06") + tube(250, 6, 100) + tube(470, 6, 100);
+      s += windowView(540, 46, 160, 104, { season: ctx.season, seed: 79, blind: true });
+      s += L(80, 30, 330, 30, "steel2", 1.5) + P("M84 30 Q100 120 90 200 L170 200 Q160 110 176 30 Z", "curtainWard") + P("M120 34 Q128 120 122 198", null, "aoC", 1, "opacity:0.15");
+      s += shadow(450, 214, 140, 8) + boxP(330, 212, 230, 26, 0.1, VP, "steel", "paperE", "steel") + R(334, 170, 40, 16, "paperE", 6) + R(372, 172, 186, 14, "wardBlanket", 4) + R(556, 140, 6, 72, "steel2");
+      s += G(300, 210, L(0, 0, 0, -140, "steel2", 2) + R(-8, -136, 16, 24, "ivBag", 4) + L(0, -112, 18, -60, "steel", 0.8) + E(0, 0, 12, 3, "steel2"));
+      s += G(700, 150, R(0, 0, 50, 34, "inkE", 3) + P("M4 20 L14 20 L18 10 L24 28 L28 16 L46 16", null, "neonA", 1.4));
+      return s + vignette(W, H);
     },
+    // A PC방 at night, from the back: rows of gaming chairs and the glow of the screens past them, neon
+    // strips along the ceiling, the room otherwise dark.
+    pcbang() {
+      const p = proj(400, 92, 560, 0, 1.55), q = (pts, tok, ex) => P(poly(pts.map((v) => p(...v))), tok, null, 0, ex);
+      const Z0 = 1.4, Z1 = 14, hw = 5, ht = 2.8;
+      let s = R(-10, -10, W + 20, H + 20, "nCeil") + q([[-hw, 0, Z0], [hw, 0, Z0], [hw, 0, Z1], [-hw, 0, Z1]], "nFloor2") + q([[-hw, 0, Z0], [-hw, ht, Z0], [-hw, ht, Z1], [-hw, 0, Z1]], "nWall2") + q([[hw, 0, Z0], [hw, ht, Z0], [hw, ht, Z1], [hw, 0, Z1]], "nWall2");
+      const e0 = p(-hw, ht, Z1), e1 = p(hw, 0, Z1);
+      s += R(e0[0], e0[1], e1[0] - e0[0], e1[1] - e0[1], "nWall");
+      for (const [x, t] of [[-2, "neonB"], [2, "neonA"]]) s += q([[x - 0.05, ht, Z0], [x + 0.05, ht, Z0], [x + 0.05, ht, Z1], [x - 0.05, ht, Z1]], t, "opacity:0.9");
+      s += q([[-hw, ht - 0.1, Z0], [-hw, ht - 0.05, Z0], [-hw, ht - 0.05, Z1], [-hw, ht - 0.1, Z1]], "neonB", "opacity:0.7") + q([[hw, ht - 0.1, Z0], [hw, ht - 0.05, Z0], [hw, ht - 0.05, Z1], [hw, ht - 0.1, Z1]], "neonA", "opacity:0.7");
+      for (let z = Z1 - 1.6; z >= 2.6; z -= 1.8) {
+        for (let i = 0; i < 6; i++) {
+          const x = -hw + 0.9 + i * 1.65;
+          if (Math.abs(x) < 0.7 && z < 5) continue;
+          const m = p(x, 1.2, z + 0.35), sc = 560 / (z + 0.35);
+          s += pool(m[0], m[1], sc * 0.9, sc * 0.5, i % 3 ? "monitorGlow" : "neonA", 0.65) + R(m[0] - sc * 0.32, m[1] - sc * 0.2, sc * 0.64, sc * 0.38, "inkE", 1);
+          const c = p(x, 0.45, z - 0.15), k = 560 / (z - 0.15);
+          s += R(c[0] - k * 0.26, c[1] - k * 0.75, k * 0.52, k * 0.78, "chairBlack", k * 0.08) + R(c[0] - k * 0.26, c[1] - k * 0.75, k * 0.52, k * 0.06, "neonB", 1, null, 0, "opacity:0.6");
+          if ((i + Math.round(z)) % 3 !== 0) s += E(c[0], c[1] - k * 0.86, k * 0.12, k * 0.14, "hairE") + P("M" + (c[0] - k * 0.14) + " " + (c[1] - k * 0.84) + " Q" + c[0] + " " + (c[1] - k * 1.12) + " " + (c[0] + k * 0.14) + " " + (c[1] - k * 0.84), null, "inkE", Math.max(1, k * 0.03));
+        }
+        s += q([[-hw + 0.3, 0.75, z + 0.2], [hw - 0.3, 0.75, z + 0.2], [hw - 0.3, 0.75, z + 0.7], [-hw + 0.3, 0.75, z + 0.7]], "inkE", "opacity:0.8");
+      }
+      return s + vignette(W, H, 0.75);
+    },
+    // The apartment kitchen: a tiled splashback, upper cabinets and the counter with the rice cooker, a
+    // tall fridge, the window over the sink, the dining table under a pendant lamp.
+    kitchen(ctx, night) {
+      let s = room(W, H, BACK, VP, { night, wall: night ? "nWall" : "kitchenWall", floor: "wood" });
+      s += R(400, 60, 340, 66, "bathTile") + P(Array.from({ length: 12 }, (_, i) => "M" + (400 + i * 28) + " 60 L" + (400 + i * 28) + " 126").join(" ") + " M400 82 L740 82 M400 104 L740 104", null, "bathTile2", 0.8);
+      s += windowView(520, 64, 110, 56, { season: ctx.season, night, seed: 76, tree: false });
+      s += R(400, 22, 340, 38, "cabinet") + R(400, 58, 340, 3, "aoC", 0, null, 0, "opacity:0.25") + [0, 1, 2, 3, 4].map((i) => L(400 + i * 68, 24, 400 + i * 68, 58, "aoC", 0.8, "opacity:0.2") + R(400 + i * 68 + 30, 50, 8, 2, "steel2")).join("");
+      s += R(400, 122, 340, 5, "counterTop") + R(400, 127, 340, 73, "cabinet") + R(400, 127, 340, 4, "aoC", 0, null, 0, "opacity:0.15") + [0, 1, 2, 3, 4].map((i) => L(400 + i * 68, 132, 400 + i * 68, 198, "aoC", 0.8, "opacity:0.22") + R(400 + i * 68 + 30, 136, 8, 2, "steel2")).join("");
+      s += G(440, 122, R(-16, -22, 32, 22, "riceCooker", 8) + R(-12, -18, 24, 6, "aoC", 3, null, 0, "opacity:0.15") + O(8, -8, 2, "neonA")) + G(690, 122, R(-12, -26, 24, 26, "steel", 2) + R(-14, -28, 28, 4, "steel2")) + R(560, 118, 60, 4, "steel");
+      // The fridge: tall, two doors, a magnet or two.
+      s += shadow(360, 202, 40, 5) + boxP(326, 200, 70, 170, 0.04, VP, "fridge", "fridge", "fridge2") + L(361, 32, 361, 198, "aoC", 1, "opacity:0.25") + R(352, 90, 3, 30, "steel2") + R(367, 90, 3, 30, "steel2") + R(338, 50, 10, 12, "stickyY") + R(374, 60, 12, 9, "stickyB");
+      s += pool(220, 120, 170, 110, "lampWarm", night ? 0.8 : 0.3) + G(220, 0, L(0, 0, 0, 46, "inkE", 1) + P("M-22 62 L22 62 L12 46 L-12 46 Z", "lampShade") + E(0, 62, 18, 3, "lampWarm"));
+      s += shadow(220, 238, 150, 9) + boxP(90, 232, 260, 6, 0.1, VP, "woodDesk2", "woodDesk", "woodDesk2") + R(100, 232, 6, 30, "woodDesk2") + R(334, 232, 6, 30, "woodDesk2");
+      s += G(150, 222, E(0, 0, 12, 4, "paperE") + E(0, -2, 9, 2.5, "paperE2")) + G(280, 222, E(0, 0, 12, 4, "paperE") + E(0, -2, 9, 2.5, "paperE2")) + G(215, 220, R(-6, -14, 12, 14, "paperE2", 2));
+      return s + vignette(W, H, night ? 0.7 : null);
+    },
+    // An alley: villas with rooftop rooms, a convenience store's lit front, power lines overhead.
+    street(ctx) {
+      let s = outdoorSky(W, H, { season: ctx.season, seed: 77, tod: ctx.season === "summer" ? "rain" : "day" });
+      s += boxP(-20, 196, 330, 150, 0.1, [430, 120], "brick", "concrete", "brick2") + R(40, 30, 80, 16, "roofGreen") + R(50, 20, 40, 14, "bldNear") + R(110, 24, 18, 20, "accentBlue", 2);
+      for (let f = 0; f < 3; f++) for (let i = 0; i < 4; i++) s += R(0 + i * 72, 66 + f * 34, 30, 22, "winDay") + R(0 + i * 72, 86 + f * 34, 34, 3, "concrete2");
+      // The convenience store: a lit glass front and a striped signboard.
+      s += R(10, 150, 280, 46, "storeGlow", 0, null, 0, "opacity:0.9") + R(10, 136, 280, 14, "signW") + R(10, 140, 280, 3, "neonA") + R(10, 145, 280, 3, "neonB", 0, null, 0, "opacity:0.7");
+      for (let i = 0; i < 4; i++) s += R(20 + i * 68, 158, 56, 30, "storeShelf") + L(20 + i * 68, 168, 76 + i * 68, 168, "aoC", 1, "opacity:0.2");
+      s += pool(150, 200, 180, 30, "storeGlow", 0.5);
+      s += boxP(540, 196, 300, 160, 0.08, [430, 120], "concrete", "concrete2", "concrete2");
+      for (let f = 0; f < 4; f++) for (let i = 0; i < 4; i++) s += R(556 + i * 60, 50 + f * 36, 36, 24, "winDay");
+      s += R(0, 196, W, 64, "asphalt") + R(0, 196, W, 4, "curb");
+      s += L(380, 196, 380, 20, "trunk", 5) + L(360, 30, 400, 30, "trunk", 3) + P("M-10 40 Q190 60 380 34 Q590 56 810 30 M-10 50 Q190 72 380 42 Q590 66 810 42", null, "inkE", 0.9, "opacity:0.5");
+      s += particles(ctx.season, 0, 0, W, 200, false, 10, 8);
+      return s;
+    },
+    // Busan's beach: sand, surf, the city along the bay and the bridge.
+    beach(ctx) {
+      let s = sky(0, 0, W, H, { tod: "day", seed: 77, sunY: 0.2 });
+      s += landscape(0, 30, W, 150, { kind: "busan", season: ctx.season, seed: 14, trees: false, horizon: 0.62 });
+      s += R(0, 160, W, 30, "seaNear") + P("M0 176 q40 -6 80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 t80 0 L800 200 L0 200 Z", "foam", null, 0, "opacity:0.6") + R(0, 188, W, 72, "sand") + R(0, 188, W, 72, null, 0, null, 0, fill(aoF("u"), "opacity:0.1"));
+      return s;
+    },
+    // Farmland: ridges, terraced fields, greenhouses, a farm road.
+    farm(ctx) {
+      let s = sky(0, 0, W, H, { tod: ctx.season === "summer" ? "rain" : "day", seed: 78 });
+      s += landscape(0, 0, W, 210, { kind: "country", season: ctx.season, seed: 12, trees: false, horizon: 0.6 });
+      s += R(0, 196, W, 64, season2(ctx.season, "field")) + P("M360 260 L392 196 L408 196 L460 260 Z", "dirt");
+      s += tree(80, 204, ctx.season, 1.0) + tree(720, 206, ctx.season, 1.1);
+      return s + particles(ctx.season, 0, 0, W, 210, false, 10, 3);
+    },
+    bath() {
+      let s = R(0, 0, W, H, "bathTile");
+      let d = "";
+      for (let x = 0; x < W; x += 34) d += "M" + x + " 0 L" + x + " " + H + " ";
+      for (let y = 0; y < H; y += 34) d += "M0 " + y + " L" + W + " " + y + " ";
+      s += P(d, null, "bathTile2", 1.2) + R(0, 0, W, H, null, 0, null, 0, fill(def("bth", (id) => rad(id, [[0, "hiE", 0.2], [1, "aoC", 0.35]], 0.35, 0.3, 0.9))));
+      return s;
+    },
+  });
+
+  // ---------- event illustrations (600 × 220, floor at 178) ----------
+  // The backdrops are the sets, scaled to this frame (the floor lands at 178 and feet at 204), with a
+  // light veil over them so the people and props in front stand out.
+  const EW = 600, EH = 220, EF = 178, EFEET = 204;
+  const fit = (body) => G(-38.5, 0, body, 0.846) + R(0, 0, EW, EH, "bgVeil", 0, null, 0, "opacity:var(--a-veilOp)");
+  const BACKDROPS = {
+    nursery: (ctx) => fit(SETS.nursery(ctx)),
+    room: (ctx, night) => fit(SETS.bedroom(ctx, night)),
+    class: (ctx) => fit(SETS.classroom(ctx)),
+    field: (ctx) => fit(SETS.field(ctx)),
+    hall: (ctx) => fit(SETS.hallway(ctx)),
+    city: (ctx) => fit(SETS.city(ctx)),
+    hospital: (ctx) => fit(SETS.hospital(ctx)),
+    pcbang: (ctx) => fit(SETS.pcbang(ctx)),
+    kitchen: (ctx, night) => fit(SETS.kitchen(ctx, night)),
+    street: (ctx) => fit(SETS.street(ctx)),
+    cubicle: (ctx) => fit(SETS.cubicle(ctx)),
+    beach: (ctx) => fit(SETS.beach(ctx)),
+    farm: (ctx) => fit(SETS.farm(ctx)),
+    bath: (ctx) => fit(SETS.bath(ctx)),
+    campus: (ctx) => fit(SETS.campus(ctx)),
   };
 
   // 돌잡이 items, drawn standing on a table top at y ≈ 170 around x (shared by the event art and the
   // first-birthday cutscene).
   const DOL_ITEMS = {
-    pencil: (x) => R(x - 3, 140, 6, 28, "c5", 1) + P("M" + (x - 3) + " 140 L" + x + " 132 L" + (x + 3) + " 140 Z", "skin"),
-    book: (x) => R(x - 14, 148, 28, 20, "c1", 2) + R(x - 12, 150, 24, 3, "paper", 1),
-    mouse: (x) => E(x, 160, 10, 13, "paper", "line", 1.5) + L(x, 148, x, 156, "line", 1.5),
-    stethoscope: (x) => P("M" + (x - 10) + " 146 Q" + (x - 12) + " 166 " + x + " 166 Q" + (x + 12) + " 166 " + (x + 10) + " 146", null, "dark", 2.5) + O(x, 166, 5, "metal"),
-    mic: (x) => R(x - 3, 150, 6, 18, "dark", 2) + O(x, 147, 7, "metal"),
-    gavel: (x) => R(x - 14, 148, 28, 10, "wood2", 3) + R(x - 2, 156, 4, 14, "wood", 1),
-    ball: (x) => O(x, 158, 11, "c2") + P("M" + (x - 11) + " 158 Q" + x + " 150 " + (x + 11) + " 158", null, "paper", 1.5),
-    thread: (x) => R(x - 9, 150, 18, 18, "paper", 3, "line", 1) + L(x - 9, 155, x + 9, 155, "c1", 2) + L(x - 9, 161, x + 9, 161, "c1", 2),
-    money: (x) => R(x - 14, 154, 28, 14, "leaf", 2) + R(x - 10, 150, 28, 14, "leaf", 2, "paper", 1) + O(x + 4, 157, 3, "paper"),
-    brush: (x) => R(x - 2, 140, 4, 24, "wood", 1) + P("M" + (x - 4) + " 164 L" + (x + 4) + " 164 L" + x + " 174 Z", "dark"),
+    pencil: (x) => R(x - 2.5, 140, 5, 28, "stickyY", 1) + P("M" + (x - 2.5) + " 140 L" + x + " 132 L" + (x + 2.5) + " 140 Z", "woodLight"),
+    book: (x) => R(x - 13, 150, 26, 18, "accentBlue", 1.5) + R(x - 11, 152, 22, 2, "paperE", 1),
+    mouse: (x) => E(x, 160, 9, 12, "paperE") + E(x - 3, 156, 3, 5, "hiE", null, 0, "opacity:0.4") + L(x, 148, x, 155, "steel2", 1.2),
+    stethoscope: (x) => P("M" + (x - 10) + " 146 Q" + (x - 12) + " 166 " + x + " 166 Q" + (x + 12) + " 166 " + (x + 10) + " 146", null, "inkE", 2.2) + O(x, 166, 4.5, "steel"),
+    mic: (x) => R(x - 2.5, 150, 5, 18, "inkE", 2) + O(x, 147, 6.5, "steel"),
+    gavel: (x) => R(x - 13, 149, 26, 9, "woodDark", 3) + R(x - 2, 156, 4, 14, "woodLight2", 1),
+    ball: (x) => O(x, 158, 10, "accentRed") + P("M" + (x - 10) + " 158 Q" + x + " 151 " + (x + 10) + " 158", null, "paperE", 1.2) + O(x - 3, 154, 3, "hiE", null, 0, "opacity:0.3"),
+    thread: (x) => R(x - 8, 150, 16, 18, "paperE", 2) + L(x - 8, 155, x + 8, 155, "accentRed", 2) + L(x - 8, 161, x + 8, 161, "accentRed", 2),
+    money: (x) => R(x - 14, 154, 28, 13, "bill", 1.5) + R(x - 10, 150, 28, 13, "bill", 1.5) + O(x + 4, 156.5, 3, "bill2"),
+    brush: (x) => R(x - 2, 140, 4, 24, "woodLight2", 1) + P("M" + (x - 4) + " 164 L" + (x + 4) + " 164 L" + x + " 174 Z", "inkE"),
   };
+  // A glint of light (where the old art had cartoon sparkles), and a small, muted heart.
+  function sparkle(x, y, s) {
+    return G(x, y, A("twinkle", O(0, 0, 9, null, null, 0, fill(glowF("hiE"), "opacity:0.6")) + P("M0 -7 L1 -1 L7 0 L1 1 L0 7 L-1 1 L-7 0 L-1 -1 Z", "hiE", null, 0, "opacity:0.9")), s || 1);
+  }
+  function heart(x, y, s, tok, del) {
+    return G(x, y, A("rise", P("M0 4 C-8 -2 -6 -10 0 -6 C6 -10 8 -2 0 4 Z", "heartE", null, 0, "opacity:0.75"), "--del:" + (del || 0) + "s"), (s || 1) * 0.8);
+  }
+  // Rain streaking across the whole frame, and a gloom that settles over it.
+  const gloom = (op) => R(0, 0, EW + 80, EH, null, 0, null, 0, fill(def("glm", (id) => lin(id, [[0, "aoC", 0.45], [1, "aoC", 0.1]])), "opacity:" + (op || 0.8)));
+  function rain(w, h, n, seed) {
+    const r = rand(seed || 5);
+    let s = "";
+    for (let i = 0; i < n; i++) { const y = r() * h; s += G((r() * (w + 60)).toFixed(0), y.toFixed(0), A("fall rain", L(0, 0, -4, 16, "rainE", 1.1, "opacity:0.5"), "--d:" + (0.5 + r() * 0.4).toFixed(2) + "s;--del:-" + r().toFixed(2) + "s;--dx:-14px;--fy:" + (h + 20 - y).toFixed(0) + "px")); }
+    return s;
+  }
+  // Light motes drifting: what the old sparkles became.
+  function motes(x, y, w, h, n, seed) {
+    const r = rand(seed || 2);
+    let s = "";
+    for (let i = 0; i < n; i++) s += O((x + r() * w).toFixed(0), (y + r() * h).toFixed(0), (2 + r() * 5).toFixed(1), null, null, 0, fill(glowF("lampWarm"), "opacity:" + (0.3 + r() * 0.5).toFixed(2)));
+    return A("drift slow", s);
+  }
 
   // Foreground pieces per event. Each returns SVG drawn over the backdrop; v is the outcome suffix
   // (r0a, r1 ...) when the art illustrates a result rather than the question.
   const FX = {
-    // 돌잡이: a low table laid with objects; the grabbed one (the outcome's suffix) sparkles.
+    // 돌잡이: a low lacquered table laid with objects; the grabbed one (the outcome's suffix) catches the light.
     doljabi: (v) => {
-      const items = DOL_ITEMS;
-      const ids = Object.keys(items);
-      let s = R(300, 166, 290, 14, "wood", 4) + R(310, 180, 10, 24, "wood2", 2) + R(570, 180, 10, 24, "wood2", 2) + R(296, 160, 298, 8, "c1", 3, null, 0, "opacity:0.6");
+      const ids = Object.keys(DOL_ITEMS);
+      let s = shadow(445, 200, 160, 8) + R(296, 160, 298, 10, "lacquer", 2) + R(296, 160, 298, 3, "hiE", 0, null, 0, "opacity:0.15") + R(310, 170, 10, 30, "lacquer2", 1) + R(570, 170, 10, 30, "lacquer2", 1) + R(300, 156, 290, 5, "silk", 1);
       ids.forEach((id, i) => {
         const x = 320 + i * 28;
-        s += items[id](x);
-        if (v === id || (v === "two" && (i === 1 || i === 6))) s += sparkle(x, 126, 0.8) + sparkle(x + 10, 140, 0.5, "c5");
+        if (v === id || (v === "two" && (i === 1 || i === 6))) s += pool(x, 150, 26, 26, "lampWarm", 0.8) + sparkle(x + 8, 128, 0.7);
+        s += DOL_ITEMS[id](x);
       });
       return s;
     },
-    mobile: () => G(440, 20, A("sway", L(0, 0, 0, 20, "line", 1.5) + L(-50, 20, 50, 20, "line", 2) + O(-50, 40, 9, "c1") + P("M0 36 l9 16 l-18 0 Z", "c3") + O(50, 40, 9, "gold") +
-      L(-50, 20, -50, 31, "line", 1) + L(0, 20, 0, 36, "line", 1) + L(50, 20, 50, 31, "line", 1))) + heart(360, 90, 1.2, "c1", -1) + heart(520, 110, 1, "blossom", -2),
-    cracks: () => A("shake", P("M380 20 L392 50 L380 70 L398 100 L386 128", null, "ink", 2.5) + P("M120 30 L132 56 L122 76 L136 104", null, "ink", 2)) +
-      R(330, 150, 10, 8, "stone", 1) + R(352, 160, 8, 6, "stone", 1) + R(110, 156, 9, 7, "stone", 1),
-    bus: () => G(420, 150, R(-60, -34, 140, 46, "c3", 8) + R(-52, -28, 30, 16, "screen", 2) + R(-16, -28, 30, 16, "screen", 2) + R(20, -28, 30, 16, "screen", 2) +
-      R(56, -28, 18, 30, "screen", 2) + O(-34, 14, 9, "dark") + O(54, 14, 9, "dark")),
-    finish: () => L(470, 120, 470, 204, "metal", 4) + L(580, 120, 580, 204, "metal", 4) + A("sway", P("M470 140 Q525 152 580 140", null, "c1", 4)) + bunting(20, 660, 26, 2) +
+    mobile: () => G(440, 20, A("sway", L(0, 0, 0, 20, "steel2", 1.2) + L(-50, 20, 50, 20, "steel2", 1.6) + O(-50, 40, 8, "matC") + P("M0 36 l8 14 l-16 0 Z", "matB") + E(50, 40, 9, 6, "matA") +
+      L(-50, 20, -50, 32, "steel2", 0.8) + L(0, 20, 0, 36, "steel2", 0.8) + L(50, 20, 50, 34, "steel2", 0.8))) + pool(440, 60, 120, 60, "sunLight", 0.25),
+    cracks: () => A("shake", P("M380 20 L392 50 L380 70 L398 100 L386 128", null, "inkE", 2) + P("M120 30 L132 56 L122 76 L136 104", null, "inkE", 1.6)) + G(450, 20, A("sway", L(0, 0, 0, 30, "steel2", 1) + P("M-14 30 L14 30 L10 42 L-10 42 Z", "lampShade"))) +
+      R(330, 168, 10, 6, "concrete", 1) + R(352, 172, 8, 5, "concrete", 1) + R(110, 170, 9, 6, "concrete", 1) + G(0, 0, rain(EW, 120, 6, 3).replace(/rainE/g, "concrete"), 1, "", "opacity:0.6"),
+    bus: () => G(420, 168, shadow(10, 4, 90, 8) + R(-70, -54, 160, 54, "busE", 6) + R(-70, -20, 160, 10, "busE2") + [-62, -30, 2, 34].map((x) => R(x, -48, 28, 20, "winDay", 2)).join("") + R(66, -48, 20, 34, "winDay", 2) +
+      O(-40, 2, 11, "inkE") + O(56, 2, 11, "inkE") + O(-40, 2, 4, "steel") + O(56, 2, 4, "steel") + O(88, -10, 3, "lampWarm")),
+    finish: () => L(470, 120, 470, 204, "steel2", 3) + L(580, 120, 580, 204, "steel2", 3) + A("sway", P("M470 140 Q525 150 580 140", null, "paperE", 3)) + flags(20, 660, 26, 2) +
       G(300, EFEET, avatar({ age: "child", outfit: "kid", look: { hair: 3, shirt: 1 }, mood: "happy" }), 0.85),
-    dragon: () => G(420, 90, A("drift", P("M0 0 q20 -30 50 -12 q16 -22 30 0 q-10 2 -14 10 q22 6 30 26 q-26 -8 -40 0 q-20 14 -50 -6 q-12 10 -24 4 q10 -8 18 -22 Z", "c4", null, 0, "opacity:0.85") + O(60, -6, 2.5, "gold"))) +
-      books(470, 176, 7, 5) + sparkle(380, 60, 0.9) + sparkle(530, 46, 0.7) + sparkle(560, 100, 0.6),
-    mathsyms: (v) => T(250, 70, "π", "chalk", 34) + T(300, 104, "√x", "chalk", 26) + T(370, 72, "∑", "chalk", 32) + T(340, 112, "x²", "chalk", 22) +
-      (v === "r0a" ? G(470, 120, A("bounce", R(-8, -48, 16, 34, "c5", 2) + O(0, -8, 18, "gold", "gold2", 3) + O(0, -8, 10, "gold2", null, 0, "opacity:0.4") + P("M-5 -10 L0 -16 L5 -10", null, "paper", 2))) + sparkle(430, 60) + sparkle(520, 80, 0.8) :
-        v === "r0b" ? G(470, 150, R(-30, -40, 60, 44, "paper", 2, "line", 1) + L(-20, -28, 20, -28, "line", 2) + L(-20, -18, 10, -18, "line", 2) + P("M-12 -6 L12 -6", null, "c1", 3)) :
-        G(470, 140, R(-36, -50, 72, 54, "paper", 3, "line", 1) + T(0, -14, "?", "c5", 30))),
-    bigphone: () => G(440, 118, A("float", R(-46, -84, 92, 162, "dark", 14) + R(-40, -74, 80, 136, "screen", 6) +
-      (function () { let s = ""; const cs = ["c1", "c2", "c3", "c4", "c5", "gold"]; for (let i = 0; i < 9; i++) s += R(-32 + (i % 3) * 24, -64 + Math.floor(i / 3) * 24, 18, 18, cs[i % 6], 5); return s; })() +
-      R(-28, 20, 56, 30, "paper", 6, null, 0, "opacity:0.8"))) + sparkle(360, 50, 0.8, "c2") + sparkle(520, 40, 0.7, "c2"),
-    looming: () => G(420, EFEET, P("M-60 0 Q-70 -110 -30 -140 Q0 -170 30 -140 Q70 -110 60 0 Z", "bully", null, 0, "opacity:0.85") + O(0, -150, 34, "bully", null, 0, "opacity:0.85") +
-      L(-14, -152, -4, -148, "c1", 3) + L(14, -152, 4, -148, "c1", 3)) + G(300, 70, A("rise", T(0, 0, "!", "c1", 26), "--del:-0.5s")),
-    podium: (v) => G(440, EFEET, R(-40, -70, 80, 70, "wood", 4) + R(-50, -76, 100, 10, "wood2", 3) + O(0, -50, 10, "gold")) + G(540, 178, R(-24, -36, 48, 36, "paper", 3, "line", 2) + R(-12, -38, 24, 4, "dark")) +
-      (v === "r0a" ? G(220, 30, A("bounce", P("M-18 10 L-18 -8 L-9 2 L0 -12 L9 2 L18 -8 L18 10 Z", "gold", "gold2", 2))) + sparkle(160, 40) + sparkle(280, 50, 0.8) : "") +
-      G(560, 110, A("wave", O(0, 0, 7, "skin") + R(-3, 5, 6, 26, "c3", 3)), 1) + G(500, 100, A("wave slow", O(0, 0, 7, "skinb") + R(-3, 5, 6, 26, "c4", 3)), 1),
+    // The bookworm: a tower of novels, a reading light, the story drifting up as motes.
+    dragon: () => stack(470, 176, 9, 1.6, 5) + G(520, 176, R(-16, -20, 32, 20, "fabric2", 2) + R(-14, -18, 28, 2, "paperE")) + motes(360, 30, 220, 110, 10, 4) + pool(470, 120, 140, 80, "lampWarm", 0.45),
+    mathsyms: (v) => G(0, 0, R(200, 30, 210, 100, "boardE", 2) + R(200, 30, 210, 100, "hiE", 0, null, 0, "opacity:0.05"), 1) + T(250, 70, "π", "chalkE", 30) + T(300, 104, "√x", "chalkE", 22) + T(360, 72, "∑", "chalkE", 28) + T(340, 116, "x²", "chalkE", 18) +
+      (v === "r0a" ? G(470, 120, A("bounce", R(-7, -46, 14, 32, "accentBlue", 1) + R(-7, -46, 4, 32, "accentRed", 0) + O(0, -8, 17, "brass") + O(0, -8, 11, "brass2") + O(-5, -13, 5, "hiE", null, 0, "opacity:0.5"))) + sparkle(430, 60) + sparkle(520, 80, 0.8) :
+        v === "r0b" ? G(470, 150, R(-30, -40, 60, 44, "paperE", 1) + L(-20, -28, 20, -28, "inkE", 1, "opacity:0.4") + L(-20, -18, 10, -18, "inkE", 1, "opacity:0.4") + P("M-12 -6 L12 -6", null, "accentRed", 2.5)) :
+        G(470, 140, R(-36, -50, 72, 54, "paperE", 1) + L(-26, -36, 20, -36, "inkE", 1, "opacity:0.4") + L(-26, -26, 10, -26, "inkE", 1, "opacity:0.4") + T(0, -6, "?", "accentBlue", 22))),
+    bigphone: () => pool(440, 118, 120, 120, "monitorGlow", 0.5) + G(440, 118, A("float", R(-44, -82, 88, 160, "inkE", 12) + R(-38, -72, 76, 134, "phoneScreen", 5) +
+      (function () { let s = ""; const cs = ["fabric1", "neonA", "fabric4", "neonC", "accentBlue", "fabric3"]; for (let i = 0; i < 9; i++) s += R(-30 + (i % 3) * 22, -62 + Math.floor(i / 3) * 22, 16, 16, cs[i % 6], 4); return s; })() +
+      R(-28, 20, 56, 26, "paperE", 5, null, 0, "opacity:0.7"))),
+    // Older students blocking the corridor: dark silhouettes and their long shadows.
+    looming: () => G(0, 0, gloom(0.5)) + [[380, 1.05], [450, 1.15], [520, 1]].map(([x, sc]) => G(x, EFEET, E(0, 0, 30, 6, "aoC", null, 0, "opacity:0.4") + P("M-24 0 L-22 -70 Q-26 -96 0 -100 Q26 -96 22 -70 L24 0 Z", "silhouette") + O(0, -114, 15, "silhouette"), sc)).join(""),
+    podium: (v) => G(440, EFEET, shadow(0, 0, 50, 6) + boxP(-40, 0, 80, 70, 0.1, [300 - 440, -120], "woodDesk", "woodDesk2", "woodDesk2") + R(-30, -60, 60, 3, "brass") + L(10, -70, 20, -96, "inkE", 2) + O(20, -98, 4, "inkE")) +
+      G(540, 178, R(-24, -36, 48, 36, "paperE", 2) + R(-12, -38, 24, 4, "inkE") + R(-4, -28, 8, 14, "aoC", 0, null, 0, "opacity:0.4")) + (v === "r0a" ? motes(160, 20, 300, 80, 10, 7) : ""),
     doctor: () => G(440, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 1, shirt: 3 }, mood: "happy" })) + G(440, EFEET, P("M-22 -104 L22 -104 L24 -56 L-24 -56 Z", "paper", "line", 1) +
       P("M-8 -100 Q-14 -76 0 -72 Q14 -76 8 -100", null, "dark", 2) + O(0, -70, 3.5, "metal")),
-    door: () => R(420, 34, 110, 144, "wood", 3, "wood2", 4) + O(512, 110, 5, "gold") + G(475, 80, O(0, 0, 22, "paper", "c1", 5) + L(-15, 15, 15, -15, "c1", 5)) + G(250, 40, A("drift", E(0, 0, 40, 16, "storm") + E(24, -10, 24, 14, "storm") + E(-22, -6, 20, 12, "storm") + P("M4 12 L-4 26 L4 26 L-4 40", null, "gold", 3))),
-    monitors: () => G(120, 196, E(0, 0, 24, 6, "cup") + R(-20, -30, 40, 30, "c1", 4) + R(-20, -30, 40, 8, "paper", 2) + A("rise", P("M-6 -36 q-4 -6 0 -12 M6 -36 q4 -6 0 -12", null, "steam", 2))),
-    bed: (v, id) => R(300, 120, 280, 60, "wood", 6) + R(300, 104, 60, 40, "paper", 10) + R(352, 112, 228, 54, "c5", 10, null, 0, "opacity:0.8") + G(560, 76, R(-18, -20, 36, 26, "paper", 3) + P("M-10 -20 q10 -12 20 0", "paper", "line", 1)) +
-      G(250, 60, A("float", R(-4, -26, 8, 34, "paper", 4, "line", 1) + O(0, 10, 7, "c1") + R(-1.5, -18, 3, 26, "c1", 1))) + (id === "flu" ? G(360, 98, R(-16, -8, 32, 14, "sweat", 6)) : ""),
-    laptop: () => G(450, 176, P("M-70 0 L-58 -86 L58 -86 L70 0 Z", "dark") + R(-52, -80, 104, 68, "screen", 3) + G(0, -50, O(0, -6, 10, "skinb") + R(-14, 4, 28, 18, "uniform", 6)) + R(-90, 0, 180, 8, "metal", 3)) +
-      sparkle(520, 60, 0.9) + sparkle(380, 70, 0.6),
-    mom: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 0 }, mood: "grumpy", pose: "hold" }), 1.05) + G(560, 150, R(-16, -16, 32, 24, "wood2", 4) + R(-10, -10, 20, 10, "dark", 2) + O(0, -16, 4, "c1")),
-    hearts: () => G(450, 120, A("float", R(-24, -16, 48, 32, "paper", 2, "line", 1) + P("M-24 -16 L0 4 L24 -16", null, "line", 1) + heart(0, -2, 1, "c1")), 1.6) + G(560, 168, R(-9, -26, 18, 28, "c2", 4) + R(-9, -20, 18, 6, "c1")) +
-      heart(380, 90, 1.4, "c1", -0.5) + heart(420, 50, 1, "blossom", -1.5) + heart(560, 70, 1.2, "c1", -2.5),
-    chat: () => G(440, 110, R(-80, -70, 160, 30, "screen", 12) + R(-50, -30, 130, 30, "paper", 12, "line", 1) + T(30, -9, "100", "c1", 18) + R(-80, 10, 110, 30, "screen", 12)) +
-      G(560, 170, A("flicker", P("M0 0 Q-20 -20 -6 -46 Q0 -30 8 -34 Q4 -52 16 -64 Q26 -30 20 0 Z", "fall") + P("M4 0 Q-6 -14 4 -28 Q10 -18 14 -6 Z", "gold"))),
-    raincloud: () => G(270, 34, A("drift", E(0, 0, 40, 16, "storm") + E(24, -10, 24, 14, "storm") + E(-22, -6, 20, 12, "storm")) +
-      (function () { let s = ""; for (let i = 0; i < 6; i++) s += G(-28 + i * 11, 12, A("fall", L(0, 0, -2, 8, "sweat", 2), "--d:1.2s;--del:-" + (i * 0.2) + "s;--dx:-4px;--fy:70px")); return s; })()) + R(420, 140, 160, 8, "wood", 2) + books(470, 140, 3, 3),
-    candle: () => G(440, 170, R(-14, -40, 28, 40, "paper", 3, "line", 1) + P("M-14 -40 Q0 -34 14 -40", "paper2") + L(0, -40, 0, -48, "dark", 2) + G(0, -52, A("rise", P("M0 0 q-6 -8 0 -16 q6 -8 0 -16", null, "steam", 2)))) +
-      R(0, 0, EW + 80, EH, "shadow", 0, null, 0, "opacity:0.5"),
-    notes: () => G(470, 130, A("float", R(-60, -40, 120, 80, "paper", 4, "line", 1.5) + L(0, -40, 0, 40, "line", 1.5) + L(-50, -24, -10, -24, "c2", 6, "opacity:0.7") + L(-50, -10, -16, -10, "line", 2) +
-      L(-50, 4, -6, 4, "c3", 6, "opacity:0.6") + L(10, -24, 50, -24, "line", 2) + L(10, -10, 44, -10, "c4", 6, "opacity:0.5") + L(10, 4, 50, 4, "line", 2))) + sparkle(400, 60) + sparkle(540, 70, 0.8) + sparkle(470, 40, 0.6),
-    shop: () => G(160, 34, A("drift", T(0, 0, "₩", "gold", 30)), 1) + G(230, 60, A("fall", O(0, 0, 8, "gold", "gold2", 2), "--d:3s;--dx:0px;--fy:120px")) + G(110, 50, A("fall", O(0, 0, 7, "gold", "gold2", 2), "--d:3.6s;--del:-1s;--dx:6px;--fy:130px")),
-    grandma: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, grey: true }, mood: "happy", prop: "envelope", pose: "hold" }), 0.95) +
-      heart(400, 60, 1.2, "c1", -1) + heart(540, 50, 1, "blossom", -2),
-    sheep: () => clock(470, 60, 22, 3) + G(400, 140, A("hop", E(0, 0, 18, 13, "paper", "line", 1.5) + O(16, -6, 7, "dark") + L(-8, 12, -8, 20, "dark", 3) + L(8, 12, 8, 20, "dark", 3))) +
-      G(520, 150, A("hop", E(0, 0, 14, 10, "paper", "line", 1.5) + O(12, -5, 6, "dark") + L(-6, 9, -6, 16, "dark", 3) + L(6, 9, 6, 16, "dark", 3), "--del:-0.7s")) + G(560, 100, A("rise", T(0, 0, "z", "c5", 18) + T(10, -14, "z", "c5", 14), "--del:-1s")),
-    stall: () => bunting(0, 680, 22, 3) + G(460, 176, R(-90, -60, 180, 60, "c1", 4) + R(-100, -100, 200, 18, "c2", 4) + R(-90, -82, 6, 22, "wood2") + R(84, -82, 6, 22, "wood2") +
-      E(-30, -66, 30, 10, "dark") + E(-30, -70, 24, 6, "c1dark") + G(-30, -80, A("rise", P("M-6 0 q-4 -6 0 -12 M6 0 q4 -6 0 -12", null, "steam", 2))) + R(20, -76, 50, 14, "paper", 3)) +
-      G(80, 40, A("sway", L(0, 0, 0, 14, "line", 1) + E(0, 26, 12, 14, "c1") + R(-6, 12, 12, 4, "gold"))) + G(560, 54, A("sway slow", L(0, 0, 0, 14, "line", 1) + E(0, 26, 12, 14, "c2") + R(-6, 12, 12, 4, "gold"))),
-    banner: () => G(300, 26, A("sway-slow", R(-110, 0, 220, 56, "c1", 4) + R(-104, 6, 208, 44, "c1dark", 3, null, 0, "opacity:0.35") + T(0, 42, "D-100", "paper", 36))) + R(500, 120, 60, 58, "wood", 2),
-    polaroids: () => G(470, 100, R(-50, -46, 60, 70, "paper", 2, "line", 1, "") + R(-44, -40, 48, 46, "sky") + O(-28, -14, 7, "skin") + O(-12, -16, 7, "skinb") + R(-36, -8, 30, 14, "c3", 4)) +
-      G(520, 120, R(-30, -40, 60, 70, "paper", 2, "line", 1) + R(-24, -34, 48, 46, "blossom") + O(-8, -8, 7, "skin") + O(8, -10, 7, "skinb")) + G(400, 170, P("M-14 0 L0 -24 L14 0 Z", "paper", "line", 1) + R(-10, -10, 20, 10, "dark")),
-    toilet: () => G(460, 178, E(0, -34, 50, 14, "paper", "line", 2) + E(0, -34, 40, 9, "sweat") + P("M-46 -30 Q-40 0 -20 0 L20 0 Q40 0 46 -30", "paper", "line", 2) + R(-40, -110, 80, 60, "paper", 8, "line", 2) +
-      G(0, -48, A("bounce", R(-6, -14, 12, 22, "dark", 3) + R(-4, -12, 8, 15, "screen", 1)))) + G(430, 112, A("rise", O(0, 0, 4, "sweat") + O(50, -6, 3, "sweat") + O(24, -14, 3.5, "sweat"))),
-    planner: () => G(470, 120, R(-70, -50, 140, 100, "paper", 4, "line", 1.5) + (function () { let s = ""; for (let i = 0; i < 6; i++) s += L(-60, -32 + i * 14, 60, -32 + i * 14, "line", 1); for (let i = 0; i < 4; i++) s += L(-60 + i * 40, -40, -60 + i * 40, 40, "line", 1); return s; })() +
-      R(-58, -30, 36, 10, "c3", 2, null, 0, "opacity:0.7") + R(-18, -16, 36, 10, "c1", 2, null, 0, "opacity:0.7") + R(22, -2, 36, 10, "c5", 2, null, 0, "opacity:0.7") + R(-58, 12, 36, 10, "c2", 2, null, 0, "opacity:0.7")),
-    trip: () => G(480, 176, R(-80, -70, 160, 62, "c2", 10) + R(-70, -60, 40, 24, "screen", 3) + R(-20, -60, 40, 24, "screen", 3) + R(30, -60, 40, 24, "screen", 3) + O(-50, -6, 12, "dark") + O(50, -6, 12, "dark")),
-    bulb: () => G(300, 40, A("pulse", O(0, 0, 34, "lamp", null, 0, "opacity:0.35")) + O(0, 0, 18, "lamp", "gold2", 2) + R(-7, 16, 14, 10, "metal", 2) + L(-4, -4, 0, 6, "gold2", 2) + L(4, -4, 0, 6, "gold2", 2)) +
-      sparkle(250, 30, 0.7) + sparkle(350, 26, 0.6),
-    examEve: () => G(470, 176, R(-60, -70, 100, 70, "c5", 14) + R(-50, -60, 80, 18, "c5dark", 6, null, 0, "opacity:0.4")) + clock(540, 70, 20, 10) +
-      G(400, 170, R(-20, -10, 40, 26, "paper", 2, "line", 1) + O(-10, 0, 5, "skin") + L(0, -2, 14, -2, "line", 1.5) + L(0, 4, 14, 4, "line", 1.5)) + G(560, 166, O(0, 0, 10, "paper", "dark", 3)),
-    lunchbox: () => G(450, 170, R(-80, -50, 120, 50, "c5", 6) + R(-74, -44, 52, 38, "paper", 4) + R(-16, -44, 50, 18, "c1", 3) + R(-16, -22, 24, 16, "leaf", 3) + O(20, -14, 8, "gold") +
-      R(56, -86, 34, 86, "metal", 8) + R(56, -90, 34, 12, "dark", 5)) + G(520, 70, A("rise", P("M0 0 q-6 -8 0 -16 q6 -8 0 -16", null, "steam", 2))) + heart(380, 70, 1, "c1", -1),
+    door: () => shadow(475, 180, 70, 6) + R(414, 30, 122, 150, "doorFrame") + R(420, 34, 110, 146, "doorE2") + R(420, 34, 4, 146, "hiE", 0, null, 0, "opacity:0.15") + R(510, 104, 14, 5, "brass", 2) +
+      G(475, 80, O(0, 0, 20, "paperE") + O(0, 0, 20, null, "accentRed", 4) + L(-14, 14, 14, -14, "accentRed", 4)) + A("shake", P("M540 40 q10 10 0 20 M548 34 q16 16 0 32", null, "inkE", 1.4, "opacity:0.4")),
+    monitors: () => G(120, 196, shadow(0, 2, 26, 4) + R(-18, -26, 36, 26, "cupNoodle", 3) + R(-18, -26, 36, 8, "accentRed", 2) + E(0, -26, 18, 4, "paperE2") + G(0, -30, A("rise", P("M-6 0 q-4 -6 0 -12 M6 0 q4 -6 0 -12", null, "steamE", 1.6)))) + G(156, 196, R(-6, -30, 12, 30, "neonA", 3, null, 0, "opacity:0.8")),
+    // Sick in bed: the duvet, a thermometer and pills on the night table, a humidifier's mist.
+    bed: (v, id) => shadow(440, 182, 150, 8) + boxP(300, 180, 280, 34, 0.1, [300, 90], "beddingE2", "beddingE", "beddingE2") + R(306, 128, 60, 22, "paperE", 8) + R(360, 134, 216, 30, "duvet", 8) + R(360, 134, 216, 6, "hiE", 3, null, 0, "opacity:0.2") +
+      G(560, 140, boxP(-18, 40, 36, 40, 0.06, [-260, -50], "woodDesk", "woodDesk2", "woodDesk2") + R(-10, -8, 6, 8, "paperE", 1) + R(0, -10, 8, 10, "accentRed", 2, null, 0, "opacity:0.7") + L(-14, -2, 6, -6, "steel", 1.5)) +
+      G(250, 176, R(-12, -30, 24, 30, "paperE", 8) + G(0, -34, A("rise", E(0, 0, 8, 5, "steamE", null, 0, "opacity:0.6")))) + (id === "flu" ? G(330, 118, R(-14, -6, 28, 10, "towel", 4)) : ""),
+    laptop: () => pool(450, 120, 130, 80, "monitorGlow", 0.5) + G(450, 176, P("M-70 0 L-58 -86 L58 -86 L70 0 Z", "inkE") + R(-52, -80, 104, 68, "phoneScreen", 2) + G(0, -50, O(0, -6, 10, "fabric2") + R(-14, 4, 28, 18, "uniformE", 6)) + R(-36, -26, 30, 3, "paperE", 0, null, 0, "opacity:0.6") + R(-90, 0, 180, 7, "steel", 2)),
+    mom: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 0 }, mood: "grumpy", pose: "hold" }), 1.05) + G(560, 150, R(-16, -14, 32, 16, "inkE", 3) + L(-10, -14, -14, -28, "inkE", 1.5) + L(10, -14, 14, -28, "inkE", 1.5) + O(8, -6, 1.6, "neonA")),
+    hearts: () => G(450, 120, A("float", R(-24, -16, 48, 32, "paperE", 1) + P("M-24 -16 L0 4 L24 -16", null, "paperE2", 1) + P("M0 6 C-6 1 -4 -5 0 -2 C4 -5 6 1 0 6 Z", "heartE")), 1.4) + G(560, 168, R(-9, -26, 18, 28, "fabric4", 3) + R(-9, -20, 18, 5, "paperE", 0, null, 0, "opacity:0.6")) +
+      heart(390, 80, 1.2, 0, -0.5) + heart(530, 64, 1, 0, -2),
+    chat: () => G(440, 110, R(-80, -70, 150, 28, "bubbleE", 12) + R(-50, -32, 130, 28, "bubbleMe", 12) + T(30, -12, "100", "inkE", 15) + R(-80, 6, 104, 28, "bubbleE", 12) + L(-70, -56, -10, -56, "inkE", 2, "opacity:0.3") + L(-70, 20, -20, 20, "inkE", 2, "opacity:0.3")),
+    // A bad stretch: rain streaking over everything, the room gone grey, crumpled pages on the floor.
+    raincloud: () => gloom() + rain(EW, EH, 36, 9) + [[420, 192], [470, 198], [520, 188]].map(([x, y]) => G(x, y, P("M-7 0 L-5 -7 L1 -9 L7 -4 L6 3 L-1 5 Z", "paperE") + L(-4, -4, 3, 1, "aoC", 0.8, "opacity:0.3"))).join(""),
+    candle: () => gloom(0.9) + pool(440, 120, 110, 90, "candle", 0.9) + G(440, 170, R(-12, -40, 24, 40, "paperE", 2) + R(-12, -40, 7, 40, "hiE", 0, null, 0, "opacity:0.2") + L(0, -40, 0, -46, "inkE", 1.5) + G(0, -50, A("flicker", P("M0 4 Q-5 -4 0 -14 Q5 -4 0 4 Z", "candle")))),
+    notes: () => G(470, 130, A("float", R(-60, -40, 120, 80, "paperE", 2) + L(0, -40, 0, 40, "paperE2", 1.5) + L(-50, -24, -10, -24, "stickyY", 5, "opacity:0.8") + L(-50, -10, -16, -10, "inkE", 1, "opacity:0.4") +
+      L(-50, 4, -6, 4, "stickyB", 5, "opacity:0.7") + L(10, -24, 50, -24, "inkE", 1, "opacity:0.4") + L(10, -10, 44, -10, "stickyP", 5, "opacity:0.6") + L(10, 4, 50, 4, "inkE", 1, "opacity:0.4") + L(-50, 18, -20, 18, "inkE", 1, "opacity:0.4"))) + pool(470, 130, 120, 70, "sunLight", 0.3),
+    shop: () => G(160, 34, A("drift", T(0, 0, "₩", "brass", 26)), 1) + G(230, 60, A("fall", O(0, 0, 7, "brass") + O(-2, -2, 3, "hiE", null, 0, "opacity:0.4"), "--d:3s;--dx:0px;--fy:120px")) + G(110, 50, A("fall", O(0, 0, 6, "brass") + O(-2, -2, 2.5, "hiE", null, 0, "opacity:0.4"), "--d:3.6s;--del:-1s;--dx:6px;--fy:130px")),
+    grandma: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, grey: true }, mood: "happy", prop: "envelope", pose: "hold" }), 0.95) + pool(470, 100, 110, 90, "lampWarm", 0.4),
+    // Insomnia: 3 a.m. on the clock, the phone's light on the ceiling.
+    sheep: () => gloom(0.7) + clock(470, 60, 20, 3) + pool(420, 30, 120, 30, "monitorGlow", 0.6) + G(400, 172, R(-10, -3, 20, 4, "inkE", 1) + R(-9, -3, 18, 1.4, "monitorGlow")) + motes(380, 80, 200, 80, 5, 9),
+    stall: () => flags(0, 680, 22, 3) + G(460, 176, shadow(0, 2, 100, 6) + R(-90, -56, 180, 56, "stallE", 2) + R(-100, -100, 200, 16, "awning", 2) + [0, 1, 2, 3, 4, 5, 6].map((i) => R(-100 + i * 29, -100, 14, 16, "paperE", 0, null, 0, "opacity:0.7")).join("") + R(-90, -84, 4, 28, "steel2") + R(86, -84, 4, 28, "steel2") +
+      E(-30, -60, 30, 8, "inkE") + E(-30, -63, 24, 5, "tteok") + G(-30, -72, A("rise", P("M-6 0 q-4 -6 0 -12 M6 0 q4 -6 0 -12", null, "steamE", 1.6))) + R(20, -70, 50, 12, "paperE", 2)),
+    banner: () => G(300, 26, A("sway-slow", R(-110, 0, 220, 52, "bannerE", 1) + R(-110, 0, 220, 6, "aoC", 0, null, 0, "opacity:0.2") + T(0, 38, "D-100", "paperE", 32))) + L(190, 26, 410, 26, "steel2", 1.4) + R(500, 120, 60, 58, "woodDesk", 2),
+    polaroids: () => G(470, 100, R(-50, -46, 60, 70, "paperE", 1) + R(-44, -40, 48, 46, "skyMid") + O(-28, -14, 7, "fabric2") + O(-12, -16, 7, "fabric2") + R(-36, -8, 30, 14, "fabric1", 4)) +
+      G(520, 120, R(-30, -40, 60, 70, "paperE", 1) + R(-24, -34, 48, 46, "blossomE") + O(-8, -8, 7, "fabric2") + O(8, -10, 7, "fabric2")) + G(400, 170, P("M-14 0 L0 -24 L14 0 Z", "paperE") + R(-10, -10, 20, 10, "inkE")),
+    toilet: () => G(460, 178, shadow(0, 0, 50, 5) + E(0, -34, 48, 13, "porcelain") + E(0, -34, 38, 8, "rainE") + P("M-44 -30 Q-40 0 -20 0 L20 0 Q40 0 44 -30", "porcelain") + R(-38, -108, 76, 60, "porcelain", 6) + R(-38, -108, 14, 60, "hiE", 4, null, 0, "opacity:0.25") +
+      G(0, -48, A("bounce", R(-6, -14, 12, 22, "inkE", 3) + R(-4, -12, 8, 15, "phoneScreen", 1)))) + G(430, 112, A("rise", O(0, 0, 3, "rainE") + O(50, -6, 2.5, "rainE") + O(24, -14, 3, "rainE"))),
+    planner: () => G(470, 120, R(-70, -50, 140, 100, "paperE", 2) + (function () { let s = ""; for (let i = 0; i < 6; i++) s += L(-60, -32 + i * 14, 60, -32 + i * 14, "paperE2", 1); for (let i = 0; i < 4; i++) s += L(-60 + i * 40, -40, -60 + i * 40, 40, "paperE2", 1); return s; })() +
+      R(-58, -30, 36, 10, "stickyB", 1, null, 0, "opacity:0.8") + R(-18, -16, 36, 10, "stickyP", 1, null, 0, "opacity:0.8") + R(22, -2, 36, 10, "stickyY", 1, null, 0, "opacity:0.8") + R(-58, 12, 36, 10, "matB", 1, null, 0, "opacity:0.8")),
+    trip: () => G(480, 176, shadow(0, 4, 100, 8) + R(-90, -72, 180, 66, "busTour", 8) + R(-90, -36, 180, 8, "accentBlue", 0, null, 0, "opacity:0.6") + R(-80, -64, 44, 22, "winDay", 2) + R(-30, -64, 44, 22, "winDay", 2) + R(20, -64, 44, 22, "winDay", 2) + R(70, -64, 14, 40, "winDay", 2) +
+      O(-56, -6, 12, "inkE") + O(56, -6, 12, "inkE") + O(-56, -6, 4, "steel") + O(56, -6, 4, "steel")),
+    // A pendant lamp clicks on over the desk.
+    bulb: () => pool(300, 90, 160, 110, "lampWarm", 0.7) + G(300, 0, L(0, 0, 0, 40, "inkE", 1.2) + P("M-22 60 L22 60 L14 40 L-14 40 Z", "lampShade") + E(0, 60, 22, 4, "lampWarm") + P("M-22 62 L-70 170 L70 170 L22 62 Z", "lampWarm", null, 0, "opacity:0.12")) + motes(240, 80, 120, 80, 6, 3),
+    examEve: () => gloom(0.6) + pool(480, 120, 110, 70, "lampWarm", 0.6) + G(470, 176, R(-60, -60, 100, 60, "fabric1", 10) + R(-50, -54, 80, 14, "aoC", 6, null, 0, "opacity:0.2")) + clock(540, 70, 18, 10) +
+      G(400, 170, R(-20, -10, 40, 26, "paperE", 1) + R(-16, -6, 10, 12, "fabric2") + L(-2, -2, 14, -2, "inkE", 1, "opacity:0.4") + L(-2, 4, 14, 4, "inkE", 1, "opacity:0.4")) + G(560, 166, O(0, 0, 9, "paperE") + O(0, 0, 9, null, "inkE", 2)),
+    lunchbox: () => G(450, 170, shadow(0, 2, 80, 6) + R(-80, -46, 120, 46, "fabric1", 5) + R(-74, -40, 52, 34, "paperE", 3) + R(-16, -40, 50, 16, "kimchi", 2) + R(-16, -20, 24, 14, "matB", 2) + O(20, -12, 7, "stickyY") +
+      R(56, -86, 32, 86, "steel", 7) + R(56, -86, 10, 86, "hiE", 5, null, 0, "opacity:0.25") + R(56, -90, 32, 12, "inkE", 5)) + G(520, 70, A("rise", P("M0 0 q-6 -8 0 -16 q6 -8 0 -16", null, "steamE", 1.6))),
     counsel: () => G(500, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 1, shirt: 3 }, mood: "ok", pose: "hold", prop: "book" }), 0.95),
     // People: a birthday cake, a block tower, a cheering sign at the exam gate.
-    cake: () => G(470, 176, R(-50, -40, 100, 40, "paper", 6, "line", 1.5) + R(-50, -40, 100, 10, "blossom", 4) + R(-40, -66, 80, 26, "paper", 6, "line", 1.5) + R(-40, -66, 80, 8, "c1", 3) +
-      [-24, -8, 8, 24].map((x) => R(x - 2, -82, 4, 16, "c5", 1) + G(x, -86, A("flicker", P("M0 0 Q-3 -5 0 -10 Q3 -5 0 0 Z", "gold")))).join("")) + bunting(20, 660, 24, 4) + sparkle(400, 60, 0.8) + sparkle(540, 50, 0.7),
-    tower: () => toyBlocks(470, EF) + G(470, EF - 44, toyBlocks(0, 0)) + sparkle(430, 70, 0.8) + sparkle(530, 90, 0.6),
-    cheer: () => G(470, 112, A("sway", R(-50, -30, 100, 56, "paper", 4, "line", 1.5) + heart(0, -6, 1.4, "c1") + L(-44, 26, -44, 70, "wood2", 4) + L(44, 26, 44, 70, "wood2", 4))) +
-      G(400, 150, A("bounce", O(0, 0, 14, "c2") + O(6, -6, 9, "c2dark"))) + G(560, 140, A("bounce", O(0, 0, 14, "c5") + O(-5, -6, 9, "c5dark"), "--del:-0.4s")) + sparkle(420, 40, 0.8),
-    sparkles: () => sparkle(420, 60, 1.2) + sparkle(500, 110, 0.9, "c5") + sparkle(380, 130, 0.7, "c1") + sparkle(540, 50, 0.6, "c3"),
+    cake: () => pool(470, 120, 110, 80, "candle", 0.6) + G(470, 176, shadow(0, 2, 60, 5) + R(-50, -40, 100, 40, "paperE", 5) + R(-50, -40, 100, 8, "blossomE", 3) + R(-40, -64, 80, 24, "paperE", 5) + R(-40, -64, 80, 6, "stickyP", 3) +
+      [-24, -8, 8, 24].map((x) => R(x - 1.5, -78, 3, 14, "stickyB", 1) + G(x, -82, A("flicker", P("M0 0 Q-3 -5 0 -10 Q3 -5 0 0 Z", "candle")))).join("")) + flags(20, 660, 24, 4),
+    tower: () => toyBlocks(470, EF) + G(470, EF - 44, toyBlocks(0, 0)),
+    cheer: () => G(470, 112, A("sway", R(-50, -30, 100, 56, "paperE", 2) + R(-50, -30, 100, 10, "accentRed", 1, null, 0, "opacity:0.8") + L(-30, 0, 30, 0, "inkE", 3, "opacity:0.7") + L(-24, 12, 24, 12, "inkE", 3, "opacity:0.5") + L(-44, 26, -44, 70, "woodLight2", 3) + L(44, 26, 44, 70, "woodLight2", 3))) +
+      G(400, 140, A("bounce", R(-12, -16, 24, 30, "thermos", 4))) + G(560, 140, A("bounce", R(-10, -12, 20, 24, "paperE", 3) + R(-10, -12, 20, 6, "accentRed"), "--del:-0.4s")),
+    sparkles: () => motes(330, 30, 260, 130, 12, 5),
   };
+  // Toy blocks (wooden, muted), and a string of the little flags of every nation at a sports day.
+  function toyBlocks(x, y) {
+    return shadow(x, y, 40, 4) + boxP(x - 30, y, 22, 22, 0.08, [x + 200, y - 120], "matA", "hiE", "matA") + boxP(x - 6, y, 22, 22, 0.08, [x + 200, y - 120], "matB", "hiE", "matB") + boxP(x - 18, y - 22, 22, 22, 0.08, [x + 200, y - 120], "matC", "hiE", "matC") + O(x + 36, y - 9, 9, "fabric1");
+  }
+  function flags(x1, x2, y, seed) {
+    let s = P("M" + x1 + " " + y + " Q" + (x1 + x2) / 2 + " " + (y + 16) + " " + x2 + " " + y, null, "inkE", 0.8, "opacity:0.6");
+    const n = Math.floor((x2 - x1) / 22);
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n, px = x1 + (x2 - x1) * t, py = y + 16 * 4 * t * (1 - t) * 0.5 + 1;
+      s += R((px - 6).toFixed(1), py.toFixed(1), 12, 8, ["paperE", "fabric1", "accentRed", "fabric3", "stickyY", "fabric4"][(i + (seed || 0)) % 6], 0, null, 0, "opacity:0.85");
+    }
+    return A("sway-slow", s);
+  }
+  const bunting = flags;
 
   // Event id → backdrop, foreground and how you look in it. Unknown ids fall back by prefix, then by
   // keyword, then by life stage, so new events (e.g. a longer bullying storyline) still get a picture.
@@ -905,9 +1397,11 @@
     for (const [re, key] of KEYWORDS) if (re.test(id)) return EVENT_ART[key];
     return { bg: STAGE_BG[stage] || "room", night: stage === "high" || stage === "hs3", fx: "sparkles", icon: "✨" };
   }
-  // ctx: { id, variant, stage, look, mood, season }
+  // ctx: { id, variant, stage, look, mood, season, view, region }
   function eventArt(ctx) {
     VIEW = (ctx && ctx.view) || "city";
+    REGION = (ctx && ctx.region) || "";
+    begin();
     const spec = specFor(ctx.id, ctx.stage);
     const res = (spec.res && ctx.variant && (spec.res[ctx.variant] || spec.res[ctx.variant.slice(0, 2)])) || {};
     const c = Object.assign({}, ctx);
@@ -920,29 +1414,51 @@
     const px = spec.x || 200;
     if (!spec.alone) (ctx.people || []).slice(0, 2).forEach((q, k) => {
       const x = px <= 300 ? px + 92 + k * 74 : px - 92 - k * 74;
-      s += person(Object.assign({}, c, { look: lookFor(q.lk, q.x), mood: res.pmood || spec.pmood || "happy" }), x, EFEET, 0.86 * (k ? 0.94 : 1));
+      s += shadow(x, EFEET, 30, 5, 0.7) + person(Object.assign({}, c, { look: lookFor(q.lk, q.x), mood: res.pmood || spec.pmood || "happy" }), x, EFEET, 0.86 * (k ? 0.94 : 1));
     });
-    s += person(c, px, EFEET, 0.86, extra);
-    return svg("0 0 " + EW + " " + EH, s, "event-art");
+    s += shadow(px, EFEET, 32, 5, 0.8) + person(c, px, EFEET, 0.86, extra);
+    return svg("0 0 " + EW + " " + EH, tidy(defsOut() + s + vignette(EW, EH)), "event-art");
   }
   function iconFor(id) { return specFor(id, "").icon || "✨"; }
 
   // ---------- screen illustrations (same 600 × 220 frame) ----------
+  // Homes by income fifth, seen from the street, standing on y ≈ 204 in the left half of the frame:
+  // a villa with a rooftop room (옥탑방), an older low-rise block, a standard apartment complex, a newer
+  // one with landscaping, a riverside tower, and the children's home.
   const HOMES = {
-    // Housing by income fifth: a rooftop room over a villa, an older low-rise block, a standard
-    // apartment complex, a newer complex with a park, and a riverside tower.
-    q1: () => R(60, 110, 200, 94, "stone", 2) + R(110, 70, 80, 40, "c2", 2) + R(100, 64, 100, 8, "stone2") + R(126, 82, 18, 16, "screen", 2) + L(200, 84, 250, 84, "line", 1) + R(214, 84, 12, 14, "c5") + R(232, 84, 10, 12, "c1") +
-      (function () { let s = ""; for (let i = 0; i < 3; i++) for (let k = 0; k < 2; k++) s += R(76 + i * 62, 124 + k * 38, 26, 22, "screen", 2); return s; })(),
-    q2: () => R(40, 70, 240, 134, "stone", 2) + R(40, 64, 240, 10, "stone2") + (function () { let s = ""; for (let i = 0; i < 6; i++) for (let k = 0; k < 4; k++) s += R(52 + i * 38, 82 + k * 30, 22, 18, "screen", 2); return s; })(),
-    q3: () => [40, 170].map((x, j) => R(x, 30 + j * 16, 110, 174 - j * 16, j ? "stone" : "stone2", 2) + (function () { let s = ""; for (let i = 0; i < 3; i++) for (let k = 0; k < 7 - j; k++) s += R(x + 12 + i * 32, 44 + j * 16 + k * 22, 20, 12, "screen", 2); return s; })()).join(""),
-    q4: () => HOMES.q3() + tree(30, 204, "spring", 0.8) + tree(300, 204, "spring", 0.9) + R(0, 196, 320, 8, "grass"),
+    q1: () => {
+      // A three-storey brick villa; on its roof a little room, a blue water tank and washing on a line.
+      let s = shadow(160, 204, 140, 6) + boxP(50, 204, 220, 104, 0.08, [420, 60], "brick", "concrete", "brick2");
+      for (let f = 0; f < 3; f++) for (let i = 0; i < 4; i++) s += R(64 + i * 52, 112 + f * 32, 24, 18, "winDay") + R(62 + i * 52, 129 + f * 32, 28, 3, "concrete2");
+      s += R(46, 96, 228, 6, "concrete2") + boxP(90, 96, 90, 34, 0.06, [420, 60], "rooftop", "roofGreen", "concrete2") + R(106, 72, 18, 24, "doorE2") + R(140, 74, 26, 14, "winLit", 0, null, 0, "opacity:0.8");
+      s += R(200, 76, 26, 20, "accentBlue", 3) + R(200, 76, 26, 4, "hiE", 2, null, 0, "opacity:0.2") + L(180, 70, 262, 66, "inkE", 0.8) + R(234, 68, 10, 14, "fabric1") + R(248, 67, 9, 12, "paperE");
+      return s + P("M270 204 L270 160 L290 160", null, "steel2", 2) + R(270, 120, 30, 3, "steel2");
+    },
+    q2: () => {
+      // A 1980s five-storey block: painted concrete, a stripe, small balconies, air conditioners.
+      let s = shadow(170, 204, 160, 6) + boxP(30, 204, 270, 142, 0.06, [420, 60], "concrete", "concrete2", "concrete2") + R(30, 62, 270, 10, "accentBlue", 0, null, 0, "opacity:0.5");
+      for (let f = 0; f < 5; f++) for (let i = 0; i < 6; i++) s += R(42 + i * 43, 80 + f * 24, 28, 14, "winDay") + R(40 + i * 43, 94 + f * 24, 32, 3, "concrete2") + (i % 3 === 1 ? R(68 + i * 43, 84 + f * 24, 8, 6, "paperE2") : "");
+      return s;
+    },
+    q3: () => shadow(170, 204, 170, 6) + aptSlab(160, 204, 140, 168, 9, 31) + aptSlab(30, 204, 130, 186, 9, 32) + R(0, 196, 340, 8, "lawnSu") + tree(20, 204, "summer", 0.6) + tree(320, 204, "summer", 0.7),
+    q4: () => shadow(170, 204, 170, 6) + aptSlab(170, 204, 140, 176, 8, 41) + R(170, 28, 120, 10, "glassTint") + aptSlab(30, 204, 130, 192, 8, 42) + R(30, 12, 110, 12, "glassTint") +
+      R(0, 192, 340, 12, "lawnSp") + tree(18, 204, "spring", 0.85, "cherry") + tree(150, 206, "spring", 0.7) + tree(320, 204, "spring", 0.85, "cherry") + G(250, 204, R(-26, -26, 52, 3, "woodDark") + L(-22, -24, -22, 0, "woodDark", 2) + L(22, -24, 22, 0, "woodDark", 2)),
     // A children's home: a long two-storey building behind a low fence, with a slide in the yard.
-    care: () => R(30, 80, 250, 124, "stone", 2) + R(24, 72, 262, 12, "stone2") + R(138, 150, 34, 54, "c2", 2) +
-      (function () { let s = ""; for (let i = 0; i < 5; i++) for (let k = 0; k < 2; k++) s += R(44 + i * 48, 94 + k * 34, 26, 22, "screen", 2); return s; })() +
-      (function () { let s = ""; for (let i = 0; i < 14; i++) s += R(6 + i * 24, 184, 4, 20, "stone2"); return s; })() + R(4, 186, 330, 4, "stone2") +
-      L(300, 204, 330, 150, "metal", 4) + L(330, 150, 350, 150, "metal", 4) + L(350, 150, 350, 204, "metal", 3) + P("M300 204 L330 150 L338 154 L310 204 Z", "c1"),
-    q5: () => R(0, 176, 600, 20, "river") + P("M100 20 L180 6 L180 204 L100 204 Z", "glass") + P("M180 6 L230 26 L230 204 L180 204 Z", "stone2") +
-      (function () { let s = ""; for (let k = 0; k < 12; k++) s += L(104, 30 + k * 14, 176, 20 + k * 14.6, "screen", 2, "opacity:0.7"); return s; })() + R(250, 60, 60, 144, "glass", 2) + G(560, 60, O(0, 0, 3, "gold")),
+    care: () => {
+      let s = shadow(160, 204, 150, 6) + boxP(30, 204, 250, 124, 0.06, [420, 60], "careWall", "concrete", "concrete2") + R(24, 76, 262, 6, "roofOr") + R(138, 152, 34, 52, "doorE2");
+      for (let i = 0; i < 5; i++) for (let k = 0; k < 2; k++) s += R(44 + i * 48, 96 + k * 32, 26, 20, "winDay") + R(44 + i * 48, 96 + k * 32, 26, 4, "curtain", 0, null, 0, "opacity:0.7");
+      for (let i = 0; i < 14; i++) s += R(6 + i * 24, 184, 3, 20, "steel2");
+      return s + R(4, 186, 330, 3, "steel2") + L(300, 204, 326, 154, "steel", 3) + L(326, 154, 346, 154, "steel", 3) + L(346, 154, 346, 204, "steel", 2.5) + P("M300 204 L326 154 L333 158 L309 204 Z", "accentRed", null, 0, "opacity:0.8");
+    },
+    q5: () => {
+      // Riverside towers in glass, the river and a bridge in front.
+      let s = R(0, 172, 600, 30, "seaNear") + R(0, 172, 600, 3, "hiE", 0, null, 0, "opacity:0.2") + R(0, 196, 600, 3, "concrete2");
+      s += boxP(90, 176, 80, 172, 0.06, [420, 60], "towerGlass", "concrete", "towerGlass2") + boxP(200, 176, 70, 146, 0.06, [420, 60], "towerGlass", "concrete", "towerGlass2");
+      for (let k = 0; k < 14; k++) s += L(94, 16 + k * 11.5, 166, 16 + k * 11.5, "hiE", 0.8, "opacity:0.3") + (k < 12 ? L(204, 42 + k * 11, 266, 42 + k * 11, "hiE", 0.8, "opacity:0.3") : "");
+      s += G(0, 0, R(110, 60, 20, 8, "winLit") + R(140, 100, 20, 8, "winLit") + R(214, 90, 16, 8, "winLit"), 1, "", "opacity:var(--a-litOp)") + P("M90 4 L170 4 L170 20 L90 30 Z", "hiE", null, 0, "opacity:0.12");
+      s += R(0, 160, 600, 5, "concrete") + [60, 200, 340, 480].map((x) => R(x, 165, 6, 12, "concrete2")).join("");
+      return s;
+    },
   };
   // What each parent wears for work (engine JOBS ids).
   const JOB_GEAR = { exec: "suit", doctor: "coat", pro: "suit", civil: "suit", office: "suit", nurse: "scrubs", service: "apron", shop: "apron",
@@ -950,9 +1466,10 @@
   const homeShape = (ctx) => (ctx.parents === "care" ? HOMES.care : HOMES[ctx.family] || HOMES.q3);
   const SCREENS = {
     birth(ctx) {
-      let s = outdoorSky(EW, EH, { season: "spring", seed: 81 });
-      s += homeShape(ctx)() + R(0, 196, EW, 24, "grass");
-      s += tree(560, 200, "spring", 1.1) + tree(480, 204, "spring", 0.8) + particles("spring", 0, 0, EW, 200, false, 12, 3);
+      let s = sky(0, 0, EW, EH, { tod: "gold", seed: 81, sunX: 0.88, sunY: 0.5 }) + ridge(0, EW, 150, 50, 2, "mtnFar", "spring") + haze(0, 100, EW, 60, 0.5);
+      s += homeShape(ctx)() + R(0, 196, EW, 24, "pathE") + R(0, 196, EW, 3, "curb");
+      s += tree(560, 200, "spring", 1.1, "cherry") + tree(480, 204, "spring", 0.8, "cherry") + particles("spring", 0, 0, EW, 200, false, 10, 3);
+      s += shadow(400, EFEET, 110, 7, 0.7);
       // Whoever raises you stands at the door (dressed for work when they have a job) with the newborn
       // in a blanket. mom() is the mother, a grandmother or a carer; with only a dad, he holds the baby.
       const j = ctx.jobs || {};
@@ -963,119 +1480,114 @@
       s += dadHolds ? bundle(450 + 8, EFEET - 76, 1.05) : bundle(340 + 8, EFEET - 74, 1.05);
       return s;
     },
-    track() {
-      let s = outdoorSky(EW, EH, { season: "winter", seed: 82 }) + R(0, 150, EW, 70, "grass") + P("M260 220 L290 150 L310 150 L340 220 Z", "path") + P("M290 150 L150 120 L170 118 L305 150 Z", "path") + P("M305 150 L440 118 L460 120 L310 150 Z", "path");
-      s += G(300, 150, R(-4, -90, 8, 90, "wood2") + G(-38, -78, R(-30, -14, 70, 28, "c4", 4) + P("M-30 -14 L-44 0 L-30 14 Z", "c4")) + G(38, -48, R(-40, -14, 70, 28, "c3", 4) + P("M30 -14 L44 0 L30 14 Z", "c3")));
-      s += G(130, 110, O(0, 0, 16, "c5") + P("M-16 0 Q0 -8 16 0 M-16 0 Q0 8 16 0 M0 -16 L0 16", null, "paper", 1.5)) + G(480, 110, R(-6, -20, 12, 16, "paper", 2) + P("M-6 -4 L-16 16 L16 16 L6 -4 Z", "c3"));
-      return s + particles("winter", 0, 0, EW, 200, false, 14, 4);
+    // The track choice: a fork in a snowy road with two road signs, humanities left and sciences right.
+    track(ctx) {
+      let s = sky(0, 0, EW, EH, { tod: "day", seed: 82 }) + ridge(0, EW, 130, 46, 3, "mtnFar", "winter") + haze(0, 90, EW, 50, 0.5) + landscape(0, 60, EW, 90, { kind: "town", season: "winter", seed: 5, trees: false, horizon: 0.8 });
+      s += R(0, 140, EW, 80, "snowE") + P("M250 220 L292 140 L308 140 L350 220 Z", "asphalt") + P("M292 140 L150 116 L176 114 L304 140 Z", "asphalt") + P("M304 140 L430 114 L456 116 L308 140 Z", "asphalt");
+      s += G(300, 150, shadow(0, 0, 20, 3) + R(-2, -96, 4, 96, "steel2") + G(-40, -84, R(-34, -14, 72, 26, "signGreen", 2) + P("M-34 -14 L-46 -1 L-34 12 Z", "signGreen") + R(-26, -4, 46, 3, "paperE", 0, null, 0, "opacity:0.8")) +
+        G(40, -52, R(-40, -14, 72, 26, "signBlue", 2) + P("M32 -14 L44 -1 L32 12 Z", "signBlue") + R(-30, -4, 46, 3, "paperE", 0, null, 0, "opacity:0.8")));
+      s += tree(80, 160, "winter", 0.9) + tree(530, 160, "winter", 1.0);
+      return s + particles("winter", 0, 0, EW, 200, false, 14, 4) + vignette(EW, EH);
     },
+    // A mock exam: the OMR card on a desk, a computer-sign pen, an eraser, the classroom soft behind.
     mock(ctx) {
-      let s = BACKDROPS.class(ctx) + R(140, 150, 320, 30, "wood", 3);
-      s += G(300, 150, R(-60, -60, 120, 66, "paper", 3, "line", 1) + (function () { let x = ""; for (let i = 0; i < 5; i++) for (let k = 0; k < 5; k++) x += O(-44 + k * 12, -48 + i * 11, 3.5, i === k % 5 ? "dark" : "omr", "c1", 0.8); return x; })() +
-        R(20, -52, 32, 46, "omr", 2) + G(66, -4, R(-3, -40, 6, 40, "c2", 2, null, 0, "transform:rotate(30deg)")));
-      return s;
+      let s = BACKDROPS.class(ctx) + R(0, 0, EW, EH, "bgVeil", 0, null, 0, "opacity:0.3");
+      s += P("M60 220 L130 140 L470 140 L560 220 Z", "formica") + P("M60 220 L130 140 L134 144 L66 220 Z", "formica2") + R(0, 0, EW, EH, null, 0, null, 0, fill(def("dsk", (id) => rad(id, [[0, "hiE", 0.1], [1, "aoC", 0.2]], 0.4, 0.8, 0.8))));
+      s += G(300, 170, P("M-110 30 L-90 -36 L96 -36 L120 30 Z", "omr") + (function () { let x = ""; for (let i = 0; i < 4; i++) for (let k = 0; k < 10; k++) { const px = -84 + k * 17 + i * -2.5, py = -26 + i * 13; x += E(px, py, 4.5, 3, k === (i * 3 + 2) % 10 ? "inkE" : "omrBubble"); } return x; })() + R(-90, -36, 186, 5, "omrRed"));
+      s += G(470, 150, P("M-40 10 L30 -14 L34 -8 L-36 16 Z", "inkE") + P("M30 -14 L42 -18 L34 -8 Z", "paperE")) + G(160, 196, P("M-14 0 L14 -6 L18 6 L-10 12 Z", "paperE") + P("M4 -4 L14 -6 L18 6 L8 8 Z", "accentBlue", null, 0, "opacity:0.7"));
+      return s + vignette(EW, EH);
     },
-    exam(ctx) { return SCENES_EV.exam(ctx); },
-    report() {
-      let s = R(0, 0, EW, EH, "nightwall") + R(0, 178, EW, 42, "nightfloor");
-      s += G(300, 120, A("float", R(-110, -80, 220, 140, "paper", 4, "line", 1.5) + R(-110, -80, 220, 26, "c5", 4) + R(-96, -40, 120, 6, "line") + R(-96, -26, 160, 6, "line") + R(-96, -12, 100, 6, "line") +
-        O(70, 24, 22, "c1", null, 0, "opacity:0.85") + O(70, 24, 16, null, "paper", 2)));
-      return s + sparkle(150, 60) + sparkle(460, 50, 0.8);
+    exam(ctx) {
+      return fit(SETS.examhall(ctx)) + shadow(260, EFEET, 30, 5, 0.8) + person(ctx, 260, EFEET, 0.86, { mood: ctx.mood === "happy" ? "ok" : ctx.mood }) + vignette(EW, EH);
     },
-    apply() {
-      let s = R(0, 0, EW, EH, "wall") + R(0, 178, EW, 42, "floor");
-      ["c1", "c5", "c3"].forEach((c, i) => { s += G(200 + i * 100, 120, A("float", R(-40, -28, 80, 56, "paper", 3, c, 3) + P("M-40 -28 L0 4 L40 -28", null, c, 2) + O(0, 4, 6, c)), 1, "", "--del:-" + i * 0.7 + "s"); });
-      return s;
+    // The score report under the desk lamp at night.
+    report(ctx) {
+      let s = fit(SETS.desk(ctx)) + R(0, 0, EW, EH, "aoC", 0, null, 0, "opacity:0.35") + pool(300, 120, 230, 120, "lampWarm", 0.7);
+      s += G(300, 122, A("float", R(-104, -78, 212, 140, "aoC", 2, null, 0, "opacity:0.3") + R(-110, -84, 212, 140, "paperE", 1) + R(-110, -84, 212, 18, "inkE", 1, null, 0, "opacity:0.85") +
+        [0, 1, 2, 3, 4].map((i) => L(-96, -48 + i * 14, 40, -48 + i * 14, "paperE2", 1) + R(56, -54 + i * 14, 20, 10, "paperE2", 1)).join("") + O(70, 30, 20, null, "accentRed", 2.5) + O(70, 30, 15, "accentRed", null, 0, "opacity:0.15")));
+      return s + vignette(EW, EH, 0.7);
+    },
+    // Applications: three groups' application pages on the laptop at the desk.
+    apply(ctx) {
+      let s = fit(SETS.bedroom(ctx, true)) + R(0, 0, EW, EH, "aoC", 0, null, 0, "opacity:0.3") + pool(300, 110, 220, 100, "monitorGlow", 0.6);
+      s += G(300, 190, P("M-150 0 L-128 -150 L128 -150 L150 0 Z", "inkE") + R(-120, -142, 240, 128, "phoneScreen", 2) + R(-170, 0, 340, 9, "steel", 2));
+      ["accentRed", "accentBlue", "fabric3"].forEach((c, i) => { s += G(220 + i * 80, 112, A("float", R(-32, -40, 64, 80, "paperE", 1) + R(-32, -40, 64, 12, c) + L(-24, -16, 20, -16, "inkE", 1, "opacity:0.35") + L(-24, -6, 14, -6, "inkE", 1, "opacity:0.35") + L(-24, 4, 22, 4, "inkE", 1, "opacity:0.35") + R(-24, 20, 30, 8, c, 2, null, 0, "opacity:0.7")), 1, "", "--del:-" + i * 0.7 + "s"); });
+      return s + vignette(EW, EH, 0.7);
     },
     // ---------- the epilogue ----------
-    // A campus lawn with a lecture hall, a clock tower and cherry trees.
     campus(ctx) {
-      let s = outdoorSky(EW, EH, { season: "spring", seed: 84 }) + R(0, 168, EW, 52, "grass") + P("M250 220 L280 168 L320 168 L350 220 Z", "path");
-      s += R(60, 70, 190, 100, "stone", 3) + R(52, 62, 206, 12, "stone2", 2) + R(140, 30, 30, 44, "stone2", 2) + clock(155, 46, 10, 10);
-      for (let i = 0; i < 4; i++) s += R(74 + i * 44, 92, 26, 30, "glass", 2) + R(74 + i * 44, 134, 26, 30, "glass", 2);
-      s += R(380, 96, 160, 74, "wall", 3) + R(372, 88, 176, 12, "wall2", 2);
-      for (let i = 0; i < 3; i++) s += R(392 + i * 50, 110, 34, 26, "glass", 2);
-      s += tree(30, 176, "spring", 1) + tree(570, 176, "spring", 1.1) + particles("spring", 0, 0, EW, 170, false, 12, 21);
-      return s + person(ctx, 300, EFEET, 0.95, { mood: "happy", prop: "book", pose: "hold" });
+      return fit(SETS.campus(Object.assign({}, ctx, { season: "spring" }))) + shadow(300, EFEET, 30, 5, 0.8) + person(ctx, 300, EFEET, 0.95, { mood: "happy", prop: "book", pose: "hold" }) + vignette(EW, EH);
     },
-    // A barracks on a hill, a flagpole and a duffel bag.
+    // An army training centre in winter: barracks on a hill, the flagpole, a duffel bag.
     army(ctx) {
-      let s = outdoorSky(EW, EH, { season: "winter", seed: 85 }) + P("M0 150 Q160 110 320 146 T600 132 L600 220 L0 220 Z", "hill") + R(0, 178, EW, 42, "path");
-      s += R(330, 100, 220, 70, "stone2", 2) + P("M322 104 L440 74 L558 104 Z", "leaf2") + R(420, 130, 30, 40, "wood2", 2);
-      for (let i = 0; i < 4; i++) s += R(344 + i * 50, 116, 24, 16, "lamp", 2);
-      s += L(110, 178, 110, 60, "metal", 4) + G(112, 64, A("sway", R(0, 0, 40, 24, "c5", 2) + O(20, 12, 6, "c1")));
-      s += G(230, 196, E(0, 0, 34, 14, "hoodie2") + R(-30, -14, 60, 16, "hoodie", 8));
-      return s + particles("winter", 0, 0, EW, 170, false, 10, 22) + person(ctx, 300, EFEET, 0.95, { mood: ctx.mood || "ok" });
+      let s = sky(0, 0, EW, EH, { tod: "day", seed: 85 }) + ridge(0, EW, 140, 60, 6, "mtnFar", "winter") + haze(0, 90, EW, 50, 0.5) + ridge(0, EW, 160, 30, 7, "mtnMid", "winter") + R(0, 172, EW, 48, "dirt");
+      s += boxP(330, 172, 220, 62, 0.06, [300, 80], "concrete", "roofGreen", "concrete2") + P("M322 112 L440 92 L558 112 Z", "roofGreen");
+      for (let i = 0; i < 5; i++) s += R(344 + i * 42, 128, 24, 16, "winDay") + R(344 + i * 42, 128, 24, 16, "winLit", 0, null, 0, "opacity:var(--a-litOp)");
+      s += L(110, 178, 110, 54, "steel", 2.5) + G(112, 58, A("sway", R(0, 0, 40, 26, "paperE") + O(20, 13, 6, "accentRed") + P("M14 13 A6 6 0 0 0 26 13 A3 3 0 0 0 20 13 A3 3 0 0 1 14 13 Z", "accentBlue")));
+      s += G(230, 196, shadow(0, 2, 36, 5) + E(0, -8, 34, 13, "olive") + R(-30, -20, 60, 16, "olive2", 8));
+      return s + particles("winter", 0, 0, EW, 170, false, 10, 22) + shadow(300, EFEET, 30, 5, 0.8) + person(ctx, 300, EFEET, 0.95, { mood: ctx.mood || "ok" }) + vignette(EW, EH);
     },
-    // An interview chair in front of a long desk, and a stack of applications.
+    // A job interview: three interviewers behind a long table, the empty chair, the window.
     hunt(ctx) {
-      let s = R(0, 0, EW, EF, "wall") + floorPlanks(EF, EW, EH - EF) + windowView(470, 30, 100, 90, { season: "fall", seed: 86, tree: false });
-      s += R(40, 120, 260, 20, "wood", 3) + R(52, 140, 10, 40, "wood2") + R(278, 140, 10, 40, "wood2");
-      for (let i = 0; i < 3; i++) s += G(80 + i * 80, 110, O(0, -26, 12, "hair") + R(-18, -16, 36, 26, "uniform", 8) + R(-14, 4, 28, 6, "paper", 1));
-      s += G(400, 170, R(-4, -40, 8, 40, "metal2") + R(-24, -46, 48, 10, "metal", 3));
-      for (let i = 0; i < 4; i++) s += R(500, 160 - i * 7, 60, 6, i % 2 ? "paper" : "paper2", 1, "line", 1);
-      return s + person(ctx, 400, EFEET, 0.92, { mood: ctx.mood || "ok" });
+      let s = fit(room(W, H, BACK, VP, { wall: "officeWall", floor: "tile" }) + windowView(560, 40, 150, 110, { season: "fall", seed: 86, tree: false, blind: true }) + tube(200, 6, 100) + tube(460, 6, 100));
+      s += boxP(40, 140, 260, 18, 0.06, [300, 80], "woodDesk2", "woodDesk", "woodDesk2") + R(52, 140, 6, 40, "steel2") + R(282, 140, 6, 40, "steel2");
+      for (let i = 0; i < 3; i++) s += G(80 + i * 80, 122, O(0, -26, 11, "hairE") + P("M-20 0 Q-20 -18 0 -18 Q20 -18 20 0 Z", "suitE") + R(-12, -2, 24, 6, "paperE", 1) + R(-3, -18, 6, 10, "paperE", 0, null, 0, "opacity:0.7"));
+      s += G(400, 176, R(-4, -36, 8, 36, "steel2") + R(-22, -42, 44, 8, "chairBlack", 3) + R(-20, -76, 40, 34, "chairBlack", 4));
+      for (let i = 0; i < 4; i++) s += R(500, 160 - i * 6, 60, 5, i % 2 ? "paperE" : "paperE2", 1);
+      return s + shadow(400, EFEET, 30, 5, 0.8) + person(ctx, 400, EFEET, 0.92, { mood: ctx.mood || "ok" }) + vignette(EW, EH);
     },
-    // A city at dusk: towers, an apartment block and you on a balcony-high bridge.
+    // At thirty: the city at dusk from a pedestrian bridge, towers and apartment lights coming on.
     at30(ctx) {
-      const gid = nid("dusk");
-      let s = grad(gid, "dusk", "dusk2") + R(0, 0, EW, EH, null, 0, null, 0, "fill:url(#" + gid + ")") + O(470, 120, 30, "sun", null, 0, "opacity:0.85");
+      let s = sky(0, 0, EW, EH, { tod: "gold", seed: 87, sunX: 0.78, sunY: 0.58, sunR: 10 }) + namsan(150, 150, 0.9) + haze(0, 80, EW, 90, 0.5);
       const r = rand(87);
-      for (let i = 0; i < 8; i++) {
-        const x = i * 78, h = 60 + r() * 90;
-        s += R(x, EF - h, 62, h, "city");
-        for (let yy = EF - h + 10; yy < EF - 8; yy += 14) for (let xx = x + 6; xx < x + 56; xx += 14) if (r() < 0.45) s += R(xx, yy, 7, 6, "lamp");
-      }
-      s += R(0, EF, EW, EH - EF, "road") + R(0, EF - 4, EW, 6, "metal");
-      return s + person(ctx, 300, EFEET, 0.95, { mood: ctx.mood || "happy" });
+      for (let i = 0; i < 9; i++) { const x = i * 70 - 10, h = 60 + r() * 80; s += block(x, EF, 56, h, i % 2 ? "bldFar" : "bldMid", i + 3, 9); }
+      s += aptSlab(420, EF, 80, 120, 8, 5) + aptSlab(510, EF, 90, 100, 8, 6);
+      s += R(0, EF - 6, EW, 8, "concrete") + R(0, EF + 2, EW, EH - EF, "asphalt") + [40, 160, 280, 400, 520].map((x) => L(x, EF - 6, x, EF - 30, "steel2", 1.5)).join("") + L(0, EF - 26, EW, EF - 26, "steel2", 2);
+      return s + shadow(300, EFEET, 30, 5, 0.8) + person(ctx, 300, EFEET, 0.95, { mood: ctx.mood || "happy" }) + vignette(EW, EH);
     },
   };
   // v6.0: the report card, the six 수시 envelopes, the first-round notice board, the results page.
   // Grade digits are numbers, not words, so the report card can show them.
-  const GRADE_TOK = ["c3", "c5", "c2", "c4", "c1"];
   Object.assign(SCREENS, {
     naesin(ctx) {
-      let s = R(0, 0, EW, EH, "wall") + R(0, 178, EW, 42, "floor") + R(120, 150, 360, 30, "wood", 3);
+      let s = fit(SETS.classroom(ctx)) + R(0, 0, EW, EH, "bgVeil", 0, null, 0, "opacity:0.3");
       const gs = (ctx.grades || [2, 3, 1, 2, 3]).slice(0, 6);
       let rows = "";
       gs.forEach((g, i) => {
-        rows += R(-70, -44 + i * 15, 70, 6, "line", 2) + R(14, -48 + i * 15, 22, 13, GRADE_TOK[(g || 3) - 1], 3) + T(25, -38 + i * 15, String(g), "paper", 10);
+        rows += L(-74, -40 + i * 15, -4, -40 + i * 15, "paperE2", 4) + R(14, -48 + i * 15, 22, 13, "paperE2", 2) + T(25, -38 + i * 15, String(g), "inkE", 10) + '<rect x="38" y="' + (-46 + i * 15) + '" width="3" height="9" style="fill:var(--g' + Math.min(6, g || 3) + ')"/>';
       });
-      s += G(300, 110, A("float", R(-90, -70, 180, 150, "paper", 4, "line", 1.5) + R(-90, -70, 180, 18, "c5", 4) + rows + O(60, 54, 14, "c1", null, 0, "opacity:0.85") + O(60, 54, 10, null, "paper", 2)));
-      return s + person(ctx, 500, EFEET, 0.8, { pose: "hold", prop: "book" }) + sparkle(150, 60, 0.8);
+      s += G(300, 112, A("float", R(-86, -66, 180, 150, "aoC", 2, null, 0, "opacity:0.3") + R(-90, -70, 180, 150, "paperE", 1) + R(-90, -70, 180, 16, "accentBlue", 1, null, 0, "opacity:0.8") + rows + O(60, 54, 14, null, "accentRed", 2) + O(60, 54, 10, "accentRed", null, 0, "opacity:0.2")));
+      return s + shadow(500, EFEET, 28, 5, 0.8) + person(ctx, 500, EFEET, 0.8, { pose: "hold", prop: "book" }) + vignette(EW, EH);
     },
     susi(ctx) {
-      let s = R(0, 0, EW, EH, "wall") + R(0, 178, EW, 42, "floor");
-      ["c1", "c5", "c3", "c2", "c4", "c5"].forEach((c, i) => {
+      let s = fit(SETS.bedroom(ctx, false)) + R(0, 0, EW, EH, "bgVeil", 0, null, 0, "opacity:0.3");
+      ["accentRed", "accentBlue", "fabric3", "fabric2", "fabric4", "accentBlue"].forEach((c, i) => {
         const x = 110 + (i % 3) * 80, y = 70 + Math.floor(i / 3) * 62;
-        s += G(x, y, A("float", R(-30, -20, 60, 40, "paper", 3, c, 2.5) + P("M-30 -20 L0 4 L30 -20", null, c, 2)), 1, "", "--del:-" + i * 0.5 + "s");
+        s += G(x, y, A("float", R(-28, -18, 60, 40, "aoC", 1, null, 0, "opacity:0.25") + R(-30, -20, 60, 40, "paperE", 1) + P("M-30 -20 L0 4 L30 -20", null, "paperE2", 1.5) + R(-30, -20, 6, 40, c, 0, null, 0, "opacity:0.8")), 1, "", "--del:-" + i * 0.5 + "s");
       });
-      return s + person(ctx, 470, EFEET, 0.86, { mood: "stressed", pose: "hold" });
+      return s + shadow(470, EFEET, 28, 5, 0.8) + person(ctx, 470, EFEET, 0.86, { mood: "stressed", pose: "hold" }) + vignette(EW, EH);
     },
     susiStage(ctx) {
-      let s = BACKDROPS.class(ctx) + R(110, 28, 260, 130, "wood2", 6) + R(118, 36, 244, 114, "board", 4);
-      for (let i = 0; i < 6; i++) s += G(150 + (i % 3) * 80, 66 + Math.floor(i / 3) * 52, R(-28, -18, 56, 40, "paper", 2) + R(-20, -10, 40, 4, "line") + R(-20, -2, 30, 4, "line") + O(0, -18, 4, ["c1", "c5", "c3"][i % 3]));
-      return s + person(ctx, 470, EFEET, 0.86, {});
+      let s = fit(SETS.hallway(ctx)) + R(0, 0, EW, EH, "bgVeil", 0, null, 0, "opacity:0.25") + R(104, 22, 272, 142, "woodDark", 2) + R(110, 28, 260, 130, "cork2");
+      for (let i = 0; i < 6; i++) s += G(150 + (i % 3) * 80, 66 + Math.floor(i / 3) * 52, R(-27, -17, 56, 40, "aoC", 0, null, 0, "opacity:0.2") + R(-28, -18, 56, 40, "paperE") + R(-20, -10, 40, 3, "inkE", 0, null, 0, "opacity:0.35") + R(-20, -2, 30, 3, "inkE", 0, null, 0, "opacity:0.35") + O(0, -16, 2.5, ["accentRed", "accentBlue", "neonC"][i % 3]));
+      return s + shadow(470, EFEET, 28, 5, 0.8) + person(ctx, 470, EFEET, 0.86, {}) + vignette(EW, EH);
     },
     susiResult(ctx) {
-      let s = R(0, 0, EW, EH, "nightwall") + R(0, 178, EW, 42, "nightfloor") + R(130, 150, 300, 30, "wood", 3);
-      s += G(280, 150, P("M-80 0 L-66 -96 L66 -96 L80 0 Z", "dark") + R(-58, -90, 116, 76, "screen", 3) + R(-46, -76, 92, 10, ctx.mood === "happy" ? "c3" : "c1", 3) +
-        R(-46, -58, 60, 6, "line") + R(-46, -46, 76, 6, "line") + R(-100, 0, 200, 8, "metal", 3));
-      if (ctx.mood === "happy") s += sparkle(200, 50) + sparkle(360, 40, 0.8) + sparkle(420, 90, 0.6);
-      return s + person(ctx, 500, EFEET, 0.86, { pose: ctx.mood === "happy" ? "cheer" : null });
+      const ok = ctx.mood === "happy";
+      let s = fit(SETS.bedroom(ctx, true)) + R(0, 0, EW, EH, "aoC", 0, null, 0, "opacity:0.3") + pool(280, 110, 180, 100, "monitorGlow", 0.6) + R(130, 150, 300, 30, "woodDesk", 2);
+      s += G(280, 150, P("M-80 0 L-66 -96 L66 -96 L80 0 Z", "inkE") + R(-58, -90, 116, 76, "phoneScreen", 2) + R(-46, -76, 92, 12, ok ? "fabric3" : "accentRed", 2, null, 0, "opacity:0.85") +
+        R(-46, -56, 60, 4, "inkE", 0, null, 0, "opacity:0.35") + R(-46, -46, 76, 4, "inkE", 0, null, 0, "opacity:0.35") + R(-100, 0, 200, 7, "steel", 2));
+      if (ok) s += motes(170, 30, 260, 80, 8, 4);
+      return s + shadow(500, EFEET, 28, 5, 0.8) + person(ctx, 500, EFEET, 0.86, { pose: ok ? "cheer" : null }) + vignette(EW, EH);
     },
   });
-  const SCENES_EV = {
-    exam(ctx) {
-      let s = R(0, 0, EW, EF, "wall") + floorPlanks(EF, EW, EH - EF) + R(140, 20, 300, 96, "board", 4, "wood", 6) + clock(500, 50, 22, 8) + windowView(530, 90, 60, 70, { season: "fall", seed: 91, tree: false });
-      for (const x of [60, 470]) s += G(x, 196, R(-40, -12, 80, 8, "wood", 2) + R(-16, -16, 32, 5, "paper", 1) + O(-18, -30, 14, "hair") + R(-36, -20, 34, 22, "hoodie", 8));
-      return s + person(ctx, 260, EFEET, 0.86, { mood: ctx.mood === "happy" ? "ok" : ctx.mood });
-    },
-  };
   function screenArt(name, ctx) {
     VIEW = (ctx && ctx.view) || "city";
-    if (name === "offers" || name === "ending") return svg("0 0 " + W + " " + H, SCENES[ctx.label ? "gate" : name === "ending" ? "road" : "home"](ctx), "event-art wide");
-    return svg("0 0 " + EW + " " + EH, SCREENS[name](ctx), "event-art");
+    REGION = (ctx && ctx.region) || "";
+    begin();
+    if (name === "offers" || name === "ending") { const b = SCENES[ctx.label ? "gate" : name === "ending" ? "road" : "home"](ctx); return svg("0 0 " + W + " " + H, tidy(defsOut() + b), "event-art wide"); }
+    const b = SCREENS[name](ctx);
+    return svg("0 0 " + EW + " " + EH, tidy(defsOut() + b), "event-art");
   }
 
 
@@ -1092,7 +1604,7 @@
     const v = (k, d) => (c[k] != null ? c[k] : d);
     const style = "--t:" + t + "s;--s0:" + v("s0", 1) + ";--s1:" + v("s1", 1.06) + ";--ox:" + v("ox", 400) + "px;--oy:" + v("oy", 260) + "px;--x0:" + v("x0", 0) + "px;--x1:" + v("x1", 0) +
       "px;--y0:" + v("y0", 0) + "px;--y1:" + v("y1", 0) + "px";
-    return { t, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + CW + " " + CH + '" preserveAspectRatio="xMidYMid slice" class="art cut-art" aria-hidden="true" focusable="false"><g class="cam" style="' + style + '">' + body + "</g></svg>" };
+    return { t, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + CW + " " + CH + '" preserveAspectRatio="xMidYMid slice" class="art cut-art" aria-hidden="true" focusable="false"><g class="cam" style="' + style + '">' + defsOut() + body + "</g></svg>" };
   }
   // Slide from dx0 to dx1 (px), starting at `at` seconds and taking d seconds: walking, driving, parallax.
   const walk = (dx0, dx1, at, d, body) => '<g class="c-walk" style="--wx0:' + dx0 + "px;--wx1:" + dx1 + "px;--at:" + at + "s;--d:" + d + 's">' + body + "</g>";
@@ -1127,105 +1639,125 @@
     }
     return s;
   }
+  // Confetti for the films, in the muted paper colours of the rest of the art.
+  function confetti(n, seed) { return confettiRain(n, seed).replace(/var\(--a-(c1|c2|c3|c4|c5|gold)\)/g, (m, t) => C({ c1: "accentRed", c2: "stickyY", c3: "fabric3", c4: "fabric4", c5: "accentBlue", gold: "brass" }[t])); }
   const petals = (seed, n) => particles("spring", 0, 0, CW, CH - 40, false, n || 22, seed || 5);
-  // A street that scrolls past behind someone walking in place: far city, near trees and a fence.
+  // A room on the film stage (800 × 450): the back wall meets the floor at 360, feet at 418.
+  const CVP = [400, 200], CBACK = [70, 40, 730, 360];
+  const stage = (o) => room(CW, CH, CBACK, CVP, o);
+  // A street that scrolls past behind someone walking in place: far apartment blocks and a hill, near
+  // shopfronts, trees, street lights and the railing of the pavement.
   function streetPan(t, season) {
     const r = rand(77);
-    let far = "", near = "";
-    for (let i = 0; i < 14; i++) {
-      const x = i * 90, h = 90 + r() * 90;
-      far += R(x, CG - 40 - h, 80, h + 40, "city") + R(x + 12, CG - 30 - h, 14, 12, "lamp", 0, null, 0, "opacity:0.35");
+    let far = ridge(0, 1400, 250, 90, 7, "mtnFar", season, 8) + haze(0, 160, 1400, 110, 0.5), near = "";
+    for (let i = 0; i < 12; i++) far += aptSlab(i * 120, CG - 30, 80, 110 + r() * 90, 10, 50 + i);
+    for (let i = 0; i < 7; i++) {
+      const x = i * 210;
+      near += boxP(x, CG - 30, 180, 120, 0, CVP, i % 2 ? "concrete" : "brick", "concrete", "brick2") + R(x + 8, CG - 120, 164, 22, ["neonA", "signW", "neonC", "neonB"][i % 4], 1, null, 0, "opacity:0.8") + R(x + 24, CG - 112, 90, 6, "signBox", 1, null, 0, "opacity:0.4") +
+        R(x + 12, CG - 92, 156, 58, "storeGlow", 0, null, 0, "opacity:0.55") + L(x + 90, CG - 92, x + 90, CG - 34, "steel2", 2);
     }
-    for (let i = 0; i < 40; i++) near += R(i * 32, CG - 30, 4, 34, "paper", 1, null, 0, "opacity:0.8");
-    for (let i = 0; i < 8; i++) near += tree(80 + i * 170, CG + 6, season, 1.25);
-    return outdoorSky(CW, CH, { season, seed: 31 }) + walk(0, -260, 0, t, far) + R(0, CG - 4, CW, CH, "path") +
-      walk(0, -620, 0, t, near + R(0, CG - 30, 1360, 4, "paper", 0, null, 0, "opacity:0.8")) + R(0, CG + 34, CW, 8, "stone2") + (season === "spring" ? petals(12, 18) : "");
+    for (let i = 0; i < 8; i++) near += tree(80 + i * 170, CG + 6, season, 1.25) + L(160 + i * 170, CG + 2, 160 + i * 170, CG - 150, "steel2", 3) + L(160 + i * 170, CG - 148, 184 + i * 170, CG - 148, "steel2", 2) + O(184 + i * 170, CG - 145, 3, "sodium");
+    near += R(0, CG - 34, 1400, 3, "steel2") + (function () { let x = ""; for (let i = 0; i < 70; i++) x += R(i * 20, CG - 34, 2, 34, "steel2"); return x; })();
+    return sky(0, 0, CW, CH, { tod: season === "summer" ? "rain" : "day", seed: 31, sunY: 0.12 }) + walk(0, -260, 0, t, far) + R(0, CG - 4, CW, CH, "pavement") + L(0, CG + 30, CW, CG + 30, "curb", 6) +
+      walk(0, -620, 0, t, near) + R(0, CG + 33, CW, CH, "asphalt") + (season === "spring" ? petals(12, 18) : particles(season, 0, 0, CW, CH, false, 14, 12));
   }
-  // A school (or university) gate: a building, two pillars and a name plate the app passes in as text.
+  // A school (or university) gate: the building behind, two pillars, a name plate with the text app.js passes.
   function gateShot(label, floors, season) {
-    let s = outdoorSky(CW, CH, { season, seed: 19 }) + R(0, CG, CW, CH - CG, "grass") + P("M330 450 L370 " + CG + " L430 " + CG + " L470 450 Z", "path");
+    let s = sky(0, 0, CW, CH, { tod: season === "fall" ? "dawn" : "day", seed: 19 }) + ridge(0, CW, 200, 70, 4, "mtnFar", season) + haze(0, 140, CW, 80, 0.5) + R(0, CG, CW, CH - CG, "pavement") + P("M330 450 L370 " + CG + " L430 " + CG + " L470 450 Z", "pathE");
     const top = CG - 40 - floors * 34;
-    s += R(150, top, 500, CG - top, "stone", 4) + R(140, top - 12, 520, 14, "stone2", 3);
-    for (let f = 0; f < floors; f++) for (let i = 0; i < 9; i++) s += R(172 + i * 52, top + 14 + f * 34, 30, 20, "glass", 2);
-    s += tree(90, CG + 4, season, 1.6) + tree(720, CG + 4, season, 1.7);
-    s += R(230, 180, 46, CG - 180, "stone2", 3) + R(524, 180, 46, CG - 180, "stone2", 3) + R(218, 170, 70, 16, "stone", 3) + R(512, 170, 70, 16, "stone", 3);
-    s += R(270, 116, 260, 44, "paper", 6, "gold", 3) + (label ? T(400, 145, label, "ink", label.length > 20 ? 12 : label.length > 13 ? 15 : 19) : "");
+    s += boxP(150, CG, 500, CG - top, 0.04, [400, 200], "schoolWall", "concrete", "concrete2") + R(140, top - 12, 520, 12, "concrete2");
+    for (let f = 0; f < floors; f++) for (let i = 0; i < 9; i++) s += R(172 + i * 52, top + 14 + f * 34, 30, 20, "winDay") + R(172 + i * 52, top + 14 + f * 34, 30, 4, "aoC", 0, null, 0, "opacity:0.2");
+    s += tree(90, CG + 4, season, 1.6, "cherry") + tree(720, CG + 4, season, 1.7);
+    s += shadow(253, CG + 2, 40, 6) + shadow(547, CG + 2, 40, 6) + boxP(230, CG, 46, CG - 180, 0.03, [400, 200], "granite", "granite2", "granite2") + boxP(524, CG, 46, CG - 180, 0.03, [400, 200], "granite", "granite2", "granite2") + R(218, 170, 70, 14, "granite2") + R(512, 170, 70, 14, "granite2");
+    s += R(270, 116, 260, 44, "plate", 2, "granite2", 3) + (label ? T(400, 145, label, "plateInk", label.length > 20 ? 12 : label.length > 13 ? 15 : 19) : "");
     return s;
   }
   // The 돌잡이 table seen from the front, scaled up from the event art's coordinates.
   const DOL_ORDER = ["pencil", "book", "mouse", "stethoscope", "mic", "gavel", "ball", "thread", "money", "brush"];
   function dolTable() {
-    let s = R(300, 166, 290, 14, "wood", 4) + R(310, 180, 10, 24, "wood2", 2) + R(570, 180, 10, 24, "wood2", 2) + R(296, 160, 298, 8, "c1", 3, null, 0, "opacity:0.6");
+    let s = R(296, 160, 298, 10, "lacquer", 2) + R(296, 160, 298, 3, "hiE", 0, null, 0, "opacity:0.15") + R(310, 170, 10, 30, "lacquer2", 1) + R(570, 170, 10, 30, "lacquer2", 1) + R(300, 156, 290, 5, "silk", 1);
     DOL_ORDER.forEach((id, i) => { s += DOL_ITEMS[id](320 + i * 28); });
     return G(-314, 64, s, 1.6);
   }
   const dolX = (id) => (320 + Math.max(0, DOL_ORDER.indexOf(id)) * 28) * 1.6 - 314;
   const homeOf = (ctx) => G(40, 112, homeShape(ctx)(), 1.45);
+  // The family home seen from the street, by day or at the golden hour.
+  const homeStreet = (ctx, tod, season) => sky(0, 0, CW, CH, { tod: tod || "day", seed: 4, sunX: 0.85, sunY: tod === "gold" ? 0.5 : 0.16 }) + ridge(0, CW, 230, 80, 3, "mtnFar", season) + haze(0, 170, CW, 80, 0.5) +
+    homeOf(ctx) + R(0, CG + 30, CW, CH, "pavement") + R(0, CG + 28, CW, 4, "curb");
+  // A hospital at night: the building, one lit window, the red cross sign, street lights.
+  function hospitalNight() {
+    let s = sky(0, 0, CW, CH, { tod: "night", seed: 7, sunX: 0.15, sunY: 0.16 });
+    const r = rand(23);
+    for (let i = 0; i < 10; i++) s += withLit(0.9, () => block(i * 84 - 10, CG + 10, 76, 80 + r() * 120, "bldFar", i + 60, 12));
+    s += haze(0, 200, CW, 170, 0.3) + boxP(270, CG, 260, CG - 110, 0.04, [400, 200], "hospWall", "concrete", "concrete2") + R(258, 98, 284, 14, "concrete2");
+    s += R(370, 46, 60, 46, "paperE", 4) + R(392, 52, 16, 34, "accentRed", 2) + R(383, 61, 34, 16, "accentRed", 2) + pool(400, 69, 60, 40, "accentRed", 0.35);
+    for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) s += R(292 + i * 46, 132 + j * 44, 26, 28, i === 3 && j === 1 ? "winLit" : (i + j) % 3 ? "nightWin" : "winLit", 2, null, 0, i === 3 && j === 1 ? "" : (i + j) % 3 ? "" : "opacity:0.5");
+    s += G(431, 190, A("pulse", O(0, 0, 40, null, null, 0, fill(glowF("winLit"), "opacity:0.6"))));
+    s += R(0, CG, CW, CH - CG, "asphalt") + R(0, CG, CW, 6, "curb");
+    for (let i = 0; i < 3; i++) { const x = 90 + i * 300; s += pool(x + 20, CG + 10, 120, 26, "sodium", 0.8) + L(x, CG, x, CG - 190, "steel2", 4) + L(x, CG - 188, x + 26, CG - 188, "steel2", 3) + O(x + 26, CG - 184, 4, "sodium") + pool(x + 26, CG - 180, 40, 40, "sodium", 0.6); }
+    return s;
+  }
 
+  // The family living room at night (the results-night set, scaled up to the film stage).
+  const living = (ctx) => G(-292, -6, SETS.home(ctx), 1.73);
   const CUTS = {
     birth(ctx) {
-      // 1. A city at night, one lit window in the hospital; the camera pushes in.
-      let a = outdoorSky(CW, CH, { night: true, seed: 7 });
-      const r = rand(23);
-      for (let i = 0; i < 10; i++) { const h = 80 + r() * 120; a += R(i * 84 - 10, CG - h, 76, h + 10, "city"); }
-      a += R(270, 110, 260, CG - 110, "stone", 4) + R(258, 98, 284, 16, "stone2", 3) + R(370, 46, 60, 46, "paper", 6) + R(392, 52, 16, 34, "c1", 2) + R(383, 61, 34, 16, "c1", 2);
-      for (let i = 0; i < 5; i++) for (let j = 0; j < 5; j++) a += R(292 + i * 46, 132 + j * 44, 26, 28, i === 3 && j === 1 ? "lamp" : "night2", 2);
-      a += G(431, 190, A("pulse", O(0, 0, 40, "lamp", null, 0, "opacity:0.35")));
-      a += R(0, CG, CW, CH - CG, "road") + R(0, CG, CW, 6, "stone2");
+      // 1. The hospital at night, one window lit; the camera pushes in.
+      const a = hospitalNight();
       // 2. The delivery room: a first cry over the bassinet, your parents leaning in.
-      let b = R(0, 0, CW, CG, "tile") + R(0, CG, CW, CH - CG, "tile2") + windowView(560, 60, 170, 130, { night: true, season: ctx.season, city: true, seed: 8 });
-      b += R(40, 300, 200, 56, "paper", 10, "line", 2) + R(40, 282, 56, 28, "paper", 8) + R(46, 356, 8, 62, "metal") + R(226, 356, 8, 62, "metal");
+      let b = stage({ wall: "wardWall", floor: "tile", lower: [70, "wardWall2"] }) + windowView(540, 70, 170, 130, { night: true, season: ctx.season, seed: 8, blind: true }) + tube(240, 12, 120) + tube(470, 12, 120);
+      b += shadow(140, 412, 120, 10) + boxP(40, 356, 200, 56, 0.1, CVP, "steel", "paperE", "steel") + R(40, 282, 56, 28, "paperE", 8) + R(46, 356, 8, 62, "steel2") + R(226, 356, 8, 62, "steel2");
       b += mom(ctx, 290, CF, 1.45, { pose: "hold" }) + dad(ctx, 540, CF, 1.5, { pose: "hold" });
-      b += R(350, 330, 110, 46, "c5", 10) + R(362, 376, 8, 42, "metal") + R(440, 376, 8, 42, "metal") + bundle(390, 326, 1.4);
-      b += fx("c-fade", 0.5, G(450, 300, A("pulse", P("M0 0 q10 -10 0 -20 M10 4 q16 -14 0 -30 M20 8 q22 -18 0 -40", null, "c1", 3)))) + heart(380, 260, 1.6, "c1", 0.6) + heart(430, 240, 1.2, "blossom", 1.4);
+      b += shadow(405, 416, 70, 8) + R(350, 330, 110, 46, "ivBag", 10) + R(350, 330, 110, 10, "hiE", 6, null, 0, "opacity:0.2") + R(362, 376, 8, 42, "steel2") + R(440, 376, 8, 42, "steel2") + bundle(390, 326, 1.4);
+      b += pool(400, 300, 160, 90, "lampWarm", 0.5) + fx("c-fade", 0.5, G(450, 300, A("pulse", P("M0 0 q10 -10 0 -20 M10 4 q16 -14 0 -30 M20 8 q22 -18 0 -40", null, "paperE", 2.5, "opacity:0.7")))) + heart(380, 260, 1.6, 0, 0.6) + heart(430, 240, 1.2, 0, 1.4);
       // 3. Coming home: the family's home in the spring, your parents walking up with you.
-      let c = outdoorSky(CW, CH, { season: "spring", seed: 4 }) + homeOf(ctx) + R(0, CG + 30, CW, CH, "grass") + tree(700, CG + 34, "spring", 1.7);
+      let c = homeStreet(ctx, "day", "spring") + tree(700, CG + 34, "spring", 1.7, "cherry");
       c += walk(360, 0, 0.1, 3.0, dad(ctx, 610, CF + 6, 1.5, { pose: "wave" }) + mom(ctx, 490, CF + 10, 1.45, { pose: "hold" }) + bundle(526, CF - 118, 1.1));
       c += petals(5, 20);
       return [
         cutShot(3.2, a, { s0: 1, s1: 2.1, ox: 431, oy: 186 }),
-        cutShot(3.6, b, { s0: 1.05, s1: 1.3, ox: 410, oy: 320 }),
+        cutShot(3.6, b + vignette(CW, CH), { s0: 1.05, s1: 1.3, ox: 410, oy: 320 }),
         cutShot(3.6, c, { s0: 1.08, s1: 1.0, ox: 420, oy: 300, x0: -20, x1: 10 }),
       ];
     },
     dol(ctx) {
       const items = (ctx.items || []).filter((id) => DOL_ITEMS[id]);
       if (!items.length) items.push("pencil");
-      // 1. The first-birthday party: a folding screen, balloons, a rice-cake tower, the whole family.
-      let a = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor");
-      for (let i = 0; i < 8; i++) a += R(120 + i * 70, 70, 66, 220, i % 2 ? "c3" : "c5", 3, null, 0, "opacity:0.55") + R(128 + i * 70, 82, 50, 196, "paper2", 2, null, 0, "opacity:0.7");
-      a += bunting(60, 740, 40, 2);
-      [[90, "c1"], [150, "c2"], [650, "c4"], [710, "c5"]].forEach(([x, col], i) => { a += G(x, 120, A("float", O(0, 0, 22, col) + L(0, 22, 0, 90, "line", 1.2), "--del:-" + i * 0.6 + "s")); });
-      a += R(300, 300, 200, 16, "wood", 3) + R(312, 316, 8, 60, "wood2") + R(480, 316, 8, 60, "wood2");
-      ["c1", "paper", "c2", "blossom", "c3", "paper2"].forEach((col, i) => { a += R(340 + i * 6, 278 - i * 22, 120 - i * 12, 22, col, 4); });
+      // 1. The first-birthday party in a banquet room: a folding screen (병풍), the rice-cake tower, the family.
+      const hall = (n) => {
+        let s = stage({ wall: "banquetWall", floor: "wood", ceil: "banquetCeil" }) + R(70, 40, 660, 320, "lampWarm", 0, null, 0, "opacity:0.06");
+        for (let i = 0; i < n; i++) s += R(150 + i * 64, 80, 60, 230, "screenPanel", 1) + R(156 + i * 64, 86, 48, 218, "silk", 1) + ridge(158 + i * 64, 44, 250, 60, i + 3, "mtnFar", "spring", 3) + R(150 + i * 64, 80, 2, 230, "aoC", 0, null, 0, "opacity:0.2");
+        return s + pool(400, 140, 300, 120, "lampWarm", 0.4) + [200, 400, 600].map((x) => O(x, 30, 12, "lampWarm") + pool(x, 34, 50, 30, "lampWarm", 0.6)).join("");
+      };
+      let a = hall(8) + flags(60, 740, 40, 2);
+      a += shadow(400, 376, 120, 8) + R(300, 300, 200, 14, "lacquer", 3) + R(312, 314, 8, 60, "lacquer2") + R(480, 314, 8, 60, "lacquer2");
+      ["tteok", "paperE", "tteok2", "blossomE", "tteok", "paperE2"].forEach((col, i) => { a += R(340 + i * 6, 278 - i * 22, 120 - i * 12, 22, col, 4) + R(340 + i * 6, 278 - i * 22, 120 - i * 12, 4, "hiE", 2, null, 0, "opacity:0.2"); });
       a += mom(ctx, 150, CF, 1.35, { pose: "cheer" }) + dad(ctx, 250, CF, 1.4, { pose: "wave" });
       a += G(560, CF, avatar({ age: "adult", outfit: "casual", look: { hair: 2, skin: ctx.look.skin, shirt: 3, sex: "f" }, mood: "happy", pose: "cheer" }), 1.25);
       a += G(660, CF, avatar({ age: "adult", outfit: "casual", look: { hair: 0, skin: ctx.look.skin, shirt: 1 }, mood: "happy", pose: "wave" }), 1.3);
       // 2. The table of objects; you toddle up to the one you'll grab.
-      let b = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor");
-      for (let i = 0; i < 8; i++) b += R(80 + i * 84, 50, 80, 230, i % 2 ? "c3" : "c5", 3, null, 0, "opacity:0.45");
-      b += dolTable();
+      let b = hall(10) + dolTable();
       const tx = dolX(items[0]);
       b += walk(-300, 0, 0.3, 2.4, me(ctx, "baby", tx - 18, 446, 1.7, { mood: "happy" }));
-      b += fx("c-fade", 2.7, sparkle(tx, 270, 1.2) + sparkle(tx + 18, 290, 0.7, "c5"));
-      // 3. The grab, up close: the item (or both) held high, confetti.
-      let c = R(0, 0, CW, CH, "wall") + G(400, 225, A("pulse", O(0, 0, 230, "lamp", null, 0, "opacity:0.35")));
+      b += fx("c-fade", 2.7, pool(tx, 300, 60, 60, "lampWarm", 0.8) + sparkle(tx, 270, 1.2) + sparkle(tx + 18, 290, 0.7));
+      // 3. The grab, up close: the item (or both) held high in a pool of light, confetti.
+      let c = R(0, 0, CW, CH, null, 0, null, 0, fill(def("dolbg", (id) => rad(id, [[0, "banquetWall"], [1, "screenPanel"]], 0.5, 0.5, 0.75)))) + G(400, 225, A("pulse", O(0, 0, 230, null, null, 0, fill(glowF("lampWarm"), "opacity:0.7"))));
       const one = items.length === 1;
       items.slice(0, 2).forEach((id, i) => {
         const x = one ? 400 : 290 + i * 220, sc = one ? 4.2 : 3.4;
         c += G(x, 225, fx("c-pop", 0.2 + i * 0.35, G(0, -150 * sc, DOL_ITEMS[id](0), sc)));
-        c += sparkle(x - 90, 120, 1.4) + sparkle(x + 80, 300, 1) + sparkle(x + 60, 100, 0.8, "c5");
+        c += sparkle(x - 90, 120, 1.4) + sparkle(x + 80, 300, 1) + sparkle(x + 60, 100, 0.8);
       });
-      c += confettiRain(40, 3);
+      c += confetti(40, 3);
       return [
-        cutShot(3.0, a, { s0: 1.12, s1: 1.12, x0: 50, x1: -50 }),
-        cutShot(3.6, b, { s0: 1, s1: 1.35, ox: tx, oy: 330 }),
-        cutShot(3.2, c, { s0: 0.92, s1: 1.04 }),
+        cutShot(3.0, a + vignette(CW, CH), { s0: 1.12, s1: 1.12, x0: 50, x1: -50 }),
+        cutShot(3.6, b + vignette(CW, CH), { s0: 1, s1: 1.35, ox: tx, oy: 330 }),
+        cutShot(3.2, c + vignette(CW, CH), { s0: 0.92, s1: 1.04 }),
       ];
     },
     // First day of elementary school: out of the door, the walk, the gate.
     elem(ctx) {
-      let a = outdoorSky(CW, CH, { season: "spring", seed: 6 }) + homeOf(ctx) + R(0, CG + 30, CW, CH, "grass") + tree(720, CG + 34, "spring", 1.6);
+      let a = homeStreet(ctx, "day", "spring") + tree(720, CG + 34, "spring", 1.6, "cherry");
       a += mom(ctx, 250, CF + 10, 1.45, { pose: "wave" });
       a += walk(-220, 0, 0.2, 2.6, me(ctx, "elem", 520, CF + 12, 1.6, { mood: "happy" }));
       a += petals(8, 16);
@@ -1244,10 +1776,10 @@
     // A new school in a new uniform (middle or high school): the mirror, the walk, the gate.
     school(ctx) {
       const st = ctx.stage, high = st === "high";
-      let a = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor") + windowView(80, 70, 200, 160, { season: "spring", city: true, seed: 12 });
-      a += R(520, 60, 120, 300, "frame", 8) + R(532, 72, 96, 276, "glass", 4, null, 0, "opacity:0.75") + P("M548 90 L600 70 M548 130 L620 90", null, "paper", 3, "opacity:0.6");
-      a += R(620, 300, 160, 70, "c4", 10) + R(620, 280, 60, 30, "paper", 8);
-      a += me(ctx, st, 400, CF, 1.6, { mood: "happy" }) + fx("c-fade", 1.0, sparkle(380, 250, 1.1) + sparkle(430, 300, 0.8) + sparkle(370, 330, 0.6, "c5"));
+      let a = stage({ floor: "wood" }) + windowView(90, 80, 200, 170, { season: "spring", seed: 12, curtain: true }) + sunPatch(240, 380, 220, 30, 90) + shaft([[94, 84], [290, 84], [470, 410], [240, 410]], 12);
+      a += shadow(580, 366, 80, 8) + R(520, 60, 120, 300, "woodDark", 4) + R(532, 72, 96, 276, "mirror", 2) + P("M548 90 L600 70 M548 130 L620 90", null, "hiE", 3, "opacity:0.4") + R(532, 72, 96, 276, null, 0, null, 0, fill(def("mir", (id) => lin(id, [[0, "hiE", 0.25], [1, "hiE", 0]], [0, 0, 1, 1]))));
+      a += shadow(700, 416, 90, 8) + boxP(620, 412, 180, 60, 0.08, CVP, "beddingE2", "beddingE", "beddingE2") + R(620, 340, 60, 24, "paperE", 8);
+      a += me(ctx, st, 400, CF, 1.6, { mood: "happy" }) + fx("c-fade", 1.0, motes(330, 220, 140, 160, 8, 5));
       let b = streetPan(3.2, "spring");
       b += walk(0, -100, 0, 3.2, other(61, 590, CF, 1.25) + other(62, 670, CF, 1.25));
       b += me(ctx, st, 360, CF, 1.45, { mood: "happy" });
@@ -1255,137 +1787,145 @@
       [[120, 71], [190, 72], [640, 73], [700, 74]].forEach(([x, sd]) => { c += other(sd, x, CF, 1.2); });
       c += walk(-260, 0, 0.2, 2.4, me(ctx, st, 400, CF + 14, 1.5, { mood: "happy" })) + petals(10, 18);
       return [
-        cutShot(2.8, a, { s0: 1, s1: 1.25, ox: 410, oy: 300 }),
+        cutShot(2.8, a + vignette(CW, CH), { s0: 1, s1: 1.25, ox: 410, oy: 300 }),
         cutShot(3.2, b, { s0: 1.05, s1: 1.05 }),
         cutShot(3.4, c, { s0: 1.2, s1: 1.0, ox: 400, oy: 320 }),
       ];
     },
-    // 수능 morning: a cold dawn walk, a police escort, the gate, the bell.
+    // 수능 morning: a cold blue dawn walk under the last street lights, a police escort, the gate, the bell.
     exam(ctx) {
       const st = ctx.stage;
-      let a = outdoorSky(CW, CH, { night: true, seed: 3 }) + R(0, 220, CW, 160, "dusk", 0, null, 0, "opacity:0.35") + R(0, CG, CW, CH - CG, "road");
-      for (let i = 0; i < 4; i++) a += G(80 + i * 220, CG, R(-3, -170, 6, 170, "metal") + R(-14, -176, 28, 8, "metal", 3) + A("pulse", O(0, -160, 34, "lamp", null, 0, "opacity:0.3")) + O(0, -168, 7, "lamp"));
-      a += particles("fall", 0, 0, CW, CG, false, 10, 4);
+      let a = sky(0, 0, CW, CH, { tod: "dawn", seed: 3 }) + ridge(0, CW, 260, 90, 5, "mtnFar", "winter") + haze(0, 200, CW, 80, 0.5);
+      for (let i = 0; i < 7; i++) a += withLit(0.7, () => aptSlab(i * 120 - 20, CG - 10, 90, 150 + (i % 3) * 30, 10, 70 + i));
+      a += R(0, CG - 10, CW, CH, "pavement") + R(0, CG + 30, CW, CH, "asphalt") + R(0, CG + 28, CW, 4, "curb");
+      for (let i = 0; i < 4; i++) a += G(80 + i * 220, CG, pool(20, 8, 70, 18, "sodium", 0.6) + R(-3, -190, 6, 190, "steel2") + R(-3, -190, 30, 5, "steel2", 2) + pool(26, -184, 40, 40, "sodium", 0.7) + O(26, -184, 5, "sodium"));
+      a += particles("winter", 0, 0, CW, CG, false, 10, 4) + R(0, 0, CW, CH, "dawnTop", 0, null, 0, "opacity:0.12");
       let pair = mom(ctx, 330, CF, 1.45, { pose: "hold", mood: "ok" }) + me(ctx, st, 440, CF, 1.5, { mood: "ok" });
-      for (let i = 0; i < 3; i++) pair += G(466, 214, A("rise", E(0, 0, 10, 6, "steam", null, 0, "opacity:0.8"), "--del:" + (i * 0.9) + "s"));
+      for (let i = 0; i < 3; i++) pair += G(466, 214, A("rise", E(0, 0, 10, 6, "steamE", null, 0, "opacity:0.8"), "--del:" + (i * 0.9) + "s"));
       a += walk(-200, 0, 0, 3.0, pair);
-      let b = outdoorSky(CW, CH, { season: "fall", seed: 21 }) + R(0, CG - 160, CW, 160, "city") + R(0, CG, CW, CH - CG, "road") + R(0, CG + 30, CW, 6, "paper", 0, null, 0, "opacity:0.6");
+      let b = sky(0, 0, CW, CH, { tod: "dawn", seed: 21 });
+      for (let i = 0; i < 9; i++) b += block(i * 92 - 10, CG, 84, 120 + (i % 3) * 40, i % 2 ? "bldFar" : "bldMid", i + 80, 12);
+      b += R(0, CG, CW, CH - CG, "asphalt") + L(0, CG + 30, CW, CG + 30, "lane", 3, "stroke-dasharray:30 20");
       // Riders first, sitting down into the bodywork drawn over their legs; the officer wears a helmet.
       let bike = G(-46, -18, avatar({ age: "teen", outfit: "uniform", look: lookFor(88, "f"), mood: "stressed" }), 0.85);
       bike += G(-6, -22, avatar({ age: "adult", outfit: "casual", look: { hair: 0, skin: 0, shirt: 2 }, mood: "ok" }) + P("M-22 -128 Q-22 -158 0 -158 Q22 -158 22 -128 Z", "paper", "line", 2) + R(-22, -134, 44, 6, "c5", 2), 0.9);
-      bike += O(-56, -22, 24, "dark") + O(60, -22, 24, "dark") + O(-56, -22, 9, "metal") + O(60, -22, 9, "metal") + P("M-74 -36 L-60 -64 L-10 -76 L60 -66 L84 -36 Z", "paper", "line", 2) + R(-50, -60, 100, 10, "c5", 3);
-      bike += R(-78, -110, 4, 50, "metal") + G(-76, -114, A("pulse", O(0, 0, 9, "c1")) + A("pulse", O(12, 0, 9, "c5"), "--del:-1.2s"));
-      for (let i = 0; i < 5; i++) bike += L(100 + i * 10, -100 + i * 18, 190 + i * 30, -100 + i * 18, "paper", 3, "opacity:0.7");
+      bike += O(-56, -22, 24, "inkE") + O(60, -22, 24, "inkE") + O(-56, -22, 9, "steel") + O(60, -22, 9, "steel") + P("M-74 -36 L-60 -64 L-10 -76 L60 -66 L84 -36 Z", "paperE") + R(-50, -60, 100, 10, "accentBlue", 3) + R(-60, -50, 120, 4, "neonC", 1, null, 0, "opacity:0.8");
+      bike += R(-78, -110, 4, 50, "steel2") + G(-76, -114, A("pulse", O(0, 0, 9, "accentRed")) + A("pulse", O(12, 0, 9, "accentBlue"), "--del:-1.2s")) + pool(-70, -114, 50, 40, "accentRed", 0.5);
+      for (let i = 0; i < 5; i++) bike += L(100 + i * 10, -100 + i * 18, 190 + i * 30, -100 + i * 18, "paperE", 2, "opacity:0.4");
       b += walk(820, -820, 0.2, 3.0, G(400, CF, bike, 1.2));
       let c = gateShot(ctx.label, 4, "fall");
-      [[70, 81, "c2"], [150, 82, "c3"], [230, 83, "c1"]].forEach(([x, sd, col], i) => {
-        c += G(x, CF, A("hop", R(-34, -230, 68, 46, col, 6) + R(-2, -186, 4, 60, "wood2") + avatar({ age: "teen", outfit: "uniform", look: lookFor(sd, sd % 2 ? "m" : "f"), mood: "happy", pose: "cheer" }), "--del:-" + i * 0.35 + "s"), 1.15);
+      [[70, 81, "accentRed"], [150, 82, "accentBlue"], [230, 83, "fabric3"]].forEach(([x, sd, col], i) => {
+        c += G(x, CF, A("hop", R(-34, -230, 68, 46, "paperE", 2) + R(-34, -230, 68, 10, col) + L(-24, -206, 24, -206, "inkE", 3, "opacity:0.6") + R(-2, -186, 4, 60, "woodLight2") + avatar({ age: "teen", outfit: "uniform", look: lookFor(sd, sd % 2 ? "m" : "f"), mood: "happy", pose: "cheer" }), "--del:-" + i * 0.35 + "s"), 1.15);
       });
-      c += G(310, CF - 20, R(-26, -34, 52, 40, "c1", 8) + E(0, -34, 26, 8, "paper") + L(-30, -60, -8, -38, "wood", 3));
+      c += G(310, CF - 20, R(-26, -34, 52, 40, "thermos", 6) + E(0, -34, 26, 8, "paperE") + G(0, -40, A("rise", P("M-6 0 q-4 -6 0 -12 M6 0 q4 -6 0 -12", null, "steamE", 2))));
       c += mom(ctx, 470, CF + 8, 1.4, { pose: "hold" }) + walk(0, 170, 1.4, 1.8, me(ctx, st, 560, CF + 12, 1.45, { mood: "ok" }));
-      let d = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor") + R(180, 50, 360, 130, "board", 4, "wood", 7) + clock(640, 90, 30, 8);
-      for (let i = 0; i < 4; i++) d += G(110 + i * 190, CG + 10, R(-50, -14, 100, 10, "wood", 2) + R(-46, -4, 6, 40, "metal") + R(40, -4, 6, 40, "metal") + R(-22, -20, 44, 7, "omr", 1) + O(-20, -46, 16, "hair") + R(-40, -32, 40, 26, "hoodie", 10));
-      d += me(ctx, st, 400, CF + 30, 1.4, { mood: "stressed" }) + G(400, CF - 10, R(-70, -14, 140, 12, "wood", 2) + R(-30, -22, 60, 9, "omr", 1));
-      d += G(690, 200, fx("c-ring", 0.4, P("M-24 20 Q-24 -24 0 -26 Q24 -24 24 20 Z", "gold", "gold2", 2) + O(0, 24, 6, "gold2")));
-      d += fx("c-fade", 0.5, G(690, 190, A("pulse", P("M34 -20 q14 16 0 34 M48 -30 q22 26 0 54 M-34 -20 q-14 16 0 34 M-48 -30 q-22 26 0 54", null, "gold", 3))));
+      let d = stage({ wall: "wallSchool", floor: "lino", lower: [80, "wainscot"] }) + tube(200, 10, 120) + tube(480, 10, 120) + board(180, 70, 360, 120, { seed: 4, writing: false }) + clock(640, 100, 26, 8);
+      for (let i = 0; i < 4; i++) d += deskP(110 + i * 190, CG + 26, 1.5, CVP, { tape: true, paper: true }) + backHead(110 + i * 190, CG - 30, 1.2, i % 2 ? "uniformE" : "hoodieE");
+      d += me(ctx, st, 400, CF + 30, 1.4, { mood: "stressed" }) + G(400, CF - 10, R(-70, -14, 140, 12, "formica", 2) + R(-30, -22, 60, 9, "omr", 1));
+      d += G(690, 200, fx("c-ring", 0.4, P("M-24 20 Q-24 -24 0 -26 Q24 -24 24 20 Z", "brass") + O(0, 24, 6, "brass2")));
+      d += fx("c-fade", 0.5, G(690, 190, A("pulse", P("M34 -20 q14 16 0 34 M48 -30 q22 26 0 54 M-34 -20 q-14 16 0 34 M-48 -30 q-22 26 0 54", null, "brass", 2.5))));
       return [
-        cutShot(3.0, a, { s0: 1.05, s1: 1.12 }),
-        cutShot(3.2, b, { s0: 1.0, s1: 1.04 }),
-        cutShot(3.4, c, { s0: 1.12, s1: 1.12, x0: 40, x1: -40 }),
-        cutShot(3.0, d, { s0: 1.0, s1: 1.3, ox: 420, oy: 320 }),
+        cutShot(3.0, a + vignette(CW, CH), { s0: 1.05, s1: 1.12 }),
+        cutShot(3.2, b + vignette(CW, CH), { s0: 1.0, s1: 1.04 }),
+        cutShot(3.4, c + vignette(CW, CH), { s0: 1.12, s1: 1.12, x0: 40, x1: -40 }),
+        cutShot(3.0, d + vignette(CW, CH), { s0: 1.0, s1: 1.3, ox: 420, oy: 320 }),
       ];
     },
-    // Results day: the phone buzzes, the score report fills in, your face.
+    // Results day: the phone buzzes in the dark room, the score report fills in, your face.
     results(ctx) {
       const st = ctx.stage, mood = ctx.react || "ok";
-      let a = R(0, 0, CW, CG, "nightwall") + R(0, CG, CW, CH - CG, "nightfloor") + windowView(90, 70, 190, 150, { night: true, season: "winter", city: true, seed: 33 });
-      a += R(470, 280, 260, 16, "wood", 3) + R(484, 296, 10, 120, "wood2") + R(706, 296, 10, 120, "wood2");
-      a += G(600, 270, A("pulse", O(0, 0, 60, "screen", null, 0, "opacity:0.35")) + fx("c-ring", 0.5, R(-22, -12, 44, 14, "dark", 4) + R(-18, -10, 36, 10, "screen", 2)));
+      let a = stage({ night: true, floor: "wood" }) + windowView(100, 80, 190, 150, { night: true, season: "winter", seed: 33, curtain: true });
+      a += shadow(590, 414, 140, 8) + boxP(470, 296, 260, 14, 0.08, CVP, "woodDesk2", "woodDesk", "woodDesk2") + R(484, 296, 10, 120, "woodDesk2") + R(706, 296, 10, 120, "woodDesk2");
+      a += G(600, 280, pool(0, 0, 80, 50, "monitorGlow", 0.8) + fx("c-ring", 0.5, R(-22, -8, 44, 12, "inkE", 4) + R(-18, -6, 36, 8, "phoneScreen", 2)));
       a += walk(-260, 0, 0.3, 2.2, me(ctx, st, 380, CF, 1.5, { mood: "stressed" }));
-      let b = R(0, 0, CW, CH, "night");
-      b += R(260, 20, 280, 420, "dark", 34) + R(276, 60, 248, 340, "paper", 8) + R(276, 60, 248, 40, "c5", 8) + O(400, 40, 5, "metal");
-      const cols = ["c1", "c5", "c4", "c3"];
+      let b = R(0, 0, CW, CH, "nightTop") + pool(400, 225, 300, 240, "monitorGlow", 0.5);
+      b += R(260, 20, 280, 420, "inkE", 34) + R(276, 60, 248, 340, "paperE", 6) + R(276, 60, 248, 40, "accentBlue", 6, null, 0, "opacity:0.85") + O(400, 40, 5, "steel2");
+      const cols = ["fabric4", "accentBlue", "fabric3", "fabric2"];
       (ctx.grades || [3, 3, 3, 3]).slice(0, 4).forEach((gr, i) => {
         const h = Math.max(14, ((10 - gr) / 9) * 230), x = 300 + i * 56;
-        b += R(x, 140, 40, 240, "tile", 4) + fx("c-grow", 0.4 + i * 0.4, R(x, 380 - h, 40, h, cols[i], 4));
-        b += fx("c-pop", 0.9 + i * 0.4, O(x + 20, 370 - h - 16, 12, gr <= 1 ? "gold" : gr <= 3 ? "c3" : "gray"));
+        b += R(x, 140, 40, 240, "paperE2", 3) + fx("c-grow", 0.4 + i * 0.4, R(x, 380 - h, 40, h, cols[i], 3));
+        b += fx("c-pop", 0.9 + i * 0.4, O(x + 20, 370 - h - 16, 11, gr <= 1 ? "brass" : gr <= 3 ? "fabric3" : "steel"));
       });
-      let c = R(0, 0, CW, CG, "nightwall") + R(0, CG, CW, CH - CG, "nightfloor");
+      let c = living(ctx);
       const yay = mood === "happy";
       c += mom(ctx, 190, CF, 1.6, { pose: yay ? "cheer" : "hold" }) + dad(ctx, 620, CF, 1.65, { pose: yay ? "cheer" : "hold" });
-      c += me(ctx, st, 400, CF + 160, 2.5, { mood, pose: yay ? "cheer" : "stand" }) + (yay ? confettiRain(30, 7) : "");
+      c += me(ctx, st, 400, CF + 160, 2.5, { mood, pose: yay ? "cheer" : "stand" }) + (yay ? confetti(30, 7) : "");
       return [
-        cutShot(2.8, a, { s0: 1, s1: 1.3, ox: 600, oy: 290 }),
-        cutShot(3.4, b, { s0: 0.96, s1: 1.06 }),
-        cutShot(3.0, c, { s0: 1.12, s1: 1.0, ox: 400, oy: 260 }),
+        cutShot(2.8, a + vignette(CW, CH, 0.8), { s0: 1, s1: 1.3, ox: 600, oy: 290 }),
+        cutShot(3.4, b + vignette(CW, CH, 0.8), { s0: 0.96, s1: 1.06 }),
+        cutShot(3.0, c + vignette(CW, CH, 0.8), { s0: 1.12, s1: 1.0, ox: 400, oy: 260 }),
       ];
     },
-    // Admission: the family at the laptop, the stamp, the cheer.
+    // Admission: the family at the laptop in the dark living room, the stamp, the cheer.
     offers(ctx) {
       const st = ctx.stage;
-      const gid = nid("glow");
-      let a = "<defs>" + glow(gid, "screen") + "</defs>" + R(0, 0, CW, CG, "nightwall") + R(0, CG, CW, CH - CG, "nightfloor");
-      a += R(180, 300, 440, 70, "sofa", 16) + R(190, 270, 420, 50, "sofa2", 14);
+      let a = stage({ night: true, floor: "wood" }) + windowView(90, 70, 160, 140, { night: true, season: "winter", seed: 35, curtain: true });
+      a += shadow(400, 400, 240, 12) + boxP(180, 370, 440, 70, 0.06, CVP, "sofaE", "sofaE2", "sofaE2") + R(190, 270, 420, 50, "sofaE2", 10);
       a += mom(ctx, 250, CF, 1.4, { pose: "hold", mood: "ok" }) + dad(ctx, 560, CF, 1.45, { pose: "hold", mood: "ok" }) + me(ctx, st, 400, CF + 20, 1.5, { mood: "stressed" });
-      a += O(400, 300, 120, null, null, 0, "fill:url(#" + gid + ")") + G(400, 330, R(-60, -50, 120, 70, "dark", 6) + R(-52, -44, 104, 58, "screen", 3) + R(-76, 20, 152, 8, "metal", 3));
-      let b = R(0, 0, CW, CH, "wood2");
-      b += fx("c-thud", 0.95, G(400, 225, R(-170, -200, 340, 400, "paper", 6, "line", 2) + O(0, -150, 30, "gold", "gold2", 3) + R(-120, -90, 240, 10, "line", 3) + R(-120, -60, 200, 10, "line", 3) + R(-120, -30, 220, 10, "line", 3) + R(-120, 0, 160, 10, "line", 3)));
-      b += G(470, 300, fx("c-stamp", 0.8, O(0, 0, 66, null, "c1", 9) + O(0, 0, 52, "c1", null, 0, "opacity:0.15") + P("M-30 2 L-8 26 L34 -24", null, "c1", 11)));
-      b += fx("c-flash", 0.95, R(0, 0, CW, CH, "paper"));
-      let c = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor") + bunting(40, 760, 50, 3);
+      a += pool(400, 300, 200, 160, "monitorGlow", 0.8) + G(400, 330, R(-60, -50, 120, 70, "inkE", 5) + R(-52, -44, 104, 58, "phoneScreen", 2) + R(-76, 20, 152, 8, "steel", 3));
+      let b = R(0, 0, CW, CH, "woodDesk2") + R(0, 0, CW, CH, null, 0, null, 0, fill(def("tbl", (id) => rad(id, [[0, "hiE", 0.15], [1, "aoC", 0.4]], 0.5, 0.45, 0.8))));
+      b += fx("c-thud", 0.95, G(400, 225, R(-166, -196, 340, 400, "aoC", 4, null, 0, "opacity:0.25") + R(-170, -200, 340, 400, "paperE", 2) + O(0, -150, 26, null, "brass", 3) + O(0, -150, 18, "brass", null, 0, "opacity:0.3") + R(-120, -90, 240, 8, "paperE2", 3) + R(-120, -60, 200, 8, "paperE2", 3) + R(-120, -30, 220, 8, "paperE2", 3) + R(-120, 0, 160, 8, "paperE2", 3)));
+      b += G(470, 300, fx("c-stamp", 0.8, O(0, 0, 66, null, "stampRed", 8) + O(0, 0, 52, "stampRed", null, 0, "opacity:0.12") + P("M-30 2 L-8 26 L34 -24", null, "stampRed", 10)));
+      b += fx("c-flash", 0.95, R(0, 0, CW, CH, "paperE"));
+      let c = living(ctx) + pool(400, 160, 380, 220, "lampWarm", 0.5) + flags(40, 760, 50, 3);
       c += G(170, CF, A("hop", avatar({ age: "adult", outfit: "casual", look: { hair: 3, skin: ctx.look.skin, shirt: 0, sex: "f" }, mood: "happy", pose: "cheer" })), 1.5);
       c += G(640, CF, A("hop", avatar({ age: "adult", outfit: "casual", look: { hair: 1, skin: ctx.look.skin, shirt: 2, sex: "m" }, mood: "happy", pose: "cheer" }), "--del:-0.5s"), 1.55);
       c += G(400, CF + 10, A("hop", me(ctx, st, 0, 0, 1.7, { mood: "happy", pose: "cheer" }), "--del:-0.25s"));
-      c += confettiRain(46, 11);
+      c += confetti(46, 11);
       return [
-        cutShot(3.0, a, { s0: 1, s1: 1.45, ox: 400, oy: 320 }),
+        cutShot(3.0, a + vignette(CW, CH, 0.8), { s0: 1, s1: 1.45, ox: 400, oy: 320 }),
         cutShot(2.6, b, { s0: 1.06, s1: 1.0 }),
-        cutShot(3.2, c, { s0: 1.0, s1: 1.08 }),
+        cutShot(3.2, c + vignette(CW, CH, 0.6), { s0: 1.0, s1: 1.08 }),
       ];
     },
-    // The ending: a suitcase on a spring road, then through the university gate. No offer: a dusk road.
+    // The ending: a suitcase on a road under cherry trees, then through the university gate. No offer: a dusk road.
     end(ctx) {
-      const suitcase = (x) => G(x, CF, R(-22, -60, 44, 56, "c4", 6) + R(-8, -70, 16, 12, null, 3, "c4", 3) + O(-12, -2, 4, "dark") + O(12, -2, 4, "dark"));
+      const suitcase = (x) => G(x, CF, shadow(0, 0, 26, 4) + R(-22, -60, 44, 56, "suitcase", 5) + R(-22, -60, 8, 56, "hiE", 4, null, 0, "opacity:0.15") + R(-8, -70, 16, 12, null, 3, "steel2", 3) + O(-12, -2, 4, "inkE") + O(12, -2, 4, "inkE"));
       if (!ctx.label) {
-        const gid = nid("dusk");
-        let a = grad(gid, "dusk", "dusk2") + R(0, 0, CW, CH, null, 0, null, 0, "fill:url(#" + gid + ")") + O(560, 250, 60, "sun", null, 0, "opacity:0.9");
-        a += P("M0 300 Q200 240 400 296 T800 270 L800 450 L0 450 Z", "hill") + P("M0 350 Q240 310 520 344 T800 336 L800 450 L0 450 Z", "grass") + P("M330 450 Q380 380 520 344 L540 344 Q440 390 450 450 Z", "path");
+        let a = sky(0, 0, CW, CH, { tod: "gold", seed: 12, sunX: 0.7, sunY: 0.58, sunR: 20 }) + ridge(0, CW, 300, 100, 8, "mtnFar", "fall") + haze(0, 220, CW, 90, 0.7) + ridge(0, CW, 330, 50, 9, "mtnMid", "fall");
+        a += R(0, 330, CW, 120, "vegFa2") + P("M330 450 Q380 380 520 334 L540 334 Q440 390 450 450 Z", "asphalt");
+        for (let i = 0; i < 5; i++) { const t = 1 - i * 0.18, x = 560 + 220 * t; a += L(x, 330 + 100 * t, x, 330 + 100 * t - 200 * t, "trunk", 4 * t) + L(x - 20 * t, 340 + 100 * t - 200 * t, x + 20 * t, 340 + 100 * t - 200 * t, "trunk", 3 * t); }
         a += walk(0, 150, 0.2, 3.0, me(ctx, "uni", 360, CF, 1.4, { mood: "tired" }));
-        const b = outdoorSky(CW, CH, { night: true, seed: 44 }) + P("M0 330 Q300 280 800 320 L800 450 L0 450 Z", "hill") + me(ctx, "uni", 400, CF, 1.5, { mood: "ok" });
-        return [cutShot(3.2, a, { s0: 1.0, s1: 1.1, ox: 450, oy: 340 }), cutShot(3.0, b, { s0: 1.2, s1: 1.0, ox: 400, oy: 260 })];
+        const b = sky(0, 0, CW, CH, { tod: "night", seed: 44, sunX: 0.8, sunY: 0.18 }) + ridge(0, CW, 330, 80, 3, "mtnNear", "fall") + withLit(0.9, () => landscape(0, 220, CW, 160, { kind: "town", season: "fall", seed: 9, trees: false })) +
+          R(0, 360, CW, 90, "asphalt") + me(ctx, "uni", 400, CF, 1.5, { mood: "ok" });
+        return [cutShot(3.2, a + vignette(CW, CH), { s0: 1.0, s1: 1.1, ox: 450, oy: 340 }), cutShot(3.0, b + vignette(CW, CH, 0.8), { s0: 1.2, s1: 1.0, ox: 400, oy: 260 })];
       }
-      let a = outdoorSky(CW, CH, { season: "spring", seed: 14 });
+      let a = sky(0, 0, CW, CH, { tod: "day", seed: 14 }) + ridge(0, CW, 250, 80, 4, "mtnFar", "spring") + haze(0, 180, CW, 80, 0.5);
       let road = "";
-      for (let i = 0; i < 9; i++) road += tree(60 + i * 160, CG + 4, "spring", 1.5);
-      a += walk(0, -480, 0, 3.0, road) + R(0, CG, CW, CH - CG, "path") + me(ctx, "uni", 390, CF, 1.5, { mood: "happy" }) + suitcase(440) + petals(15, 24);
-      let b = gateShot(ctx.label, 4, "spring") + bunting(232, 568, 168, 1);
+      for (let i = 0; i < 9; i++) road += tree(60 + i * 160, CG + 4, "spring", 1.5, "cherry");
+      a += walk(0, -480, 0, 3.0, road) + R(0, CG, CW, CH - CG, "pathE") + me(ctx, "uni", 390, CF, 1.5, { mood: "happy" }) + suitcase(440) + petals(15, 24);
+      let b = gateShot(ctx.label, 4, "spring") + flags(232, 568, 168, 1);
       b += fx("c-out", 2.5, walk(-300, 0, 0.1, 2.4, me(ctx, "uni", 400, CF + 12, 1.5, { mood: "happy" }) + suitcase(446)));
       b += fx("c-fade", 2.5, me(ctx, "uni", 400, CF + 12, 1.5, { mood: "happy", pose: "cheer" }) + suitcase(446)) + petals(16, 26);
       let c = gateShot(ctx.label, 4, "spring") + me(ctx, "uni", 400, CF + 12, 1.5, { mood: "happy", pose: "cheer" }) + petals(17, 30);
-      for (let i = 0; i < 4; i++) c += G(120 + i * 60, 70 + (i % 2) * 20, A("drift", P("M-10 0 q5 -6 10 0 q5 -6 10 0", null, "ink", 2)));
+      for (let i = 0; i < 4; i++) c += G(120 + i * 60, 70 + (i % 2) * 20, A("drift", P("M-8 0 q4 -4 8 0 q4 -4 8 0", null, "inkE", 1.4, "opacity:0.6")));
       return [
         cutShot(3.0, a, { s0: 1.05, s1: 1.05 }),
         cutShot(3.6, b, { s0: 1.15, s1: 1.05, ox: 400, oy: 330 }),
         cutShot(3.0, c, { s0: 1.6, s1: 1.0, ox: 400, oy: 360 }),
       ];
     },
-    // Moving house: the truck pulls away; the view from the new window.
+    // Moving house: the ladder truck (사다리차) at the window and the moving truck pulling away; the view
+    // from the new window.
     move(ctx) {
-      let a = outdoorSky(CW, CH, { season: ctx.season, seed: 25 }) + homeOf(ctx) + R(0, CG + 30, CW, CH, "road");
-      let truck = R(-150, -150, 210, 130, "paper", 6, "line", 2) + R(60, -110, 80, 90, "c5", 10) + R(78, -100, 44, 34, "screen", 4) + O(-100, -14, 24, "dark") + O(90, -14, 24, "dark") + O(-100, -14, 9, "metal") + O(90, -14, 9, "metal");
-      for (let i = 0; i < 3; i++) truck += R(-138 + i * 64, -184, 56, 36, "cubicle", 3, "cubicle2", 2);
+      let a = homeStreet(ctx, "day", ctx.season);
+      a += G(640, CF + 22, L(-40, -60, -200, -300, "neonC", 8) + L(-40, -60, -200, -300, "inkE", 1) + R(-230, -320, 50, 26, "steel", 2) + R(-60, -70, 120, 50, "neonC", 4) + O(-30, -14, 18, "inkE") + O(40, -14, 18, "inkE"));
+      let truck = shadow(-40, -4, 140, 10) + R(-150, -150, 210, 130, "paperE", 4) + R(-150, -150, 210, 10, "hiE", 2, null, 0, "opacity:0.3") + R(60, -110, 80, 90, "accentBlue", 8) + R(78, -100, 44, 34, "winDay", 4) + O(-100, -14, 24, "inkE") + O(90, -14, 24, "inkE") + O(-100, -14, 9, "steel") + O(90, -14, 9, "steel");
+      for (let i = 0; i < 3; i++) truck += R(-138 + i * 64, -184, 56, 36, "cardboard", 2) + L(-138 + i * 64, -170, -82 + i * 64, -170, "tape", 3);
       a += walk(0, 900, 1.0, 2.2, G(520, CF + 22, truck)) + mom(ctx, 260, CF + 20, 1.3, { pose: "wave", mood: "ok" });
-      let b = R(0, 0, CW, CG, "wall") + R(0, CG, CW, CH - CG, "floor") + windowView(150, 50, 500, 280, { view: ctx.view, season: ctx.season, city: true, seed: 26 });
-      for (let i = 0; i < 4; i++) b += R(80 + i * 170, CF - 40 - (i % 2) * 30, 70, 50, "cubicle", 3, "cubicle2", 2);
+      let b = stage({ floor: "wood", wall: "wallpaper2" }) + windowView(150, 50, 500, 280, { view: ctx.view, season: ctx.season, seed: 26 }) + sunPatch(260, 380, 360, 40, 100);
+      for (let i = 0; i < 4; i++) b += shadow(115 + i * 170, CF - 40 - (i % 2) * 30 + 50, 40, 5) + boxP(80 + i * 170, CF + 10 - (i % 2) * 30, 70, 50, 0.08, CVP, "cardboard", "cardboard2", "cardboard2") + L(80 + i * 170, CF - 22 - (i % 2) * 30, 150 + i * 170, CF - 22 - (i % 2) * 30, "tape", 4);
       b += me(ctx, ctx.stage, 400, CF + 20, 1.5, { mood: "happy" });
-      return [cutShot(3.2, a, { s0: 1.0, s1: 1.08, x0: 0, x1: -30 }), cutShot(3.2, b, { s0: 1.2, s1: 1.0, ox: 400, oy: 200 })];
+      return [cutShot(3.2, a, { s0: 1.0, s1: 1.08, x0: 0, x1: -30 }), cutShot(3.2, b + vignette(CW, CH), { s0: 1.2, s1: 1.0, ox: 400, oy: 200 })];
     },
   };
   // The shots for one cutscene: [{ t: seconds, svg }]. ctx is app.js's art context plus what the film
-  // needs (items, label, grades, react). VIEW follows the region, as everywhere else.
+  // needs (items, label, grades, react). VIEW and REGION follow the region, as everywhere else.
   function cutscene(name, ctx) {
     VIEW = (ctx && ctx.view) || "city";
-    return CUTS[name] ? CUTS[name](ctx) : [];
+    REGION = (ctx && ctx.region) || "";
+    begin();
+    return CUTS[name] ? CUTS[name](ctx).map((c) => ({ t: c.t, svg: tidy(c.svg) })) : [];
   }
 
   // ---------- the map ----------
@@ -1452,11 +1992,31 @@
     }
     return (BOX[id] = [x0, y0, x1, y1]);
   }
-  function realLand(home, focus) {
-    const hm = new Set(home && GEO.areas[home] ? GEO.areas[home].munis : []);
+  // The land is drawn in a restrained cartographic style: one light from the north-west across the whole
+  // peninsula (a single gradient in map space, passed to the paths as --kland), soft relief along the
+  // Baekdudaegan spine and on Hallasan, a pale shallow-water halo along the coast (the province outlines
+  // drawn once in <defs> and used twice), and a sea that deepens offshore.
+  const SPINE = [[128.35, 38.6], [128.5, 38.1], [128.75, 37.7], [128.95, 37.3], [129.05, 36.9], [128.95, 36.5], [128.6, 36.2], [128.2, 36.0], [127.9, 35.7], [127.65, 35.35]];
+  const SOBAEK = [[128.2, 36.0], [127.95, 36.2], [127.7, 36.55], [127.95, 36.95], [128.35, 37.05]];
+  function mapDefs(o) {
+    const land = nid("kl"), sea = nid("ks"), pv = nid("pv");
+    let d = '<linearGradient id="' + land + '" gradientUnits="userSpaceOnUse" x1="120" y1="40" x2="640" y2="700">' + stp([0, "landHi"]) + stp([0.55, "landE"]) + stp([1, "landLo"]) + "</linearGradient>" +
+      '<radialGradient id="' + sea + '" gradientUnits="userSpaceOnUse" cx="340" cy="330" r="560">' + stp([0, "mapShallow"]) + stp([0.45, "mapSeaE"]) + stp([1, "mapSeaDeep"]) + "</radialGradient>";
+    if (GEO) d += '<g id="' + pv + '">' + GEO.geo.provinces.map((p) => '<path d="' + p + '" vector-effect="non-scaling-stroke"/>').join("") + "</g>";
+    return { d, land, sea, pv };
+  }
+  const relief = () => {
+    const path = (pts) => "M" + pts.map(([lon, lat]) => mx(lon) + " " + my(lat)).join(" L");
     let s = "";
+    for (const [w, op] of [[46, 0.07], [28, 0.08], [14, 0.1]]) s += P(path(SPINE) + " " + path(SOBAEK), null, "reliefE", w, "opacity:" + op);
+    return s + E(mx(126.53), my(33.37), 16, 9, "reliefE", null, 0, "opacity:0.14") + E(mx(126.53), my(33.37), 8, 4.5, "reliefE", null, 0, "opacity:0.14");
+  };
+  function realLand(home, focus, md) {
+    const hm = new Set(home && GEO.areas[home] ? GEO.areas[home].munis : []);
+    let s = '<use href="#' + md.pv + '" class="kmap-halo"/>';
     for (const c in GEO.geo.munis) s += '<path class="kmap-muni' + (hm.has(c) ? " home" : "") + '" d="' + GEO.geo.munis[c] + '"/>';
-    for (const d of GEO.geo.provinces) s += '<path class="kmap-prov" d="' + d + '"/>';
+    if (!focus) s += relief();
+    s += '<use href="#' + md.pv + '" class="kmap-prov"/>';
     return s;
   }
   function koreaMap(opts) {
@@ -1464,30 +2024,32 @@
     const states = o.states || {}, labels = o.labels || {};
     const fade = nid("nfade"), clip = nid("iclip");
     const focus = o.focus && GEO ? areaBox(o.focus) : null;
-    let s = "<defs><linearGradient id=\"" + fade + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + C("land2") + '" stop-opacity="0.15"/><stop offset="1" stop-color="' + C("land2") + '" stop-opacity="0.8"/></linearGradient>' +
+    const md = mapDefs(o);
+    let s = "<defs>" + md.d + "<linearGradient id=\"" + fade + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + C("land2") + '" stop-opacity="0.12"/><stop offset="1" stop-color="' + C("land2") + '" stop-opacity="0.6"/></linearGradient>' +
       '<clipPath id="' + clip + '"><circle cx="' + INSET.x + '" cy="' + INSET.y + '" r="' + INSET.r + '"/></clipPath></defs>';
-    s += R(-400, -400, MW + 800, MH + 800, "mapSea");
+    s += R(-400, -400, MW + 800, MH + 800, null, 0, null, 0, "fill:url(#" + md.sea + ")");
     s += P(mpath(NORTH), null, null, 0, "fill:url(#" + fade + ")");
-    if (GEO) s += realLand(o.home, focus);
+    if (GEO) s += realLand(o.home, focus, md);
     else {
-      s += P(mpath(SOUTH), "land", "coast", 2);
+      s += P(mpath(SOUTH), "landE", "coastE", 1.2);
       // Islands: Jeju, Geoje, Jindo, Ganghwa, Ulleungdo and Dokdo.
-      s += E(mx(126.55), my(33.38), 38, 16, "land", "coast", 2) + E(mx(128.62), my(34.88), 8, 10, "land", "coast", 1.5) + E(mx(126.25), my(34.45), 9, 8, "land", "coast", 1.5) +
-        E(mx(126.45), my(37.7), 7, 8, "land", "coast", 1.5) + O(mx(130.87), my(37.5), 5, "land", "coast", 1.5) + O(mx(131.86), my(37.24), 2.2, "land", "coast", 1) + O(mx(131.87), my(37.25), 1.6, "land", "coast", 1);
+      s += E(mx(126.55), my(33.38), 38, 16, "landE", "coastE", 1.2) + E(mx(128.62), my(34.88), 8, 10, "landE", "coastE", 1) + E(mx(126.25), my(34.45), 9, 8, "landE", "coastE", 1) +
+        E(mx(126.45), my(37.7), 7, 8, "landE", "coastE", 1) + O(mx(130.87), my(37.5), 5, "landE", "coastE", 1) + O(mx(131.86), my(37.24), 2.2, "landE", "coastE", 1) + O(mx(131.87), my(37.25), 1.6, "landE", "coastE", 1);
+      s += relief();
     }
-    s += P("M" + DMZ.map(([lon, lat]) => mx(lon) + " " + my(lat)).join(" L"), null, "dmz", 2.5, "stroke-dasharray:7 6");
+    s += P("M" + DMZ.map(([lon, lat]) => mx(lon) + " " + my(lat)).join(" L"), null, "dmz", 1.6, "stroke-dasharray:5 5");
     // Zoomed on one area (the school dialog): its real schools, and none of the national furniture.
-    if (focus) return focusMap(o, s, focus);
+    if (focus) return focusMap(o, s, focus, md);
     // Seoul on the mainland, and the inset it opens into.
     const [sx, sy] = [mx(SEOUL[0]), my(SEOUL[1])];
-    s += O(sx, sy, 11, null, "inset", 2.5) + L(sx - 8, sy + 8, INSET.x + 40, INSET.y - INSET.r + 10, "inset", 2, "stroke-dasharray:5 5");
+    s += O(sx, sy, 11, null, "inset", 1.6) + L(sx - 8, sy + 8, INSET.x + 40, INSET.y - INSET.r + 10, "inset", 1.2, "stroke-dasharray:4 4");
     if (GEO) {
       const hm = new Set(o.home && GEO.areas[o.home] ? GEO.areas[o.home].munis : []);
       let gu = "";
       for (const c in GEO.geo.munis) if (c.startsWith("11")) gu += '<path class="kmap-muni' + (hm.has(c) ? " home" : "") + '" d="' + GEO.geo.munis[c] + '"/>';
-      s += O(INSET.x, INSET.y, INSET.r, "mapSea", null, 0) + '<g clip-path="url(#' + clip + ')"><g transform="' + INSET_T + '">' + gu + "</g></g>" + O(INSET.x, INSET.y, INSET.r, null, "inset", 3);
+      s += O(INSET.x + 2, INSET.y + 3, INSET.r, "aoC", null, 0, "opacity:0.12") + O(INSET.x, INSET.y, INSET.r, "mapSeaE", null, 0) + '<g clip-path="url(#' + clip + ')"><g transform="' + INSET_T + '">' + gu + "</g></g>" + O(INSET.x, INSET.y, INSET.r, null, "inset", 1.8);
     } else {
-      s += O(INSET.x, INSET.y, INSET.r, "land", "inset", 3) + P("M" + (INSET.x - 66) + " " + (INSET.y + 4) + " Q" + (INSET.x - 30) + " " + (INSET.y + 14) + " " + INSET.x + " " + (INSET.y + 2) + " T" + (INSET.x + 66) + " " + (INSET.y - 2), null, "mapSea", 7);
+      s += O(INSET.x, INSET.y, INSET.r, "landE", "inset", 1.8) + P("M" + (INSET.x - 66) + " " + (INSET.y + 4) + " Q" + (INSET.x - 30) + " " + (INSET.y + 14) + " " + INSET.x + " " + (INSET.y + 2) + " T" + (INSET.x + 66) + " " + (INSET.y - 2), null, "mapSeaE", 7);
     }
     const unit = o.px ? o.px / MW : 0.8; // CSS px per map unit
     const minU = Math.ceil(11.5 / unit);
@@ -1508,29 +2070,30 @@
     // A dashed route for a move, drawn under the dots.
     if (o.from && o.sel && o.from !== o.sel && PLACES[o.from] && PLACES[o.sel]) {
       const [ax, ay] = SEOUL_IDS.indexOf(o.from) >= 0 ? [sx, sy] : mapPos(o.from), [bx, by] = SEOUL_IDS.indexOf(o.sel) >= 0 ? [sx, sy] : mapPos(o.sel);
-      s += P("M" + ax + " " + ay + " Q" + ((ax + bx) / 2 + 40) + " " + (Math.min(ay, by) - 60) + " " + bx + " " + by, null, "route", 4, "stroke-dasharray:10 8");
+      s += P("M" + ax + " " + ay + " Q" + ((ax + bx) / 2 + 40) + " " + (Math.min(ay, by) - 60) + " " + bx + " " + by, null, "route", 3, "stroke-dasharray:8 7");
     }
     for (const id in PLACES) {
       const [x, y] = mapPos(id);
       const st = states[id] || "open";
       const sel = o.sel === id;
       const inset = SEOUL_IDS.indexOf(id) >= 0;
-      const r = inset ? 9 : 11;
-      // A wider invisible circle makes the dot easy to tap; the visible one is coloured by state in CSS.
-      let dot = O(0, 0, r + 9, null, null, 0, "fill:transparent") + '<circle class="kd" r="' + r + '"/>';
-      if (st === "home") dot += A("kmap-pulse", O(0, 0, r + 6, null, "pin", 3));
-      if (sel) dot += O(0, 0, r + 5, null, "sel", 4);
+      const r = inset ? 8 : 9.5;
+      // A wider invisible circle makes the dot easy to tap; the visible one is coloured by state in CSS:
+      // a ring with a dot in it, and a soft shadow under it.
+      let dot = O(0, 0, r + 10, null, null, 0, "fill:transparent") + O(0.8, 1.6, r, "aoC", null, 0, "opacity:0.18") + '<circle class="kd" r="' + r + '"/>' + '<circle class="kc" r="' + (r * 0.38).toFixed(1) + '"/>';
+      if (st === "home") dot += A("kmap-pulse", O(0, 0, r + 6, null, "pin", 2));
+      if (sel) dot += O(0, 0, r + 5, null, "sel", 2.5);
       s += '<g class="kmap-pt ' + st + (sel ? " sel" : "") + '" data-place="' + id + '" transform="translate(' + x + " " + y + ')"' + (o.static ? "" : ' tabindex="0" role="button"') +
         (labels[id] ? ' aria-label="' + esc(labels[id]) + '"' : "") + ">" + (labels[id] && !named(id) ? "<title>" + esc(labels[id]) + "</title>" : "") + dot + "</g>";
       if (labels[id] && named(id)) s += mapLabel(x, y, labels[id], inset ? (["mokdong", "mapo", "gwanak"].indexOf(id) >= 0 ? "l" : "r") : LABEL_SIDE[id] || "r", inset ? small : big, (st === "home" ? "home" : "") + (sel ? " sel" : ""));
     }
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + MW + " " + MH + '" class="kmap"' + (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ">" + s + "</svg>";
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + MW + " " + MH + '" class="kmap" style="--kland:url(#' + md.land + ')"' + (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ">" + s + "</svg>";
   }
 
   // One area up close for the school dialog: its municipalities, and each option's real school as a
   // numbered marker (o.schools: { lat, lon, n, cls, id }; id makes it data-pick for taps). Schools outside the area (special schools far
   // away) get no marker; the dialog names their city instead.
-  function focusMap(o, s, box) {
+  function focusMap(o, s, box, md) {
     const [x0, y0, x1, y1] = box;
     const pad = Math.max(x1 - x0, y1 - y0) * 0.12 + 2;
     const vx = x0 - pad, vy = y0 - pad, vw = x1 - x0 + 2 * pad, vh = y1 - y0 + 2 * pad;
@@ -1538,51 +2101,64 @@
     for (const m of o.schools || []) {
       const x = mx(m.lon), y = my(m.lat);
       if (x < vx || x > vx + vw || y < vy || y > vy + vh) continue;
-      const mark = G(x, y, O(0, 0, 9, null, null, 0) + (m.n != null ? '<text y="4" text-anchor="middle">' + esc(String(m.n)) + "</text>" : ""), k, "kmap-sch " + (m.cls || ""));
+      const mark = G(x, y, O(0.8, 1.6, 9, "aoC", null, 0, "opacity:0.2;stroke:none") + O(0, 0, 9, null, null, 0) + (m.n != null ? '<text y="3.6" text-anchor="middle">' + esc(String(m.n)) + "</text>" : ""), k, "kmap-sch " + (m.cls || ""));
       s += m.id ? '<g data-pick="' + esc(m.id) + '">' + mark + "</g>" : mark;
     }
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + [vx, vy, vw, vh].map((v) => v.toFixed(1)).join(" ") + '" preserveAspectRatio="xMidYMid meet" class="kmap kmap-focus"' +
-      (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ' style="--k:' + k.toFixed(3) + '">' + s + "</svg>";
+      (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ' style="--k:' + k.toFixed(3) + ";--kland:url(#" + md.land + ')">' + s + "</svg>";
   }
 
   // ---------- the share card ----------
-  // A result card for the end of a life: you, where and into what you were born, how it ended, your
-  // best Suneung grades and a five-step ladder from the family you were born into to where you are at
-  // 30. All words are passed in by app.js. Colours are tokens like the rest of the art; app.js swaps
-  // them for their computed values before drawing the card to a canvas for the PNG.
+  // A result card for the end of a life, laid out like a film card: a still of you in your region at
+  // the golden hour on the left; on the right the title, your name in a serif, where and into what you
+  // were born, how it ended, your best Suneung grades and a five-step ladder from the family you were
+  // born into to where you are at 30. All words are passed in by app.js. Colours are tokens like the
+  // rest of the art; app.js swaps them for their computed values before drawing the card to a canvas.
   const CARD_FONT = "font-family:system-ui,-apple-system,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif";
-  const TL = (x, y, text, fill, size, weight, anchor) =>
-    '<text x="' + x + '" y="' + y + '" text-anchor="' + (anchor || "start") + '" style="fill:' + C(fill) + ";font-size:" + size + "px;font-weight:" + (weight || 600) + ";" + CARD_FONT + '">' + esc(text) + "</text>";
+  const CARD_SERIF = "font-family:'Noto Serif KR','Nanum Myeongjo','AppleMyungjo',Batang,Georgia,'Times New Roman',serif";
+  const TL = (x, y, text, fill, size, weight, anchor, font) =>
+    '<text x="' + x + '" y="' + y + '" text-anchor="' + (anchor || "start") + '" style="fill:' + C(fill) + ";font-size:" + size + "px;font-weight:" + (weight || 600) + ";" + (font || CARD_FONT) + '">' + esc(text) + "</text>";
   // A string clipped to n characters, so long names and universities stay on the card.
   const clip = (s, n) => (String(s).length > n ? String(s).slice(0, n - 1) + "…" : String(s));
   function shareCard(o) {
     const Wc = 600, Hc = 340;
-    let s = R(0, 0, Wc, Hc, "card", 20) + R(0, 0, Wc, 58, "c5", 20) + R(0, 38, Wc, 20, "c5");
-    s += TL(24, 37, o.title, "paper", 20, 800) + (o.daily ? TL(Wc - 24, 37, clip(o.daily, 30), "paper", 13, 700, "end") : "");
-    // You, standing on a little lawn.
-    s += E(96, 300, 62, 12, "shadow") + person(Object.assign({}, o.ctx, { stage: "uni" }), 96, 300, 1.05, { mood: o.mood || "happy" });
-    let y = 96;
-    s += TL(190, y, clip(o.name, 18), "cardInk", 28, 800);
-    y += 26;
-    for (const [k, v] of o.lines) { s += TL(190, y, k, "cardSub", 12, 600) + TL(290, y, clip(v, 24), "cardInk", 14, 700); y += 22; }
-    y += 6;
-    s += TL(190, y, o.gradesLabel, "cardSub", 12, 600);
+    begin();
+    const ctx = o.ctx || {};
+    REGION = ctx.region || ""; VIEW = ctx.view || "city";
+    const pid = nid("cp");
+    // The still: a golden-hour sky over your region, you standing in it, darkening toward the foot.
+    let pic = sky(16, 16, 196, 308, { tod: "gold", seed: 3, sunX: 0.75, sunY: 0.5, sunR: 7 }) + landscape(16, 120, 196, 150, { season: "spring", seed: 6, trees: false, horizon: 0.55 }) +
+      R(16, 262, 196, 62, "pathE") + R(16, 260, 196, 3, "curb") + tree(40, 268, "spring", 0.9, "cherry") + tree(200, 270, "spring", 0.8, "cherry") +
+      R(16, 16, 196, 308, null, 0, null, 0, fill(def("cardfade", (id) => lin(id, [[0, "aoC", 0], [0.6, "aoC", 0], [1, "aoC", 0.35]])))) +
+      shadow(114, 304, 26, 4) + person(Object.assign({}, ctx, { stage: "uni" }), 114, 304, 0.74, { mood: o.mood || "happy" });
+    let s = R(0, 0, Wc, Hc, "cardBg", 18) + '<clipPath id="' + pid + '"><rect x="16" y="16" width="196" height="308" rx="10"/></clipPath><g clip-path="url(#' + pid + ')">' + pic + "</g>";
+    const X = 236, XV = 316;
+    s += TL(X, 36, o.title, "cardMute", 11, 700, "start", CARD_FONT + ";letter-spacing:0.14em") + (o.daily ? TL(Wc - 18, 36, clip(o.daily, 30), "cardAccent", 11, 700, "end") : "");
+    s += TL(X, 76, clip(o.name, 16), "cardInk2", 32, 700, "start", CARD_SERIF) + R(X, 90, Wc - 18 - X, 1.2, "cardRule");
+    let y = 114;
+    for (const [k, v] of o.lines) { s += TL(X, y, k, "cardMute", 11, 600) + TL(XV, y, clip(v, 26), "cardInk2", 13.5, 700) + R(X, y + 8, Wc - 18 - X, 0.6, "cardRule"); y += 23; }
+    y += 10;
+    s += TL(X, y, o.gradesLabel, "cardMute", 11, 600);
     if (o.grades) {
       o.grades.forEach((gr, i) => {
-        const x = 190 + i * 38;
-        s += '<rect x="' + x + '" y="' + (y + 8) + '" width="32" height="32" rx="8" style="fill:var(--g' + Math.min(6, gr) + ')"/>' + TL(x + 16, y + 30, gr, "paper", 17, 800, "middle");
+        const x = X + i * 40;
+        s += R(x, y + 8, 32, 34, null, 4, "cardRule", 1) + TL(x + 16, y + 32, gr, "cardInk2", 19, 700, "middle", CARD_SERIF) + '<rect x="' + (x + 6) + '" y="' + (y + 37) + '" width="20" height="2.5" rx="1" style="fill:var(--g' + Math.min(6, gr) + ')"/>';
       });
-    } else s += TL(190, y + 30, "—", "cardInk", 18, 800);
+    } else s += TL(X, y + 32, "—", "cardInk2", 20, 700, "start", CARD_SERIF);
     // The ladder: five steps, the family you were born into and (once known) where you are at 30.
-    const lx = 468, ly = 300, sw = 24, sh = 22;
-    for (let i = 0; i < 5; i++) s += R(lx + i * sw, ly - (i + 1) * sh, sw - 3, (i + 1) * sh, i + 1 === o.mob.to ? "gold" : i + 1 === o.mob.from ? "c3" : "line", 4, null, 0, "opacity:" + (i + 1 === o.mob.to || i + 1 === o.mob.from ? 1 : 0.45));
-    const cx = (k) => lx + (k - 1) * sw + (sw - 3) / 2, cy = (k) => ly - k * sh - 14;
-    s += O(cx(o.mob.from), cy(o.mob.from), 7, "c3", "paper", 2) + TL(cx(o.mob.from), ly + 18, o.mob.labels[0], "cardSub", 11, 700, "middle");
-    if (o.mob.to) {
-      if (o.mob.to !== o.mob.from) s += P("M" + cx(o.mob.from) + " " + (cy(o.mob.from) - 10) + " Q" + (cx(o.mob.from) + cx(o.mob.to)) / 2 + " " + (Math.min(cy(o.mob.from), cy(o.mob.to)) - 34) + " " + cx(o.mob.to) + " " + (cy(o.mob.to) - 12), null, "c1", 3, "stroke-dasharray:5 4");
-      s += G(cx(o.mob.to), cy(o.mob.to), P("M0 -10 L3 -3 L10 -3 L4 2 L6 9 L0 5 L-6 9 L-4 2 L-10 -3 L-3 -3 Z", "gold", "gold2", 1.5)) + TL(cx(o.mob.to), ly + 32, o.mob.labels[1], "cardSub", 11, 700, "middle");
+    const lx = 474, ly = 296, sw = 22, sh = 13;
+    for (let i = 0; i < 5; i++) {
+      const k = i + 1, born = k === o.mob.from, now = k === o.mob.to;
+      s += R(lx + i * sw, ly - (k + 1) * sh, sw - 5, (k + 1) * sh, now ? "cardAccent" : born ? "cardPanel" : "cardRule", 2, born && !now ? "cardInk2" : null, 1.2, now || born ? "" : "opacity:0.7");
     }
-    return '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 ' + Wc + " " + Hc + '" class="share-card" role="img" aria-label="' + esc(o.aria || o.title) + '">' + s + "</svg>";
+    const cx = (k) => lx + (k - 1) * sw + (sw - 5) / 2, cy = (k) => ly - (k + 1) * sh - 9;
+    s += O(cx(o.mob.from), cy(o.mob.from), 3.5, "cardInk2") + TL(cx(o.mob.from), ly + 16, o.mob.labels[0], "cardMute", 10.5, 700, "middle");
+    if (o.mob.to) {
+      if (o.mob.to !== o.mob.from) s += P("M" + cx(o.mob.from) + " " + (cy(o.mob.from) - 6) + " Q" + (cx(o.mob.from) + cx(o.mob.to)) / 2 + " " + (Math.min(cy(o.mob.from), cy(o.mob.to)) - 26) + " " + cx(o.mob.to) + " " + (cy(o.mob.to) - 7), null, "cardAccent", 1.6, "stroke-dasharray:3 3");
+      s += O(cx(o.mob.to), cy(o.mob.to), 4.5, "cardAccent") + TL(cx(o.mob.to), ly + 30, o.mob.labels[1], "cardAccent", 10.5, 700, "middle");
+    }
+    s += R(X, Hc - 22, 26, 2.5, "cardAccent");
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 ' + Wc + " " + Hc + '" class="share-card" role="img" aria-label="' + esc(o.aria || o.title) + '">' + tidy(defsOut() + s) + "</svg>";
   }
 
   root.SuneungArt = { portrait, portraitFor, koreaMap, areaBox, scene, sceneName, eventArt, screenArt, shareCard, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
