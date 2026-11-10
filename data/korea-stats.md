@@ -308,6 +308,14 @@ Retrieved: 2026-10-29 (figures read from the attached xlsx / pdf / hwpx / csv fi
 | Household income by head's status | regular employee 45.7% of households, mean ₩95.2M/yr; self-employed 21.1%, ₩80.0M; temp/daily 11.3%, ₩45.4M; other/not working 21.9%, ₩40.1M (all ₩74.3M, median ₩58.0M) | 2024 income | 만원/yr | 국가데이터처, 가계금융복지조사 2025 | https://mods.go.kr/boardDownload.es?bid=215&list_no=439535&seq=8 | official |
 | Dual earners by head's occupation | managers 52.7, professionals 63.6, clerks 66.1, service 67.2, sales 66.9, farm 80.5, craft 57.6, machine 54.7, elementary 52.7 | 2025 H2 | % of married households with an employed head | 국가데이터처, 맞벌이 가구 | https://mods.go.kr/boardDownload.es?bid=211&list_no=445516&seq=1 | official |
 
+## 15. Names
+Retrieved: 2026-11-10
+
+| Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
+|---|---|---|---|---|---|---|
+| Most common surnames | 김 21.5% (10.69 million of 51.07 million); 이 14.7%; 박 8.4%; 최 4.7%; the top ten 63.9% | 2015-11-01 | Share of the population | Statistics Korea (2015 인구주택총조사, released 2016-09-07), via news | https://view.asiae.co.kr/article/2016090708573546435 ; https://m.seoul.co.kr/news/2021/01/25/20210125500093 | unverified (news citing the KOSTAT release); ranks 5–10 (정, 강, 조, 윤, 장, 임) and their shares (4.3, 2.3, 2.1, 2.1, 2.0, 1.7%) are from memory of the same release and sum to the stated top-ten total; ranks 11–20 are estimates (1.1–1.5% each) |
+| Most popular given names, 2023–24 births | boys 이준, 도윤, 하준, 은우, 서준; girls 서아, 이서, 아윤, 지아, 하윤 | 2023–2024 | Most-registered names (order as reported) | 대법원 전자가족관계등록시스템 통계서비스 (Supreme Court family-registration statistics), via news (Financial News, 2025-07) | https://www.fnnews.com/news/202507090655316630 | unverified: read only through a search summary; the article and the official statistics site (efamily.scourt.go.kr) could not be opened from this environment. The game's lists add 15 more names a sex from earlier 2020s rankings (시우, 지호, 수호, 유준, 예준, 선우 ...; 지안, 하은, 아린, 서윤, 시아, 수아 ...), not checked against the source |
+
 ## Game mapping
 Retrieved: 2026-11-04 (real-figure and verdict columns; game values unchanged). The Suneung Simulator's constants (suneung/engine.js at commit 7846047) next to the closest real figure. "Life" means one simulated childhood from birth to High 3 unless noted.
 
@@ -346,14 +354,24 @@ Retrieved: 2026-11-04 (real-figure and verdict columns; game values unchanged). 
 | `med` cut / 의대 places | percentile cut 98.8 | 3,058 places (2026) for 493,896 takers ≈ 0.6%; 3,548 places from 2027 (≈0.7% of 2026's takers) | rough check only (most medical places are 수시, and N-수 dominate) |
 | `LOCAL_QUOTA` (지역인재) | 0.6 percentile points off the cut | 59.7% of places at obliged medical schools go to regional talent (2025) | a quota of seats, modelled as a cut bonus; no direct conversion |
 | `RURAL_QUOTA` (농어촌) | 0.8 percentile points off the cut | up to 4% of places, outside the quota | no direct conversion |
+<<<<<<< HEAD
 | School types counts | 8 gifted, 20 science, 28 foreign-language, 8 international, 32 autonomous private | official 2025-04-01: 8 gifted, 20 science, 28 foreign-language, 8 international, 33 자사고, 25 arts, 17 sports, 56 meister-type, 484 특성화; students: 특성화 13.0%, 특목 4.7%, 자율 6.8% of high school students | game only uses admission chances; consistent (33 vs 32 자사고 is a 2025 vs 2026 date difference) |
 | `intlMid` admission | 0.3 for applicants above z 0.6, else 0 | 대원 23.6 : 1, 영훈 ≈10.7 : 1 applicants per place (2026 entry, unverified news) | game is far easier than the real lottery among applicants (≈4–9% per applicant), but its gate already filters to strong students |
 | Kindergarten choice | ordinary kindergarten default | ages 3/4/5 in 2025: kindergarten 50.3 / 59.7 / 64.5%, daycare 42.5 / 32.4 / 29.1%, neither 7.2 / 7.9 / 6.4% (calc); preschool private-ed participation 47.6% | no game rate; `homeCare` (and English academies) fall in the ~7% in neither |
+=======
+| School types counts | 8 gifted, 20 science, 28 foreign-language, 8 international, 32 autonomous private | (news, 2025–26) | game only uses admission chances; consistent |
+| `SURNAMES` (classmates, teachers) | 김 21.5, 이 14.7, 박 8.4, 최 4.7, 정 4.3 ... 홍 1.1 (20 surnames, weights) | 2015 census shares (top four confirmed, top ten 63.9%) | matches the confirmed shares; the 20 cover about 77% of the population, the rest of Korea's surnames are left out |
+| `GIVEN` (classmates) | 20 boys' and 20 girls' names, weight 1/(rank + 4) | 2023–24 top five per sex (Supreme Court statistics, unverified) | top five match the reported order; the tail and the weights are estimates |
+| `CLASS_SIZE` (named classmates) | 6 per new elementary, middle and high school class | class sizes 19.3 / 24.9 / 23.4 (2025) | only the classmates who matter are named, not the whole class |
+| `TEACHER_F` (homeroom teacher is a woman) | elementary 75%, middle 68%, high 55% | no figure checked | estimate (see Gaps) |
+| Kindergarten choice | ordinary kindergarten default | public daycare share 28.3% (2023); preschool private-ed participation 47.6% | no game rate |
+>>>>>>> worktree-agent-adaa7c91bebc43762
 
 ## Gaps (no verifiable figure found yet)
 Retrieved: 2026-11-04. Filled this week and removed: province and district populations (2025 census), new care cases 2023–25, kindergarten vs daycare by age, high schools and students by type, 2024 time-use sleep by age, 2025–26 수능 grade cuts and 한국사 grade-1 shares.
 - Share of children (not households) in single-parent or grandparent households, and grandparent households since 2015 (expected in the 2025 census 20% sample results, due end-Nov 2026); children who lose a parent before 18.
 - Mean monthly pay by occupation (the 고용형태별근로실태조사 occupation tables are only on KOSIS, which blocks automated requests); occupation mix within each household-income fifth; single mothers' employment rate.
+<<<<<<< HEAD
 - What a children's home spends on each child's education (tutoring, cram school) a month; how many care leavers choose to stay on to 24; why new cases and placements stopped adding up from 2022 (e-나라지표 1421).
 - Tuition at 자사고, 외고, 국제고 and 국제중; an official source for 국제중 competition ratios (only news citing 종로학원 found).
 - Private elementary school tuition (schoolinfo.go.kr was reachable on 2026-11-04, but no national tuition table or open file with 수업료 was found).
@@ -363,3 +381,16 @@ Retrieved: 2026-11-04. Filled this week and removed: province and district popul
 - Admission rates by family income or region: only news citing Korea Student Aid Foundation data obtained by lawmakers (scholarship applicants only). Scores by region and school type are now in §7 (KICE 2026 analysis), but not admissions.
 - Graduates' wages by school tier: KEIS's GOMS survey ended with the 2019 wave; only research papers using it were found.
 - Kindergartens by province (in the 교육기본통계 tables on kess.kedi.re.kr; the 2025 summary has only kindergarten children by province); the 2026 교육기본통계 attachments (eiec.kdi.re.kr refused automated requests).
+=======
+- What a children's home spends on each child's education (tutoring, cram school) a month; how many care leavers choose to stay on to 24; 2023–25 new care cases.
+- Kindergarten vs daycare vs home-care shares by age.
+- Students by high-school type nationally (자사고, 외고, 과학고, 특성화고, 마이스터고) and their tuition; 국제중 competition ratios.
+- Private elementary school tuition.
+- 2024 KYRBS sleep minutes and obesity rate; 2024 time-use sleep minutes by age.
+- 수능 grade cuts and 한국사 grade-1 share by year (in KICE xlsx attachments).
+- National 검정고시 totals and high-school-level pass rates.
+- Admission rates by family income or region.
+- Graduates' wages by school tier.
+- Women's share of teachers by school level (KEDI 교육기본통계 tables); share of middle and high schools that are boys' or girls' only.
+- Year-by-year 2020–2022 name rankings (the Supreme Court statistics site); how many teenagers date, and how many keep a best friend from elementary school.
+>>>>>>> worktree-agent-adaa7c91bebc43762

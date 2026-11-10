@@ -1799,6 +1799,17 @@
       job: (id) => D.jobs[id] || id,
       // English needs an article: "a nurse", "an office worker".
       jobA: (id) => { const j = D.jobs[id] || id; return en ? (/^[aeiou]/i.test(j) ? "an " : "a ") + j : j; },
+      // People ({ s, n, x } from the engine, Korean names). English romanizes them: "Seo-a", "Ms. Park".
+      // Korean calls friends by their given name, with 이 after a final consonant (이준이, 서아), so a
+      // particle after h.nm always follows a vowel: h.nm(p.a) + "가".
+      nm: (r) => (!r ? (en ? "a friend" : "친구") : en ? nameEn(r.n) : r.n + (hasBatchim(r.n) ? "이" : "")),
+      full: (r) => (!r ? (en ? "a classmate" : "반 친구") : en ? nameEn(r.n) + " " + (SURNAME_EN[r.s] || nameEn(r.s)) : r.s + r.n),
+      // A teacher by surname: "Ms. Park" / "박 선생님" (ends in a consonant: 이, 은, 을, 과).
+      tch: (t) => (!t ? (en ? "your teacher" : "선생님") : en ? (t.x === "f" ? "Ms. " : "Mr. ") + (SURNAME_EN[t.s] || nameEn(t.s)) : t.s + " 선생님"),
+      he: (r) => (r && r.x === "f" ? "she" : "he"),
+      him: (r) => (r && r.x === "f" ? "her" : "him"),
+      his: (r) => (r && r.x === "f" ? "her" : "his"),
+      josa,
       trait: (id) => D.trait[id] || id,
       traitFx: (id) => D.traitFx[id] || "",
       actEarly: (id) => D.actEarly[id],
@@ -1852,6 +1863,321 @@
     };
     return h;
   }
+
+  // ---------- people (v6.1) ----------
+  // Names come from the engine in Korean. English shows given names in Revised Romanization, syllable by
+  // syllable (a hyphen before a syllable that starts with a vowel, as on passports: 서아 → Seo-a), and
+  // surnames in their usual spellings.
+  const SURNAME_EN = { 김: "Kim", 이: "Lee", 박: "Park", 최: "Choi", 정: "Jung", 강: "Kang", 조: "Cho", 윤: "Yoon", 장: "Jang", 임: "Lim",
+    한: "Han", 오: "Oh", 서: "Seo", 신: "Shin", 권: "Kwon", 황: "Hwang", 안: "Ahn", 송: "Song", 전: "Jeon", 홍: "Hong" };
+  function nameEn(n) {
+    let out = "";
+    for (const ch of String(n)) {
+      const c = ch.charCodeAt(0) - 0xac00;
+      if (c < 0 || c > 11171) { out += ch; continue; }
+      const i = Math.floor(c / 588), m = Math.floor((c % 588) / 28), f = c % 28;
+      if (out && i === 11) out += "-";
+      out += (i === 5 ? "r" : RR_I[i]) + RR_M[m] + RR_F[f];
+    }
+    return out.charAt(0).toUpperCase() + out.slice(1);
+  }
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  // Wraps an existing message so it names people when the event carries them (p.by, p.a ...) and reads
+  // exactly as before otherwise (old saves, old log lines).
+  const named = (lang, key, fn) => { const old = MSG[lang][key]; MSG[lang][key] = (p, h) => fn(p || {}, h, () => (typeof old === "function" ? old(p || {}, h) : old)); };
+
+  Object.assign(MSG.en, {
+    "people.title": "Friends",
+    "people.sub": "the people in your life",
+    "people.empty": "No friends yet. They come with kindergarten and school.",
+    "people.tap": "Tap a friend to spend your Friends blocks with them; tap again for whoever's around.",
+    "people.with": (p, h) => "Friends blocks go to " + h.nm(p.a) + ".",
+    "people.auto": "Friends blocks go to whoever's around.",
+    "people.now": "In your class",
+    "people.old": "Old friends",
+    "people.teacher": (p, h) => "Homeroom teacher: " + h.tch(p.t) + " (" + h.t("teacher.sty")[p.t.sty] + ")",
+    "people.cl": (p) => "Closeness " + p.v + "/100",
+    "people.pick": (p, h) => "Spend Friends blocks with " + h.full(p.a),
+    "people.role": { partner: "Going out", bully: "Bullying you", crush: "Crush", best: "Best friend", rival: "Rival", ex: "Ex", friend: "Friend", classmate: "Classmate", old: "Old friend", out: "Outside school" },
+    "people.tag": { studious: "studious", sporty: "sporty", funny: "funny", kind: "kind", quiet: "quiet", gamer: "gamer", artsy: "artsy", bossy: "bossy", troubled: "troubled" },
+    "people.met": { play: "from the playground", kinder: "from kindergarten", elem: "from elementary school", mid: "from middle school", high: "from high school", academy: "from the retake academy", uni: "from campus" },
+    "people.out": { hagwon: "from cram school", church: "from church", friend: "a friend's friend" },
+    "people.hint": "Hang out with friends to grow closer. A studious friend turns some of that time into studying together; friends you don't see fade.",
+    "teacher.sty": { warm: "warm", strict: "strict", passion: "passionate", relaxed: "laid-back", tired: "worn out" },
+    "teacher.fx": {
+      warm: "Stress −1 a turn, motivation a little higher",
+      strict: "Lessons ×1.03, stress +1 a turn",
+      passion: "Lessons ×1.05, motivation a little higher, stress +1 a turn",
+      relaxed: "Lessons ×0.96, stress −1 a turn, motivation a little lower",
+      tired: "Lessons ×0.92, stress +1 a turn, motivation lower",
+    },
+    "log.homeroom": (p, h) => "Your homeroom teacher this year is " + h.tch(p.t) + ": " + {
+      warm: "warm and patient.", strict: "strict, but fair.", passion: "passionate, with extra handouts every week.", relaxed: "laid-back; homework is optional, mostly.", tired: "tired, and counting the days to the holidays.",
+    }[p.t.sty],
+    "log.soc.class": (p, h) => {
+      const st = p.why === "move" ? "A new school after the move: a class full of strangers." : p.why === "transfer" ? "A new school after the transfer. Nobody here knows what happened." : {
+        play: "The neighbourhood kids at the playground become your first friends.", kinder: "Your kindergarten class: a room full of new faces.", elem: "Elementary school: a new class, and a lot of new names to learn.",
+        mid: "Middle school: a new class, mostly strangers.", high: "High school: a new class.", academy: "The retake academy: a new class of retakers.", uni: "Campus: new faces in every lecture.",
+      }[p.st];
+      const w = p.with || [];
+      return st + (w.length === 1 ? " " + h.nm(w[0]) + " is in your class again." : w.length > 1 ? " " + h.nm(w[0]) + " and " + h.nm(w[1]) + " come along too." : "");
+    },
+    "log.soc.best": (p, h) => h.full(p.a) + " is your best friend now." + (p.was ? " (You and " + h.nm(p.was) + " aren't as close as you were.)" : ""),
+    "log.soc.drift": (p, h) => "You and " + h.nm(p.a) + " have drifted apart.",
+    "log.soc.partner": (p, h) => "You and " + h.full(p.a) + " are going out.",
+    "log.soc.ex": (p, h) => (p.why === "them" ? h.nm(p.a) + " broke up with you." : "You and " + h.nm(p.a) + " broke up."),
+    "end.friends": "Where your friends are now",
+    "end.friend": (p, h) => {
+      const where = p.path === "work" ? "working" : p.path === "retake" ? "retaking the Suneung" : h.uni(p.uni);
+      return where + (p.total ? " · Suneung total " + p.total : "");
+    },
+
+    // Events.
+    "ev.soc-seatmate.r.play": (p, h) => cap(h.nm(p.a)) + ", who lives two doors down, wants to play in the sandpit every afternoon. You share a spade and, after some negotiation, a bucket.",
+    "ev.soc-seatmate.r.kinder": (p, h) => "At kindergarten your cubby is next to " + h.nm(p.a) + "'s. By lunchtime " + h.he(p.a) + "'s told you " + h.his(p.a) + " whole life story and given you half a sticker.",
+    "ev.soc-seatmate.r.elem": (p, h) => "Your new seatmate (jjakkung) is " + h.full(p.a) + ". " + cap(h.he(p.a)) + " lends you an eraser on the first day and never asks for it back.",
+    "ev.soc-seatmate.r.mid": (p, h) => "First day of middle school. The student next to you, " + h.full(p.a) + ", whispers that the homeroom teacher looks scary, and you both laugh at exactly the wrong moment.",
+    "ev.soc-seatmate.r.high": (p, h) => "Your new deskmate is " + h.full(p.a) + ". By the end of the first week you know " + h.his(p.a) + " snack schedule, " + h.his(p.a) + " favorite idol and " + h.his(p.a) + " mock-exam grades.",
+    "ev.soc-seatmate.r.academy": (p, h) => "At the retake academy you sit beside " + h.full(p.a) + ", a retaker too. Every morning at 7 you share the heater and a quiet nod.",
+    "ev.soc-seatmate.r.uni": (p, h) => "At your first lecture " + h.full(p.a) + " saves you a seat. " + cap(h.he(p.a)) + " has no idea you're secretly studying for the Suneung again.",
+    "ev.soc-playdate.r": (p, h) => cap(h.nm(p.a)) + " comes over for a playdate. You build a block tower taller than both of you, then knock it down together. Best day ever.",
+    "ev.soc-birthday.text": (p, h) => (p.t ? cap(h.nm(p.a)) + "'s birthday is this weekend. A few of you are planning a karaoke room and a convenience-store cake." :
+      cap(h.nm(p.a)) + " is having a birthday party at a kids' café on Saturday, and the invitation has your name on it in glitter pen."),
+    "ev.soc-birthday.c": ["Go, with a present", "Stay home"],
+    "ev.soc-birthday.r0": (p, h) => "You sing the loudest of anyone. " + cap(h.nm(p.a)) + " hugs you at the door. (Closer)",
+    "ev.soc-birthday.r1": (p, h) => "On Monday everyone's talking about the party. " + cap(h.nm(p.a)) + " doesn't look at you much.",
+    "ev.soc-fight.text": (p, h) => [
+      cap(h.nm(p.a)) + " told someone a secret you'd told only " + h.him(p.a) + ". Now half the class knows.",
+      "You and " + h.nm(p.a) + " argue over a game, and it turns into a real fight. You both say things you don't mean.",
+      cap(h.nm(p.a)) + " has been spending all " + h.his(p.a) + " time with other friends lately, and you snap at " + h.him(p.a) + " about it.",
+    ][p.why || 0],
+    "ev.soc-fight.c": (p, h) => ["Apologize first", "Wait for " + h.nm(p.a) + " to come round"],
+    "ev.soc-fight.r0": (p, h) => "You send a message that evening: sorry. " + cap(h.nm(p.a)) + " replies with ten crying emoji and a sorry of " + h.his(p.a) + " own.",
+    "ev.soc-fight.r1a": (p, h) => "The next morning " + h.nm(p.a) + " is waiting by your desk with a banana milk. \"Sorry.\" Just like that, it's over.",
+    "ev.soc-fight.r1b": (p, h) => "Neither of you gives in. You walk past " + h.nm(p.a) + " in the hallway like a stranger. (A cold war)",
+    "ev.soc-makeup.r": (p, h) => cap(h.nm(p.a)) + " slides a folded note onto your desk: \"Are we OK?\" You write \"yes, idiot\" and slide it back. Friends again.",
+    "ev.soc-moveaway.text": (p, h) => cap(h.nm(p.a)) + "'s family is moving to " + (p.to ? h.region(p.to) : "another city") + ". " + cap(h.he(p.a)) + " tells you on the way home, kicking a stone the whole way.",
+    "ev.soc-moveaway.c": ["Promise to call every week", "Say goodbye"],
+    "ev.soc-moveaway.r0": "You swap numbers and promise. On moving day you wave until the truck turns the corner.",
+    "ev.soc-moveaway.r1": "You say goodbye at the school gate. It's strange how quickly the empty desk fills up.",
+    "ev.soc-letter.r": (p, h) => (p.t ? cap(h.nm(p.a)) + " calls out of the blue. You talk for two hours about nothing and everything, as if no time has passed." :
+      "A letter comes from " + h.nm(p.a) + ", with a drawing of the two of you and a sticker. It goes up on your wall."),
+    "ev.soc-study.text": (p, h) => cap(h.nm(p.a)) + " is starting a study group (seuteodi) before the exams: three of you, a study café, phones in a basket by the door.",
+    "ev.soc-study.c": ["Join", "Study on your own"],
+    "ev.soc-study.r0": (p, h) => "Explaining things to each other works: " + h.sub(p.s) + " finally starts to make sense. (Closer to " + h.nm(p.a) + ")",
+    "ev.soc-study.r1": "You study alone. It's quieter, and lonelier.",
+    "ev.soc-group.text": (p, h) => [
+      "Exams are over, and " + h.nm(p.a) + ", " + h.nm(p.b) + " and the others are planning a day at the beach.",
+      cap(h.nm(p.a)) + " and " + h.nm(p.b) + " want to hit a karaoke room, then eat tteokbokki until nobody can move.",
+      cap(h.nm(p.a)) + " has found cheap tickets to a theme park, and " + h.nm(p.b) + " is already in.",
+    ][p.k || 0],
+    "ev.soc-group.c": ["Go (₩30,000 from your savings)", "Stay home and rest"],
+    "ev.soc-group.r0": "You come home exhausted and happy. A hundred photos land in the group chat.",
+    "ev.soc-group.r1": "You see the photos in the group chat later. It looks like fun.",
+    "ev.soc-crush.text": (p, h) => (p.again ? "You still like " + h.nm(p.a) + ". It hasn't gone away; if anything it's worse." : ({
+      hagwon: "There's someone at your cram school, " + h.full(p.a) + ", who always sits two rows ahead. You've started arriving early.",
+      church: h.full(p.a) + " from the youth group at church saves you a seat every Sunday. You've started looking forward to Sundays.",
+      friend: "A friend introduced you to " + h.full(p.a) + ", who goes to another school. Now you check your phone for " + h.his(p.a) + " messages all day.",
+    })[p.out] || "Lately you can't stop looking at " + h.full(p.a) + ". When " + h.he(p.a) + " laughs in class, your face goes hot."),
+    "ev.soc-crush.c": ["Confess (gobaek)", "Keep it to yourself"],
+    "ev.soc-crush.r0a": (p, h) => "You say it, badly, behind the building after class. " + cap(h.nm(p.a)) + " goes red and says \"me too.\" You're going out.",
+    "ev.soc-crush.r0b": (p, h) => cap(h.nm(p.a)) + " says sorry: " + h.he(p.a) + " only sees you as a friend. You walk home the long way. (Stress up)",
+    "ev.soc-crush.r1": (p, h) => "You keep it to yourself. Every time " + h.nm(p.a) + " walks past, your heart does something stupid.",
+    "ev.soc-confessed.text": (p, h) => (p.out ? h.full(p.a) + " (" + h.t("people.out")[p.out] + ")" : h.full(p.a)) + " catches you after class, very red, and says " + h.he(p.a) + " likes you. " + cap(h.he(p.a)) + "'s holding a can of your favorite drink.",
+    "ev.soc-confessed.c": ["Say yes", "Say \"let's stay friends\""],
+    "ev.soc-confessed.r0": "You say yes. You both stand there grinning. You're going out.",
+    "ev.soc-confessed.r1": (p, h) => "You let " + h.him(p.a) + " down as gently as you can. It's awkward for a while.",
+    "ev.soc-date.r": (p, h) => [
+      "You and " + h.nm(p.a) + " walk along the Han River with convenience-store ramyeon. (Stress down)",
+      "A movie with " + h.nm(p.a) + ". Neither of you could tell anyone the plot. (Stress down)",
+      cap(h.nm(p.a)) + " quizzes you on English vocabulary at a café, and you quiz back. Weirdly romantic. (Stress down)",
+    ][p.k || 0],
+    "ev.soc-breakup.text": (p, h) => "The exam is getting close, and you and " + h.nm(p.a) + " keep arguing about how little time you have for each other.",
+    "ev.soc-breakup.c": ["Break up to focus", "Stay together"],
+    "ev.soc-breakup.r0": "You end it, kindly. It hurts more than you expected, but your evenings are yours again.",
+    "ev.soc-breakup.r1": (p, h) => "You promise to make it work: Sunday afternoons only. " + cap(h.nm(p.a)) + " slips a note of encouragement into your pencil case.",
+    "ev.soc-dumped.r": (p, h) => cap(h.nm(p.a)) + " sends a long message: you never have time any more, and " + h.he(p.a) + " thinks it's better to end it. You read it six times. (Stress up)",
+    "ev.soc-reunion.text": (p, h) => cap(h.nm(p.a)) + " adds you to a group chat with your old classmates. They're meeting up this weekend, " + h.nm(p.b) + " included.",
+    "ev.soc-reunion.c": ["Go (−1 block next turn)", "Not this time"],
+    "ev.soc-reunion.r0": "Everyone is taller and exactly the same. You laugh about things you'd forgotten until midnight.",
+    "ev.soc-reunion.r1": "You mute the chat and get back to work.",
+    "ev.soc-afterschool.text": (p, h) => ({
+      uni: cap(h.nm(p.a)) + " calls from " + h.uni(p.uni) + ": festivals, clubs, a part-time job. \"Let's get dinner. My treat. You need a break.\"",
+      retake: cap(h.nm(p.a)) + " is retaking too, at another academy. \"Dinner? We can complain about the mocks together.\"",
+      work: cap(h.nm(p.a)) + " has a job now and wants to buy you dinner with " + h.his(p.a) + " first paycheck.",
+    })[p.path] || cap(h.nm(p.a)) + " calls: \"Let's get dinner. You need a break.\"",
+    "ev.soc-afterschool.c": ["Go (−1 block next turn)", "Say you're too busy"],
+    "ev.soc-afterschool.r0": (p, h) => "For three hours you're not a retaker. " + cap(h.nm(p.a)) + " says " + h.he(p.a) + " believes in you, and you almost believe it too.",
+    "ev.soc-afterschool.r1": (p, h) => "\"After the exam, then.\" " + cap(h.nm(p.a)) + " says " + h.he(p.a) + "'ll hold you to it.",
+    "ev.soc-rivalrank.rw": (p, h) => "Class ranks are out: you're " + ordinal(p.me) + ", your rival " + h.nm(p.a) + " is " + ordinal(p.them) + ". " + cap(h.nm(p.a)) + " pretends not to care. (Motivation up)",
+    "ev.soc-rivalrank.rl": (p, h) => "Class ranks are out: your rival " + h.nm(p.a) + " is " + ordinal(p.them) + ", you're " + ordinal(p.me) + ". " + cap(h.nm(p.a)) + " gives you a small smile. You won't forget it. (Fired up)",
+    "ev.soc-rivalmock.text": (p, h) => "The mock results are out, and your rival " + h.nm(p.a) + " is walking over with " + h.his(p.a) + " score report.",
+    "ev.soc-rivalmock.c": ["Compare"],
+    "ev.soc-rivalmock.rw": (p, h) => "Your average percentile: " + p.me + ". " + cap(h.nm(p.a)) + "'s: " + p.them + ". You win this round. (Motivation up)",
+    "ev.soc-rivalmock.rl": (p, h) => cap(h.nm(p.a)) + "'s average percentile is " + p.them + "; yours is " + p.me + ". Next time. (Fired up)",
+    "ev.soc-rivalmock.rx": (p, h) => cap(h.nm(p.a)) + " won't show you " + h.his(p.a) + " score report.",
+    "ev.soc-gate.r.f": (p, h) => "At the gate of the exam site " + h.nm(p.a) + " is waiting, stamping in the cold. " + cap(h.he(p.a)) + " presses a hot pack into your hand: \"You've got this.\" (Stress down)",
+    "ev.soc-gate.r.p": (p, h) => cap(h.nm(p.a)) + " is at the gate with a chocolate bar and a hand-written note: \"Don't forget to breathe.\" (Stress down)",
+    "ev.soc-gate.r.r": (p, h) => "Your phone buzzes on the way in: a hot-drink gift voucher from " + h.nm(p.a) + ", and a message: \"Go for it! You've got this.\" (Stress down)",
+  });
+
+  Object.assign(MSG.ko, {
+    "people.title": "친구",
+    "people.sub": "내 곁의 사람들",
+    "people.empty": "아직 친구가 없다. 친구는 유치원과 학교에서 생긴다.",
+    "people.tap": "친구를 누르면 친구 칸을 그 친구와 보낸다. 다시 누르면 그때그때 어울리는 친구와 보낸다.",
+    "people.with": (p, h) => "친구 칸은 " + h.nm(p.a) + "와 보낸다.",
+    "people.auto": "친구 칸은 그때그때 어울리는 친구와 보낸다.",
+    "people.now": "우리 반",
+    "people.old": "옛 친구",
+    "people.teacher": (p, h) => "담임: " + h.tch(p.t) + " (" + h.t("teacher.sty")[p.t.sty] + ")",
+    "people.cl": (p) => "친밀도 " + p.v + "/100",
+    "people.pick": (p, h) => h.full(p.a) + "와 친구 칸 보내기",
+    "people.role": { partner: "사귀는 중", bully: "괴롭히는 아이", crush: "짝사랑", best: "단짝", rival: "라이벌", ex: "전 애인", friend: "친구", classmate: "반 친구", old: "옛 친구", out: "학교 밖 친구" },
+    "people.tag": { studious: "공부벌레", sporty: "운동파", funny: "분위기 메이커", kind: "다정함", quiet: "조용함", gamer: "게이머", artsy: "예술가", bossy: "센 척", troubled: "말썽꾼" },
+    "people.met": { play: "놀이터 친구", kinder: "유치원 친구", elem: "초등학교 친구", mid: "중학교 친구", high: "고등학교 친구", academy: "재수학원 친구", uni: "대학 친구" },
+    "people.out": { hagwon: "학원 친구", church: "교회 친구", friend: "친구의 친구" },
+    "people.hint": "친구와 어울릴수록 가까워진다. 공부 잘하는 친구와는 같이 공부도 하게 되고, 만나지 않는 친구와는 멀어진다.",
+    "teacher.sty": { warm: "다정함", strict: "엄격함", passion: "열정적", relaxed: "느긋함", tired: "지침" },
+    "teacher.fx": {
+      warm: "턴마다 스트레스 −1, 의욕 조금 높게",
+      strict: "수업 ×1.03, 턴마다 스트레스 +1",
+      passion: "수업 ×1.05, 의욕 조금 높게, 턴마다 스트레스 +1",
+      relaxed: "수업 ×0.96, 턴마다 스트레스 −1, 의욕 조금 낮게",
+      tired: "수업 ×0.92, 턴마다 스트레스 +1, 의욕 낮게",
+    },
+    "log.homeroom": (p, h) => "올해 담임은 " + h.tch(p.t) + ". " + {
+      warm: "다정하고 참을성이 많으시다.", strict: "엄하지만 공정하시다.", passion: "열정이 넘쳐서 매주 프린트를 더 나눠 주신다.", relaxed: "느긋하시다. 숙제는 대체로 자율이다.", tired: "지쳐 보이신다. 방학까지 남은 날을 세고 계신 듯하다.",
+    }[p.t.sty],
+    "log.soc.class": (p, h) => {
+      const st = p.why === "move" ? "이사 후 새 학교. 반 친구가 전부 처음 보는 얼굴이다." : p.why === "transfer" ? "전학 온 새 학교. 여기서는 무슨 일이 있었는지 아무도 모른다." : {
+        play: "놀이터의 동네 아이들이 첫 친구가 됐다.", kinder: "유치원 우리 반. 온통 새로운 얼굴이다.", elem: "초등학교 새 반. 외울 이름이 잔뜩이다.",
+        mid: "중학교 새 반. 대부분 모르는 아이들이다.", high: "고등학교 새 반.", academy: "재수학원 새 반. 모두 재수생이다.", uni: "대학 캠퍼스. 강의마다 새로운 얼굴이다.",
+      }[p.st];
+      const w = p.with || [];
+      return st + (w.length === 1 ? " " + h.nm(w[0]) + "와 또 같은 반이 됐다." : w.length > 1 ? " " + h.nm(w[0]) + "와 " + h.nm(w[1]) + "도 같이 왔다." : "");
+    },
+    "log.soc.best": (p, h) => josa(h.full(p.a), "이", "가") + " 이제 단짝이다." + (p.was ? " (" + h.nm(p.was) + "와는 예전만큼 가깝지 않다.)" : ""),
+    "log.soc.drift": (p, h) => h.nm(p.a) + "와 사이가 멀어졌다.",
+    "log.soc.partner": (p, h) => josa(h.full(p.a), "과", "와") + " 사귀기 시작했다.",
+    "log.soc.ex": (p, h) => (p.why === "them" ? h.nm(p.a) + "가 이별을 통보했다." : h.nm(p.a) + "와 헤어졌다."),
+    "end.friends": "친구들은 지금",
+    "end.friend": (p, h) => {
+      const where = p.path === "work" ? "취업" : p.path === "retake" ? "재수 중" : h.uni(p.uni);
+      return where + (p.total ? " · 수능 표준점수 합 " + p.total : "");
+    },
+
+    "ev.soc-seatmate.r.play": (p, h) => "두 집 건너 사는 " + h.nm(p.a) + "가 매일 오후 모래놀이터에서 같이 놀자고 한다. 삽은 같이 쓰고, 양동이는 협상 끝에 번갈아 쓰기로 했다.",
+    "ev.soc-seatmate.r.kinder": (p, h) => "유치원에서 " + h.nm(p.a) + " 옆 사물함을 쓰게 됐다. 점심시간쯤 " + h.nm(p.a) + "는 자기 인생 이야기를 다 들려주고 스티커 반쪽을 나눠 줬다.",
+    "ev.soc-seatmate.r.elem": (p, h) => "새 짝꿍은 " + h.full(p.a) + ". 첫날 지우개를 빌려주더니 끝내 돌려 달라고 하지 않는다.",
+    "ev.soc-seatmate.r.mid": (p, h) => "중학교 첫날. 옆자리 " + josa(h.full(p.a), "이", "가") + " 담임 선생님이 무섭게 생겼다고 속삭인다. 하필 그 순간 둘 다 웃음이 터졌다.",
+    "ev.soc-seatmate.r.high": (p, h) => "새 짝은 " + h.full(p.a) + ". 첫 주가 끝날 무렵엔 간식 시간표, 최애 아이돌, 모의고사 등급까지 다 알게 됐다.",
+    "ev.soc-seatmate.r.academy": (p, h) => "재수학원 옆자리는 " + h.full(p.a) + ". 역시 재수생이다. 매일 아침 7시, 난로 하나와 말없는 눈인사를 나눈다.",
+    "ev.soc-seatmate.r.uni": (p, h) => "첫 강의에서 " + josa(h.full(p.a), "이", "가") + " 자리를 맡아 줬다. 내가 몰래 수능을 다시 준비하는 줄은 꿈에도 모른다.",
+    "ev.soc-playdate.r": (p, h) => h.nm(p.a) + "가 놀러 왔다. 둘보다 키가 큰 블록 탑을 쌓고, 같이 와르르 무너뜨렸다. 최고의 하루.",
+    "ev.soc-birthday.text": (p, h) => (p.t ? "이번 주말이 " + h.nm(p.a) + " 생일이다. 몇 명이서 코인노래방에 가고 편의점 케이크를 사기로 했다." :
+      h.nm(p.a) + "가 토요일에 키즈카페에서 생일 파티를 연다. 반짝이 펜으로 쓴 초대장에 내 이름이 있다."),
+    "ev.soc-birthday.c": ["선물을 사 들고 간다", "집에 있는다"],
+    "ev.soc-birthday.r0": (p, h) => "누구보다 큰 소리로 생일 축하 노래를 불렀다. " + h.nm(p.a) + "가 문 앞에서 꼭 안아 준다. (더 친해짐)",
+    "ev.soc-birthday.r1": (p, h) => "월요일, 다들 파티 이야기뿐이다. " + h.nm(p.a) + "는 나를 잘 쳐다보지 않는다.",
+    "ev.soc-fight.text": (p, h) => [
+      h.nm(p.a) + "한테만 말한 비밀을 " + h.nm(p.a) + "가 다른 애한테 말해 버렸다. 이제 반 절반이 안다.",
+      h.nm(p.a) + "와 게임 때문에 말다툼을 하다가 진짜 싸움이 됐다. 둘 다 진심이 아닌 말을 해 버렸다.",
+      "요즘 " + h.nm(p.a) + "가 다른 친구들하고만 어울려서, 결국 한마디 쏘아붙이고 말았다.",
+    ][p.why || 0],
+    "ev.soc-fight.c": (p, h) => ["먼저 사과한다", h.nm(p.a) + "가 먼저 오길 기다린다"],
+    "ev.soc-fight.r0": (p, h) => "그날 밤 메시지를 보냈다. 미안해. " + h.nm(p.a) + "는 우는 이모티콘 열 개와 자기도 미안하다는 답장을 보냈다.",
+    "ev.soc-fight.r1a": (p, h) => "다음 날 아침 " + h.nm(p.a) + "가 바나나우유를 들고 내 자리에서 기다리고 있다. \"미안.\" 그걸로 끝.",
+    "ev.soc-fight.r1b": (p, h) => "둘 다 굽히지 않는다. 복도에서 " + h.nm(p.a) + "를 모르는 사람처럼 지나친다. (냉전)",
+    "ev.soc-makeup.r": (p, h) => h.nm(p.a) + "가 접은 쪽지를 내 책상에 밀어 놓았다. \"우리 괜찮지?\" \"응, 바보야\"라고 써서 돌려줬다. 다시 친구.",
+    "ev.soc-moveaway.text": (p, h) => h.nm(p.a) + "네 가족이 " + (p.to ? ro(h.region(p.to)) : "다른 도시로") + " 이사를 간다. 집에 오는 길 내내 돌멩이를 차면서 털어놓았다.",
+    "ev.soc-moveaway.c": ["매주 전화하자고 약속한다", "작별 인사를 한다"],
+    "ev.soc-moveaway.r0": "전화번호를 주고받고 약속했다. 이삿날, 트럭이 모퉁이를 돌 때까지 손을 흔들었다.",
+    "ev.soc-moveaway.r1": "교문 앞에서 작별 인사를 했다. 빈자리가 금방 채워지는 게 이상하다.",
+    "ev.soc-letter.r": (p, h) => (p.t ? h.nm(p.a) + "한테서 갑자기 전화가 왔다. 아무 얘기나 두 시간 동안 떠들었다. 시간이 하나도 안 지난 것 같다." :
+      h.nm(p.a) + "한테서 편지가 왔다. 둘이 같이 있는 그림과 스티커가 들어 있다. 벽에 붙여 두었다."),
+    "ev.soc-study.text": (p, h) => h.nm(p.a) + "가 시험 전 스터디를 만든다고 한다. 셋이서 스터디카페, 휴대폰은 문 앞 바구니에.",
+    "ev.soc-study.c": ["같이 한다", "혼자 공부한다"],
+    "ev.soc-study.r0": (p, h) => "서로 설명해 주니 효과가 있다. " + josa(h.sub(p.s), "이", "가") + " 드디어 이해되기 시작한다. (" + h.nm(p.a) + "와 더 친해짐)",
+    "ev.soc-study.r1": "혼자 공부한다. 조용하고, 조금 외롭다.",
+    "ev.soc-group.text": (p, h) => [
+      "시험이 끝났다. " + h.nm(p.a) + ", " + h.nm(p.b) + " 그리고 다른 애들이 바다에 가자고 한다.",
+      h.nm(p.a) + "와 " + h.nm(p.b) + "가 코인노래방에 갔다가 배 터지게 떡볶이를 먹자고 한다.",
+      h.nm(p.a) + "가 놀이공원 할인 티켓을 구했고, " + h.nm(p.b) + "는 벌써 간다고 했다.",
+    ][p.k || 0],
+    "ev.soc-group.c": ["간다 (내 돈 3만 원)", "집에서 쉰다"],
+    "ev.soc-group.r0": "녹초가 돼서 행복하게 돌아왔다. 단톡방에 사진이 백 장 올라온다.",
+    "ev.soc-group.r1": "나중에 단톡방에서 사진을 봤다. 재미있었나 보다.",
+    "ev.soc-crush.text": (p, h) => (p.again ? "아직도 " + h.nm(p.a) + "가 좋다. 사라지기는커녕 더 심해졌다." : ({
+      hagwon: "학원에서 늘 두 줄 앞에 앉는 " + h.full(p.a) + ". 요즘 학원에 일찍 가게 된다.",
+      church: "교회 학생부의 " + josa(h.full(p.a), "이", "가") + " 일요일마다 자리를 맡아 준다. 일요일이 기다려진다.",
+      friend: "친구가 다른 학교에 다니는 " + josa(h.full(p.a), "을", "를") + " 소개해 줬다. 하루 종일 메시지가 왔나 휴대폰만 본다.",
+    })[p.out] || "요즘 자꾸 " + josa(h.full(p.a), "을", "를") + " 보게 된다. 수업 시간에 " + h.nm(p.a) + "가 웃으면 얼굴이 화끈거린다."),
+    "ev.soc-crush.c": ["고백한다", "마음속에만 담아 둔다"],
+    "ev.soc-crush.r0a": (p, h) => "방과 후 건물 뒤에서 더듬더듬 말했다. " + h.nm(p.a) + "가 빨개진 얼굴로 \"나도\"라고 한다. 사귀게 됐다.",
+    "ev.soc-crush.r0b": (p, h) => h.nm(p.a) + "가 미안하다고, 친구로만 생각한다고 한다. 집까지 먼 길로 돌아갔다. (스트레스 증가)",
+    "ev.soc-crush.r1": (p, h) => "마음속에만 담아 둔다. " + h.nm(p.a) + "가 지나갈 때마다 심장이 바보같이 뛴다.",
+    "ev.soc-confessed.text": (p, h) => (p.out ? h.t("people.out")[p.out] + " " : "") + josa(h.full(p.a), "이", "가") + " 방과 후에 새빨개진 얼굴로 날 좋아한다고 고백했다. 손에는 내가 제일 좋아하는 음료수가 들려 있다.",
+    "ev.soc-confessed.c": ["받아 준다", "\"우리 그냥 친구 하자\"고 한다"],
+    "ev.soc-confessed.r0": "좋다고 했다. 둘 다 바보처럼 웃으며 서 있었다. 사귀게 됐다.",
+    "ev.soc-confessed.r1": "최대한 다정하게 거절했다. 한동안 어색하다.",
+    "ev.soc-date.r": (p, h) => [
+      h.nm(p.a) + "와 편의점 라면을 들고 한강을 걸었다. (스트레스 감소)",
+      h.nm(p.a) + "와 영화를 봤다. 줄거리는 둘 다 기억이 안 난다. (스트레스 감소)",
+      "카페에서 " + h.nm(p.a) + "가 영단어 시험을 내 주고, 나도 내 줬다. 이상하게 설렌다. (스트레스 감소)",
+    ][p.k || 0],
+    "ev.soc-breakup.text": (p, h) => "시험이 다가오면서 " + h.nm(p.a) + "와 만날 시간이 없다는 문제로 자꾸 다툰다.",
+    "ev.soc-breakup.c": ["공부에 집중하려고 헤어진다", "계속 만난다"],
+    "ev.soc-breakup.r0": "좋게 끝냈다. 생각보다 훨씬 아프지만, 저녁 시간은 다시 내 것이 됐다.",
+    "ev.soc-breakup.r1": (p, h) => "일요일 오후에만 만나자고 약속했다. " + h.nm(p.a) + "가 필통에 응원 쪽지를 넣어 두었다.",
+    "ev.soc-dumped.r": (p, h) => h.nm(p.a) + "한테서 긴 메시지가 왔다. 요즘 나는 시간이 하나도 없고, 그만하는 게 좋겠다고. 여섯 번을 다시 읽었다. (스트레스 증가)",
+    "ev.soc-reunion.text": (p, h) => h.nm(p.a) + "가 옛날 반 친구들 단톡방에 나를 초대했다. 이번 주말에 모인다고 한다. " + h.nm(p.b) + "도 온다.",
+    "ev.soc-reunion.c": ["간다(다음 턴 1칸 감소)", "이번엔 못 간다"],
+    "ev.soc-reunion.r0": "다들 키만 컸지 그대로다. 잊고 있던 이야기로 자정까지 웃었다.",
+    "ev.soc-reunion.r1": "단톡방 알림을 끄고 다시 공부한다.",
+    "ev.soc-afterschool.text": (p, h) => ({
+      uni: h.nm(p.a) + "가 " + h.uni(p.uni) + "에서 전화했다. 축제, 동아리, 알바 이야기. \"밥 먹자. 내가 살게. 너 좀 쉬어야 돼.\"",
+      retake: h.nm(p.a) + "도 다른 학원에서 재수 중이다. \"밥 먹을래? 모의고사 욕이나 하자.\"",
+      work: h.nm(p.a) + "가 취업해서 첫 월급으로 밥을 사 주겠다고 한다.",
+    })[p.path] || h.nm(p.a) + "한테서 전화가 왔다. \"밥 먹자. 너 좀 쉬어야 돼.\"",
+    "ev.soc-afterschool.c": ["간다(다음 턴 1칸 감소)", "바쁘다고 한다"],
+    "ev.soc-afterschool.r0": (p, h) => "세 시간 동안은 재수생이 아니었다. " + h.nm(p.a) + "가 나를 믿는다고 했고, 나도 조금은 믿게 됐다.",
+    "ev.soc-afterschool.r1": (p, h) => "\"그럼 수능 끝나고.\" " + h.nm(p.a) + "는 꼭 지키라고 한다.",
+    "ev.soc-rivalrank.rw": (p, h) => "반 등수가 나왔다. 나는 " + p.me + "등, 라이벌 " + h.nm(p.a) + "는 " + p.them + "등. " + h.nm(p.a) + "는 신경 안 쓰는 척한다. (의욕 증가)",
+    "ev.soc-rivalrank.rl": (p, h) => "반 등수가 나왔다. 라이벌 " + h.nm(p.a) + "는 " + p.them + "등, 나는 " + p.me + "등. " + h.nm(p.a) + "가 살짝 웃는다. 잊지 않겠다. (승부욕 불탐)",
+    "ev.soc-rivalmock.text": (p, h) => "모의고사 성적이 나왔다. 라이벌 " + h.nm(p.a) + "가 성적표를 들고 다가온다.",
+    "ev.soc-rivalmock.c": ["비교해 본다"],
+    "ev.soc-rivalmock.rw": (p, h) => "내 평균 백분위 " + p.me + ", " + h.nm(p.a) + "는 " + p.them + ". 이번 판은 내가 이겼다. (의욕 증가)",
+    "ev.soc-rivalmock.rl": (p, h) => h.nm(p.a) + "의 평균 백분위는 " + p.them + ", 나는 " + p.me + ". 다음엔 두고 보자. (승부욕 불탐)",
+    "ev.soc-rivalmock.rx": (p, h) => h.nm(p.a) + "가 성적표를 안 보여 준다.",
+    "ev.soc-gate.r.f": (p, h) => "시험장 교문 앞에서 " + h.nm(p.a) + "가 추위에 발을 동동 구르며 기다리고 있다. 핫팩을 손에 쥐여 준다. \"너 잘할 거야.\" (스트레스 감소)",
+    "ev.soc-gate.r.p": (p, h) => h.nm(p.a) + "가 초콜릿과 손편지를 들고 교문 앞에 와 있다. \"숨 쉬는 거 잊지 마.\" (스트레스 감소)",
+    "ev.soc-gate.r.r": (p, h) => "시험장 들어가는 길에 휴대폰이 울린다. " + h.nm(p.a) + "가 보낸 따뜻한 음료 기프티콘과 메시지. \"수능 대박! 넌 할 수 있어.\" (스트레스 감소)",
+  });
+
+  // Existing messages that can now name people. Without names (old saves, events from before v6.1)
+  // they read exactly as they did.
+  named("en", "ev.bully-start.text", (p, h, old) => (p.by ? h.full(p.by) + " and a couple of others have started picking on you: nasty nicknames, shoves in the hallway, your things going missing. Nobody wants to sit with you anymore. It happens every day." : old()));
+  named("ko", "ev.bully-start.text", (p, h, old) => (p.by ? josa(h.full(p.by), "이", "가") + " 몇몇 아이들과 나를 괴롭히기 시작했다. 듣기 싫은 별명, 복도에서 툭툭 밀치기, 자꾸 없어지는 물건. 이제 아무도 내 옆에 앉으려 하지 않는다. 매일 그렇다." : old()));
+  named("en", "ev.bully-on.text", (p, h, old) => (p.by ? cap(h.nm(p.by)) + " still hasn't stopped. You dread the walk to school, and in class it's hard to think about anything else." : old()));
+  named("ko", "ev.bully-on.text", (p, h, old) => (p.by ? h.nm(p.by) + "의 괴롭힘은 아직 끝나지 않았다. 등굣길이 두렵고, 수업 시간에도 다른 생각을 할 수가 없다." : old()));
+  named("en", "ev.bully-bad.text", (p, h, old) => (p.by ? "It has turned serious: threats from " + h.nm(p.by) + ", a group chat made to mock you, being cornered after school. Some mornings you can't make yourself go. Your parents can tell something is very wrong." : old()));
+  named("ko", "ev.bully-bad.text", (p, h, old) => (p.by ? "괴롭힘이 심각해졌다. " + h.nm(p.by) + "의 협박, 나를 조롱하려고 만든 단톡방, 방과 후에 둘러싸이는 일까지. 도저히 학교에 갈 수 없는 아침도 있다. 부모님도 뭔가 크게 잘못됐다는 걸 눈치채셨다." : old()));
+  named("en", "ev.bully-on.c", (p, h, old) => (p.fr ? old().map((c, i) => (i === 2 ? "Stick close to " + h.nm(p.fr) + " and your friends" : c)) : old()));
+  named("ko", "ev.bully-on.c", (p, h, old) => (p.fr ? old().map((c, i) => (i === 2 ? h.nm(p.fr) + "와 친구들 곁에 붙어 다닌다" : c)) : old()));
+  named("en", "ev.bully-on.r2", (p, h, old) => (p.fr && p.f ? cap(h.nm(p.fr)) + " walks with you between classes and at lunch" + (p.by ? ", and tells " + h.nm(p.by) + " to back off" : "") + ". You're a harder target with a friend beside you. " + h.t("bully.res." + p.x) : old()));
+  named("ko", "ev.bully-on.r2", (p, h, old) => (p.fr && p.f ? "쉬는 시간과 점심시간마다 " + h.nm(p.fr) + "가 함께 다녀 준다" + (p.by ? ". " + h.nm(p.by) + "한테 그만하라고 맞서 주기도 한다" : "") + ". 친구가 옆에 있으면 함부로 건드리지 못한다. " + h.t("bully.res." + p.x) : old()));
+  named("en", "ev.pcbang.text", (p, h, old) => (p.a ? cap(h.nm(p.a)) + " and the others are heading to the PC café after class. \"Just one game,\" " + h.he(p.a) + " says." : old()));
+  named("ko", "ev.pcbang.text", (p, h, old) => (p.a ? h.nm(p.a) + "와 친구들이 수업 끝나고 PC방에 가자고 한다. \"딱 한 판만.\"" : old()));
+  named("en", "ev.rival.r", (p, h, old) => (p.a ? "Your rival " + h.nm(p.a) + " posted " + h.his(p.a) + " exam scores in the class group chat: perfect marks. You're fired up." : old()));
+  named("ko", "ev.rival.r", (p, h, old) => (p.a ? "라이벌 " + h.nm(p.a) + "가 반 단톡방에 시험 점수를 올렸다. 전 과목 만점. 승부욕이 불탄다." : old()));
+  named("en", "ev.lonely.text", (p, h, old) => (p.a ? cap(h.nm(p.a)) + " and your old classmates post photos from a school trip. You've talked to nobody but family all week." : old()));
+  named("ko", "ev.lonely.text", (p, h, old) => (p.a ? h.nm(p.a) + "와 예전 반 친구들이 수학여행 사진을 올렸다. 이번 주에 가족 말고는 아무하고도 말을 안 했다." : old()));
+  // Log lines: an event's question names its people (q), and a turn says who you spent it with.
+  named("en", "log.event", (p, h, old) => (p.q && p.c != null ? h.t("ev." + p.id + ".text", p.q) + " → " + h.t("ev." + p.id + ".c", p.q)[p.c] + ". " + h.t(p.r.key, p.r.p) : old()));
+  named("ko", "log.event", (p, h, old) => (p.q && p.c != null ? h.t("ev." + p.id + ".text", p.q) + " → " + h.t("ev." + p.id + ".c", p.q)[p.c] + ". " + h.t(p.r.key, p.r.p) : old()));
+  named("en", "log.month", (p, h, old) => old() + (p.fr ? " · time with " + h.nm(p.fr) + (p.sg ? " (studied together)" : "") : ""));
+  named("ko", "log.month", (p, h, old) => old() + (p.fr ? " · " + h.nm(p.fr) + "와 함께" + (p.sg ? "(같이 공부)" : "") : ""));
 
   // In care, staying out of kindergarten means staying in the home, not with grandparents.
   MSG.en["school.desc.care"] = Object.assign({}, MSG.en["school.desc"], { homeCare: "Free. Stay in the home with the carers: few lessons (×0.3), less stress, no kindergarten colds." });

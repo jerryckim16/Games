@@ -17,6 +17,7 @@
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
     planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"), traits: $("traits"), mainMap: $("mainMap"), mapHome: $("mapHome"), mapHint: $("mapHint"),
+    people: $("people"), peopleTeacher: $("peopleTeacher"), peopleNote: $("peopleNote"),
     chart: $("chart"), legend: $("legend"), log: $("log"), history: $("history"), newLifeBtn: $("newLifeBtn"),
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
@@ -213,6 +214,7 @@
     renderStats();
     renderBars();
     renderPlan();
+    renderPeople();
     renderLog();
     renderHistory();
     drawChart();
@@ -668,6 +670,7 @@
   const LOG_ICON = {
     "log.born": "👶", "log.stage": "🏫", "log.grade": "🎒", "log.teacher": "🍎", "log.report": "📊", "log.sebae": "🧧", "log.track": "🔀",
     "log.birthday": "🎂", "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩", "log.school": "🏫", "log.schoolMove": "🏫",
+    "log.homeroom": "🧑‍🏫", "log.soc.class": "👋", "log.soc.best": "🤞", "log.soc.drift": "🍂", "log.soc.partner": "💕", "log.soc.ex": "💔",
     "log.month": "🗓️", "log.mock": "📝", "log.suneung": "🎯", "log.apply": "📮", "log.enroll": "🎓", "log.quit": "🚪", "log.halfpay": "💸", "log.newyear": "🌱",
   };
   function logIcon(l) {
@@ -823,7 +826,7 @@
     }
     if (outcome) {
       // The outcome keeps the event's picture, redrawn with how things turned out.
-      const art = outcome.id ? Art.eventArt(artCtx({ id: outcome.id, variant: outcome.variant })) : "";
+      const art = outcome.id ? Art.eventArt(artCtx({ id: outcome.id, variant: outcome.variant, people: outcome.people })) : "";
       openModal(outcome.title, '<div class="outcome">' + esc(T(outcome.msg.key, outcome.msg.p)) + "</div>",
         [{ label: T("continue"), primary: true, run: () => { outcome = null; after(); } }], art);
       return;
@@ -951,6 +954,11 @@
     fill();
   }
 
+  // The people an event names (p.a, p.b), as the art draws them: their seeded looks.
+  function peopleArt(q) {
+    if (!q || !game.social) return [];
+    return [q.a, q.b].map((r) => r && game.person(r.id)).filter(Boolean).map((p) => ({ lk: p.lk, x: p.x }));
+  }
   function eventTitle(ev) {
     if (ev.id === "eve" || ev.id === "lunch") return T("ev." + ev.id + ".title");
     if (game.isEarly()) return T("turn.age", { a: L.age(game.age) }) + " · " + L.date(game.year, game.month);
@@ -960,20 +968,21 @@
   const variantOf = (msg) => (msg && msg.key ? msg.key.split(".").pop() : "");
   function showEvent(ev) {
     const title = eventTitle(ev);
+    const people = peopleArt(ev.p);
     if (!ev.choices) {
       openModal(title, '<p class="story">' + esc(T(ev.result.key, ev.result.p)) + "</p>", [{ label: T("ok"), primary: true, run: () => { game.dismiss(); after(); } }],
-        Art.eventArt(artCtx({ id: ev.id, variant: variantOf(ev.result) })));
+        Art.eventArt(artCtx({ id: ev.id, variant: variantOf(ev.result), people })));
       return;
     }
-    openModal(title, '<p class="story">' + esc(T("ev." + ev.id + ".text")) + '</p><div class="choices"></div>', [], Art.eventArt(artCtx({ id: ev.id })));
+    openModal(title, '<p class="story">' + esc(T("ev." + ev.id + ".text", ev.p)) + '</p><div class="choices"></div>', [], Art.eventArt(artCtx({ id: ev.id, people })));
     const box = els.modalBody.querySelector(".choices");
-    T("ev." + ev.id + ".c").forEach((label, i) => {
+    T("ev." + ev.id + ".c", ev.p).forEach((label, i) => {
       const b = document.createElement("button");
       b.type = "button";
       b.innerHTML = '<span class="cn" aria-hidden="true">' + (i + 1) + "</span>" + esc(label);
       b.addEventListener("click", () => {
         const msg = game.choose(i);
-        outcome = { title, msg, id: ev.id, variant: variantOf(msg) };
+        outcome = { title, msg, id: ev.id, variant: variantOf(msg), people };
         after();
       });
       box.appendChild(b);
@@ -1171,13 +1180,71 @@
     openModal(u ? T("end.title", { uni: L.uni(u.id) }) : T("end.titleNone"),
       '<p class="story">' + esc(T(verdict)) + '</p><div class="summary">' +
       tile("end.attempts", e.attempts) + tile("end.age", L.age(e.age)) + tile("end.best", best ? best.total : "—") + tile("end.grades", gr ? gr.join("·") : "—") +
-      '</div><p class="muted">' + esc(T("end.note")) + "</p>",
+      "</div>" + friendFates(g) + '<p class="muted">' + esc(T("end.note")) + "</p>",
       [
         { label: T("end.look"), run: () => { g.endingSeen = true; after(); } },
         { label: T("newLife"), primary: true, run: startOver },
       ],
       Art.screenArt("ending", artCtx({ stage: "uni", label: u ? L.uni(u.id) : "", mood: u ? "happy" : "ok" })));
   }
+
+  // Where the closest friends ended up (the engine's friendOutcomes), drawn as university students.
+  function friendFates(g) {
+    const fo = g.friendOutcomes ? g.friendOutcomes(5) : [];
+    if (!fo.length) return "";
+    const role = T("people.role");
+    return "<h3>" + esc(T("end.friends")) + '</h3><ul class="fates">' + fo.map((f) => '<li><span class="pic">' + Art.portraitFor(f.path === "uni" ? "uni" : "academy", Art.lookFor(f.lk, f.x), "happy") +
+      '</span><span class="who"><b>' + esc(L.full(f)) + "</b> <small>" + esc(role[f.role] || "") + "</small><br>" + esc(T("end.friend", f)) + "</span></li>").join("") + "</ul>";
+  }
+
+  // ---------- the people in your life ----------
+  // Classmates first (by what they are to you, then how close), then old friends you still know. Tap a
+  // card to spend the turn's Friends blocks with that person; tap it again to leave it to chance.
+  const ROLE_ORDER = ["partner", "best", "crush", "rival", "friend", "bully", "classmate", "ex", "old", "out"];
+  function renderPeople() {
+    const g = game;
+    const s = g.soc();
+    const order = (p) => ROLE_ORDER.indexOf(g.roleOf(p)) * 1000 - p.cl;
+    const here = s.people.filter((p) => p.here).sort((a, b) => order(a) - order(b)).slice(0, 9);
+    const old = s.people.filter((p) => !p.here && (p.cl >= 15 || ["partner", "best", "crush"].indexOf(g.roleOf(p)) >= 0)).sort((a, b) => order(a) - order(b)).slice(0, 6);
+    const stage = artCtx().stage;
+    const role = T("people.role"), tag = T("people.tag"), met = T("people.met"), out = T("people.out");
+    const done = !!g.ending;
+    const card = (p) => {
+      const r = g.roleOf(p);
+      const on = s.focus === p.id;
+      const name = L.full(p);
+      const where = p.out ? out[p.out] : met[p.st] || "";
+      const off = done || r === "bully";
+      return '<button type="button" class="pcard r-' + r + (on ? " on" : "") + '" data-pid="' + p.id + '" aria-pressed="' + on + '"' + (off ? " disabled" : "") +
+        ' title="' + esc(T("people.pick", { a: p }) + " · " + T("people.cl", { v: Math.round(p.cl) })) + '">' +
+        '<span class="pic">' + Art.portraitFor(stage, Art.lookFor(p.lk, p.x), r === "bully" ? "grumpy" : p.fight != null ? "grumpy" : "happy") + "</span>" +
+        '<span class="pinfo"><b>' + esc(name) + '</b><span class="role">' + esc(role[r]) + "</span><small>" + esc(p.tr.map((t) => tag[t]).join(" · ") + (where ? " · " + where : "")) + "</small>" +
+        '<span class="clbar" aria-label="' + esc(T("people.cl", { v: Math.round(p.cl) })) + '"><i style="width:' + Math.round(p.cl) + '%"></i></span></span></button>';
+    };
+    let html = "";
+    if (here.length) html += '<h3 class="grp">' + esc(T("people.now")) + '</h3><div class="pgrid">' + here.map(card).join("") + "</div>";
+    if (old.length) html += '<h3 class="grp">' + esc(T("people.old")) + '</h3><div class="pgrid">' + old.map(card).join("") + "</div>";
+    els.people.innerHTML = html || '<p class="muted">' + esc(T("people.empty")) + "</p>";
+    const t = g.inClass() && s.teacher;
+    els.peopleTeacher.classList.toggle("hidden", !t);
+    if (t) {
+      els.peopleTeacher.innerHTML = '<span class="pic">' + Art.portrait({ age: "adult", outfit: "casual", look: { hair: t.x === "f" ? 3 : 1, shirt: t.g % 4, skin: 0, sex: t.x }, mood: t.sty === "tired" ? "tired" : "happy" }) + "</span><span>" +
+        esc(T("people.teacher", { t })) + "<small>" + esc(T("teacher.fx")[t.sty]) + "</small></span>";
+    }
+    const f = g.person(s.focus);
+    els.peopleNote.textContent = here.length || old.length ? (f ? T("people.with", { a: f }) : T("people.auto")) + " " + T("people.tap") + " " + T("people.hint") : "";
+  }
+  els.people.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-pid]");
+    if (!b || b.disabled || !game) return;
+    const id = Number(b.dataset.pid);
+    game.setFocus(game.social.focus === id ? null : id);
+    save();
+    renderPeople();
+    const again = els.people.querySelector('button[data-pid="' + id + '"]');
+    if (again) again.focus({ preventScroll: true });
+  });
 
   // ---------- cutscenes ----------
   // Short animated films (art.js draws the shots) for life's milestones. Which have played is kept on

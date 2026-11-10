@@ -242,7 +242,16 @@
     if (o.prop === "baton") s += G(hx + 2, pose === "cheer" ? shY - b.arm - 6 : hyHand - 4, R(-3, -10, 6, 18, "c1", 2, "c1dark", 1));
     if (o.prop === "envelope") s += G(hx + 18, shY + 24, R(-11, -7, 22, 15, "paper", 1, "line", 1) + P("M-11 -7 L0 2 L11 -7", null, "line", 1) + O(0, 2, 2.5, "c1"));
     if (o.prop === "mask") s += P("M" + (-hr * 0.62) + " " + (hy + hr * 0.25) + " Q0 " + (hy + hr * 0.15) + " " + (hr * 0.62) + " " + (hy + hr * 0.25) + " L" + (hr * 0.55) + " " + (hy + hr * 0.75) + " Q0 " + (hy + hr * 0.95) + " " + (-hr * 0.55) + " " + (hy + hr * 0.75) + " Z", "paper", "line", 1);
-    return A("bob", s);
+    // still: no bobbing (the small portraits in the Friends panel).
+    return o.still ? s : A("bob", s);
+  }
+  // A head-and-shoulders portrait of the same avatar, for the Friends panel. o: avatar options.
+  function portrait(o, label) {
+    const b = BODY[o.age] || BODY.teen;
+    const shY = -b.leg - b.body, hy = shY - 1 - b.head;
+    const size = b.head * 2 + 22;
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + (-size / 2) + " " + (hy - b.head - 9) + " " + size + " " + size + '" class="art portrait"' +
+      (label ? ' role="img" aria-label="' + esc(label) + '"' : ' aria-hidden="true" focusable="false"') + ">" + avatar(Object.assign({ still: true }, o)) + "</svg>";
   }
   function hairFront(v, r, hy) {
     // Four styles: short, side part, long (back drawn earlier) and bob.
@@ -315,6 +324,11 @@
     if (g.motivation < 35) return "tired";
     if (g.stress < 45 && g.motivation >= 60 && g.health >= 55) return "happy";
     return "ok";
+  }
+  // A portrait in the clothes of a life stage (a classmate dressed like you), for the Friends panel.
+  function portraitFor(stage, look, mood, label) {
+    const f = figureFor(stage);
+    return portrait({ age: f.age, outfit: f.outfit, look, mood: mood || "happy" }, label);
   }
   function person(ctx, x, y, s, extra) {
     const f = figureFor(ctx.stage);
@@ -734,6 +748,12 @@
     lunchbox: () => G(450, 170, R(-80, -50, 120, 50, "c5", 6) + R(-74, -44, 52, 38, "paper", 4) + R(-16, -44, 50, 18, "c1", 3) + R(-16, -22, 24, 16, "leaf", 3) + O(20, -14, 8, "gold") +
       R(56, -86, 34, 86, "metal", 8) + R(56, -90, 34, 12, "dark", 5)) + G(520, 70, A("rise", P("M0 0 q-6 -8 0 -16 q6 -8 0 -16", null, "steam", 2))) + heart(380, 70, 1, "c1", -1),
     counsel: () => G(500, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 1, shirt: 3 }, mood: "ok", pose: "hold", prop: "book" }), 0.95),
+    // People: a birthday cake, a block tower, a cheering sign at the exam gate.
+    cake: () => G(470, 176, R(-50, -40, 100, 40, "paper", 6, "line", 1.5) + R(-50, -40, 100, 10, "blossom", 4) + R(-40, -66, 80, 26, "paper", 6, "line", 1.5) + R(-40, -66, 80, 8, "c1", 3) +
+      [-24, -8, 8, 24].map((x) => R(x - 2, -82, 4, 16, "c5", 1) + G(x, -86, A("flicker", P("M0 0 Q-3 -5 0 -10 Q3 -5 0 0 Z", "gold")))).join("")) + bunting(20, 660, 24, 4) + sparkle(400, 60, 0.8) + sparkle(540, 50, 0.7),
+    tower: () => toyBlocks(470, EF) + G(470, EF - 44, toyBlocks(0, 0)) + sparkle(430, 70, 0.8) + sparkle(530, 90, 0.6),
+    cheer: () => G(470, 112, A("sway", R(-50, -30, 100, 56, "paper", 4, "line", 1.5) + heart(0, -6, 1.4, "c1") + L(-44, 26, -44, 70, "wood2", 4) + L(44, 26, 44, 70, "wood2", 4))) +
+      G(400, 150, A("bounce", O(0, 0, 14, "c2") + O(6, -6, 9, "c2dark"))) + G(560, 140, A("bounce", O(0, 0, 14, "c5") + O(-5, -6, 9, "c5dark"), "--del:-0.4s")) + sparkle(420, 40, 0.8),
     sparkles: () => sparkle(420, 60, 1.2) + sparkle(500, 110, 0.9, "c5") + sparkle(380, 130, 0.7, "c1") + sparkle(540, 50, 0.6, "c3"),
   };
 
@@ -836,6 +856,27 @@
     early: { bg: "cubicle", fx: "bulb", mood: "happy", x: 160, icon: "⏩", res: { r1: { mood: "ok" } } },
     lonely: { bg: "room", night: true, fx: "polaroids", mood: "tired", prop: "phone", pose: "hold", x: 200, icon: "📷", res: { r0: { mood: "happy", prop: null, pose: null } } },
     chuseok: { bg: "kitchen", fx: "grandma", mood: "stressed", x: 220, icon: "🌕", res: { r0: { mood: "ok" }, r1: { mood: "happy" } } },
+    // People (v6.1). The friend the event names stands beside you (pmood: their face); alone: they're
+    // somewhere else (a phone call, a letter), so you're drawn on your own.
+    "soc-seatmate": { bg: "class", fx: "sparkles", mood: "happy", pmood: "happy", icon: "🪑" },
+    "soc-playdate": { bg: "nursery", fx: "tower", mood: "happy", pmood: "happy", pose: "cheer", icon: "🧸" },
+    "soc-birthday": { bg: "room", fx: "cake", mood: "happy", pmood: "happy", pose: "cheer", icon: "🎂", res: { r1: { mood: "tired", pose: "stand", pmood: "grumpy" } } },
+    "soc-fight": { bg: "hall", fx: "raincloud", mood: "grumpy", pmood: "grumpy", icon: "💢", res: { r0: { mood: "ok", pmood: "happy" }, r1a: { mood: "happy", pmood: "happy" }, r1b: { mood: "grumpy", pmood: "grumpy" } } },
+    "soc-makeup": { bg: "class", fx: "notes", mood: "happy", pmood: "happy", icon: "🤝" },
+    "soc-moveaway": { bg: "street", fx: "trip", mood: "tired", pmood: "tired", pose: "wave", icon: "📦" },
+    "soc-letter": { bg: "room", fx: "hearts", mood: "happy", prop: "phone", pose: "hold", alone: true, icon: "📞" },
+    "soc-study": { bg: "class", fx: "notes", mood: "ok", pmood: "ok", prop: "book", pose: "hold", icon: "📚", res: { r0: { mood: "happy" } } },
+    "soc-group": { bg: "beach", fx: "sparkles", mood: "happy", pmood: "happy", pose: "wave", icon: "🎤", res: { r1: { mood: "ok", pose: "stand" } } },
+    "soc-crush": { bg: "class", fx: "hearts", mood: "happy", pmood: "ok", icon: "💓", res: { r0a: { pmood: "happy", pose: "cheer" }, r0b: { mood: "tired" } } },
+    "soc-confessed": { bg: "hall", fx: "hearts", mood: "ok", pmood: "happy", icon: "💌", res: { r0: { mood: "happy" }, r1: { pmood: "tired" } } },
+    "soc-date": { bg: "beach", fx: "hearts", mood: "happy", pmood: "happy", icon: "🎬" },
+    "soc-breakup": { bg: "room", night: true, fx: "raincloud", mood: "tired", pmood: "tired", icon: "💔", res: { r1: { mood: "ok", pmood: "happy" } } },
+    "soc-dumped": { bg: "room", night: true, fx: "raincloud", mood: "tired", prop: "phone", pose: "hold", alone: true, icon: "💔" },
+    "soc-reunion": { bg: "street", fx: "polaroids", mood: "happy", pmood: "happy", pose: "wave", icon: "🎉", res: { r1: { mood: "ok", pose: "stand" } } },
+    "soc-afterschool": { bg: "street", fx: "sparkles", mood: "happy", pmood: "happy", icon: "🍜", res: { r1: { mood: "tired", pmood: "ok" } } },
+    "soc-rivalrank": { bg: "class", fx: "chat", mood: "ok", pmood: "ok", icon: "📊", res: { rw: { mood: "happy", pose: "cheer", pmood: "grumpy" }, rl: { mood: "grumpy", pmood: "happy" } } },
+    "soc-rivalmock": { bg: "class", fx: "notes", mood: "ok", pmood: "ok", icon: "📝", res: { rw: { mood: "happy", pose: "cheer", pmood: "grumpy" }, rl: { mood: "grumpy", pmood: "happy" } } },
+    "soc-gate": { bg: "street", fx: "cheer", mood: "ok", pmood: "happy", icon: "📣" },
   };
   const KEYWORDS = [
     [/bull|tease|gossip|cyber|threat|victim|gang/, "bully"],
@@ -864,7 +905,13 @@
     // narrower crop a phone shows.
     s += G(-40, 0, FX[spec.fx](ctx.variant, ctx.id));
     const extra = { pose: res.pose || spec.pose, prop: res.prop !== undefined ? res.prop : spec.prop, mood: res.mood || (ctx.variant ? ctx.mood : spec.mood || ctx.mood) };
-    s += person(c, spec.x || 200, EFEET, 0.86, extra);
+    // The people the event names ({ lk, x } from the engine) stand beside you, in your stage's clothes.
+    const px = spec.x || 200;
+    if (!spec.alone) (ctx.people || []).slice(0, 2).forEach((q, k) => {
+      const x = px <= 300 ? px + 92 + k * 74 : px - 92 - k * 74;
+      s += person(Object.assign({}, c, { look: lookFor(q.lk, q.x), mood: res.pmood || spec.pmood || "happy" }), x, EFEET, 0.86 * (k ? 0.94 : 1));
+    });
+    s += person(c, px, EFEET, 0.86, extra);
     return svg("0 0 " + EW + " " + EH, s, "event-art");
   }
   function iconFor(id) { return specFor(id, "").icon || "✨"; }
@@ -1391,5 +1438,5 @@
       (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ' style="--k:' + k.toFixed(3) + '">' + s + "</svg>";
   }
 
-  root.SuneungArt = { koreaMap, areaBox, scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
+  root.SuneungArt = { portrait, portraitFor, koreaMap, areaBox, scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
 })(typeof window !== "undefined" ? window : globalThis);
