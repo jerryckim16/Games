@@ -1965,6 +1965,15 @@
       aria: g.name + ", " + (e.uni ? L.uni(e.uni) : T("card.none")),
     });
   }
+  // Published as a claude.ai artifact, the page can't download files itself: the viewer's "downloads"
+  // capability asks them and saves the file. It resolves to null (or never exists) when the game is
+  // opened straight from index.html, where a plain download link works.
+  let artifactDownloads = null;
+  try {
+    if (window.claude && typeof window.claude.use === "function") {
+      window.claude.use("downloads").then((d) => { artifactDownloads = d; }, () => { /* plain links, then */ });
+    }
+  } catch (e) { /* not in the artifact viewer */ }
   // The PNG: the card with its colour tokens resolved (an image can't read the page's CSS), drawn to a
   // canvas. If the browser blocks the download, the picture is shown to save by hand.
   function downloadCard() {
@@ -1992,7 +2001,10 @@
             link.remove();
             if (href !== url) setTimeout(() => URL.revokeObjectURL(href), 10000);
           };
-          if (cv.toBlob && window.URL && URL.createObjectURL) cv.toBlob((blob) => save(blob ? URL.createObjectURL(blob) : url), "image/png");
+          if (artifactDownloads && cv.toBlob) {
+            // The viewer confirms the save (or declines: then the picture below is still there to keep).
+            cv.toBlob((blob) => { if (blob) artifactDownloads.save({ filename: file, data: blob }).catch(() => { /* declined or unavailable */ }); }, "image/png");
+          } else if (cv.toBlob && window.URL && URL.createObjectURL) cv.toBlob((blob) => save(blob ? URL.createObjectURL(blob) : url), "image/png");
           else save(url);
           if (out) out.innerHTML = '<img src="' + url + '" alt="' + esc(game.name) + '"><p class="muted small">' + esc(T("end.pngHelp")) + "</p>";
         } catch (err) { fail(); }
