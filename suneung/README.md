@@ -426,19 +426,19 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 62 | 2.6 · 2.1 · 2.4 | 367 | 367 | 1.00 | 1% | 0% | 44% |
-| slacker (half games & friends), 1 try | 56 | 3.2 · 2.6 · 5.9 | 352 | 352 | 1.00 | 0% | 0% | 14% |
-| grinder (no rest), self-study, 1 try | 66 | 3.1 · 2.6 · 2.8 | 368 | 368 | 1.00 | 3% | 0% | 45% |
-| smart, online lectures, 1 try | 66 | 2.4 · 2.1 · 2.5 | 378 | 378 | 1.00 | 3% | 0% | 63% |
-| smart, best affordable method, 1 try | 69 | 2.1 · 1.9 · 2.3 | 385 | 385 | 1.00 | 14% | 3% | 70% |
-| smart, best affordable, retakes up to 3 tries | 69 | 2.1 · 1.9 · 2.3 | 385 | 411 | 2.50 | 69% | 25% | 99% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 385 | 420 | 3.71 | 91% | 86% | 98% |
-| smart, best affordable, tries for selective schools, 1 try | 68 | 2.0 · 1.9 · 2.2 | 385 | 385 | 1.00 | 6% | 1% | 79% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.9 · 2.3 | 384 | 420 | 3.80 | 90% | 85% | 96% |
-| balanced, self-study, vocational high school, 1 try | 59 | 2.8 · 2.4 · 2.6 | 355 | 355 | 1.00 | 1% | 0% | 19% |
-| balanced, self-study, leaves school at High 1, 1 try | 62 | 2.9 · 2.4 · 2.6 | 364 | 364 | 1.00 | 0% | 0% | 31% |
-| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.2 · 1.9 · 2.4 | 383 | 383 | 1.00 | 6% | 1% | 64% |
-| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.2 · 2.1 · 2.4 | 378 | 378 | 1.00 | 6% | 1% | 61% |
+| balanced, self-study, 1 try | 62 | 2.5 · 2.0 · 2.3 | 368 | 368 | 1.00 | 1% | 0% | 41% |
+| slacker (half games & friends), 1 try | 56 | 3.2 · 2.5 · 5.8 | 354 | 354 | 1.00 | 0% | 0% | 14% |
+| grinder (no rest), self-study, 1 try | 66 | 3.0 · 2.5 · 2.7 | 370 | 370 | 1.00 | 0% | 0% | 53% |
+| smart, online lectures, 1 try | 66 | 2.3 · 2.2 · 2.5 | 377 | 377 | 1.00 | 4% | 0% | 59% |
+| smart, best affordable method, 1 try | 69 | 2.1 · 1.8 · 2.2 | 385 | 385 | 1.00 | 6% | 3% | 75% |
+| smart, best affordable, retakes up to 3 tries | 69 | 2.1 · 1.8 · 2.2 | 385 | 412 | 2.65 | 66% | 24% | 99% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.8 · 2.2 | 385 | 420 | 3.52 | 89% | 85% | 99% |
+| smart, best affordable, tries for selective schools, 1 try | 69 | 2.0 · 1.9 · 2.2 | 384 | 384 | 1.00 | 8% | 1% | 76% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.9 · 2.2 | 384 | 419 | 3.50 | 89% | 85% | 99% |
+| balanced, self-study, vocational high school, 1 try | 59 | 2.8 · 2.5 · 2.8 | 353 | 353 | 1.00 | 1% | 0% | 19% |
+| balanced, self-study, leaves school at High 1, 1 try | 61 | 2.8 · 2.4 · 2.7 | 363 | 363 | 1.00 | 0% | 0% | 34% |
+| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.1 · 2.0 · 2.4 | 383 | 383 | 1.00 | 9% | 1% | 65% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.2 · 2.5 | 376 | 376 | 1.00 | 1% | 0% | 63% |
 
 How much luck spreads lives that follow the same strategy, before (v4.1) and after the luck changes (v4.2). "Skill r²" is how much of the spread in first totals is explained by ability entering High 3; the rest is luck (the exam day, the paper, an accident in High 3, a family that can suddenly afford tutors, or can't):
 
@@ -451,54 +451,54 @@ The smart bot with the best affordable method, first try only, by the family it 
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 18 | 66 | 379 | 6% | 44% |
-| Lower-middle income | 23 | 67 | 383 | 4% | 83% |
-| Middle income | 10 | 71 | 398 | 20% | 90% |
-| Upper-middle income | 18 | 70 | 387 | 17% | 67% |
-| High income | 11 | 71 | 387 | 36% | 73% |
+| Low income | 15 | 66 | 377 | 0% | 60% |
+| Lower-middle income | 19 | 66 | 378 | 0% | 68% |
+| Middle income | 18 | 71 | 391 | 11% | 83% |
+| Upper-middle income | 15 | 69 | 391 | 7% | 87% |
+| High income | 13 | 72 | 388 | 15% | 77% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 13 | 70 | 396 | 31% | 92% | 77% |
-| Seoul academy district | 4 | 73 | 393 | 50% | 50% | 100% |
-| Seoul | 5 | 71 | 387 | 0% | 60% | 100% |
-| Capital-region city | 23 | 67 | 387 | 13% | 57% | 78% |
-| Big city | 15 | 70 | 389 | 13% | 87% | 100% |
-| Mid-sized city | 11 | 66 | 371 | 0% | 64% | 82% |
-| Rural county | 9 | 66 | 374 | 0% | 67% | 89% |
+| Gangnam | 18 | 70 | 396 | 17% | 94% | 78% |
+| Seoul academy district | 4 | 72 | 379 | 0% | 50% | 100% |
+| Seoul | 5 | 71 | 389 | 0% | 80% | 100% |
+| Capital-region city | 21 | 67 | 386 | 5% | 67% | 76% |
+| Big city | 11 | 71 | 387 | 9% | 91% | 100% |
+| Mid-sized city | 12 | 66 | 375 | 0% | 75% | 83% |
+| Rural county | 9 | 66 | 370 | 0% | 44% | 89% |
 
-What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 73% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
+What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 70% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.3 | +0.1 | 71% |
-| Easygoing (순한 아기) | +0.1 | -0.2 | 71% |
-| Curious (호기심 많은 아기) | +0.5 | +1.1 | 75% |
-| Good sleeper (잘 자는 아기) | +0.0 | -0.8 | 70% |
-| Unflappable (겁 없는 아기) | +0.0 | -0.1 | 70% |
-| All smiles (잘 웃는 아기) | -0.0 | +1.2 | 75% |
-| Pencil (연필) | +1.7 | +6.4 | 88% |
-| Book (책) | +1.0 | +0.7 | 70% |
-| Computer mouse (마우스) | +1.1 | +2.3 | 76% |
-| Stethoscope (청진기) | +0.9 | -0.3 | 69% |
-| Microphone (마이크) | +1.0 | +3.0 | 79% |
-| Judge's gavel (판사봉) | +1.1 | +3.4 | 81% |
-| Ball (공) | +0.3 | +0.2 | 73% |
-| Thread (실) | +0.7 | +0.5 | 69% |
-| Money (돈) | +0.2 | +0.6 | 71% |
-| Paintbrush (붓) | +0.0 | +1.1 | 76% |
+| Sturdy (튼튼한 아기) | +0.4 | -0.6 | 68% |
+| Easygoing (순한 아기) | -0.0 | -0.0 | 68% |
+| Curious (호기심 많은 아기) | +0.6 | +0.9 | 76% |
+| Good sleeper (잘 자는 아기) | -0.0 | -2.4 | 73% |
+| Unflappable (겁 없는 아기) | +0.0 | -1.1 | 68% |
+| All smiles (잘 웃는 아기) | -0.0 | -0.5 | 69% |
+| Pencil (연필) | +1.7 | +4.7 | 80% |
+| Book (책) | +1.0 | +0.5 | 66% |
+| Computer mouse (마우스) | +1.2 | +1.4 | 70% |
+| Stethoscope (청진기) | +1.0 | +1.3 | 76% |
+| Microphone (마이크) | +1.2 | +2.9 | 78% |
+| Judge's gavel (판사봉) | +1.1 | +1.9 | 74% |
+| Ball (공) | +0.3 | -0.7 | 68% |
+| Thread (실) | +0.6 | +0.9 | 69% |
+| Money (돈) | +0.3 | +2.0 | 71% |
+| Paintbrush (붓) | -0.0 | -1.2 | 74% |
 
 Who raises you, on the same 80 lives (smart bot, best affordable method, first try) with the family setup forced at birth. Lives that start with both parents can still lose one later:
 
 | Setup at birth | Start | First total | In-Seoul+ |
 |---|---|---|---|
-| Both parents | 69 | 385 | 68% |
-| Single mom | 67 | 382 | 68% |
-| Single dad | 67 | 382 | 65% |
-| Grandparents | 67 | 380 | 64% |
-| Children's home | 66 | 377 | 59% |
+| Both parents | 69 | 385 | 75% |
+| Single mom | 67 | 381 | 70% |
+| Single dad | 67 | 381 | 70% |
+| Grandparents | 67 | 379 | 66% |
+| Children's home | 66 | 379 | 65% |
 
 What the tables show:
 
@@ -525,6 +525,20 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v5.4:** fixes from a deep review of the engine.
+  - Private elementary and international middle schools were closed to every family, because their fees exceeded even the top fifth's education budget. Like the English kindergarten, they're now paid from household income, so the top two fifths can afford them.
+  - The English kindergarten's fee no longer also empties the education budget.
+  - A retake academy needs a scholarship from the fourth try, when parents pay only half.
+  - Grandparents no longer get promoted or laid off. Children's homes and grandparents get no new baby siblings, and children's homes no "money is tight" event (its text is now neutral too).
+  - Dropouts no longer get the local-quota news or the school festival in High 3, and the Chuseok "why aren't you at school?" stops after the first year.
+  - Care ends at 18 even on the early-수능 path.
+  - An English kindergarten becomes the local one on a move to the countryside.
+  - The math olympiad is offered to children well ahead of their year (it used an old ability scale, so almost nobody saw it).
+  - Harvest weekends happen in elementary school too.
+  - Old saves look up single-sex schools in their own area first.
+  - The default school can never be closed.
+  - Balance tables regenerated.
 
 - **v5.3:** fix: girls could be placed in boys' schools and boys in girls' schools. Every middle and high school now carries its real 남녀공학구분 from NEIS (5,691 of 5,718 looked up one by one), and real schools are only picked among those that take you; older saves holding a school of the other sex are moved to one that does.
 

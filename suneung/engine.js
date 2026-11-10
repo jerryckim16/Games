@@ -1,6 +1,6 @@
 // Suneung Simulator engine. No DOM access, so it runs in the browser or in Node (see sim.js).
 //
-// A life runs from the first year of elementary school (age 6, counted the international way: 만 나이) to the 수능 and any retakes. School
+// A life runs from birth (age 0, counted the international way: 만 나이; early years are a year a turn) to the 수능 and any retakes. School
 // years move in big turns (a year, then semesters, then seasons); grade 12 and retake years are
 // played month by month. The game is a queue of screens. The app calls advance(plan) once per turn; the
 // engine applies the plan, rolls events and exams, and pushes anything the player must see or decide
@@ -192,7 +192,7 @@
     rural: { hagwon: 0.75, tutor: 0, price: 0.7, stress: -2, motivation: -1, health: 1 },
   };
   // pop: share of Korea's 2024 registered population (%), the chance of being born there. Each place
-  // stands for a group, so the twelve add up to the whole country: Gangnam = the three Gangnam
+  // stands for a group, so the seventeen add up to the whole country: Gangnam = the three Gangnam
   // districts (강남·서초·송파); the rest of Seoul is five areas: Nowon = the northeast (노원·도봉·강북·
   // 성북·중랑·동대문), Mokdong = the southwest (양천·강서·구로), Mapo = the northwest and centre (마포·
   // 서대문·은평·종로·중구·용산), Gwanak = the south (관악·동작·금천·영등포), Gangdong = the east (강동·광진·
@@ -247,12 +247,12 @@
     { id: "engKinder", stage: "kinder", fee: 1545000, fromIncome: true, lessons: { all: 1.05, eng: 3 }, stress: 2, motivation: 0, admit: () => 1, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
     { id: "pubElem", stage: "elem", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
     // 사립초: ₩10M a year or so, small classes and English immersion, by lottery (about 2 applicants a seat).
-    { id: "privElem", stage: "elem", fee: 800000, lessons: { all: 1.15, eng: 1.5 }, stress: 1, motivation: 2, admit: () => 0.5, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
+    { id: "privElem", stage: "elem", fee: 800000, fromIncome: true, lessons: { all: 1.15, eng: 1.5 }, stress: 1, motivation: 2, admit: () => 0.5, where: ["gangnam", "seoulAcad", "seoul", "capital", "metro"] },
     { id: "pubMid", stage: "mid", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
     // Private middle schools are assigned by the same lottery; you can list a preference.
     { id: "privMid", stage: "mid", fee: 0, lessons: { all: 1.08 }, stress: 1, motivation: 1, admit: () => 0.6 },
     // 국제중: document screening, then a lottery among those who pass.
-    { id: "intlMid", stage: "mid", fee: 700000, lessons: { all: 1.1, eng: 1.6 }, stress: 3, motivation: 3, board: true, admit: (g) => (zOf(g, ["kor", "math", "eng"]) > 0.6 ? 0.3 : 0) },
+    { id: "intlMid", stage: "mid", fee: 700000, fromIncome: true, lessons: { all: 1.1, eng: 1.6 }, stress: 3, motivation: 3, board: true, admit: (g) => (zOf(g, ["kor", "math", "eng"]) > 0.6 ? 0.3 : 0) },
     { id: "pubHigh", stage: "high", fee: 0, lessons: {}, stress: 0, motivation: 0, admit: () => 1 },
     { id: "privHigh", stage: "high", fee: 0, lessons: { all: 1.08 }, stress: 1, motivation: 1, admit: () => 0.6 },
     // 자사고: selection on middle-school grades and an interview; a Suneung-minded curriculum.
@@ -354,7 +354,7 @@
   const CARE_SETTLE_ELSE = 10000000;
   const SEOUL_AREAS = new Set(["gangnam", "nowon", "mokdong", "mapo", "gwanak", "gangdong"]);
   // Events that need a family household: its fortunes, its moves, its relatives.
-  const CARE_SKIP = new Set(["promotion", "jackpot", "layoff", "jeonse", "parentill", "divorce", "bereaved", "daechi", "med-move", "grandma", "grandstory", "chuseok"]);
+  const CARE_SKIP = new Set(["promotion", "jackpot", "layoff", "jeonse", "parentill", "divorce", "bereaved", "daechi", "med-move", "grandma", "grandstory", "chuseok", "family-money", "sibling"]);
   // Fees paid out of household income rather than the education budget (English kindergarten).
   const FEE_FROM_INCOME = 0.12;
   // ...and fewer hands at home: stress settles this much higher, motivation this much lower.
@@ -675,7 +675,7 @@
     // The family's fortunes. Each moves the income fifth (and the education budget) for good.
     {
       // A promotion, or a family business that takes off. Safe jobs (civil servants) rise more slowly.
-      id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("promotion") : 0), when: () => true,
+      id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" && g.parents !== "grand" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("promotion") : 0), when: () => true,
       run: (g) => {
         const who = g.fortuneParent("promotion");
         g.shiftFamily(1, "promotion");
@@ -691,7 +691,7 @@
     {
       // A layoff, or a business that goes under (most small shops close within five years). Teachers
       // and civil servants are rarely let go. The parent finds other work: often a shop or a steering wheel.
-      id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("layoff") : 0), when: () => true,
+      id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" && g.parents !== "grand" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("layoff") : 0), when: () => true,
       run: (g) => {
         const who = g.fortuneParent("layoff");
         const from = who && g.jobs[who];
@@ -768,7 +768,7 @@
     // Care ends at 18 (보호종료): after the first 수능 you leave with the settlement and a monthly
     // allowance, or stay on in the home (allowed to 24) with a roof and meals but neither payment yet.
     {
-      id: "careleave", weight: (g) => (g.parents === "care" && g.flags.careLeft == null && !g.flags.careStay ? 100 : 0), when: (g) => g.attempt >= 2, choices: 2,
+      id: "careleave", weight: (g) => (g.parents === "care" && g.flags.careLeft == null && !g.flags.careStay ? 100 : 0), when: (g) => g.attempt >= 2 && g.age >= 18, choices: 2,
       run: (g, i) => {
         if (i === 1) { g.flags.careStay = g.clock; bump(g, { stress: -4, motivation: 2 }); return "r1"; }
         return leaveCare(g, "r0");
@@ -810,7 +810,7 @@
     },
     {
       // Harvest weekends on the family farm (or boat).
-      id: "job-farm", weight: (g) => (g.hasJob("farmer") ? 1.2 : 0), when: (g) => g.grade >= 3 && g.grade <= 12 && g.attempt === 1 && g.month >= 6 && g.month <= 11,
+      id: "job-farm", weight: (g) => (g.hasJob("farmer") ? 1.2 : 0), when: (g) => g.grade >= 3 && g.grade <= 12 && g.attempt === 1 && (g.status === "elem" || (g.month >= 6 && g.month <= 11)),
       run: (g) => { g.money += 100000; bump(g, { health: 4, stress: 2 }); g.lostBlocks += 1; return ["r", { who: g.hasJob("farmer") }]; },
     },
     {
@@ -887,7 +887,7 @@
     },
     { id: "bump", early: true, weight: 1.5, when: (g) => g.age >= 1 && !g.flags.bump, run: (g) => { g.flags.bump = 1; bump(g, { health: -8, stress: 3 }); return "r"; } },
     {
-      id: "sibling", early: true, weight: 1, when: (g) => g.age >= 2 && !g.flags.sibling,
+      id: "sibling", early: true, weight: (g) => (g.parents === "grand" ? 0 : 1), when: (g) => g.age >= 2 && !g.flags.sibling,
       run: (g) => { g.flags.sibling = g.rng() < 0.5 ? "m" : "f"; bump(g, { stress: 8, motivation: -3 }); return ["r", { sib: g.flags.sibling }]; },
     },
     { id: "grandstory", early: true, weight: 1.5, when: (g) => g.age >= 2 && !g.flags.grandstory, run: (g) => { g.flags.grandstory = 1; studyBoost(g, "hist", 0.03); studyBoost(g, "inq1", 0.02); bump(g, { stress: -4 }); return "r"; } },
@@ -915,10 +915,12 @@
     { id: "sportsday", weight: 1.5, when: (g) => g.grade <= 6, run: (g) => { bump(g, { health: 6, stress: -6, motivation: 4 }); return "r"; } },
     { id: "bookworm", weight: 1.5, when: (g) => g.grade <= 8, run: (g) => { studyBoost(g, "kor", 0.05); bump(g, { motivation: 3 }); return "r"; } },
     {
-      id: "olympiad", weight: 2, when: (g) => g.grade >= 3 && g.grade <= 9 && g.skills.math > 0.5 && !g.dropoutActive(), choices: 2,
+      // Offered to children well ahead of their year in math (ability is on the 수능 scale, so compare
+      // with the typical level for the grade, not an absolute value).
+      id: "olympiad", weight: 2, when: (g) => g.grade >= 3 && g.grade <= 9 && zOf(g, ["math"]) > 0.8 && !g.dropoutActive(), choices: 2,
       run: (g, i) => {
         if (i === 1) return "r1";
-        if (g.rng() < 0.25 + g.skills.math * 0.15) { studyBoost(g, "math", 0.06); bump(g, { motivation: 10, stress: 4 }); return "r0a"; }
+        if (g.rng() < clamp(0.1 + zOf(g, ["math"]) * 0.15, 0.1, 0.7)) { studyBoost(g, "math", 0.06); bump(g, { motivation: 10, stress: 4 }); return "r0a"; }
         bump(g, { stress: 6 }); return "r0b";
       },
     },
@@ -1031,7 +1033,7 @@
     },
     // Relatives at Chuseok ask why you aren't at school.
     {
-      id: "chuseok", weight: 1.5, when: (g) => g.dropout != null && g.grade <= 12 && !g.flags.chuseok && g.month >= 6 && g.month <= 9, choices: 2,
+      id: "chuseok", weight: 1.5, when: (g) => g.dropout != null && g.attempt === 1 && !g.flags.chuseok && g.month >= 6 && g.month <= 9, choices: 2,
       run: (g, i) => {
         g.flags.chuseok = 1;
         if (i === 0) { bump(g, { stress: 4, motivation: 6 }); return "r0"; }
@@ -1204,7 +1206,7 @@
     { id: "grandma", luck: 1, weight: 1, when: () => true, run: (g) => { g.money += 200000; bump(g, { motivation: 5, stress: -4 }); return "r"; } },
     { id: "insomnia", weight: (g) => 1.2 * g.trait("insomnia"), when: (g) => g.grade >= 7 && g.stress > 55, run: (g) => { bump(g, { health: -10 }); return "r"; } },
     {
-      id: "festival", weight: 1, when: (g) => !g.dropoutActive() && ((g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high"), choices: 2,
+      id: "festival", weight: 1, when: (g) => g.dropout == null && ((g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high"), choices: 2,
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -14, motivation: 4 }); return "r0"; }
         studyBoost(g, pickWeak(g), 0.025); bump(g, { stress: 4 }); return "r1";
@@ -1263,7 +1265,7 @@
     g.skills[s] += amount * headroom(g.skills[s]) * 1.5;
   }
   // ---------- bullying ----------
-  // How likely bullying is to start this turn, relative to the other events. Per year, middle school
+  // How likely bullying is to start this turn, relative to the other events. Per year, elementary school
   // is the peak and high school the low; the stage factor also allows for turn length (a year in
   // elementary school, a semester in middle school, a season in high school). Being the new kid (a
   // move, a transfer) doubles it for a year, having no time for friends makes you an easier target,
@@ -1593,10 +1595,14 @@
       const a = this.grossBudget();
       // School fees come out of the same education budget while you're there.
       // From the fourth try the parents pay half; the 자립수당 is the state's and doesn't shrink.
-      return Math.max(0, (this.attempt >= 4 && this.parents !== "care" ? Math.round(a / 2) : a) - (this.inClass() || this.atKinder() ? this.schoolInfo().fee : 0));
+      // Fees paid out of household income (fromIncome) don't come out of this budget.
+      const sch = this.inClass() || this.atKinder() ? this.schoolInfo() : null;
+      return Math.max(0, (this.attempt >= 4 && this.parents !== "care" ? Math.round(a / 2) : a) - (sch && !sch.fromIncome ? sch.fee : 0));
     }
     // What a family can pay for a school: its education budget, or, for fees families pay out of
-    // income (an English kindergarten), FEE_FROM_INCOME of household income.
+    // income (an English kindergarten, a private elementary school, an international middle school),
+    // FEE_FROM_INCOME of household income. Real fees at these schools far exceed what families spend
+    // on 사교육, so they can't come out of that budget.
     feeLimit(x) { return x && x.fromIncome ? FAMILIES[this.family].income * 10000 * FEE_FROM_INCOME * PARENT_BUDGET[this.parents || "both"] : this.grossBudget(); }
     // The family's monthly education money before fees: less with one parent or grandparents. In care,
     // the home's small budget, then the 자립수당 for five years once you've left.
@@ -1607,7 +1613,8 @@
     // Who you live with, for the resting stress and motivation: care splits into in the home and out.
     home() { const p = this.parents || "both"; return p === "care" && this.flags.careLeft != null ? "careOut" : p; }
     // Whether someone pays ₩2.9M a month for a retake academy. Nobody does for a child in care.
-    paysAcademy() { return this.parents !== "care" && FAMILIES[this.family].paysAcademy; }
+    // From the fourth try the parents pay only half (log.halfpay), which doesn't stretch to ₩2.9M a month.
+    paysAcademy() { return this.parents !== "care" && this.attempt < 4 && FAMILIES[this.family].paysAcademy; }
     // The one-off settlement on leaving care, which each province sets.
     careSettlement() { return CARE_SETTLE[SEOUL_AREAS.has(this.region) ? "seoul" : this.region] || CARE_SETTLE_ELSE; }
 
@@ -1632,8 +1639,10 @@
         const missing = REAL && REAL.areas[this.region] && REAL_LOCAL[x.id] && !real;
         // Closed only because every such school here is a boys' (or girls') school: say so.
         const wrongSex = missing && this.realSchoolFor(x.id, true);
-        const blocked = (x.where && x.where.indexOf(kind) < 0) ? "region" : wrongSex ? "sex" : missing ? "region" : x.fee > this.feeLimit(x) ? "cost" : x.admit(this) <= 0 ? "admit" : null;
-        return { id: x.id, fee: x.fee, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def: x.id === DEFAULT_SCHOOL[top.stage], real };
+        const def = x.id === DEFAULT_SCHOOL[top.stage];
+        // The default school is always open (pickSchool can't refuse it), even without a real match.
+        const blocked = def ? null : (x.where && x.where.indexOf(kind) < 0) ? "region" : wrongSex ? "sex" : missing ? "region" : x.fee > this.feeLimit(x) ? "cost" : x.admit(this) <= 0 ? "admit" : null;
+        return { id: x.id, fee: x.fee, income: !!x.fromIncome, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def, real };
       });
     }
     // The real school a game school would be for this life: a local one picked from the area's schools
@@ -1671,8 +1680,11 @@
     // before the player picked a sex can go anywhere.
     admitsMe(sex) { return !sex || !this.sex || sex === this.sex; }
     // Who a real school admits, looked up by name (saves from before v6 stored schools without it).
-    static realSchoolSex(name) {
+    static realSchoolSex(name, region) {
       if (!REAL) return null;
+      // Some names exist in more than one place with different rules (세화고, 덕원중): look at home first.
+      const home = REAL.areas[region];
+      if (home) for (const e of home.schools) if (e[0] === name) return e[6] || null;
       for (const id in REAL.areas) for (const e of REAL.areas[id].schools) if (e[0] === name) return e[6] || null;
       for (const k in REAL.special) for (const e of REAL.special[k]) if (e[0] === name) return e[6] || null;
       return null;
@@ -1684,7 +1696,7 @@
       const id = this.schoolInfo().id;
       let r = this.real;
       // A save from before single-sex schools were known may hold a school that doesn't take you.
-      if (r && r.sex === undefined) { r.sex = Game.realSchoolSex(r.name); if (!this.admitsMe(r.sex)) { this.real = r = null; } }
+      if (r && r.sex === undefined) { r.sex = Game.realSchoolSex(r.name, r.region); if (!this.admitsMe(r.sex)) { this.real = r = null; } }
       if (r && r.id === id && r.region === this.region || r && r.id === id && SCHOOL_BY_ID[id].board) return r;
       const x = this.realSchoolFor(id);
       return x ? Object.assign({ id, region: this.region }, x) : null;
@@ -1713,8 +1725,9 @@
     regionInfo() { return REGION_BY_ID[this.region] || REGION_BY_ID.suwon; }
     regionKindInfo() { return REGION_KINDS[this.regionInfo().kind]; }
     // 지역인재: outside the capital region, with middle and high school there (arrived by grade 7).
-    localQuota() { const r = this.regionInfo(); return !r.capital && (this.regionFrom || 1) <= 7; }
-    ruralQuota() { return this.regionInfo().kind === "rural" && (this.regionFrom || 1) <= 7; }
+    // The quotas need middle and high school in the region: a dropout (검정고시) doesn't qualify.
+    localQuota() { const r = this.regionInfo(); return this.dropout == null && !r.capital && (this.regionFrom || 1) <= 7; }
+    ruralQuota() { return this.dropout == null && this.regionInfo().kind === "rural" && (this.regionFrom || 1) <= 7; }
     // Percentile points taken off a university's cut by the quotas you qualify for, and which applies.
     quotaFor(u) {
       // 검정고시 holders don't count as having gone to school in the region.
@@ -1760,6 +1773,12 @@
     relocate(id) {
       const from = this.region;
       this.region = id;
+      // A kindergarten that doesn't exist in the new place (an English kindergarten in the countryside)
+      // becomes the neighbourhood one.
+      if (this.atKinder() && this.schoolInfo().where && this.schoolInfo().where.indexOf(this.regionInfo().kind) < 0) {
+        this.school = DEFAULT_SCHOOL.kinder;
+        this.addLog("log.schoolMove", { id: this.school }, "event");
+      }
       // A new home means the local public school, unless yours is a boarding or commuter school.
       if (this.inClass() && !this.schoolInfo().board && this.schoolInfo().id !== DEFAULT_SCHOOL[this.status === "hs3" ? "high" : this.status]) {
         this.school = DEFAULT_SCHOOL[this.status === "hs3" ? "high" : this.status];

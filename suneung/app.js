@@ -886,7 +886,7 @@
       const why = o.blocked ? T("school.no." + (o.blocked === "admit" && o.id === "artsHigh" ? "arts" : o.blocked), { sex: g.sex }) : "";
       const cls = o.def ? "ch-safe" : o.blocked ? "ch-long" : o.p >= 0.55 ? "ch-match" : o.p >= 0.25 ? "ch-reach" : "ch-long";
       const tag = '<span class="chance ' + cls + '" title="' + esc(T("school.chance", { p: o.p, def: o.def })) + '">' + esc(o.def ? T("school.tag.def") : o.blocked ? T("school.tag.no") : Math.round(o.p * 100) + "%") + "</span>";
-      const facts = [T("school.fee", { fee: o.fee }), o.track ? T("school.track", { t: o.track }) : ""].filter(Boolean).join(" · ");
+      const facts = [T("school.fee", { fee: o.fee, income: o.income }), o.track ? T("school.track", { t: o.track }) : ""].filter(Boolean).join(" · ");
       // A special school is the nearest one in the country, which can be a long way from home.
       const where = o.real ? (o.real.city && o.real.km >= 15 ? T("school.realFar", { city: o.real.city, km: o.real.km }) : T("school.realHere")) : "";
       const real = o.real ? '<small class="real"><b class="num">' + o.n + "</b> " + esc(L.realSchool(o.real.name)) + " · " + esc(where) + "</small>" : "";
