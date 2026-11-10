@@ -580,19 +580,19 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 | balanced, self-study, 1 try | 62 | 2.6 · 2.2 · 2.3 | 368 | 368 | 1.00 | 1% | 0% | 48% |
 | slacker (half games & friends), 1 try | 57 | 2.9 · 2.5 · 5.5 | 356 | 356 | 1.00 | 0% | 0% | 24% |
 | grinder (no rest), self-study, 1 try | 66 | 2.9 · 2.3 · 2.6 | 373 | 373 | 1.00 | 4% | 0% | 55% |
-| smart, online lectures, 1 try | 67 | 2.2 · 2.1 · 2.5 | 380 | 380 | 1.00 | 6% | 0% | 70% |
+| smart, online lectures, 1 try | 67 | 2.2 · 2.1 · 2.5 | 380 | 380 | 1.00 | 6% | 0% | 71% |
 | smart, best affordable method, 1 try | 69 | 1.9 · 1.8 · 2.3 | 386 | 386 | 1.00 | 6% | 1% | 80% |
-| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.8 · 2.3 | 386 | 410 | 2.60 | 68% | 30% | 98% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 1.9 · 1.9 · 2.3 | 386 | 419 | 3.48 | 91% | 86% | 99% |
+| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.8 · 2.3 | 386 | 410 | 2.60 | 69% | 31% | 98% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 1.9 · 1.9 · 2.3 | 386 | 420 | 3.46 | 91% | 86% | 99% |
 | smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 2.0 · 2.3 | 385 | 385 | 1.00 | 8% | 1% | 79% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 1.9 · 1.9 · 2.4 | 386 | 420 | 3.52 | 93% | 88% | 100% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 1.9 · 1.9 · 2.4 | 386 | 420 | 3.51 | 93% | 88% | 100% |
 | balanced, self-study, vocational high school, 1 try | 60 | 2.6 · 2.3 · 2.5 | 359 | 359 | 1.00 | 0% | 0% | 36% |
-| balanced, self-study, leaves school at High 1, 1 try | 62 | 2.6 · 2.4 · 2.5 | 365 | 365 | 1.00 | 0% | 0% | 40% |
+| balanced, self-study, leaves school at High 1, 1 try | 62 | 2.6 · 2.4 · 2.5 | 365 | 365 | 1.00 | 0% | 0% | 41% |
 | smart, best affordable, leaves school at High 1, 1 try | 68 | 1.9 · 1.9 · 2.5 | 385 | 385 | 1.00 | 9% | 1% | 75% |
-| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.1 · 2.5 | 378 | 378 | 1.00 | 4% | 0% | 59% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.1 · 2.5 | 378 | 378 | 1.00 | 4% | 0% | 60% |
 | balanced, self-study, 1 try, 정시 only (no 수시) | 62 | 2.6 · 2.2 · 2.3 | 368 | 368 | 1.00 | 1% | 0% | 40% |
 | smart, best affordable, 1 try, 정시 only (no 수시) | 69 | 1.9 · 1.8 · 2.3 | 386 | 386 | 1.00 | 5% | 1% | 78% |
-| smart, best affordable, builds the school record, 1 try | 68 | 2.2 · 1.8 · 2.4 | 383 | 383 | 1.00 | 23% | 8% | 75% |
+| smart, best affordable, builds the school record, 1 try | 68 | 2.2 · 1.8 · 2.4 | 383 | 383 | 1.00 | 23% | 8% | 76% |
 | smart, best affordable, 1 try, the same lives as girls | 69 | 1.9 · 1.8 · 2.3 | 386 | 386 | 1.00 | 6% | 1% | 79% |
 
 Admissions in the same lives (v6.0): the 내신 average at the end of High 3's first semester, the record score (as an ordinary university reads it), how many 수시 applications the bot sent on its first try, how often it got a 수시 offer on its first try, how often the school it finally enrolled at came through 수시 (on any try), and how often that school was a women's university:
@@ -603,19 +603,19 @@ Admissions in the same lives (v6.0): the 내신 average at the end of High 3's f
 | slacker (half games & friends), 1 try | 3.44 | 33 | 2.1 | 19% | 19% | 0% |
 | grinder (no rest), self-study, 1 try | 2.59 | 43 | 2.7 | 18% | 18% | 0% |
 | smart, online lectures, 1 try | 2.57 | 45 | 1.8 | 15% | 15% | 0% |
-| smart, best affordable method, 1 try | 2.38 | 49 | 2.7 | 16% | 16% | 0% |
-| smart, best affordable, retakes up to 3 tries | 2.38 | 49 | 0.1 | 1% | 18% | 0% |
+| smart, best affordable method, 1 try | 2.38 | 49 | 2.7 | 18% | 18% | 0% |
+| smart, best affordable, retakes up to 3 tries | 2.38 | 49 | 0.1 | 1% | 19% | 0% |
 | smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.38 | 50 | 0.0 | 0% | 16% | 0% |
 | smart, best affordable, tries for selective schools, 1 try | 2.49 | 48 | 2.9 | 16% | 16% | 0% |
 | smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 2.52 | 49 | 0.0 | 0% | 20% | 0% |
 | balanced, self-study, vocational high school, 1 try | 1.91 | 47 | 3.9 | 34% | 34% | 0% |
-| balanced, self-study, leaves school at High 1, 1 try | - | 26 | 1.8 | 8% | 8% | 0% |
+| balanced, self-study, leaves school at High 1, 1 try | - | 26 | 1.8 | 9% | 9% | 0% |
 | smart, best affordable, leaves school at High 1, 1 try | - | 26 | 2.0 | 11% | 11% | 0% |
 | smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | - | - | 1.2 | 6% | 6% | 0% |
 | balanced, self-study, 1 try, 정시 only (no 수시) | 2.89 | 42 | 0.0 | 0% | 0% | 0% |
 | smart, best affordable, 1 try, 정시 only (no 수시) | 2.38 | 49 | 0.0 | 0% | 0% | 0% |
-| smart, best affordable, builds the school record, 1 try | 2.36 | 65 | 4.6 | 50% | 50% | 0% |
-| smart, best affordable, 1 try, the same lives as girls | 2.38 | 49 | 3.0 | 18% | 18% | 11% |
+| smart, best affordable, builds the school record, 1 try | 2.36 | 65 | 4.6 | 54% | 54% | 0% |
+| smart, best affordable, 1 try, the same lives as girls | 2.38 | 49 | 3.0 | 19% | 19% | 11% |
 
 How much luck spreads lives that follow the same strategy, before (v4.1) and after the luck changes (v4.2). "Skill r²" is how much of the spread in first totals is explained by ability entering High 3; the rest is luck (the exam day, the paper, an accident in High 3, a family that can suddenly afford tutors, or can't):
 
@@ -650,18 +650,18 @@ What each trait is worth, in a paired test: the same 80 lives (smart bot, best a
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.4 | +0.7 | 78% |
+| Sturdy (튼튼한 아기) | +0.4 | +0.7 | 76% |
 | Easygoing (순한 아기) | +0.0 | +0.6 | 76% |
 | Curious (호기심 많은 아기) | +0.5 | +0.5 | 69% |
 | Good sleeper (잘 자는 아기) | +0.0 | -0.9 | 81% |
 | Unflappable (겁 없는 아기) | +0.0 | +1.3 | 76% |
 | All smiles (잘 웃는 아기) | -0.0 | -0.8 | 79% |
-| Pencil (연필) | +1.6 | +4.6 | 81% |
+| Pencil (연필) | +1.6 | +4.6 | 80% |
 | Book (책) | +0.9 | +0.6 | 79% |
 | Computer mouse (마우스) | +1.2 | +3.2 | 81% |
 | Stethoscope (청진기) | +0.9 | +2.9 | 79% |
 | Microphone (마이크) | +1.0 | +3.3 | 74% |
-| Judge's gavel (판사봉) | +1.1 | +3.3 | 73% |
+| Judge's gavel (판사봉) | +1.1 | +3.3 | 74% |
 | Ball (공) | +0.2 | +0.4 | 78% |
 | Thread (실) | +0.5 | +1.4 | 78% |
 | Money (돈) | +0.3 | -0.0 | 76% |
@@ -672,9 +672,9 @@ Who raises you, on the same 80 lives (smart bot, best affordable method, first t
 | Setup at birth | Start | First total | In-Seoul+ |
 |---|---|---|---|
 | Both parents | 69 | 386 | 79% |
-| Single mom | 68 | 382 | 73% |
-| Single dad | 68 | 381 | 71% |
-| Grandparents | 67 | 381 | 71% |
+| Single mom | 68 | 382 | 74% |
+| Single dad | 68 | 381 | 73% |
+| Grandparents | 67 | 381 | 73% |
 | Children's home | 67 | 381 | 71% |
 
 What the tables show:
