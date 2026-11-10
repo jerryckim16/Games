@@ -7,9 +7,10 @@
   --accent: #2f5bea;
   --accent-text: #ffffff;
   --accent-soft: #e6ecfd;
-  --pos: #12a150;
-  --neg: #d93a3a;
-  --warn: #c98200;
+  /* Light mode is darker than the dark theme's bright tones so text on and in these colours passes AA. */
+  --pos: #0e7f3f;
+  --neg: #c42f2f;
+  --warn: #9a6200;
   --grid: #eceef2;
   --track: #eceef2;
   --backdrop: rgba(15, 18, 25, 0.55);
@@ -19,12 +20,14 @@
   --s-hist: #a0661b;
   --s-inq1: #9b4fd6;
   --s-inq2: #d1489b;
-  --g1: #12a150;
-  --g2: #4c9a2a;
-  --g3: #9a8a1a;
-  --g4: #c98200;
-  --g5: #d0661f;
-  --g6: #d93a3a;
+  --g1: #0b7a3c;
+  --g2: #3f7d22;
+  --g3: #766a12;
+  --g4: #9a5f00;
+  --g5: #b14d12;
+  --g6: #c42f2f;
+  /* v6.3: value text past the top of a bar, a danger button's text, the coach marks, the sticky bars. */
+  --gold-text: #8a5f00; --danger-text: #ffffff; --coach-dim: rgba(15, 18, 25, 0.38); --bar-shadow: rgba(15, 18, 25, 0.12);
   /* The Friends panel: a colour per role, and the closeness bar. */
   --r-best: #12a150; --r-partner: #d1489b; --r-crush: #e86f9c; --r-rival: #c98200; --r-bully: #6b5b8c;
   --r-friend: #2f5bea; --r-other: #8b93a3; --r-focus: #f0a020; --cl-fill: #ef6b8a; --cl-track: #f1e3e7;
@@ -41,7 +44,7 @@
   --a-paper: #ffffff; --a-paper2: #f1ece2; --a-line: #b9c0cc; --a-ink: #2b2b35; --a-snow: #ffffff;
   --a-blossom: #ffbfd3; --a-blossom2: #ff8fb4; --a-leaf: #63b85a; --a-leaf2: #3e8a45;
   --a-fall: #f28a3a; --a-fall2: #d9472b; --a-lamp: #ffe17d; --a-screen: #8fd3ff; --a-steam: #c9d2de;
-  --a-cubicle: #c9a77d; --a-cubicle2: #a8855c; --a-hair: #2b211d; --a-hoodie: #8a93a6;
+  --a-cubicle: #c9a77d; --a-cubicle2: #a8855c; --a-hair: #2b211d; --a-hairGrey: #c3c6cd; --a-hoodie: #8a93a6;
   --a-hoodie2: #6f788c; --a-pants: #444a60; --a-jeans: #4d6fa8; --a-shoe: #3a3330;
   --a-uniform: #2f3e6b; --a-uniform2: #22305a; --a-shirt: #ffffff; --a-tie: #c9353d;
   --a-skin: #f7d3b2; --a-skinb: #e3b48d; --a-sickface: #a6e3a1; --a-mouth: #c84a52;
@@ -84,6 +87,7 @@
     --g4: #f0b23a;
     --g5: #f08a4a;
     --g6: #ff6b6b;
+    --gold-text: #f0c040; --danger-text: #1b1e26; --coach-dim: rgba(0, 0, 0, 0.55); --bar-shadow: rgba(0, 0, 0, 0.5);
     --r-best: #3ccf7a; --r-partner: #f06cb8; --r-crush: #f58fb5; --r-rival: #f0b23a; --r-bully: #a594d0;
     --r-friend: #6b8cff; --r-other: #8a91a0; --r-focus: #ffbf47; --cl-fill: #f07a98; --cl-track: #3a2c33;
     --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
@@ -98,7 +102,7 @@
     --a-paper: #e9e7ef; --a-paper2: #cfcad6; --a-line: #8b90a0; --a-ink: #1a1a22; --a-snow: #eef2ff;
     --a-blossom: #d98aa8; --a-blossom2: #e56a96; --a-leaf: #3f7f45; --a-leaf2: #2c5e35;
     --a-fall: #cc6a2c; --a-fall2: #b33a24; --a-lamp: #ffd36a; --a-screen: #5fb4ff; --a-steam: #8a93a6;
-    --a-cubicle: #6e5a44; --a-cubicle2: #574634; --a-hair: #1c1614; --a-hoodie: #5a6274;
+    --a-cubicle: #6e5a44; --a-cubicle2: #574634; --a-hair: #1c1614; --a-hairGrey: #a9adb8; --a-hoodie: #5a6274;
     --a-hoodie2: #474e5f; --a-pants: #2f3445; --a-jeans: #3a5585; --a-shoe: #221e1c;
     --a-uniform: #2a3558; --a-uniform2: #1d2645; --a-tie: #b0343a; --a-shirt: #dfe2ec;
     --a-skin: #e8c2a0; --a-skinb: #c99a76; --a-sickface: #86c784; --a-mouth: #a83a42;
@@ -141,6 +145,7 @@
   --g4: #f0b23a;
   --g5: #f08a4a;
   --g6: #ff6b6b;
+  --gold-text: #f0c040; --danger-text: #1b1e26; --coach-dim: rgba(0, 0, 0, 0.55); --bar-shadow: rgba(0, 0, 0, 0.5);
   --r-best: #3ccf7a; --r-partner: #f06cb8; --r-crush: #f58fb5; --r-rival: #f0b23a; --r-bully: #a594d0;
   --r-friend: #6b8cff; --r-other: #8a91a0; --r-focus: #ffbf47; --cl-fill: #f07a98; --cl-track: #3a2c33;
   --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
@@ -155,7 +160,7 @@
   --a-paper: #e9e7ef; --a-paper2: #cfcad6; --a-line: #8b90a0; --a-ink: #1a1a22; --a-snow: #eef2ff;
   --a-blossom: #d98aa8; --a-blossom2: #e56a96; --a-leaf: #3f7f45; --a-leaf2: #2c5e35;
   --a-fall: #cc6a2c; --a-fall2: #b33a24; --a-lamp: #ffd36a; --a-screen: #5fb4ff; --a-steam: #8a93a6;
-  --a-cubicle: #6e5a44; --a-cubicle2: #574634; --a-hair: #1c1614; --a-hoodie: #5a6274;
+  --a-cubicle: #6e5a44; --a-cubicle2: #574634; --a-hair: #1c1614; --a-hairGrey: #a9adb8; --a-hoodie: #5a6274;
   --a-hoodie2: #474e5f; --a-pants: #2f3445; --a-jeans: #3a5585; --a-shoe: #221e1c;
   --a-uniform: #2a3558; --a-uniform2: #1d2645; --a-tie: #b0343a; --a-shirt: #dfe2ec;
   --a-skin: #e8c2a0; --a-skinb: #c99a76; --a-sickface: #86c784; --a-mouth: #a83a42;
@@ -270,7 +275,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 .stat .k { color: var(--muted); font-size: 0.8rem; }
 .stat .v { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat .s { color: var(--muted); font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Up to two lines, then an ellipsis: school names and family facts are too important to cut at one. */
+.stat .s { color: var(--muted); font-size: 0.78rem; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
 
 .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 860px) { .row { grid-template-columns: 1fr; gap: 0; } }
@@ -310,7 +316,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 /* Ability bars carry aptitude stars in a fourth column; strong subjects stand out in gold. */
 #skills .bar { grid-template-columns: minmax(0, 9.5rem) 1fr 2.6rem 3.4rem; }
 @media (max-width: 480px) { #skills .bar { grid-template-columns: minmax(0, 7rem) 1fr 2.4rem 3.2rem; gap: 8px; } }
-.apt.hi { color: var(--warn); font-weight: 700; }
+.apt.hi { color: var(--gold-text); font-weight: 700; }
 .apt.lo { opacity: 0.7; }
 .lbl .apt { font-size: 0.78rem; margin-left: 2px; }
 .apt-note { margin: 4px 0 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; }
@@ -350,7 +356,7 @@ table.grid td.l { text-align: left; }
 }
 .modal-card {
   background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
-  padding: 22px; width: 100%; max-width: 620px; max-height: calc(100vh - 32px); overflow-y: auto;
+  padding: 22px; width: 100%; max-width: 620px; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; position: relative;
 }
 .modal-card h2 { font-size: 1.2rem; }
 .modal-card p { margin: 0 0 12px; }
@@ -407,7 +413,7 @@ table.grid td.l { text-align: left; }
 /* The ending gate has the school's name across the top, so the mood bubble moves down beside you. */
 .scene-wrap[data-place="gate"] .bubble { top: 46%; left: 50%; }
 /* Ability past the top of the scale. */
-.val.over { color: var(--a-gold2); }
+.val.over { color: var(--gold-text); }
 .modal-card .talent { margin: 6px 0 10px; }
 .modal-card .field { margin-top: 12px; }
 
@@ -535,16 +541,7 @@ table.grid td.l { text-align: left; }
 .stepper button { width: 32px; height: 32px; padding: 0; font-size: 1.1rem; line-height: 1; background: var(--panel); }
 .stepper .n { width: 1.4rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
 .act.has .n { color: var(--accent); }
-/* Two columns of cards when the plan panel is wide enough; in a half-width panel the stepper drops below. */
-@container (min-width: 470px) {
-  .acts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .act { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
-  .act .stepper { grid-column: 1 / -1; }
-}
-@container (min-width: 720px) {
-  .act { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
-  .act .stepper { grid-column: auto; }
-}
+/* Activity cards: see "v6.3 (design)" at the end for the compact two-column layout. */
 
 /* ---------- ability gains ---------- */
 .bi { margin-right: 5px; }
@@ -715,11 +712,11 @@ body.cutting { overflow: hidden; }
 /* The Korea map (birth screen, move dialog). Dot colours by state; the home pin pulses. */
 .kmap { display: block; width: 100%; height: auto; max-height: 62vh; border-radius: 12px; }
 .kmap .kmap-pt .kd { stroke: var(--a-mapHalo); stroke-width: 3; }
-.kmap .kmap-pt.open circle:nth-child(2) { fill: var(--a-pinOpen); }
-.kmap .kmap-pt.closed circle:nth-child(2) { fill: var(--a-pinOff); }
-.kmap .kmap-pt.home circle:nth-child(2) { fill: var(--a-pin); }
+.kmap .kmap-pt.open .kd { fill: var(--a-pinOpen); }
+.kmap .kmap-pt.closed .kd { fill: var(--a-pinOff); }
+.kmap .kmap-pt.home .kd { fill: var(--a-pin); }
 .kmap .kmap-pt[tabindex] { cursor: pointer; outline: none; }
-.kmap .kmap-pt[tabindex]:hover circle:nth-child(2), .kmap .kmap-pt[tabindex]:focus-visible circle:nth-child(2) { stroke: var(--a-sel); stroke-width: 5; }
+.kmap .kmap-pt[tabindex]:hover .kd, .kmap .kmap-pt[tabindex]:focus-visible .kd { stroke: var(--a-sel); stroke-width: 5; }
 .kmap .kmap-lbl { fill: var(--a-mapLbl); font-weight: 700; paint-order: stroke; stroke: var(--a-mapHalo); stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
 .kmap .kmap-lbl.home, .kmap .kmap-lbl.sel { font-weight: 900; }
 .kmap .kmap-seoul { fill: var(--a-inset); }
@@ -814,9 +811,10 @@ table.grid th.l { text-align: left; }
 /* 5-grade 내신: 1 best (green) to 5 (red); the A–E level is an outline. */
 .gr5-1, .gr5-2, .gr5-3, .gr5-4, .gr5-5 { display: inline-block; min-width: 1.6rem; padding: 1px 6px; border-radius: 6px; font-weight: 800; text-align: center; color: var(--panel); }
 .gr5-1 { background: var(--g1); } .gr5-2 { background: var(--g2); } .gr5-3 { background: var(--g3); } .gr5-4 { background: var(--g5); } .gr5-5 { background: var(--g6); }
-.ach { display: inline-block; min-width: 1.4rem; padding: 0 5px; border: 2px solid var(--border); border-radius: 6px; font-weight: 700; text-align: center; }
-.ach-A { border-color: var(--g1); color: var(--g1); } .ach-B { border-color: var(--g2); color: var(--g2); } .ach-C { border-color: var(--g3); color: var(--g3); }
-.ach-D { border-color: var(--g5); color: var(--g5); } .ach-E { border-color: var(--g6); color: var(--g6); }
+/* Scoped to the report card: a bare .ach is an achievement card (the setup screen and the ending). */
+table.naesin .ach { display: inline-block; min-width: 1.4rem; padding: 0 5px; border: 2px solid var(--border); border-radius: 6px; font-weight: 700; text-align: center; background: none; }
+table.naesin .ach-A { border-color: var(--g1); color: var(--g1); } table.naesin .ach-B { border-color: var(--g2); color: var(--g2); } table.naesin .ach-C { border-color: var(--g3); color: var(--g3); }
+table.naesin .ach-D { border-color: var(--g5); color: var(--g5); } table.naesin .ach-E { border-color: var(--g6); color: var(--g6); }
 .reveal .gr5-1, .reveal .gr5-2, .reveal .gr5-3, .reveal .gr5-4, .reveal .gr5-5 { animation: score-pop 0.45s ease-out both; animation-delay: calc(var(--i) * 0.15s + 0.45s); }
 .record.hidden { display: none; }
 .rec-facts { margin: 6px 0 0; font-size: 0.8rem; line-height: 1.45; color: var(--text); overflow-wrap: anywhere; }
@@ -841,3 +839,192 @@ table.grid th.l { text-align: left; }
 @media (prefers-reduced-motion: reduce) {
   .reveal .gr5-1, .reveal .gr5-2, .reveal .gr5-3, .reveal .gr5-4, .reveal .gr5-5 { animation: none !important; }
 }
+
+/* ---------- v6.3 (design) ----------
+   Shared patterns, meant for reuse by every screen:
+   .panel + h2.panel-title   a section with an icon, a title and a muted subtitle
+   .card                     a quiet box inside a panel or dialog (past lives, 수시 schools)
+   .chips / .chip            facts as pills; tones .good .bad .cost .info, size .sm
+   .note.warn                a warning line at the top of a dialog
+   #modalButtons             the dialog's sticky footer (primary on the right); .danger for the irreversible
+   .picks                    picked items pinned as removable chips at the top of a list (apply, 수시)
+   details > summary         "more" lists folded away (long shots, all places, locked achievements)
+   .turnbar                  the plan's sticky bottom bar: slots, blocks left, Next */
+html { scroll-padding-bottom: 150px; }
+/* Korean: break between words, not inside them, with a little more leading. */
+html:lang(ko) body { word-break: keep-all; overflow-wrap: anywhere; line-height: 1.55; }
+html:lang(ko) .bar, html:lang(ko) .stat .v, html:lang(ko) .chip, html:lang(ko) .pill { line-height: 1.35; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Once in a life the subtitle has done its job. */
+body.in-game header .sub { display: none; }
+body.in-game .top { margin-bottom: 14px; }
+
+h2.panel-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.chip { display: inline-flex; align-items: center; gap: 4px; line-height: 1.3; max-width: 100%; overflow-wrap: anywhere; }
+.chip.sm { padding: 1px 7px; font-size: 0.7rem; font-weight: 600; }
+.chip.good { color: var(--pos); background: color-mix(in srgb, var(--pos) 11%, var(--panel)); border-color: color-mix(in srgb, var(--pos) 35%, var(--panel)); }
+.chip.bad { color: var(--neg); background: color-mix(in srgb, var(--neg) 10%, var(--panel)); border-color: color-mix(in srgb, var(--neg) 35%, var(--panel)); }
+.chip.cost { color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--panel)); border-color: color-mix(in srgb, var(--warn) 35%, var(--panel)); }
+.chip.info { color: var(--muted); }
+.note.warn { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid var(--warn); border-radius: 8px; background: var(--track); color: var(--text); font-size: 0.86rem; }
+button.danger { background: var(--neg); border-color: var(--neg); color: var(--danger-text); }
+button.ghost { background: transparent; padding: 6px 12px; font-size: 0.85rem; }
+.danger-text { color: var(--neg); }
+details > summary { cursor: pointer; }
+.longshots > summary, .susi-more > summary, .map-list > summary, .ach-more > summary {
+  display: flex; align-items: center; min-height: 44px; color: var(--accent); font-weight: 600; font-size: 0.86rem;
+}
+
+/* ---------- the life block on a phone: a place chip instead of the map, a compact stats strip ---------- */
+.place-chip { display: none; width: 100%; min-height: 44px; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px;
+  border: 0; border-top: 1px solid var(--border); border-radius: 0; background: var(--panel); text-align: left; font-weight: 700; }
+.place-chip .pc-name { min-width: 0; overflow-wrap: anywhere; }
+.place-chip .pc-go { flex: none; color: var(--accent); font-size: 0.85rem; }
+.place-chip.closed .pc-go { color: var(--muted); font-weight: 500; }
+.map-side .map-legend { margin: 0; padding: 2px 10px 6px; color: var(--a-mapLbl); font-size: 0.72rem; }
+.map-side .map-legend.dim { opacity: 0.75; }
+.map-head small { cursor: help; }
+@media (max-width: 759px) {
+  .map-side { display: none; }
+  .place-chip { display: flex; }
+}
+.life .stat { position: relative; }
+.life .stat.fam .chips { flex: 1 1 auto; }
+.life .stat.fam .s { flex-basis: 100%; }
+.stat.fam .chip { padding: 2px 9px; font-size: 0.78rem; background: var(--panel); }
+.stat.fam .chip.fam-class { font-weight: 700; }
+@media (max-width: 600px) {
+  .life .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 8px; }
+  .life .stat { padding: 6px 8px; column-gap: 8px; }
+  .life .stat .ic { font-size: 1rem; }
+  .life .stat .k { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .life .stat .v { font-size: 0.95rem; }
+  .life .stat .s { font-size: 0.72rem; }
+  .stat.fam .chip { font-size: 0.72rem; padding: 1px 8px; }
+}
+
+/* ---------- "This turn" ---------- */
+.turn-sum { background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; }
+.turn-sum .ts-title { font-size: 0.9rem; margin: 0 0 8px; }
+
+/* ---------- phone order: the plan first, "Your stats" folded below it ---------- */
+.fold-head { display: none; }
+@media (max-width: 860px) {
+  .row > .plan { order: -1; }
+  .fold-head { display: flex; width: 100%; min-height: 44px; justify-content: space-between; align-items: center; padding: 0; border: 0; background: transparent; font-size: 1rem; }
+  .fold-head .chev::after { content: "▾"; color: var(--muted); }
+  .stats-panel.folded .fold-head .chev::after { content: "▸"; }
+  .stats-panel.folded .fold-body { display: none; }
+  .stats-panel:not(.folded) .fold-head { margin-bottom: 8px; }
+}
+
+/* ---------- the plan ---------- */
+.plan-head { align-items: center; }
+.plan-head h2 { margin: 0; flex: 1 1 12rem; }
+.menu-wrap { position: relative; flex: none; }
+.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 8; min-width: 220px; display: flex; flex-direction: column; padding: 6px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 30px var(--bar-shadow); }
+.menu button { text-align: left; border: 0; border-radius: 8px; background: transparent; padding: 10px 12px; min-height: 44px; }
+.menu button:hover, .menu button:focus-visible { background: var(--accent-soft); }
+.method-field { margin-top: 8px; }
+.seg.wrap button { min-height: 40px; }
+.plan-tools { margin-top: 10px; }
+.plan-tools button { min-height: 40px; }
+
+/* Activity cards: two compact columns (icon and name, effect chips, a stepper with 44px buttons). */
+.acts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.act { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "ic lbl" "fx fx" "st st"; gap: 6px 8px; align-items: center; padding: 8px; }
+.act .ic { grid-area: ic; font-size: 1.3rem; width: 1.7rem; }
+.act .lbl { grid-area: lbl; font-size: 0.86rem; line-height: 1.25; overflow-wrap: anywhere; }
+.act .fx { grid-area: fx; display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.act .stepper { grid-area: st; justify-content: space-between; }
+.stepper button { width: 44px; height: 44px; border-radius: 10px; font-size: 1.25rem; }
+.act .chip.sm { background: var(--panel); }
+@container (max-width: 290px) { .acts { grid-template-columns: minmax(0, 1fr); } }
+
+/* The turn bar: sticky at the bottom while the plan is on screen (and inside the plan panel on wide
+   screens, where the panel is the page's right column). */
+.turnbar { position: sticky; bottom: 0; z-index: 5; margin: 12px -16px -16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--panel); border-top: 1px solid var(--border); border-radius: 0 0 12px 12px; box-shadow: 0 -8px 18px var(--bar-shadow); }
+.turnbar .slots { margin: 0 0 8px; }
+.turnbar .slot { width: 34px; height: 34px; font-size: 1.05rem; }
+.turnbar-row { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; }
+.turnbar-row #nextBtn { margin-left: auto; min-height: 44px; padding: 10px 18px; }
+.full-hint { flex: 1 1 140px; color: var(--warn); font-size: 0.76rem; line-height: 1.35; }
+.full-hint:empty { display: none; }
+
+/* ---------- dialogs ---------- */
+.modal-lang { position: absolute; top: 10px; right: 10px; z-index: 3; background: var(--panel); }
+.modal-lang button { padding: 4px 9px; font-size: 0.72rem; flex: 0 0 auto; }
+.modal:not(.has-art) .modal-lang { position: static; float: right; margin: -8px -8px 8px 10px; }
+/* The buttons are a sticky footer: always in reach on a long screen (applications, the ending). */
+#modalButtons { position: sticky; bottom: -22px; z-index: 2; margin: 14px -22px -22px; padding: 12px 22px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: var(--panel); border-top: 1px solid var(--border); border-radius: 0 0 16px 16px; }
+#modalButtons:empty { display: none; }
+#modalButtons button { min-height: 44px; }
+.uni { min-height: 44px; }
+.uni.picked { background: var(--accent-soft); border-radius: 8px; }
+/* Picks pinned at the top of a list, as chips you can take back. Sticky, so they stay in view. */
+.picks { position: sticky; top: -22px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px -4px; padding: 8px 10px;
+  border-radius: 10px; background: var(--bg); border: 1px dashed var(--border); }
+.picks-k { color: var(--muted); font-size: 0.78rem; font-weight: 700; margin-right: 2px; }
+button.chip.pick { min-height: 32px; padding: 4px 10px; font-size: 0.8rem; font-weight: 600; border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.decide button, .choices button { min-height: 44px; }
+.modal-card .story { line-height: 1.55; }
+
+/* 수시: each university a card, its types as rows with 44px targets. */
+.susi-uni { background: var(--bg); border-radius: 12px; padding: 8px 10px; }
+.sopt { min-height: 44px; }
+.cond-note[role="note"] { font-weight: 600; }
+table.naesin td, table.naesin th { padding: 6px 8px; }
+.record { margin-top: 4px; }
+.record .bars { margin-top: 4px; }
+
+/* ---------- coach marks ---------- */
+.coach { position: absolute; top: 0; left: 0; width: 1px; height: 1px; z-index: 25; }
+.coach-ring { position: absolute; border: 3px solid var(--r-focus); border-radius: 14px; box-shadow: 0 0 0 9999px var(--coach-dim); pointer-events: none; transition: all 0.25s ease; }
+.coach-bubble { position: absolute; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; box-shadow: 0 12px 32px var(--bar-shadow); }
+.coach-bubble p { margin: 0 0 10px; font-size: 0.9rem; line-height: 1.5; }
+.coach-btns { display: flex; gap: 8px; align-items: center; }
+.coach-btns button { min-height: 40px; }
+.coach-step { margin-right: auto; color: var(--muted); font-size: 0.78rem; }
+
+/* ---------- across lives: cards, achievements, the hall of fame ---------- */
+.life-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.life-card .lc-head { display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; }
+.life-card .lc-head b { font-size: 0.95rem; overflow-wrap: anywhere; }
+.life-card .lc-head button { margin-left: auto; min-height: 36px; }
+.life-card .lc-out { margin: 6px 0 4px; font-weight: 600; font-size: 0.88rem; overflow-wrap: anywhere; }
+.life-card .lc-facts { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-bottom: 6px; font-size: 0.78rem; overflow-wrap: anywhere; }
+.life-card .lf .k { color: var(--muted); }
+.ach { border: 1px solid var(--border); }
+.ach.on { border-color: color-mix(in srgb, var(--accent) 35%, var(--panel)); }
+table.grid td.empty { white-space: normal; }
+@media (max-width: 560px) {
+  #fame td.l { white-space: normal; min-width: 5.5rem; overflow-wrap: anywhere; }
+  .life-cards { grid-template-columns: minmax(0, 1fr); }
+}
+.fates li { padding: 6px 8px; border-radius: 10px; background: var(--bg); }
+.pcard { min-height: 60px; }
+
+/* ---------- the cutscene's controls ---------- */
+.cut-top { position: absolute; top: max(8px, env(safe-area-inset-top, 0px)); right: 12px; z-index: 2; display: flex; gap: 8px; align-items: center; }
+.cut-top .cut-skip { position: static; }
+.cut-progress { top: calc(max(8px, env(safe-area-inset-top, 0px)) + 46px); right: 16px; }
+.cut-lang { border-color: var(--cut-bar); }
+.cut-lang button { background: transparent; color: var(--cut-text); padding: 5px 10px; font-size: 0.78rem; flex: 0 0 auto; }
+.cut-lang button + button { border-left-color: var(--cut-bar); }
+.cut-lang button.on { background: var(--cut-text); color: var(--cut-bg); }
+@media (prefers-reduced-motion: reduce) { .coach-ring { transition: none; } }
+/* On a phone the footer's buttons share the row instead of stacking one per line. */
+@media (max-width: 480px) {
+  #modalButtons { gap: 6px; padding-top: 10px; }
+  #modalButtons button { flex: 1 1 auto; padding: 9px 10px; font-size: 0.88rem; }
+}
+/* The dialog's language switch sits top-left, clear of the names art.js centres on its banners. */
+.modal.has-art .modal-lang { right: auto; left: 10px; }
+/* With a dialog open, toasts drop in from the top so they never cover its footer. */
+body.modal-open .toast { bottom: auto; top: max(16px, env(safe-area-inset-top, 0px)); }

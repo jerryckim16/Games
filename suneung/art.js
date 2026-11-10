@@ -130,7 +130,7 @@
     const gid = nid("sky");
     let s = grad(gid, o.night ? "night" : "sky", o.night ? "night2" : "sky2") + R(0, 0, w, h, null, 0, null, 0, "fill:url(#" + gid + ")");
     if (o.night) {
-      s += G(w * 0.82, 40, O(0, 0, 16, "moon") + O(7, -5, 14, "night"));
+      if (o.moon !== false) s += G(w * 0.82, 40, O(0, 0, 16, "moon") + O(7, -5, 14, "night"));
       const r = rand(o.seed || 5);
       for (let i = 0; i < 14; i++) s += G((r() * w).toFixed(0), (r() * h * 0.5).toFixed(0), A("twinkle", O(0, 0, 1.4, "star"), "--del:-" + (r() * 3).toFixed(1) + "s"));
     } else {
@@ -155,6 +155,8 @@
     const b = BODY[o.age] || BODY.teen;
     const look = o.look || { hair: 0, skin: 0, shirt: 0 };
     const skin = look.skin ? "skinb" : "skin";
+    // Grandparents have grey hair (--a-hairGrey); everyone else the usual dark hair.
+    const hairC = look.grey ? "hairGrey" : "hair";
     const hw = b.w / 2, hipY = -b.leg, shY = hipY - b.body, hr = b.head, hy = shY - 3 - hr + 2;
     const outfit = o.outfit || "uniform";
     const gear = o.gear || "";
@@ -165,8 +167,8 @@
 
     // Back layer: backpack and long hair.
     if (o.backpack) s += R(-hw - 4, shY + 4, b.w + 8, b.body * 0.8, "c2", 8, "c2dark", 1.5);
-    if (look.hair === 2) s += P("M" + (-hr - 2) + " " + (hy - 2) + " Q" + (-hr - 4) + " " + (hy + hr + 10) + " " + (-hr + 4) + " " + (hy + hr + 14) + " L" + (hr - 4) + " " + (hy + hr + 14) + " Q" + (hr + 4) + " " + (hy + hr + 10) + " " + (hr + 2) + " " + (hy - 2) + " Z", "hair");
-    if (look.hair === 3) s += P("M" + (-hr - 2) + " " + hy + " Q" + (-hr - 3) + " " + (hy + hr * 0.95) + " " + (-hr + 6) + " " + (hy + hr * 0.95) + " L" + (hr - 6) + " " + (hy + hr * 0.95) + " Q" + (hr + 3) + " " + (hy + hr * 0.95) + " " + (hr + 2) + " " + hy + " Z", "hair");
+    if (look.hair === 2) s += P("M" + (-hr - 2) + " " + (hy - 2) + " Q" + (-hr - 4) + " " + (hy + hr + 10) + " " + (-hr + 4) + " " + (hy + hr + 14) + " L" + (hr - 4) + " " + (hy + hr + 14) + " Q" + (hr + 4) + " " + (hy + hr + 10) + " " + (hr + 2) + " " + (hy - 2) + " Z", hairC);
+    if (look.hair === 3) s += P("M" + (-hr - 2) + " " + hy + " Q" + (-hr - 3) + " " + (hy + hr * 0.95) + " " + (-hr + 6) + " " + (hy + hr * 0.95) + " L" + (hr - 6) + " " + (hy + hr * 0.95) + " Q" + (hr + 3) + " " + (hy + hr * 0.95) + " " + (hr + 2) + " " + hy + " Z", hairC);
 
     // Legs and shoes. Children wear shorts; girls wear a skirt with the school uniform and as children.
     const skirt = look.sex === "f" && (outfit === "uniform" || outfit === "kid");
@@ -228,7 +230,9 @@
     s += O(0, hy, hr, skin);
     if (mood === "sick") s += O(0, hy, hr, "sickface", null, 0, "opacity:0.35");
     s += face(hr, hy, mood, o.age === "child");
-    s += hairFront(look.hair || 0, hr, hy);
+    s += hairFront(look.hair || 0, hr, hy, hairC);
+    // Grey hair comes with a bun on top, so a grandmother never reads as the mother.
+    if (look.grey) s += O(0, hy - hr - 3, hr * 0.42, hairC);
     // Hats: a driver's cap, a hard hat, a farmer's straw hat.
     if (gear === "cap") s += P("M" + (-hr - 1) + " " + (hy - hr * 0.35) + " Q0 " + (hy - hr - 10) + " " + (hr + 1) + " " + (hy - hr * 0.35) + " Z", "c2") + R(-hr - 1, hy - hr * 0.42, hr * 2 + 12, 5, "c2dark", 2);
     if (gear === "hardhat") s += P("M" + (-hr - 2) + " " + (hy - hr * 0.3) + " Q0 " + (hy - hr - 12) + " " + (hr + 2) + " " + (hy - hr * 0.3) + " Z", "gold", "gold2", 1.5) + R(-hr - 6, hy - hr * 0.38, hr * 2 + 12, 4, "gold2", 2);
@@ -253,16 +257,16 @@
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + (-size / 2) + " " + (hy - b.head - 9) + " " + size + " " + size + '" class="art portrait"' +
       (label ? ' role="img" aria-label="' + esc(label) + '"' : ' aria-hidden="true" focusable="false"') + ">" + avatar(Object.assign({ still: true }, o)) + "</svg>";
   }
-  function hairFront(v, r, hy) {
+  function hairFront(v, r, hy, color) {
     // Four styles: short, side part, long (back drawn earlier) and bob.
     const top = hy - r - 3;
     if (v === 1) return P("M" + (-r - 2) + " " + (hy + 3) + " Q" + (-r - 2) + " " + top + " 0 " + top + " Q" + (r + 3) + " " + top + " " + (r + 2) + " " + (hy + 4) +
-      " Q" + (r * 0.4) + " " + (hy - r * 0.7) + " " + (-r * 0.5) + " " + (hy - r * 0.35) + " Q" + (-r * 0.8) + " " + (hy - r * 0.2) + " " + (-r - 2) + " " + (hy + 3) + " Z", "hair");
+      " Q" + (r * 0.4) + " " + (hy - r * 0.7) + " " + (-r * 0.5) + " " + (hy - r * 0.35) + " Q" + (-r * 0.8) + " " + (hy - r * 0.2) + " " + (-r - 2) + " " + (hy + 3) + " Z", color || "hair");
     if (v === 2 || v === 3) return P("M" + (-r - 2) + " " + (hy + 4) + " Q" + (-r - 2) + " " + top + " 0 " + top + " Q" + (r + 2) + " " + top + " " + (r + 2) + " " + (hy + 4) +
-      " L" + (r - 3) + " " + (hy - r * 0.35) + " L" + (-r + 3) + " " + (hy - r * 0.35) + " Z", "hair");
+      " L" + (r - 3) + " " + (hy - r * 0.35) + " L" + (-r + 3) + " " + (hy - r * 0.35) + " Z", color || "hair");
     return P("M" + (-r - 1.5) + " " + (hy + 2) + " Q" + (-r - 1) + " " + (top - 1) + " 0 " + top + " Q" + (r + 1) + " " + (top - 1) + " " + (r + 1.5) + " " + (hy + 2) +
       " Q" + (r * 0.7) + " " + (hy - r * 0.5) + " " + (r * 0.2) + " " + (hy - r * 0.42) + " L" + (r * 0.05) + " " + (hy - r * 0.3) + " L" + (-r * 0.15) + " " + (hy - r * 0.45) +
-      " Q" + (-r * 0.7) + " " + (hy - r * 0.5) + " " + (-r - 1.5) + " " + (hy + 2) + " Z", "hair");
+      " Q" + (-r * 0.7) + " " + (hy - r * 0.5) + " " + (-r - 1.5) + " " + (hy + 2) + " Z", color || "hair");
   }
   function face(r, hy, mood, child) {
     const ex = r * 0.38, ey = hy + r * 0.12, er = child ? 2.8 : 2.3, my = hy + r * 0.52;
@@ -544,7 +548,7 @@
     },
     start() {
       // Low rooftops and a low moon: the setup banner is wide and shows only the bottom of the frame.
-      let s = outdoorSky(W, H, { night: true, seed: 2 }) + A("pulse-slow", O(408, 118, 18, "moon") + O(416, 112, 15, "night"));
+      let s = outdoorSky(W, H, { night: true, seed: 2, moon: false }) + A("pulse-slow", O(408, 118, 18, "moon") + O(416, 112, 15, "night"));
       const r = rand(99);
       for (let i = 0; i < 9; i++) {
         const x = i * 92 + 10, h = 50 + r() * 60;
@@ -726,8 +730,8 @@
     notes: () => G(470, 130, A("float", R(-60, -40, 120, 80, "paper", 4, "line", 1.5) + L(0, -40, 0, 40, "line", 1.5) + L(-50, -24, -10, -24, "c2", 6, "opacity:0.7") + L(-50, -10, -16, -10, "line", 2) +
       L(-50, 4, -6, 4, "c3", 6, "opacity:0.6") + L(10, -24, 50, -24, "line", 2) + L(10, -10, 44, -10, "c4", 6, "opacity:0.5") + L(10, 4, 50, 4, "line", 2))) + sparkle(400, 60) + sparkle(540, 70, 0.8) + sparkle(470, 40, 0.6),
     shop: () => G(160, 34, A("drift", T(0, 0, "₩", "gold", 30)), 1) + G(230, 60, A("fall", O(0, 0, 8, "gold", "gold2", 2), "--d:3s;--dx:0px;--fy:120px")) + G(110, 50, A("fall", O(0, 0, 7, "gold", "gold2", 2), "--d:3.6s;--del:-1s;--dx:6px;--fy:130px")),
-    grandma: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2 }, mood: "happy", prop: "envelope", pose: "hold" }), 0.95) +
-      G(470, EFEET - 100, P("M-18 -4 Q0 -16 18 -4 Q8 -14 0 -14 Q-8 -14 -18 -4 Z", "gray")) + heart(400, 60, 1.2, "c1", -1) + heart(540, 50, 1, "blossom", -2),
+    grandma: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, grey: true }, mood: "happy", prop: "envelope", pose: "hold" }), 0.95) +
+      heart(400, 60, 1.2, "c1", -1) + heart(540, 50, 1, "blossom", -2),
     sheep: () => clock(470, 60, 22, 3) + G(400, 140, A("hop", E(0, 0, 18, 13, "paper", "line", 1.5) + O(16, -6, 7, "dark") + L(-8, 12, -8, 20, "dark", 3) + L(8, 12, 8, 20, "dark", 3))) +
       G(520, 150, A("hop", E(0, 0, 14, 10, "paper", "line", 1.5) + O(12, -5, 6, "dark") + L(-6, 9, -6, 16, "dark", 3) + L(6, 9, 6, 16, "dark", 3), "--del:-0.7s")) + G(560, 100, A("rise", T(0, 0, "z", "c5", 18) + T(10, -14, "z", "c5", 14), "--del:-1s")),
     stall: () => bunting(0, 680, 22, 3) + G(460, 176, R(-90, -60, 180, 60, "c1", 4) + R(-100, -100, 200, 18, "c2", 4) + R(-90, -82, 6, 22, "wood2") + R(84, -82, 6, 22, "wood2") +
@@ -949,10 +953,14 @@
       let s = outdoorSky(EW, EH, { season: "spring", seed: 81 });
       s += homeShape(ctx)() + R(0, 196, EW, 24, "grass");
       s += tree(560, 200, "spring", 1.1) + tree(480, 204, "spring", 0.8) + particles("spring", 0, 0, EW, 200, false, 12, 3);
-      // The parents in your life stand at the door, dressed for work.
+      // Whoever raises you stands at the door (dressed for work when they have a job) with the newborn
+      // in a blanket. mom() is the mother, a grandmother or a carer; with only a dad, he holds the baby.
       const j = ctx.jobs || {};
-      if (ctx.jobs) s += mom(ctx, 330, EFEET, 0.9, { gear: JOB_GEAR[j.mom] || "", mood: "happy" }) + dad(ctx, 470, EFEET, 0.95, { gear: JOB_GEAR[j.dad] || "", mood: "happy" });
-      s += person(Object.assign({}, ctx, { stage: "elem" }), 400, EFEET, ctx.jobs ? 0.7 : 1, { mood: "happy", pose: "wave" });
+      const dadHolds = ctx.parents === "dad";
+      s += mom(ctx, 340, EFEET, 0.95, { gear: JOB_GEAR[j.mom] || "", mood: "happy", pose: dadHolds ? "stand" : "hold" });
+      s += dad(ctx, 450, EFEET, 0.98, { gear: JOB_GEAR[j.dad] || "", mood: "happy", pose: dadHolds ? "hold" : "wave" });
+      // The bundle sits in the holding arm (feet-relative offsets scaled with the figure).
+      s += dadHolds ? bundle(450 + 8, EFEET - 76, 1.05) : bundle(340 + 8, EFEET - 74, 1.05);
       return s;
     },
     track() {
@@ -1095,8 +1103,7 @@
   // (grey hair) where the mother would stand, and children in care a carer.
   const hasMom = (ctx) => !ctx.parents || ctx.parents === "both" || ctx.parents === "mom";
   const hasDad = (ctx) => !ctx.parents || ctx.parents === "both" || ctx.parents === "dad";
-  const grandma = (x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, sex: "f" }, mood: "happy" }, extra || {})) +
-    P("M-18 -128 Q0 -142 18 -128 Q8 -138 0 -138 Q-8 -138 -18 -128 Z", "gray"), s || 1);
+  const grandma = (x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, sex: "f", grey: true }, mood: "happy" }, extra || {})), s || 1);
   // In a children's home a carer in a work apron stands where the mother would.
   const carer = (x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 2, shirt: 4, sex: "f" }, mood: "happy" }, extra || {})) +
     R(-15, -78, 30, 44, "paper", 4, "line", 1.5), s || 1);
@@ -1387,7 +1394,9 @@
   // longitude, roughly what it is at 37°N. Seoul's six areas are too close together to tap, so they
   // get a magnified inset in the Yellow Sea, joined to Seoul by a dashed line.
   // opts: { states: { id: "home" | "open" | "closed" }, sel: id, labels: { id: name }, from: id
-  // (draws a dashed route from there to sel), aria }. Points are focusable buttons (data-place) for
+  // (draws a dashed route from there to sel), aria, px: the width it will be drawn at in CSS pixels }.
+  // Names stay at least 11px on screen: on a small map that only fits home, the selected place and
+  // the route's start, so the rest are named by their aria-label. Points are focusable buttons (data-place) for
   // app.js to wire up; the art has no text of its own, only the names app.js passes in.
   const MW = 755, MH = 750;
   const mx = (lon) => Math.round((lon - 124.4) * 100);
@@ -1408,13 +1417,18 @@
   const SEOUL_IDS = ["gangnam", "nowon", "mokdong", "mapo", "gwanak", "gangdong"];
   // Which side of the dot each name goes on, so names stay on land or open sea and don't collide.
   const LABEL_SIDE = { suwon: "r", busan: "r", daegu: "l", gwangju: "l", daejeon: "l", pohang: "r", jeonju: "l", cheongju: "r", jeju: "r", pyeongchang: "r", haenam: "l" };
-  const SEOUL = [126.98, 37.55], INSET = { x: 102, y: 660, r: 72, k: 330 };
+  const SEOUL = [126.98, 37.55], INSET = { x: 116, y: 660, r: 72, k: 330 };
   function mapPos(id) {
     const ll = PLACES[id];
     if (SEOUL_IDS.indexOf(id) < 0) return [mx(ll[0]), my(ll[1])];
     return [Math.round(INSET.x + (ll[0] - SEOUL[0]) * INSET.k * 0.95), Math.round(INSET.y + (SEOUL[1] - ll[1]) * INSET.k * 1.25)];
   }
+  // A name beside its dot. Its width is estimated (Hangul is about square, Latin about 0.6 em), and a
+  // name that would run off the map goes on the other side instead.
   function mapLabel(x, y, text, side, size, cls) {
+    const w = String(text).split("").reduce((a, ch) => a + (/[\u1100-\uffff]/.test(ch) ? 1 : 0.6), 0) * size;
+    if (side === "l" && x - 13 - w < 2) side = "r";
+    else if (side !== "l" && x + 13 + w > MW - 2) side = "l";
     const dx = side === "l" ? -13 : 13;
     return '<text class="kmap-lbl' + (cls ? " " + cls : "") + '" x="' + (x + dx) + '" y="' + (y + size * 0.35) + '" text-anchor="' + (side === "l" ? "end" : "start") + '" style="font-size:' + size + 'px">' + esc(text) + "</text>";
   }
@@ -1475,7 +1489,16 @@
     } else {
       s += O(INSET.x, INSET.y, INSET.r, "land", "inset", 3) + P("M" + (INSET.x - 66) + " " + (INSET.y + 4) + " Q" + (INSET.x - 30) + " " + (INSET.y + 14) + " " + INSET.x + " " + (INSET.y + 2) + " T" + (INSET.x + 66) + " " + (INSET.y - 2), null, "mapSea", 7);
     }
-    if (labels.seoul) s += mapLabel(sx - 6, sy, labels.seoul, "l", 20, "kmap-seoul");
+    const unit = o.px ? o.px / MW : 0.8; // CSS px per map unit
+    const minU = Math.ceil(11.5 / unit);
+    const big = Math.max(21, minU), small = Math.max(15, minU);
+    const tight = minU > 24;
+    // Seoul's six districts are too close for six names at a readable size, so the inset only names
+    // home and the place picked (the rest have their name as a tooltip and an aria-label).
+    const key = (id) => id === o.home || id === o.sel || id === o.from || states[id] === "home";
+    const named = (id) => key(id) || (!tight && SEOUL_IDS.indexOf(id) < 0);
+    // On a small map the big Seoul label sits above-left of its ring, clear of Suwon and Incheon-side names.
+    if (labels.seoul) s += mapLabel(sx - 6, tight ? sy - minU * 0.8 : sy, labels.seoul, "l", Math.max(20, minU), "kmap-seoul");
     // Your school, as a small star where it really is (in the inset if it's in Seoul).
     for (const m of o.schools || []) {
       const p = [mx(m.lon), my(m.lat)];
@@ -1498,8 +1521,8 @@
       if (st === "home") dot += A("kmap-pulse", O(0, 0, r + 6, null, "pin", 3));
       if (sel) dot += O(0, 0, r + 5, null, "sel", 4);
       s += '<g class="kmap-pt ' + st + (sel ? " sel" : "") + '" data-place="' + id + '" transform="translate(' + x + " " + y + ')"' + (o.static ? "" : ' tabindex="0" role="button"') +
-        (labels[id] ? ' aria-label="' + esc(labels[id]) + '"' : "") + ">" + dot + "</g>";
-      if (labels[id]) s += mapLabel(x, y, labels[id], inset ? (["mokdong", "mapo", "gwanak"].indexOf(id) >= 0 ? "l" : "r") : LABEL_SIDE[id] || "r", inset ? 15 : 21, (st === "home" ? "home" : "") + (sel ? " sel" : ""));
+        (labels[id] ? ' aria-label="' + esc(labels[id]) + '"' : "") + ">" + (labels[id] && !named(id) ? "<title>" + esc(labels[id]) + "</title>" : "") + dot + "</g>";
+      if (labels[id] && named(id)) s += mapLabel(x, y, labels[id], inset ? (["mokdong", "mapo", "gwanak"].indexOf(id) >= 0 ? "l" : "r") : LABEL_SIDE[id] || "r", inset ? small : big, (st === "home" ? "home" : "") + (sel ? " sel" : ""));
     }
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + MW + " " + MH + '" class="kmap"' + (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ">" + s + "</svg>";
   }
