@@ -121,7 +121,10 @@ VOC_WORDS = ["공업", "상업", "정보", "마이스터", "기계", "전자", "
              "인공지능", "로봇", "게임", "영상", "애니메이션", "만화", "세무", "회계", "금융", "간호", "미용", "패션", "외식", "호텔", "물류", "건설", "디지털", "방송", "뷰티", "웹툰"]
 def short(name):
     return name.replace("고등학교", "고").replace("중학교", "중").replace("초등학교", "초")
-def kind(r):
+def kind(r, hs=""):
+    """hs: NEIS's official high-school type (일반고, 특성화고, 특목고, 자율고), when known, overrides the
+    name-based guesses (VOC_WORDS misses vocational schools like 성암국제무역고, and keyword hits
+    like 정보 can be ordinary schools)."""
     n, lv = r["학교명"], r["학교급구분"]
     s = short(n)
     if lv == "중학교":
@@ -133,12 +136,23 @@ def kind(r):
         return "sci"
     if any(s == a or s.startswith(a) for a in NATIONAL_AUTO):
         return "auto"
+    if hs == "자율고":
+        # Private 자율고 are regional 자사고 (휘문, 세화, 해운대고...): selective, never a lottery school.
+        # Public ones (자율형 공립고) take students like any ordinary school.
+        return "autoR" if r["설립형태"] == "사립" else "gen"
+    if hs == "일반고":
+        return "gen"
+    if hs == "특성화고":
+        return "voc"
     if "외국어고" in s or "국제고" in s:
         return "lang"
     if ("예술고" in s or "체육고" in s) and "영재" not in s:
         return "arts"
     if any(w in s for w in VOC_WORDS):
         return "voc"
+    # A 특목고 that's none of the above is a meister school (vocational) or an arts school like 국악고.
+    if hs == "특목고":
+        return "voc" if "마이스터" in s or "공업" in s or "기계" in s else "arts"
     return "gen"
 
 LV = {"초등학교": "e", "중학교": "m", "고등학교": "h"}
@@ -149,7 +163,9 @@ SEX = {"남": "m", "여": "f"}
 
 def main(csv_path, prov_path, muni_path, coed_path=None):
     rows = list(csv.DictReader(open(csv_path, encoding="utf-8-sig")))
-    coed = {r["학교ID"]: SEX.get(r["남녀공학구분"], "") for r in csv.DictReader(open(coed_path, encoding="utf-8-sig"))} if coed_path else {}
+    extra = list(csv.DictReader(open(coed_path, encoding="utf-8-sig"))) if coed_path else []
+    coed = {r["학교ID"]: SEX.get(r["남녀공학구분"], "") for r in extra}
+    hstype = {r["학교ID"]: r.get("고교유형", "") for r in extra}
     provs = json.load(open(prov_path))
     munis_geo = json.load(open(muni_path))
     munis = {f["properties"]["code"]: (f["properties"]["name"], f) for f in munis_geo["features"]}
@@ -157,7 +173,7 @@ def main(csv_path, prov_path, muni_path, coed_path=None):
     def addr(r):
         return (r["소재지도로명주소"] or r["소재지지번주소"]).split()
     def entry(r):
-        e = [r["학교명"], LV[r["학교급구분"]], FND.get(r["설립형태"], "pub"), kind(r), round(float(r["위도"]), 4), round(float(r["경도"]), 4)]
+        e = [r["학교명"], LV[r["학교급구분"]], FND.get(r["설립형태"], "pub"), kind(r, hstype.get(r["학교ID"], "")), round(float(r["위도"]), 4), round(float(r["경도"]), 4)]
         return e + [coed[r["학교ID"]]] if coed.get(r["학교ID"]) else e
 
     areas = {}
@@ -174,6 +190,8 @@ def main(csv_path, prov_path, muni_path, coed_path=None):
             sch.append(entry(r))
         sch.sort(key=lambda e: (e[1], e[0]))
         codes = geo_codes(rid, munis)
+        if not sch:
+            raise SystemExit("no schools found for " + rid + ": check AREAS against the school list")
         lat = sum(e[4] for e in sch) / len(sch); lon = sum(e[5] for e in sch) / len(sch)
         areas[rid] = {"munis": codes, "center": [round(lat, 4), round(lon, 4)], "schools": sch}
 
@@ -181,8 +199,8 @@ def main(csv_path, prov_path, muni_path, coed_path=None):
     for r in rows:
         if r["본교분교구분"] == "분교":
             continue
-        k = kind(r)
-        if k in ("sci", "auto", "lang", "arts", "voc", "intl"):
+        k = kind(r, hstype.get(r["학교ID"], ""))
+        if k in ("sci", "auto", "autoR", "lang", "arts", "voc", "intl"):
             a = addr(r)
             e = [r["학교명"], FND.get(r["설립형태"], "pub"), round(float(r["위도"]), 4), round(float(r["경도"]), 4), a[0], a[1] if len(a) > 1 else ""]
             special.setdefault(k, []).append(e + [coed[r["학교ID"]]] if coed.get(r["학교ID"]) else e)

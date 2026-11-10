@@ -2015,6 +2015,15 @@
         const e = list[Math.floor(makeRng(hashSeed(this.seed, "realschool", id, this.region))() * list.length)];
         return { name: e[0], lat: e[4], lon: e[5], sex: e[6] || null };
       }
+      // A 자사고 application is to your own area's regional 자사고 when there is one (휘문, 세화, 해운대고...),
+      // otherwise the nearest nationwide one.
+      if (id === "autoHigh") {
+        const reg = area.schools.filter((e) => e[1] === "h" && e[3] === "autoR" && (anySex || this.admitsMe(e[6])));
+        if (reg.length) {
+          const e = reg[Math.floor(makeRng(hashSeed(this.seed, "realschool", id, this.region))() * reg.length)];
+          return { name: e[0], lat: e[4], lon: e[5], sex: e[6] || null };
+        }
+      }
       return REAL_FAR[id] ? this.nearestSpecial(REAL_FAR[id], area) : null;
     }
     nearestSpecial(kind, area) {
@@ -2053,6 +2062,13 @@
       let r = this.real;
       // A save from before single-sex schools were known may hold a school that doesn't take you.
       if (r && r.sex === undefined) { r.sex = Game.realSchoolSex(r.name, r.region); if (!this.admitsMe(r.sex)) { this.real = r = null; } }
+      // A local school saved before school types came from NEIS may no longer be that kind of school
+      // (a regional 자사고 once dealt as a lottery private school): pick again.
+      if (r && REAL_LOCAL[r.id] && REAL && REAL.areas[r.region]) {
+        const [lv, fnd, kind] = REAL_LOCAL[r.id];
+        const e = REAL.areas[r.region].schools.find((x) => x[0] === r.name && x[4] === r.lat);
+        if (e && (e[1] !== lv || (fnd != null && e[2] !== fnd) || (kind != null && e[3] !== kind))) this.real = r = null;
+      }
       if (r && r.id === id && r.region === this.region || r && r.id === id && SCHOOL_BY_ID[id].board) return r;
       const x = this.realSchoolFor(id);
       return x ? Object.assign({ id, region: this.region }, x) : null;
