@@ -1,0 +1,17 @@
+# Korea in numbers: adult life
+
+Official Korean statistics for taking the Suneung Simulator (and later Korea-based games) past school: work, money, housing, family, health and daily life from the twenties to old age. Same format and status tags as `../korea-stats.md` (see `../README.md`); these files extend it rather than repeat it, and say so where a row updates one there. Each file ends with **Game ideas** (how its figures could drive mechanics) and **Gaps**.
+
+| File | Rows | Covers |
+|---|---|---|
+| [work-and-money.md](work-and-money.md) | 112 | employment by age and sex, "just resting" youth, when careers end, wages by age, sex, firm size, education and contract type, the minimum wage, job changes and unemployment, business survival, household income, assets and debt by age, wealth distribution, spending, inflation, taxes and social insurance, pensions (2025 reform, basic pension), poverty |
+| [housing-and-places.md](housing-and-places.md) | 86 | home ownership by age and region, 자가/전세/월세, apartment prices, 전세 and rents by region (Sept 2026), the 청약 points system, public rental, housing types and substandard housing, households and living with parents, moving and migration to the capital, shrinking regions, regional income, doctors and commuting |
+| [family-and-relationships.md](family-and-relationships.md) | 93 | attitudes to marriage and children, marriage rates and ages, international marriage, divorce, births and fertility by age and province, newlyweds and their first child, parental leave and child benefits, career breaks and housework, later family life and pets |
+| [health-and-later-life.md](health-and-later-life.md) | 111 | life tables (yearly death probability by age and sex), ageing, causes of death by age, suicide (with the 109 support line), cancer, chronic disease and dementia, mental health, smoking and drinking, healthcare use and costs, long-term care, loneliness, accidents and safety |
+| [society-and-daily-life.md](society-and-daily-life.md) | 85 | time use (work, housework, leisure, sleep) by age and sex, leisure, travel and reading, life satisfaction, loneliness and isolation, voting, military service (examination outcomes, soldiers' pay), crime and fraud, digital life, foreign residents and multicultural families |
+
+Retrieved 2026-11-10. Most figures were read from the released files themselves (xlsx, hwpx, hwp, pdf attachments on mods.go.kr, korea.kr, moel.go.kr, kdca.go.kr, mcst.go.kr, nec.go.kr, index.go.kr) or official APIs (OECD SDMX).
+
+**Reaching the sources from a cloud session.** mods.go.kr, korea.kr, moel.go.kr, mohw.go.kr and index.go.kr work through curl but drop connections now and then (retry). kosis.kr fills tables by script and blocks automated table requests; nps.or.kr is script-built too. nts.go.kr, law.go.kr (for WebFetch), molit.go.kr, mma.go.kr, immigration.go.kr, police.go.kr, kostat.go.kr, cancer.go.kr, nhis.or.kr and hira.or.kr reset or time out; oecd.org returns 403 (its SDMX API works). Rows that could only be read from news or search text are tagged unverified.
+
+**Worth knowing for a region model:** from mid-2026 several releases report Gwangju and South Jeolla together (전남광주통합특별시), which the game's places already follow.
