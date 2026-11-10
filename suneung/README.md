@@ -125,7 +125,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   | Timed practice exams 실전 모의고사 | High 1 on | Builds exam stamina (steadier scores on the day); small gains in every subject; stressful |
   | Rest & sleep 휴식 | always | −Stress, +Health |
   | Exercise 운동 | always | +Health, −Stress |
-  | Hang out with friends 친구 | always | Big −Stress, +Motivation; sometimes leads to a PC방 invitation (from Elementary 5) |
+  | Hang out with friends 친구 | always | Big −Stress, +Motivation; builds a friendship with someone in particular, and with a studious friend it's studying together (see People); sometimes leads to a PC방 invitation (from Elementary 5) |
   | Games & YouTube 게임 | always | −Stress, −Motivation |
   | Part-time job 알바 | High 1 on | +₩250,000 a month, +Stress, −Health |
 
@@ -207,7 +207,21 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **When it turns severe,** the options are reporting it with your parents (it stops at once 60–70% of the time), changing schools (almost always ends it, at the cost of stress, motivation and a block), the counselor, or enduring.
   - **How it ends:** a choice that works, the March class reshuffle (60%, 40% or 20% by severity), starting a new school (70%), or leaving high school.
   - **On screen:** the Condition panel shows a red line with the severity and its cost while it lasts. Every step is in the life log.
+  - **With names:** the bully is one of your bossier or more troubled classmates (or an older kid), and the follow-ups name the friend who might stand by you. Names only: the rates and odds are the same.
   - **Cost by High 3:** in a paired test (the same 200 lives cloned at the start of Middle 1 with serious bullying), reporting it costs about 1 point of average ability entering High 3 and enduring it about 4.
+- **People: named classmates, friends, a rival, a crush and a homeroom teacher who stay with you through life.**
+  - **Classmates:** each new class brings a few named classmates who matter (2 neighbourhood kids at home, 4 at kindergarten, 6 in each new elementary, middle and high school class, 4 at a retake academy, 3 on campus for 반수), and a new face joins every March. A friend or two can come along to the next school (middle schools take whole neighbourhoods), unless you move or change school. Each person has a Korean name, a sex, a seeded look (drawn with the same avatar as you), two personality traits (studious, sporty, funny, kind, quiet, gamer, artsy, bossy, troubled) and their own ability.
+  - **Names** are drawn by real frequency: surnames from the 2015 census shares (김 21.5%, 이 14.7%, 박 8.4% ...), given names from the most popular names for children born in the early 2020s (이준, 도윤, 하준, 서준, 은우 ... and 서아, 이서, 아윤, 지아, 하윤 ...). English shows them romanized: "Seo-a Park", "Ms. Kim". See `data/korea-stats.md` (Names).
+  - **Boys' and girls' schools:** at a single-sex middle or high school (when the real school is one), all your classmates are that sex, and a crush comes from outside school: cram school, church, or a friend's friend at another school.
+  - **Closeness (0–100):** each Friends block goes to someone (tap a friend in the Friends panel to choose who; otherwise whoever you're closest to, weighted) and adds about 10–14, more with a kind friend or the All smiles trait, and someone else tags along (+3). Your seatmate gets a little closer on their own. Closeness fades every month: slowly with classmates you see every day (0.5 a month), faster with people you don't (1.2), and slowly with a best friend who keeps in touch by phone after a move (0.45). A move or a new school keeps 85% of a best friend's closeness and 60% of everyone else's.
+  - **Roles emerge:** your best friend (단짝) is whoever you're closest to from 60 (until they fall under 45, or someone is clearly closer); friends from 35; a rival in every middle school, high school and academy class, usually the studious classmate just above you in class rank; a crush and maybe dating from Middle 2; exes after a breakup; and the classmate who bullies you, while it lasts.
+  - **What friends do for you (small on purpose):** a best friend takes 1 off stress every turn. An afternoon with a funny friend takes 2 more off stress, a sporty one adds 2 health, a gamer costs 1 motivation, and a studious one turns it into studying together (스터디): a small boost to your weakest subject each block.
+  - **The homeroom teacher (담임)** is new every March: warm, strict, passionate, laid-back or worn out. Each changes the year a little (school lessons ×0.92 to ×1.05, ±1 stress a turn, a little motivation), and the five are weighted so they average out to nothing.
+  - **Events with names**, from their own stream (at most one a turn, more likely in a long turn): the new seatmate (짝꿍), kindergarten playdates, birthday parties (a kids' café, later a karaoke room), a fight and a cold war that ends with a note on your desk, a friend's family moving away (promise to call, and they do), letters and calls from old friends, group study, a trip with your friends after exams, a crush and a confession (고백) that can be answered "me too", someone confessing to you, dates by the Han River, breaking up before the exam (or being dumped when you never have time), a reunion with old classmates, your friend at university calling a retaker out for dinner, your rival's class rank or mock percentile next to yours, and someone at the 수능 gate with a hot pack (or a message, in a retake year).
+  - **Existing events name people too:** the bully and the friend who stands by you (bullying's chances and odds are unchanged; a friend who stands by you gets closer), the friend who drags you to the PC방, your rival's perfect marks, the old classmates' photos when you've left school. The life log names who you spent each turn with and whether you studied together.
+  - **Friends panel:** under the plan, your class and your old friends as cards with a portrait, name, role, traits, where you met and a closeness bar, plus this year's homeroom teacher and what their style does. Colours are tokens for light and dark mode.
+  - **Where they ended up:** the ending screen lists your five closest people with their own 수능 total and university (or a retake year, or a job), from their own seeded ability. The engine function is `friendOutcomes(n)` (see Files).
+  - Everything about people comes from its own seeded streams, so the same seed gives the same classmates, and the main random sequence (events, exams, family fortunes) is untouched; only the small effects above move the balance numbers. Saves from before v6.1 build their classmates the first time they're needed.
 - **Early childhood (age 0–5).** A turn is a year with three blocks; your parents plan your days, and small children learn by playing:
 
   | Activity | What it does |
@@ -425,19 +439,19 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 62 | 2.6 · 2.1 · 2.4 | 367 | 367 | 1.00 | 1% | 0% | 44% |
-| slacker (half games & friends), 1 try | 56 | 3.2 · 2.6 · 5.9 | 352 | 352 | 1.00 | 0% | 0% | 14% |
-| grinder (no rest), self-study, 1 try | 66 | 3.1 · 2.6 · 2.8 | 368 | 368 | 1.00 | 3% | 0% | 45% |
-| smart, online lectures, 1 try | 66 | 2.4 · 2.1 · 2.5 | 378 | 378 | 1.00 | 3% | 0% | 63% |
-| smart, best affordable method, 1 try | 69 | 2.1 · 1.9 · 2.3 | 385 | 385 | 1.00 | 14% | 3% | 70% |
-| smart, best affordable, retakes up to 3 tries | 69 | 2.1 · 1.9 · 2.3 | 385 | 411 | 2.50 | 69% | 25% | 99% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 385 | 420 | 3.71 | 91% | 86% | 98% |
-| smart, best affordable, tries for selective schools, 1 try | 68 | 2.0 · 1.9 · 2.2 | 385 | 385 | 1.00 | 6% | 1% | 79% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.9 · 2.3 | 384 | 420 | 3.80 | 90% | 85% | 96% |
-| balanced, self-study, vocational high school, 1 try | 59 | 2.8 · 2.4 · 2.6 | 355 | 355 | 1.00 | 1% | 0% | 19% |
-| balanced, self-study, leaves school at High 1, 1 try | 62 | 2.9 · 2.4 · 2.6 | 364 | 364 | 1.00 | 0% | 0% | 31% |
-| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.2 · 1.9 · 2.4 | 383 | 383 | 1.00 | 6% | 1% | 64% |
-| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.2 · 2.1 · 2.4 | 378 | 378 | 1.00 | 6% | 1% | 61% |
+| balanced, self-study, 1 try | 62 | 2.6 · 2.1 · 2.5 | 369 | 369 | 1.00 | 0% | 0% | 41% |
+| slacker (half games & friends), 1 try | 57 | 3.1 · 2.5 · 5.7 | 353 | 353 | 1.00 | 0% | 0% | 15% |
+| grinder (no rest), self-study, 1 try | 66 | 2.9 · 2.3 · 2.8 | 374 | 374 | 1.00 | 4% | 0% | 51% |
+| smart, online lectures, 1 try | 67 | 2.1 · 2.1 · 2.4 | 379 | 379 | 1.00 | 5% | 0% | 65% |
+| smart, best affordable method, 1 try | 69 | 2.0 · 1.8 · 2.1 | 386 | 386 | 1.00 | 5% | 0% | 76% |
+| smart, best affordable, retakes up to 3 tries | 69 | 2.0 · 1.8 · 2.1 | 386 | 411 | 2.56 | 71% | 26% | 96% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.8 · 2.2 | 385 | 419 | 3.74 | 91% | 86% | 100% |
+| smart, best affordable, tries for selective schools, 1 try | 69 | 2.0 · 1.8 · 2.2 | 385 | 385 | 1.00 | 11% | 0% | 75% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.0 · 1.8 · 2.2 | 386 | 419 | 3.71 | 91% | 85% | 100% |
+| balanced, self-study, vocational high school, 1 try | 60 | 2.7 · 2.5 · 2.7 | 356 | 356 | 1.00 | 1% | 0% | 21% |
+| balanced, self-study, leaves school at High 1, 1 try | 62 | 2.8 · 2.4 · 2.5 | 363 | 363 | 1.00 | 0% | 0% | 34% |
+| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.0 · 1.9 · 2.4 | 385 | 385 | 1.00 | 9% | 0% | 66% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.0 · 2.4 | 379 | 379 | 1.00 | 6% | 3% | 61% |
 
 How much luck spreads lives that follow the same strategy, before (v4.1) and after the luck changes (v4.2). "Skill r²" is how much of the spread in first totals is explained by ability entering High 3; the rest is luck (the exam day, the paper, an accident in High 3, a family that can suddenly afford tutors, or can't):
 
@@ -450,54 +464,39 @@ The smart bot with the best affordable method, first try only, by the family it 
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 18 | 66 | 379 | 6% | 44% |
-| Lower-middle income | 23 | 67 | 383 | 4% | 83% |
-| Middle income | 10 | 71 | 398 | 20% | 90% |
-| Upper-middle income | 18 | 70 | 387 | 17% | 67% |
-| High income | 11 | 71 | 387 | 36% | 73% |
+| Low income | 13 | 66 | 378 | 0% | 77% |
+| Lower-middle income | 22 | 67 | 383 | 0% | 68% |
+| Middle income | 16 | 71 | 393 | 0% | 88% |
+| Upper-middle income | 20 | 70 | 391 | 10% | 85% |
+| High income | 9 | 72 | 378 | 22% | 56% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 13 | 70 | 396 | 31% | 92% | 77% |
-| Seoul academy district | 4 | 73 | 393 | 50% | 50% | 100% |
-| Seoul | 5 | 71 | 387 | 0% | 60% | 100% |
-| Capital-region city | 23 | 67 | 387 | 13% | 57% | 78% |
-| Big city | 15 | 70 | 389 | 13% | 87% | 100% |
-| Mid-sized city | 11 | 66 | 371 | 0% | 64% | 82% |
-| Rural county | 9 | 66 | 374 | 0% | 67% | 89% |
+| Gangnam | 12 | 71 | 392 | 25% | 75% | 83% |
+| Seoul academy district | 5 | 72 | 385 | 0% | 80% | 100% |
+| Seoul | 5 | 71 | 390 | 0% | 80% | 80% |
+| Capital-region city | 23 | 68 | 385 | 4% | 78% | 78% |
+| Big city | 15 | 71 | 390 | 0% | 93% | 93% |
+| Mid-sized city | 11 | 66 | 381 | 0% | 64% | 82% |
+| Rural county | 9 | 67 | 374 | 0% | 56% | 100% |
 
-What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 73% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
+What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 71% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.3 | +0.1 | 71% |
-| Easygoing (순한 아기) | +0.1 | -0.2 | 71% |
-| Curious (호기심 많은 아기) | +0.5 | +1.1 | 75% |
-| Good sleeper (잘 자는 아기) | +0.0 | -0.8 | 70% |
-| Unflappable (겁 없는 아기) | +0.0 | -0.1 | 70% |
-| All smiles (잘 웃는 아기) | -0.0 | +1.2 | 75% |
-| Pencil (연필) | +1.7 | +6.4 | 88% |
-| Book (책) | +1.0 | +0.7 | 70% |
-| Computer mouse (마우스) | +1.1 | +2.3 | 76% |
-| Stethoscope (청진기) | +0.9 | -0.3 | 69% |
-| Microphone (마이크) | +1.0 | +3.0 | 79% |
-| Judge's gavel (판사봉) | +1.1 | +3.4 | 81% |
-| Ball (공) | +0.3 | +0.2 | 73% |
-| Thread (실) | +0.7 | +0.5 | 69% |
-| Money (돈) | +0.2 | +0.6 | 71% |
-| Paintbrush (붓) | +0.0 | +1.1 | 76% |
+
 
 Who raises you, on the same 80 lives (smart bot, best affordable method, first try) with the family setup forced at birth. Lives that start with both parents can still lose one later:
 
 | Setup at birth | Start | First total | In-Seoul+ |
 |---|---|---|---|
-| Both parents | 69 | 385 | 68% |
-| Single mom | 67 | 382 | 68% |
-| Single dad | 67 | 382 | 65% |
-| Grandparents | 67 | 380 | 64% |
-| Children's home | 66 | 377 | 59% |
+| Both parents | 69 | 385 | 75% |
+| Single mom | 68 | 384 | 78% |
+| Single dad | 67 | 383 | 73% |
+| Grandparents | 67 | 381 | 69% |
+| Children's home | 66 | 379 | 69% |
 
 What the tables show:
 
@@ -519,11 +518,14 @@ What the tables show:
   - `Game` holds the state and the screen queue: `advance(plan, method)`, `choose(i)`, `dismiss()`, `chooseTrack(track, inq)`, `apply(ids)`, `decide(d)`.
   - It also holds the life stages, families, the exam simulation (`gradeSubject`), events, universities and constants.
 - `strings.js`: every piece of text, as an English and a Korean dictionary with the same keys. `make(lang, ctx)` returns the translator, including Korean money (만/억) and particle (이/가) handling.
-- `art.js`: the artwork, as SVG strings built in code (no DOM, no image files; the only words drawn are names app.js passes in, in the current language). `scene(ctx)` draws the life-stage scene with the avatar, `eventArt(ctx)` an event's illustration (data-driven through `EVENT_ART`, with fallbacks for unknown event ids), `screenArt(name, ctx)` the birth, track, mock, exam, report, application, offers and ending pictures, `cutscene(name, ctx)` a cutscene's shots (each an SVG plus its length; the motion is CSS keyframes in `styles.css`), and `moodOf(game)` / `lookFor(seed)` the avatar's mood and looks. Colours are `--a-*` tokens in `styles.css`.
+- `engine.js` people (v6.1): `g.social` holds the people (`soc()` builds it for old saves), `socialTurn(plan)` runs a turn of friendships, `rollSocial` the social events, `roleOf(p)` and `setFocus(id)` serve the Friends panel, and `friendOutcomes(n)` returns where your closest friends ended up: up to n (default 5) of `{ id, s, n, x, lk, role, cl, from, sci, total, pct, path: "uni" | "retake" | "work", uni, aim }`, closest first.
+- `art.js`: the artwork, as SVG strings built in code (no DOM, no image files; the only words drawn are names app.js passes in, in the current language). `scene(ctx)` draws the life-stage scene with the avatar, `eventArt(ctx)` an event's illustration (data-driven through `EVENT_ART`, with fallbacks for unknown event ids), `screenArt(name, ctx)` the birth, track, mock, exam, report, application, offers and ending pictures, `cutscene(name, ctx)` a cutscene's shots (each an SVG plus its length; the motion is CSS keyframes in `styles.css`), and `moodOf(game)` / `lookFor(seed)` the avatar's mood and looks, and `portrait` / `portraitFor(stage, look, mood)` a head-and-shoulders portrait for the Friends panel. An event that names people ({ lk, x } in `ctx.people`) draws them beside you. Colours are `--a-*` tokens in `styles.css`.
 - `app.js`: UI only. It renders the state and whatever screen is first in `game.queue`, and plays a milestone's cutscene first (`pendingCut` / `playCut`).
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v6.1 (social):** the people in your life. Named classmates at every stage (kindergarten to the retake academy), with Korean names drawn by real frequency (romanized in English), seeded looks, personalities and their own ability; closeness that grows with your Friends blocks (tap a friend to choose who) and fades when you don't meet; a best friend, a rival, crushes, confessions and dating from Middle 2, and a new homeroom teacher every March whose style nudges the year. Twenty new events with names (seatmates, birthdays, fights and making up, friends moving away, group study, confessions, breakups before the exam, rival results, reunions, a friend at the 수능 gate), and the bully, the PC방 friend and your rival in existing events are named too. A Friends panel with portraits and closeness bars, and the ending shows where your closest friends ended up (`friendOutcomes`). Single-sex schools give single-sex classes. Everything rolls from its own seeded streams; old saves build their classmates on load. Balance tables regenerated (they moved by a few points; see the strategy table).
 
 - **v5.2:** parents' jobs. Each parent is dealt a real job at birth (16 jobs, plus staying at home), drawn from official 2025 occupation shares for working mothers and for men aged 30–49 and fitted to the family's income fifth by real pay. Jobs change with layoffs (often into a fried-chicken shop), divorce and bereavement, and mothers go back to work at the real rate as children grow. Jobs have small effects, seven new events, work clothes on the birth screen and a line on the Family strip. New Jobs section in `data/korea-stats.md`. Balance tables regenerated.
 

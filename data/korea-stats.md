@@ -274,6 +274,14 @@ Retrieved: 2026-10-29 (figures read from the attached xlsx / pdf / hwpx / csv fi
 | Household income by head's status | regular employee 45.7% of households, mean ₩95.2M/yr; self-employed 21.1%, ₩80.0M; temp/daily 11.3%, ₩45.4M; other/not working 21.9%, ₩40.1M (all ₩74.3M, median ₩58.0M) | 2024 income | 만원/yr | 국가데이터처, 가계금융복지조사 2025 | https://mods.go.kr/boardDownload.es?bid=215&list_no=439535&seq=8 | official |
 | Dual earners by head's occupation | managers 52.7, professionals 63.6, clerks 66.1, service 67.2, sales 66.9, farm 80.5, craft 57.6, machine 54.7, elementary 52.7 | 2025 H2 | % of married households with an employed head | 국가데이터처, 맞벌이 가구 | https://mods.go.kr/boardDownload.es?bid=211&list_no=445516&seq=1 | official |
 
+## 15. Names
+Retrieved: 2026-11-10
+
+| Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
+|---|---|---|---|---|---|---|
+| Most common surnames | 김 21.5% (10.69 million of 51.07 million); 이 14.7%; 박 8.4%; 최 4.7%; the top ten 63.9% | 2015-11-01 | Share of the population | Statistics Korea (2015 인구주택총조사, released 2016-09-07), via news | https://view.asiae.co.kr/article/2016090708573546435 ; https://m.seoul.co.kr/news/2021/01/25/20210125500093 | unverified (news citing the KOSTAT release); ranks 5–10 (정, 강, 조, 윤, 장, 임) and their shares (4.3, 2.3, 2.1, 2.1, 2.0, 1.7%) are from memory of the same release and sum to the stated top-ten total; ranks 11–20 are estimates (1.1–1.5% each) |
+| Most popular given names, 2023–24 births | boys 이준, 도윤, 하준, 은우, 서준; girls 서아, 이서, 아윤, 지아, 하윤 | 2023–2024 | Most-registered names (order as reported) | 대법원 전자가족관계등록시스템 통계서비스 (Supreme Court family-registration statistics), via news (Financial News, 2025-07) | https://www.fnnews.com/news/202507090655316630 | unverified: read only through a search summary; the article and the official statistics site (efamily.scourt.go.kr) could not be opened from this environment. The game's lists add 15 more names a sex from earlier 2020s rankings (시우, 지호, 수호, 유준, 예준, 선우 ...; 지안, 하은, 아린, 서윤, 시아, 수아 ...), not checked against the source |
+
 ## Game mapping
 Retrieved: 2026-10-28. The Suneung Simulator's constants (suneung/engine.js at commit 7846047) next to the closest real figure. "Life" means one simulated childhood from birth to High 3 unless noted.
 
@@ -310,6 +318,10 @@ Retrieved: 2026-10-28. The Suneung Simulator's constants (suneung/engine.js at c
 | `LOCAL_QUOTA` (지역인재) | 0.6 percentile points off the cut | 59.7% of places at obliged medical schools go to regional talent (2025) | a quota of seats, modelled as a cut bonus; no direct conversion |
 | `RURAL_QUOTA` (농어촌) | 0.8 percentile points off the cut | up to 4% of places, outside the quota | no direct conversion |
 | School types counts | 8 gifted, 20 science, 28 foreign-language, 8 international, 32 autonomous private | (news, 2025–26) | game only uses admission chances; consistent |
+| `SURNAMES` (classmates, teachers) | 김 21.5, 이 14.7, 박 8.4, 최 4.7, 정 4.3 ... 홍 1.1 (20 surnames, weights) | 2015 census shares (top four confirmed, top ten 63.9%) | matches the confirmed shares; the 20 cover about 77% of the population, the rest of Korea's surnames are left out |
+| `GIVEN` (classmates) | 20 boys' and 20 girls' names, weight 1/(rank + 4) | 2023–24 top five per sex (Supreme Court statistics, unverified) | top five match the reported order; the tail and the weights are estimates |
+| `CLASS_SIZE` (named classmates) | 6 per new elementary, middle and high school class | class sizes 19.3 / 24.9 / 23.4 (2025) | only the classmates who matter are named, not the whole class |
+| `TEACHER_F` (homeroom teacher is a woman) | elementary 75%, middle 68%, high 55% | no figure checked | estimate (see Gaps) |
 | Kindergarten choice | ordinary kindergarten default | public daycare share 28.3% (2023); preschool private-ed participation 47.6% | no game rate |
 
 ## Gaps (no verifiable figure found yet)
@@ -325,3 +337,5 @@ Retrieved: 2026-10-28. The Suneung Simulator's constants (suneung/engine.js at c
 - National 검정고시 totals and high-school-level pass rates.
 - Admission rates by family income or region.
 - Graduates' wages by school tier.
+- Women's share of teachers by school level (KEDI 교육기본통계 tables); share of middle and high schools that are boys' or girls' only.
+- Year-by-year 2020–2022 name rankings (the Supreme Court statistics site); how many teenagers date, and how many keep a best friend from elementary school.

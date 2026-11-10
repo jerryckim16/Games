@@ -1024,6 +1024,7 @@
     // No classmates: with no time for friends, the days get lonely.
     {
       id: "lonely", weight: 2, when: (g) => g.dropoutActive() && !(g.lastPlan && g.lastPlan.friends), choices: 2,
+      params: (g) => one(g.friendPick(g.srng("lonely"), { here: false, min: 15 })),
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -10, motivation: 4 }); g.lostBlocks += 1; return "r0"; }
         bump(g, { stress: 6, motivation: -5 }); return "r1";
@@ -1086,7 +1087,7 @@
     // what to do; the odds differ by choice. It also ends when classes are reshuffled in March or you
     // change school stage (see nextTurn), and for good when you leave high school.
     {
-      id: "bully-start", weight: bullyWeight, choices: 4,
+      id: "bully-start", weight: bullyWeight, choices: 4, params: (g) => g.pickBully(),
       when: (g) => !g.bully && g.inSchool() && !g.dropoutActive() && g.grade >= 3 && g.grade <= 11 && g.clock - (g.flags.bullyEnd == null ? -99 : g.flags.bullyEnd) >= 12,
       run: (g, i) => {
         // Middle school is when it most often turns into a group thing.
@@ -1102,22 +1103,28 @@
       },
     },
     {
-      id: "bully-on", weight: 100, choices: 5,
+      id: "bully-on", weight: 100, choices: 5, params: (g) => g.bullyParams(),
       when: (g) => !!g.bully && g.bully.lv < 3 && bullyFollowUp(g),
-      run: (g, i) => {
+      run: (g, i, q) => {
         const friends = !!(g.lastPlan && g.lastPlan.friends);
         const t = longTurn(g);
         let x;
         if (i === 0) { bump(g, { stress: 5 }); x = bullyStep(g, 0.45 + t, 0.25, 0.12); } // report to the school violence committee: draining, but it works
         else if (i === 1) { g.bully.sup = 1; bump(g, { stress: -10, motivation: 3 }); x = bullyStep(g, 0.15 + t, 0.35, 0.08); } // Wee class counselor
-        else if (i === 2) { if (friends) g.bully.sup = 1; bump(g, { stress: friends ? -8 : -2 }); x = bullyStep(g, (friends ? 0.2 : 0.08) + t, friends ? 0.35 : 0.15, 0.1); }
+        else if (i === 2) {
+          if (friends) g.bully.sup = 1;
+          bump(g, { stress: friends ? -8 : -2 });
+          x = bullyStep(g, (friends ? 0.2 : 0.08) + t, friends ? 0.35 : 0.15, 0.1);
+          // The friend who stood by you is a closer friend for it.
+          if (friends && q && q.fr) g.closer(q.fr.id, 8);
+        }
         else if (i === 3) { bump(g, { health: -6, stress: 4 }); x = bullyStep(g, 0.3 + t, 0.05, 0.35); } // fight back
         else { bump(g, { motivation: -4 }); x = bullyStep(g, 0.08 + t, 0.07, 0.35); } // endure: it usually gets worse
         return ["r" + i, { x, f: friends }];
       },
     },
     {
-      id: "bully-bad", weight: 100, choices: 4,
+      id: "bully-bad", weight: 100, choices: 4, params: (g) => g.bullyParams(),
       when: (g) => !!g.bully && g.bully.lv >= 3 && bullyFollowUp(g),
       run: (g, i) => {
         const t = longTurn(g);
@@ -1129,6 +1136,9 @@
           g.lostBlocks += 1;
           g.flags.moved = g.clock;
           if (g.rng() < 0.85) { endBully(g); x = "stop"; } else { g.bully.lv = 1; x = "ease"; }
+          // A new school: new classmates.
+          const st = g.classStage();
+          if (st) g.newClass(st, "transfer");
         }
         else if (i === 2) { g.bully.sup = 1; bump(g, { stress: -10, motivation: 3 }); x = bullyStep(g, 0.15 + t, 0.4, 0.05); }
         else { bump(g, { motivation: -5, health: -4 }); x = bullyStep(g, 0.05 + t, 0.1, 0); }
@@ -1155,6 +1165,7 @@
     // ----- school years and beyond -----
     {
       id: "pcbang", weight: 3, when: (g) => g.grade >= 7 && g.status !== "academy", choices: 2,
+      params: (g) => one(g.friendPick(g.srng("pc"), { min: 15, tag: "gamer" }) || g.friendPick(g.srng("pc2"), { min: 15 })),
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -12, motivation: -4 }); return "r0"; }
         bump(g, { stress: 4, motivation: 3 }); studyBoost(g, pickWeak(g), 0.03); return "r1";
@@ -1184,7 +1195,7 @@
         bump(g, { motivation: 4, stress: 3 }); return "r1";
       },
     },
-    { id: "rival", weight: 1.5, when: (g) => g.grade >= 7, run: (g) => { bump(g, { motivation: 8, stress: 5 }); return "r"; } },
+    { id: "rival", weight: 1.5, when: (g) => g.grade >= 7, params: (g) => one(g.person(g.soc().rival)), run: (g) => { bump(g, { motivation: 8, stress: 5 }); return "r"; } },
     {
       id: "slump", weight: 1.5, when: (g) => g.grade >= 7 && g.stress > 60, choices: 2,
       run: (g, i) => {
@@ -1231,6 +1242,161 @@
       },
     },
     { id: "insight", luck: 1, weight: 1, when: (g) => g.motivation > 60, run: (g) => { const s = pickWeak(g); studyBoost(g, s, 0.04); return ["r", { s }]; } },
+    // ----- people (social: rollSocial picks these from its own stream; never the main pool) -----
+    // who(g, r) picks the people (null: nobody fits, so nothing happens); run(g, i, q) gets them back.
+    // forced: pushed by the engine itself (a new class, a mock, the 수능 gate), never rolled.
+    // A new class: whoever sits next to you (짝꿍).
+    { id: "soc-seatmate", social: true, forced: true, anyStage: true, weight: 0, when: () => false,
+      run: (g, i, q) => { g.closer(q.a.id, 12); bump(g, { stress: -2 }); return "r." + q.st; } },
+    // Kindergarten: a playdate in the sandpit.
+    { id: "soc-playdate", social: true, early: true, weight: 3, when: (g) => g.atKinder(),
+      who: (g, r) => one(g.friendPick(r, { here: true })),
+      run: (g, i, q) => { g.closer(q.a.id, 10); bump(g, { stress: -3, motivation: 2 }); return "r"; } },
+    // A birthday party (a kids' café in elementary school, a karaoke room in middle school).
+    { id: "soc-birthday", social: true, anyStage: true, weight: 3, choices: 2, when: (g) => (g.atKinder() || g.inClass()) && g.grade <= 9,
+      who: (g, r) => { const p = g.friendPick(r, { here: true, min: 12 }); return p && { a: ref(p), t: g.grade >= 7 ? 1 : 0 }; },
+      run: (g, i, q) => {
+        if (i === 0) { g.closer(q.a.id, 12); bump(g, { stress: -5, motivation: 2 }); return "r0"; }
+        g.closer(q.a.id, -6); bump(g, { stress: 1 }); return "r1";
+      } },
+    // A fight with a friend, and maybe a cold war (made up later in soc-makeup).
+    { id: "soc-fight", social: true, weight: 2, choices: 2, when: (g) => g.inClass() && g.grade >= 2 && !g.social.people.some((p) => p.fight != null),
+      who: (g, r) => { const p = g.friendPick(r, { here: true, min: GROUP }); return p && { a: ref(p), why: Math.floor(r() * 3) }; },
+      run: (g, i, q) => {
+        if (i === 0) { g.closer(q.a.id, 6); bump(g, { stress: -2 }); return "r0"; }
+        const p = g.person(q.a.id);
+        if (p && (p.tr.indexOf("kind") >= 0 || g.srng("fight", p.id)() < 0.4)) { g.closer(p.id, 4); return "r1a"; }
+        if (p) { p.fight = g.clock; g.closer(p.id, -15); }
+        bump(g, { stress: 5, motivation: -2 });
+        return "r1b";
+      } },
+    { id: "soc-makeup", social: true, weight: (g) => (g.social && g.social.people.some((p) => p.fight != null) ? 8 : 0), when: () => true,
+      who: (g) => one(g.social.people.find((p) => p.fight != null)),
+      run: (g, i, q) => { const p = g.person(q.a.id); if (p) delete p.fight; g.closer(q.a.id, 14); bump(g, { stress: -4, motivation: 2 }); return "r"; } },
+    // A friend's family moves away.
+    { id: "soc-moveaway", social: true, weight: 1.2, choices: 2, when: (g) => g.inClass() && g.grade <= 11,
+      who: (g, r) => {
+        const p = g.friendPick(r, { here: true, min: 30 });
+        const to = REGIONS.filter((x) => x.id !== g.region);
+        return p && { a: ref(p), to: to[Math.floor(r() * to.length)].id };
+      },
+      run: (g, i, q) => {
+        const p = g.person(q.a.id);
+        if (p) { p.here = false; p.away = g.clock; if (i === 0) p.keep = 1; }
+        if (g.social.focus === q.a.id) g.social.focus = null;
+        if (i === 0) g.closer(q.a.id, 5);
+        bump(g, { stress: 4, motivation: -2 });
+        return "r" + i;
+      } },
+    // A friend who moved (or a best friend from an old school) keeps in touch.
+    { id: "soc-letter", social: true, weight: 2, when: () => true,
+      who: (g, r) => { const p = g.friendPick(r, { here: false, min: 30, keep: true }); return p && { a: ref(p), t: g.grade >= 7 ? 1 : 0 }; },
+      run: (g, i, q) => { g.closer(q.a.id, 10); bump(g, { stress: -3, motivation: 1 }); return "r"; } },
+    // Group study (스터디) with a studious friend.
+    { id: "soc-study", social: true, weight: 2.5, choices: 2, when: (g) => g.grade >= 7 && (g.inClass() || g.status === "academy"),
+      who: (g, r) => one(g.friendPick(r, { here: true, min: 25, tag: "studious" })),
+      run: (g, i, q) => {
+        if (i === 1) return "r1";
+        const s = pickWeak(g);
+        studyBoost(g, s, 0.03);
+        g.closer(q.a.id, 8);
+        bump(g, { stress: 2, motivation: 3 });
+        return ["r0", { s }];
+      } },
+    // Friends plan something after exams: the beach, a karaoke room, a theme park.
+    { id: "soc-group", social: true, weight: 1.5, choices: 2, when: (g) => g.grade >= 7 && g.grade <= 11 && g.inClass(),
+      who: (g, r) => {
+        const ps = g.social.people.filter((p) => p.here && p.cl >= 25 && p.id !== g.social.bully).sort((a, b) => b.cl - a.cl);
+        return ps.length >= 2 ? { a: ref(ps[0]), b: ref(ps[1]), k: Math.floor(r() * 3) } : null;
+      },
+      run: (g, i, q) => {
+        if (i === 1) { bump(g, { stress: 2 }); return "r1"; }
+        g.money -= Math.min(g.money, 30000);
+        g.closer(q.a.id, 6); g.closer(q.b.id, 6);
+        bump(g, { stress: -10, motivation: 2 });
+        return "r0";
+      } },
+    // A crush, and a confession (고백). From Middle 2; at a boys' or girls' school it's someone from
+    // outside school.
+    { id: "soc-crush", social: true, weight: (g) => (g.social && g.social.partner == null ? 1.6 : 0), choices: 2, when: (g) => g.grade >= 8 && g.age <= 20,
+      who: (g, r) => { const p = g.romancePick(r); return p && { a: ref(p), out: p.out || null, again: g.social.crush === p.id ? 1 : 0 }; },
+      run: (g, i, q) => {
+        const p = g.person(q.a.id);
+        if (!p) return "r1";
+        if (i === 1) { g.social.crush = p.id; bump(g, { motivation: 2, stress: 2 }); return "r1"; }
+        if (g.srng("confess", p.id)() < 0.3 + p.cl / 160 + (p.like || 0)) { g.startDating(p); bump(g, { stress: -6, motivation: 4 }); return "r0a"; }
+        g.social.crush = null;
+        g.closer(p.id, -10);
+        bump(g, { stress: 8, motivation: -3 });
+        return "r0b";
+      } },
+    // Someone confesses to you.
+    { id: "soc-confessed", social: true, weight: (g) => (g.social && g.social.partner == null ? 0.8 : 0), choices: 2, when: (g) => g.grade >= 9 && g.age <= 20,
+      who: (g, r) => { const p = g.romancePick(r, true); return p && { a: ref(p), out: p.out || null }; },
+      run: (g, i, q) => {
+        const p = g.person(q.a.id);
+        if (!p) return "r1";
+        if (i === 0) { g.startDating(p); bump(g, { stress: -5, motivation: 3 }); return "r0"; }
+        g.closer(p.id, -8); bump(g, { stress: 1 }); return "r1";
+      } },
+    { id: "soc-date", social: true, weight: (g) => (g.social && g.social.partner != null ? 3 : 0), when: () => true,
+      who: (g, r) => { const p = g.person(g.social.partner); return p && { a: ref(p), k: Math.floor(r() * 3) }; },
+      run: (g, i, q) => { g.closer(q.a.id, 8); bump(g, { stress: -7, motivation: 1 }); return "r"; } },
+    // Before the exam: break up to focus, or stay together.
+    { id: "soc-breakup", social: true, choices: 2, when: (g) => g.status === "hs3" || g.attempt >= 2 || g.grade === 11,
+      weight: (g) => { const p = g.social && g.person(g.social.partner); return p && p.cl >= 35 ? 2 : 0; },
+      who: (g) => one(g.person(g.social.partner)),
+      run: (g, i) => {
+        if (i === 0) { g.endDating("you"); bump(g, { stress: 8, motivation: 4 }); return "r0"; }
+        bump(g, { stress: -3, motivation: -1 }); return "r1";
+      } },
+    // Neglected, they end it.
+    { id: "soc-dumped", social: true, when: () => true,
+      weight: (g) => { const p = g.social && g.person(g.social.partner); return p && p.cl < 35 ? 4 : 0; },
+      who: (g) => one(g.person(g.social.partner)),
+      run: (g) => { g.endDating("them"); bump(g, { stress: 10, motivation: -4 }); return "r"; } },
+    // Old friends from elementary or middle school get together.
+    { id: "soc-reunion", social: true, weight: 1.5, choices: 2, when: (g) => (g.grade >= 10 || g.attempt >= 2) && !g.dropoutActive(),
+      who: (g) => {
+        const ps = g.social.people.filter((p) => !p.here && (p.st === "elem" || p.st === "kinder" || p.st === "mid") && p.cl >= 5 && p.id !== g.social.bully).sort((a, b) => b.cl - a.cl);
+        return ps.length >= 2 ? { a: ref(ps[0]), b: ref(ps[1]) } : null;
+      },
+      run: (g, i, q) => {
+        if (i === 1) return "r1";
+        g.closer(q.a.id, 15); g.closer(q.b.id, 15);
+        g.lostBlocks += 1;
+        bump(g, { stress: -10, motivation: 2 });
+        return "r0";
+      } },
+    // Retake years: your school friends have moved on, and one of them calls.
+    { id: "soc-afterschool", social: true, weight: 2.5, choices: 2, when: (g) => g.attempt >= 2,
+      who: (g, r) => {
+        const p = g.person(g.social.best) || g.friendPick(r, { here: false, min: 30 });
+        if (!p || p.st === "academy") return null;
+        const f = g.fateOf(p);
+        return { a: ref(p), path: f.path, uni: f.uni };
+      },
+      run: (g, i, q) => {
+        if (i === 0) { g.closer(q.a.id, 10); g.lostBlocks += 1; bump(g, { stress: -10, motivation: 3 }); return "r0"; }
+        g.closer(q.a.id, -6); bump(g, { motivation: 1 }); return "r1";
+      } },
+    // The rival: the semester's class ranks (middle school) and mocks (high school and retakes).
+    { id: "soc-rivalrank", social: true, forced: true, weight: 0, when: () => false,
+      run: (g, i, q) => { const win = q.me < q.them; bump(g, win ? { motivation: 2, stress: -1 } : { motivation: 3, stress: 3 }); return win ? "rw" : "rl"; } },
+    { id: "soc-rivalmock", social: true, forced: true, weight: 0, when: () => false, choices: 1,
+      run: (g, i, q) => {
+        const m = g.mocks[g.mocks.length - 1], p = q && g.person(q.a.id);
+        if (!m || !p) return "rx";
+        const x = m.subjects;
+        const me = Math.round((x.kor.pct + x.math.pct + (x.inq1.pct + x.inq2.pct) / 2) / 3);
+        const them = clamp(Math.round(phi(g.thNow(p) + g.srng("rivalmock", p.id).normal() * 0.25) * 100), 1, 99);
+        const win = me >= them;
+        bump(g, win ? { motivation: 2, stress: -1 } : { motivation: 3, stress: 3 });
+        return [win ? "rw" : "rl", { me, them }];
+      } },
+    // 수능 morning: someone at the gate for you (or a message, in a retake year).
+    { id: "soc-gate", social: true, forced: true, weight: 0, when: () => false,
+      run: (g, i, q) => { bump(g, { stress: -3 }); return "r." + q.k; } },
   ];
   // run() result → { key, p } message.
   function outcome(id, r) {
@@ -1345,6 +1511,69 @@
   // class ranks, the GED and how far behind the class you are are measured against.
   const TYPICAL_CLIMB = 0.28;
 
+  // ---------- people: classmates, friends, rivals, crushes, teachers ----------
+  // Named people who stay with you through a life (g.social). Everything about them is rolled from
+  // their own seeded streams (hashSeed(seed, "soc", ...), see srng), never the main RNG, so a life's
+  // events, exams and family fortunes come out the same whether or not you make friends; only their
+  // small effects on stress, motivation and study move anything. Saves from before v6.1 have no
+  // g.social: soc() builds it the first time it's needed, from the stage the life is at.
+  // Surnames by share of the population (%), 2015 census (the top ten are 63.9% of Koreans).
+  const SURNAMES = [["김", 21.5], ["이", 14.7], ["박", 8.4], ["최", 4.7], ["정", 4.3], ["강", 2.3], ["조", 2.1], ["윤", 2.1], ["장", 2.0], ["임", 1.7],
+    ["한", 1.5], ["오", 1.5], ["서", 1.5], ["신", 1.5], ["권", 1.4], ["황", 1.4], ["안", 1.4], ["송", 1.4], ["전", 1.1], ["홍", 1.1]];
+  // Given names popular for children born in the early 2020s, most popular first. The birth-registration
+  // name statistics of the Supreme Court's family-registration service put 이준, 도윤, 하준, 은우, 서준 and
+  // 서아, 이서, 아윤, 지아, 하윤 on top for 2023–24; the rest of each list is from earlier 2020s rankings
+  // and not checked against the source (see data/korea-stats.md). A name's chance falls with its rank.
+  const GIVEN = {
+    m: ["이준", "도윤", "하준", "서준", "은우", "시우", "지호", "수호", "유준", "예준", "선우", "우진", "연우", "이안", "지우", "건우", "도현", "준우", "시윤", "주원"],
+    f: ["서아", "이서", "아윤", "지아", "하윤", "지안", "하은", "아린", "서윤", "시아", "수아", "채아", "윤서", "지유", "하린", "서하", "나은", "유나", "지우", "다인"],
+  };
+  // Personality traits; each person gets two, and the first is who they mostly are.
+  // studious: time with them can turn into studying together (STUDY_TOGETHER). funny / sporty / gamer:
+  // what an afternoon with them does to stress, health or motivation. kind: friendships with them grow
+  // faster, and they make up first. quiet: slower to warm up, slower to fade. bossy / troubled: the
+  // classmates a bully is most often drawn from.
+  const PERSONAS = [["studious", 1.2], ["sporty", 1], ["funny", 1], ["kind", 1], ["quiet", 0.9], ["gamer", 0.8], ["artsy", 0.8], ["bossy", 0.5], ["troubled", 0.5]];
+  const PERSONA_TH = { studious: 0.5, troubled: -0.4, gamer: -0.1 };
+  // How many named classmates a new class brings (the ones who matter, not all 20–30 of them), and how
+  // many of your old friends can come along to the next school (middle schools take whole neighbourhoods).
+  const CLASS_SIZE = { play: 2, kinder: 4, elem: 6, mid: 6, high: 6, academy: 4, uni: 3 };
+  const CARRY = { elem: 1, mid: 2, high: 1 };
+  // Where classmates' ability sits (θ at their own 수능): selective schools gather strong students.
+  const SCHOOL_TH = { privElem: 0.2, privMid: 0.1, privHigh: 0.1, intlMid: 0.6, autoHigh: 0.7, sciHigh: 1.1, langHigh: 0.8, artsHigh: -0.3, vocHigh: -0.7 };
+  // Closeness runs 0–100: a best friend (단짝) from BEST, part of your group from GROUP, and a best
+  // friend who falls under DRIFT has drifted away. FRIEND_GAIN: what a block of hanging out adds.
+  const BEST = 60, GROUP = 35, DRIFT = 45, FRIEND_GAIN = 10;
+  // Studying together: a block with a studious friend also nudges your weakest subject.
+  const STUDY_TOGETHER = 0.012;
+  // The chance of a social event in a turn, times √(months in the turn).
+  const SOCIAL_RATE = 0.18;
+  const MAX_PEOPLE = 40;
+  // The homeroom teacher (담임), new every March. lessons: multiplier on school lessons; stress: added
+  // each turn; mot: on the motivation baseline. Small, and weighted to exactly nothing on average
+  // (lessons 1, stress 0, motivation 0), so teachers change a year without moving the balance.
+  const TEACHERS = {
+    warm: { w: 3, lessons: 1, stress: -1, mot: 0.5 },
+    strict: { w: 2, lessons: 1.03, stress: 1, mot: 0 },
+    passion: { w: 2, lessons: 1.05, stress: 1, mot: 1 },
+    relaxed: { w: 2, lessons: 0.96, stress: -1, mot: -1 },
+    tired: { w: 1, lessons: 0.92, stress: 1, mot: -1.5 },
+  };
+  // Share of homeroom teachers who are women, by school level (an estimate).
+  const TEACHER_F = { elem: 0.75, mid: 0.68, high: 0.55, hs3: 0.55 };
+  // Where you meet someone when your school is boys' or girls' only.
+  const OUTSIDE = ["hagwon", "church", "friend"];
+  function pickW(r, list) {
+    let x = r() * list.reduce((a, e) => a + e[1], 0);
+    for (const e of list) { x -= e[1]; if (x <= 0) return e[0]; }
+    return list[list.length - 1][0];
+  }
+  // A name's weight by rank: the top names are common, the tail still turns up.
+  const nameList = (sex) => GIVEN[sex].map((n, i) => [n, 1 / (i + 4)]);
+  // What events and log entries carry to name someone: the name itself (strings.js romanizes it in English).
+  const ref = (p) => (p ? { id: p.id, s: p.s, n: p.n, x: p.x } : null);
+  const one = (p) => (p ? { a: ref(p) } : null);
+
   // ---------- the game ----------
   class Game {
     constructor(opts) {
@@ -1406,6 +1635,8 @@
       this.ending = null;
       this.lastPlan = null;
       this.bully = null; // { lv, n, sup } while being bullied; see bully-start
+      // The people in your life (see soc()): absent in saves from before v6.1.
+      this.social = Game.freshSocial();
       this.school = null; // school id, picked on the "school" screen; absent reads as the public school
       // regionFrom is the school grade you arrived in: the local quotas need middle and high school
       // there (from grade 7).
@@ -1583,6 +1814,9 @@
       // The parents take it hard.
       bump(this, { stress: 6, motivation: -4 });
       this.addLog("log.dropout", { g: this.grade }, "milestone");
+      // Your classmates carry on without you.
+      this.leaveClass();
+      this.social.teacher = null;
       if (this.bully) { endBully(this); this.addLog("log.bullyEnd", { why: "quit" }, "event"); }
     }
     activities() {
@@ -1687,6 +1921,10 @@
       this.real = real ? Object.assign({ id: this.school, region: this.region }, real) : null;
       this.queue.shift();
       this.addLog("log.school", { id: this.school, want: id, got, real: real && real.name }, "milestone");
+      // New school, new classmates.
+      this.soc();
+      const st = this.classStage();
+      if (st) this.newClass(st, "stage");
       this.flush();
       return { key: o.def ? "school.r.def" : got ? "school.r.in" : "school.r.out", p: { id, def: DEFAULT_SCHOOL[top.stage], real: real && real.name } };
     }
@@ -1753,6 +1991,9 @@
       }
       // In school, the quotas count from the grade you arrive in; after school, you're past them.
       this.regionFrom = this.inSchool() ? this.grade : 13;
+      // A new school means new classmates (a boarding school keeps its own).
+      const st = this.classStage();
+      if (this.social && st && !(this.inClass() && this.schoolInfo().board)) this.newClass(st, "move");
       this.flags.moved = this.clock;
       this.flags.lastMove = this.clock;
       this.addLog("log.move", { from, to: id }, "milestone");
@@ -1809,6 +2050,9 @@
       this.method = this.methodFixed() ? this.method : method;
       this.lastPlan = Object.assign({}, plan);
       this.lostBlocks = 0;
+      this.soc();
+      // This year's homeroom teacher (see TEACHERS).
+      const tf = this.teacherFx();
       const months = this.turnMonths();
       const school = this.inSchool();
       // A long turn moves ability further, but not twelve times as far: habits matter more than hours.
@@ -1870,7 +2114,7 @@
         const sl = this.schoolInfo().lessons;
         for (const s of SUBJECTS) {
           const behind = clamp(0.5 + 0.5 * (typical - this.skills[s]), CLASS_FLOOR, 1);
-          const g = CLASS_YEAR * (months / 12) * SUBJECT_INFO[s].rate * this.aptitude[s] * behind * attend * headroom(this.skills[s]) * (sl[s] || sl.all || 1);
+          const g = CLASS_YEAR * (months / 12) * SUBJECT_INFO[s].rate * this.aptitude[s] * behind * attend * headroom(this.skills[s]) * (sl[s] || sl.all || 1) * (tf ? tf.lessons : 1);
           this.skills[s] += g;
           lessons += g;
         }
@@ -1903,6 +2147,7 @@
       // The school you're at: a special school's pace, or an arts school's breathing room.
       const sch = this.inClass() || this.atKinder() ? this.schoolInfo() : null;
       if (sch) { d.stress += sch.stress; d.health += sch.health || 0; }
+      if (tf) d.stress += tf.stress;
       // Arts & sports lessons over the years are what an arts high school audition looks at.
       if (plan.arts) this.flags.artsN = (this.flags.artsN || 0) + plan.arts * months / 12 * 2 * this.trait("arts");
       d.stress += (plan.job || 0) * 5;
@@ -1911,7 +2156,7 @@
       // without time for friends.
       if (drop && !plan.friends) d.stress += DROPOUT_LONELY;
       // Motivation drifts back toward a baseline that sags with every extra year.
-      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) + this.trait("mot") + PARENT_MOT[this.home()] - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0);
+      const base = (school ? 68 : 66) - (this.attempt - 1) * 6 + (this.status === "academy" ? 6 : 0) + rk.motivation + (sch ? sch.motivation : 0) + this.trait("mot") + PARENT_MOT[this.home()] - (this.dropout != null && this.grade <= 12 && this.attempt === 1 ? DROPOUT_MOTIVATION : 0) + (tf ? tf.mot : 0);
       d.motivation += (base - this.motivation) * 0.2 - (this.stress > 70 ? 4 : 0);
       // Bullying wears you down every turn it lasts; support (parents who know, a counselor, friends)
       // softens the toll on your body.
@@ -1922,6 +2167,8 @@
         this.bully.n += 1;
       }
       bump(this, d);
+      // Friendships: who you spent the friend blocks with, and whether you studied together.
+      const st = this.socialTurn(plan);
 
       // Summarize the turn.
       const deltas = {};
@@ -1929,7 +2176,7 @@
         const dd = this.skills[s] - before[s];
         if (Math.abs(dd) >= 0.004) deltas[s] = Math.round(dd * 16.67 * 10) / 10;
       }
-      this.addLog("log.month", { m: this.month, plan: Object.assign({}, plan), cost, d: deltas, cls: Math.round(lessons * 16.67 * 10) / 10 }, "month");
+      this.addLog("log.month", Object.assign({ m: this.month, plan: Object.assign({}, plan), cost, d: deltas, cls: Math.round(lessons * 16.67 * 10) / 10 }, st.fr ? { fr: st.fr, sg: st.sg } : {}), "month");
       if (this.status === "elem") this.addLog("log.teacher", { lvl: this.classLevel() }, "");
       if (this.status === "mid" && !drop) this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
@@ -1946,21 +2193,29 @@
       const seen = new Set();
       // Fixed milestones (D-100, free-semester career week, 중2) always fire when their time comes, and so
       // does the bullying follow-up while it lasts.
-      for (const e of EVENTS) if (weightOf(e, this) >= 100 && this.stageFits(e) && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
+      for (const e of EVENTS) if (!e.social && weightOf(e, this) >= 100 && this.stageFits(e) && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
       for (let i = 0; i < n; i++) this.rollEvent(seen);
       if ((plan.friends || 0) > 0 && rng() < 0.35 && !seen.has("pcbang") && this.grade >= 7 && this.clock - (this.flags["ev-pcbang"] || -99) >= 4) {
         this.fireEvent(EVENTS.find((e) => e.id === "pcbang"));
       }
+      // The people in your life: at most one social event, from its own stream (after the main events,
+      // so the main RNG runs exactly as before).
+      this.rollSocial(seen);
 
       // Scheduled exams and decisions.
+      const mocks = this.queue.length;
       if (this.status === "high" && !drop && (this.month === 3 || this.month === 9)) this.queue.push({ type: "mock", m: this.month === 3 ? 6 : 11 });
       if (!school && MOCKS[this.month] && !(this.month === 3 && this.status !== "hs3")) this.queue.push({ type: "mock", m: this.month });
+      // How the rival did: on the mock just sat, or in middle school's semester ranks.
+      if (this.queue.length > mocks) this.rivalCheck(true);
+      else if (this.status === "mid" && !drop) this.rivalCheck(false);
       if (this.status === "high" && this.grade === 10 && this.month === 12) this.queue.push({ type: "track" });
       if (this.status !== "elem" && !school && this.month === 11) {
         this.queue.push(this.examEveEvent());
         this.queue.push(this.lunchEvent());
         const luckEv = this.examLuckEvent();
         if (luckEv) this.queue.push(luckEv);
+        this.gateEvent();
         this.queue.push({ type: "exam" });
       } else {
         this.queue.push({ type: "nextMonth" });
@@ -1986,7 +2241,7 @@
 
     rollEvent(seen) {
       // An event that just happened waits at least four months before it can happen again.
-      const pool = EVENTS.filter((e) => !seen.has(e.id) && weightOf(e, this) < 100 && this.stageFits(e) && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
+      const pool = EVENTS.filter((e) => !e.social && !seen.has(e.id) && weightOf(e, this) < 100 && this.stageFits(e) && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
       let total = 0;
       for (const e of pool) total += weightOf(e, this);
       let r = this.rng() * total;
@@ -2000,10 +2255,17 @@
     }
     // Early-childhood events only happen before school, and every other event only after.
     stageFits(e) { return e.anyStage || !!e.early === this.isEarly(); }
-    fireEvent(e) {
+    // q: the people the event is about ({ a: ref, ... }), from the social event's who() or a main event's
+    // params(); the queue item keeps it as p so the text can name them, and the outcome carries it too.
+    fireEvent(e, q) {
       this.flags["ev-" + e.id] = this.clock;
-      if (e.choices) this.queue.push({ type: "event", id: e.id, choices: e.choices });
-      else this.queue.push({ type: "event", id: e.id, choices: 0, result: outcome(e.id, e.run(this)) });
+      if (q === undefined) q = e.params ? e.params(this) : null;
+      if (e.choices) this.queue.push(q ? { type: "event", id: e.id, choices: e.choices, p: q } : { type: "event", id: e.id, choices: e.choices });
+      else {
+        const res = outcome(e.id, e.run(this, null, q));
+        if (q) res.p = Object.assign({}, q, res.p);
+        this.queue.push(q ? { type: "event", id: e.id, choices: 0, result: res, p: q } : { type: "event", id: e.id, choices: 0, result: res });
+      }
     }
 
     // What the day itself deals you, from a stream of the seed and the sitting (so a given exam day is
@@ -2040,13 +2302,15 @@
     choose(i) {
       const top = this.queue[0];
       if (!top || top.type !== "event") throw new Error("No event to answer.");
+      this.soc();
       let res;
       if (top.choices) {
         i = clamp(i | 0, 0, top.choices - 1);
         if (top.id === "eve") res = outcome("eve", this.resolveEve(i));
         else if (top.id === "lunch") res = outcome("lunch", this.resolveLunch(i));
-        else res = outcome(top.id, EVENTS.find((e) => e.id === top.id).run(this, i));
-        this.addLog("log.event", { id: top.id, c: i, r: res }, "event");
+        else res = outcome(top.id, EVENTS.find((e) => e.id === top.id).run(this, i, top.p || null));
+        if (top.p) res.p = Object.assign({}, top.p, res.p);
+        this.addLog("log.event", top.p ? { id: top.id, c: i, r: res, q: top.p } : { id: top.id, c: i, r: res }, "event");
       } else {
         res = top.result;
         this.addLog("log.event", { id: top.id, c: null, r: res }, "event");
@@ -2119,6 +2383,8 @@
         this.grade = 1;
         this.status = "elem";
         this.addLog("log.stage", { g: 1, st: "elem", y: this.year }, "milestone");
+        this.soc();
+        this.newTeacher();
         this.queue.push({ type: "school", stage: "elem" });
         return;
       }
@@ -2138,6 +2404,14 @@
           else this.addLog("log.bullyStays", { g: this.grade }, "event");
         }
         if (this.status !== was && (this.status === "mid" || this.status === "high") && this.dropout == null) this.queue.push({ type: "school", stage: this.status });
+        // Classes are reshuffled every March: a new homeroom teacher, and a new face or two.
+        this.soc();
+        this.newTeacher();
+        const cst = this.classStage();
+        if (cst && (this.status === was || this.status === "hs3")) {
+          this.makePerson(this.srng("march"), { st: cst, x: this.schoolSex(), th: SCHOOL_TH[this.schoolInfo().id] || 0 });
+          this.prunePeople();
+        }
         if (this.grade === 11 && this.dropout != null && this.flags.ged != null) this.queue.push({ type: "event", id: "early", choices: 2 });
       }
       // Severe bullying costs a block a turn: days you can't face school, or can't focus when you're there.
@@ -2290,6 +2564,12 @@
         this.enrolled = null;
       }
       this.status = d.action;
+      // Your class graduates. A retake academy or a campus brings new faces; a study café doesn't.
+      this.soc();
+      const st = this.classStage();
+      if (st) this.newClass(st, "retake");
+      else this.leaveClass();
+      this.social.teacher = null;
       this.attempt += 1;
       this.age += 1;
       this.year += 1;
@@ -2321,6 +2601,320 @@
       let best = null;
       for (const r of this.history) if (!best || r.total > best.total) best = r;
       return best;
+    }
+
+    // ----- people (see the "people" constants above) -----
+    // g.social = { n: last id used, people: [person], best, rival, crush, partner, bully: person ids or
+    // null, exes: [ids], teacher: { s, x, sty, g } or null, focus: the friend you chose to spend time
+    // with, intro: a new seatmate waiting to be introduced }.
+    // A person: { id, s: surname, n: given name, x: "m" | "f", lk: look seed (art.js lookFor), tr: two
+    // PERSONAS ids, th: ability at their own 수능 (θ), cl: closeness 0–100, st: where you met
+    // (a CLASS_SIZE key, or "out"), met: clock, here: in your class now, away: clock they left it,
+    // keep: keeps in touch, out: where you met someone from outside school, like: a head start on
+    // saying yes, fight: clock of a fight not yet made up }.
+    static freshSocial() { return { n: 0, people: [], best: null, rival: null, crush: null, partner: null, bully: null, exes: [], teacher: null, focus: null, intro: null }; }
+    // The social state, built on first use for saves from before it existed.
+    soc() {
+      if (!this.social) {
+        this.social = Game.freshSocial();
+        const st = this.classStage();
+        if (st) this.newClass(st, "lazy");
+        this.newTeacher(true);
+      }
+      return this.social;
+    }
+    // A stream for the people side of life: the seed, the month and a tag, never the main RNG.
+    srng(...tags) { return makeRng(hashSeed(this.seed, "soc", this.clock, ...tags)); }
+    person(id) { return (id != null && this.social && this.social.people.find((p) => p.id === id)) || null; }
+    // Who your classmates are right now: a CLASS_SIZE key, or null (a baby, out of school, a study café).
+    classStage() {
+      if (this.isEarly()) return this.atKinder() ? (this.schoolInfo().id === "homeCare" ? "play" : "kinder") : null;
+      if (this.inClass()) return this.status === "elem" ? "elem" : this.status === "mid" ? "mid" : "high";
+      if (this.status === "academy") return "academy";
+      if (this.status === "halfretake") return "uni";
+      return null;
+    }
+    // "m" or "f" at a boys' or girls' school (the real school's sex, when places.js knows it), else null.
+    schoolSex() {
+      if (!this.inClass()) return null;
+      const r = this.realSchool();
+      return r && (r.sex === "m" || r.sex === "f") ? r.sex : null;
+    }
+    makePerson(r, o) {
+      const s = this.social;
+      const x = o.x === "m" || o.x === "f" ? o.x : r() < 0.5 ? "m" : "f";
+      const t1 = pickW(r, PERSONAS);
+      const t2 = pickW(r, PERSONAS.filter((e) => e[0] !== t1));
+      // No two people in your class with the same given name.
+      let sur, given;
+      for (let k = 0; k < 8; k++) {
+        sur = pickW(r, SURNAMES);
+        given = pickW(r, nameList(x));
+        if (!s.people.some((q) => q.n === given && (q.here || q.s === sur))) break;
+      }
+      const th = r.normal() * 0.9 + (PERSONA_TH[t1] || 0) + (PERSONA_TH[t2] || 0) * 0.5 + (o.th || 0);
+      const id = ++s.n;
+      const p = { id, s: sur, n: given, x, lk: hashSeed(this.seed, "look", id) & 0x7fffffff, tr: [t1, t2], th: Math.round(th * 100) / 100,
+        cl: Math.round(5 + r() * 15), st: o.st, met: this.clock, here: o.here !== false, like: Math.round(r() * 25) / 100 };
+      if (o.out) p.out = o.out;
+      s.people.push(p);
+      return p;
+    }
+    // A new class: at a new school stage, after a move or a transfer, or in a retake year. A friend or
+    // two may come along to the next school; everyone else stays behind (the best friend keeps in touch).
+    newClass(st, why) {
+      const s = this.social, r = this.srng("class", st, why);
+      const sex = this.schoolSex();
+      const carry = new Set();
+      if (why === "stage" && CARRY[st] && !(this.inClass() && this.schoolInfo().board)) {
+        const cands = s.people.filter((p) => p.here && !p.out && (!sex || p.x === sex) && p.id !== s.bully).sort((a, b) => b.cl - a.cl);
+        for (const p of cands.slice(0, CARRY[st])) if (r() < 0.6) carry.add(p.id);
+      }
+      this.leaveClass(carry);
+      for (const id of carry) this.person(id).st = st;
+      const th = (this.inClass() && SCHOOL_TH[this.schoolInfo().id]) || 0;
+      const fresh = [];
+      for (let i = 0; i < CLASS_SIZE[st]; i++) fresh.push(this.makePerson(r, { st, x: sex, th }));
+      if (s.rival != null && !(this.person(s.rival) || {}).here) s.rival = null;
+      if (st === "mid" || st === "high" || st === "academy") this.pickRival(r, fresh);
+      s.intro = why === "lazy" ? null : fresh[0].id;
+      if (why !== "lazy") this.addLog("log.soc.class", { st, why, with: [...carry].map((id) => ref(this.person(id))) }, "");
+      this.prunePeople();
+    }
+    // Everyone in your class goes on with their lives without you (out of school, a new school).
+    leaveClass(keep) {
+      const s = this.soc();
+      for (const p of s.people) {
+        if (!p.here || (keep && keep.has(p.id))) continue;
+        p.here = false;
+        p.away = this.clock;
+        const close = p.id === s.best || p.id === s.partner;
+        // A best friend keeps in touch by phone; the rest drift.
+        if (close) p.keep = 1;
+        p.cl = Math.round(p.cl * (close ? 0.85 : 0.6) * 10) / 10;
+      }
+    }
+    // The rival: often the classmate just above you in class rank.
+    pickRival(r, pool) {
+      if (!pool.length) return;
+      const now = (this.skills.kor + this.skills.math + this.skills.eng + this.skills.inq1 + this.skills.inq2) / 5;
+      const p = pool.find((q) => q.tr[0] === "studious") || pool[Math.floor(r() * pool.length)];
+      p.th = Math.round((now + 0.12 + r() * 0.25 + this.climbLeft()) * 100) / 100;
+      this.social.rival = p.id;
+    }
+    // Classmates climb the typical line to their own 수능 level, so their ability now is that, less the
+    // climb they still have ahead.
+    climbLeft() { return TYPICAL_CLIMB * Math.max(0, 12 - Math.max(1, this.grade)); }
+    thNow(p) { return p.th - this.climbLeft(); }
+    // A new homeroom teacher every March while you're in class.
+    newTeacher(quiet) {
+      const s = this.social;
+      if (!this.inClass()) { s.teacher = null; return; }
+      const r = this.srng("teacher", this.grade);
+      s.teacher = { s: pickW(r, SURNAMES), x: r() < (TEACHER_F[this.status] || 0.6) ? "f" : "m", sty: pickW(r, Object.keys(TEACHERS).map((k) => [k, TEACHERS[k].w])), g: this.grade };
+      if (!quiet) this.addLog("log.homeroom", { t: s.teacher, g: this.grade }, "");
+    }
+    teacherFx() { const t = this.inClass() && this.social && this.social.teacher; return t ? TEACHERS[t.sty] || null : null; }
+    prunePeople() {
+      const s = this.social;
+      const keep = new Set([s.best, s.rival, s.crush, s.partner, s.bully, s.focus].concat(s.exes || []));
+      while (s.people.length > MAX_PEOPLE) {
+        let worst = null;
+        for (const p of s.people) if (!p.here && !keep.has(p.id) && (!worst || p.cl < worst.cl)) worst = p;
+        if (!worst) break;
+        s.people.splice(s.people.indexOf(worst), 1);
+      }
+    }
+    closer(id, d) { const p = this.person(id); if (p) p.cl = Math.round(clamp(p.cl + d, 0, 100) * 10) / 10; }
+    // What someone is to you, for the Friends panel: partner, bully (while it lasts), crush, best friend
+    // (단짝), rival, ex, friend (your group), classmate, an old friend, or someone met outside school.
+    roleOf(p) {
+      const s = this.social;
+      if (p.id === s.partner) return "partner";
+      if (p.id === s.bully && this.bully) return "bully";
+      if (p.id === s.crush) return "crush";
+      if (p.id === s.best) return "best";
+      if (p.id === s.rival && p.here) return "rival";
+      if ((s.exes || []).indexOf(p.id) >= 0) return "ex";
+      if (p.cl >= GROUP) return "friend";
+      return p.here ? "classmate" : p.out ? "out" : "old";
+    }
+    // The friend the player chose to spend this turn's friend blocks with (null: whoever's around).
+    setFocus(id) {
+      const s = this.soc();
+      s.focus = id != null && this.person(id) && this.roleOf(this.person(id)) !== "bully" ? id : null;
+    }
+    // Someone from the people you know, more likely the closer they are. o: { here, min, tag, keep, not }.
+    friendPick(r, o) {
+      const s = this.soc();
+      const pool = s.people.filter((p) => (o.here == null || !!p.here === o.here) && p.cl >= (o.min || 0) && p.id !== s.bully && (!o.tag || p.tr.indexOf(o.tag) >= 0) &&
+        (!o.keep || p.keep || p.id === s.best) && (o.not || []).indexOf(p.id) < 0);
+      return pool.length ? pickW(r, pool.map((p) => [p, p.cl + 10])) : null;
+    }
+    // Someone to like (or who likes you): from your class when it has boys and girls, otherwise someone
+    // met outside school (a cram school, church, a friend's friend from another school).
+    romancePick(r, admirer) {
+      const s = this.soc();
+      if (!admirer && s.crush != null && this.person(s.crush)) return this.person(s.crush);
+      const other = this.sex === "m" ? "f" : this.sex === "f" ? "m" : null;
+      const pool = s.people.filter((p) => p.here && (!other || p.x === other) && p.id !== s.bully && p.id !== s.best && p.id !== s.crush && (s.exes || []).indexOf(p.id) < 0);
+      if (pool.length) return pickW(r, pool.map((p) => [p, p.cl + 10]));
+      const p = this.makePerson(r, { st: "out", x: other, out: OUTSIDE[Math.floor(r() * OUTSIDE.length)], here: false });
+      p.cl = 20;
+      p.keep = 1;
+      return p;
+    }
+    startDating(p) {
+      const s = this.social;
+      s.crush = null;
+      s.partner = p.id;
+      this.closer(p.id, 20);
+      this.addLog("log.soc.partner", { a: ref(p) }, "event");
+    }
+    endDating(why) {
+      const s = this.social, p = this.person(s.partner);
+      s.partner = null;
+      if (!p) return;
+      s.exes = (s.exes || []).concat(p.id);
+      p.cl = Math.round(p.cl * 0.4 * 10) / 10;
+      this.addLog("log.soc.ex", { a: ref(p), why }, "event");
+    }
+    // One turn of friendships: closeness fades (slowly with classmates you see every day, faster with
+    // people you don't), a seatmate gets a little closer on their own, and each block of hanging out
+    // goes to the friend you chose or whoever you're closest to. A studious friend turns some of it into
+    // studying together; a funny one, a sporty one or a gamer changes what the afternoon does to you.
+    // A best friend takes a point off stress. Returns { fr, sg } for the turn's log line.
+    socialTurn(plan) {
+      const s = this.soc(), months = this.turnMonths(), r = this.srng("turn");
+      for (const p of s.people) {
+        let rate = p.here ? 0.5 : p.id === s.best || p.keep ? 0.45 : 1.2;
+        if (p.id === s.partner) rate = p.here ? 0.3 : 0.6;
+        if (p.tr.indexOf("quiet") >= 0) rate *= 0.7;
+        p.cl = Math.max(0, p.cl - rate * months);
+      }
+      const here = s.people.filter((p) => p.here && !(this.bully && p.id === s.bully));
+      if (here.length && (this.inClass() || this.atKinder())) here[Math.floor(r() * here.length)].cl += 3;
+      // Out of school, or with no classmates, you meet the old friends you're still close to.
+      const pool = here.length ? here : s.people.filter((p) => p.cl >= 20 && p.id !== s.bully);
+      const d = { stress: 0, health: 0, motivation: 0 };
+      const focus = this.person(s.focus);
+      let with1 = null, together = 0;
+      for (let i = 0; i < (plan.friends || 0) && pool.length; i++) {
+        const t = focus && pool.indexOf(focus) >= 0 ? focus : pickW(r, pool.map((p) => [p, (p.cl + 15) * (p.tr.indexOf("kind") >= 0 ? 1.2 : 1)]));
+        const has = (k) => t.tr.indexOf(k) >= 0;
+        t.cl += (FRIEND_GAIN + 4 * r()) * Math.sqrt(this.trait("friends")) * (has("kind") ? 1.2 : 1) * (has("quiet") ? 0.85 : 1);
+        if (!with1) with1 = t;
+        // Someone else tags along.
+        if (pool.length > 1) { const o = pool[Math.floor(r() * pool.length)]; if (o !== t) o.cl += 3; }
+        if (has("funny")) d.stress -= 2;
+        if (has("sporty")) d.health += 2;
+        if (has("gamer")) d.motivation -= 1;
+        if (has("studious") && this.grade >= 4) { studyBoost(this, pickWeak(this), STUDY_TOGETHER); together++; }
+      }
+      for (const p of s.people) p.cl = Math.round(clamp(p.cl, 0, 100) * 10) / 10;
+      this.updateRoles();
+      const best = this.person(s.best);
+      if (best && best.cl >= BEST) d.stress -= 1;
+      bump(this, d);
+      return { fr: ref(with1), sg: together };
+    }
+    // The best friend (단짝) is whoever you're closest to from BEST up; they stay it until they fall
+    // under DRIFT or someone else is clearly closer.
+    updateRoles() {
+      const s = this.social;
+      const cur = this.person(s.best);
+      let top = null;
+      for (const p of s.people) if (p.id !== s.partner && p.id !== s.bully && (!top || p.cl > top.cl)) top = p;
+      if (cur && cur.cl >= DRIFT && !(top && top !== cur && top.cl >= cur.cl + 15)) return;
+      if (top && top !== cur && top.cl >= BEST) { s.best = top.id; this.addLog("log.soc.best", { a: ref(top), was: ref(cur) }, "event"); return; }
+      if (cur && cur.cl < DRIFT) { s.best = null; this.addLog("log.soc.drift", { a: ref(cur) }, "event"); }
+    }
+    // At most one social event a turn (more likely in a long turn), from its own stream: a new seatmate
+    // is introduced first, then anything in the social pool that fits.
+    rollSocial(seen) {
+      const s = this.soc(), r = this.srng("ev");
+      if (s.intro != null) {
+        const p = this.person(s.intro);
+        s.intro = null;
+        if (p && p.here) { seen.add("soc-seatmate"); this.fireEvent(EVENTS.find((e) => e.id === "soc-seatmate"), { a: ref(p), st: p.st }); return; }
+      }
+      if (r() >= SOCIAL_RATE * Math.sqrt(this.turnMonths())) return;
+      const pool = EVENTS.filter((e) => e.social && !e.forced && !seen.has(e.id) && this.stageFits(e) && e.when(this) && weightOf(e, this) > 0 && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
+      if (!pool.length) return;
+      const e = pickW(r, pool.map((x) => [x, weightOf(x, this)]));
+      const q = e.who ? e.who(this, r) : {};
+      if (q) { seen.add(e.id); this.fireEvent(e, q); }
+    }
+    // After a mock (high school, retakes) or a semester's class ranks (middle school), you sometimes
+    // hear how your rival did (about a third of the time).
+    rivalCheck(mock) {
+      const s = this.soc(), p = this.person(s.rival);
+      if (!p || !p.here || this.srng("rival")() >= 0.35) return;
+      if (mock) {
+        this.flags["ev-soc-rivalmock"] = this.clock;
+        this.queue.push({ type: "event", id: "soc-rivalmock", choices: 1, p: { a: ref(p) } });
+        return;
+      }
+      const mine = this.classRank();
+      let theirs = clamp(Math.round((1 - phi((this.thNow(p) + this.srng("rank").normal() * 0.15 - this.typicalLevel()) / 0.8)) * 30) + 1, 1, 30);
+      if (theirs === mine) theirs = mine === 1 ? 2 : mine - 1;
+      this.fireEvent(EVENTS.find((e) => e.id === "soc-rivalrank"), { a: ref(p), me: mine, them: theirs });
+    }
+    // Who's at the 수능 gate for you (or texting, in a retake year): someone you're dating, your best
+    // friend, or a close friend. Nobody, and there's no screen.
+    gateEvent() {
+      const s = this.soc();
+      const p = this.person(s.partner) || this.person(s.best) || this.friendPick(this.srng("gate"), { min: GROUP });
+      if (!p) return;
+      this.fireEvent(EVENTS.find((e) => e.id === "soc-gate"), { a: ref(p), k: p.id === s.partner ? "p" : this.attempt > 1 || !p.here ? "r" : "f" });
+    }
+    // Bullying with a face: one of the meaner classmates (or a new older kid), and the friend who might
+    // stand by you. Only names: the bullying rates and odds are the same as without them.
+    pickBully() {
+      const s = this.soc(), r = this.srng("bully");
+      const pool = s.people.filter((p) => p.here && p.id !== s.best && p.id !== s.partner && p.cl < GROUP);
+      const mean = pool.filter((p) => p.tr.indexOf("bossy") >= 0 || p.tr.indexOf("troubled") >= 0);
+      let p = mean.length ? mean[Math.floor(r() * mean.length)] : null;
+      if (!p) {
+        p = this.makePerson(r, { st: this.classStage() || "elem", x: this.schoolSex() || (r() < 0.65 ? "m" : "f") });
+        p.tr = ["bossy", p.tr[1] === "bossy" ? "troubled" : p.tr[1]];
+      }
+      p.cl = 0;
+      s.bully = p.id;
+      if (s.focus === p.id) s.focus = null;
+      return { by: ref(p), fr: ref(this.friendPick(r, { here: true, min: GROUP, not: [p.id] })) };
+    }
+    bullyParams() {
+      const s = this.soc(), p = this.person(s.bully);
+      const fr = this.friendPick(this.srng("bullyfr"), { here: true, min: GROUP, not: [s.bully] });
+      return p || fr ? { by: ref(p), fr: ref(fr) } : null;
+    }
+    // Where the people closest to you ended up: their own 수능 and university (or a retake year, or a
+    // job), from their own seeded ability, the same whatever you do. For the ending screen and the
+    // epilogue. Returns up to n (default 5), closest first:
+    // [{ id, s, n, x, lk, role, cl, from, sci, total, pct, path: "uni" | "retake" | "work", uni, aim }]
+    // where total is their standard-score total and pct their percentile (null when they went to work),
+    // uni the university they enrolled at (null unless path is "uni") and aim the one their score reached.
+    friendOutcomes(n) {
+      const s = this.social;
+      if (!s) return [];
+      return s.people.filter((p) => p.id !== s.bully && p.cl > 0).sort((a, b) => b.cl - a.cl || a.id - b.id).slice(0, n || 5)
+        .map((p) => Object.assign({ id: p.id, s: p.s, n: p.n, x: p.x, lk: p.lk, role: this.roleOf(p), cl: Math.round(p.cl), from: p.st }, this.fateOf(p)));
+    }
+    fateOf(p) {
+      const r = makeRng(hashSeed(this.seed, "fate", p.id));
+      const sci = r() < (p.tr.indexOf("studious") >= 0 ? 0.6 : 0.45);
+      const th = p.th + r.normal() * 0.3;
+      const pct = Math.round(clamp(phi(th) * 100, 0.1, 99.9) * 10) / 10;
+      const total = Math.round(clamp(300 + 52 * th, 160, 430));
+      // Some go to work instead (vocational school, or a weak score); some aim higher and retake.
+      const work = p.st === "academy" ? 0 : (pct < 30 ? 0.35 : pct < 50 ? 0.12 : 0.03) + (p.tr.indexOf("troubled") >= 0 ? 0.1 : 0);
+      if (r() < work) return { sci, total: null, pct: null, path: "work", uni: null, aim: null };
+      const swing = r.normal() * 0.8;
+      const u = UNIVERSITIES.find((x) => (!x.sci || sci) && x.cut <= pct + swing) || UNI_BY_ID.college;
+      const retake = (p.tr.indexOf("studious") >= 0 ? 0.3 : 0.12) * (u.cut < 93 ? 1 : 0.4);
+      const path = r() < retake ? "retake" : "uni";
+      return { sci, total, pct, path, uni: path === "uni" ? u.id : null, aim: u.id };
     }
 
     toJSON() {
