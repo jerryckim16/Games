@@ -11,9 +11,9 @@
     <div class="top">
       <h1 data-t="app.title">Suneung Simulator</h1>
       <button type="button" id="cutToggle" class="cut-toggle" aria-pressed="true"></button>
-      <div class="seg lang" id="lang" role="group" aria-label="Language / 언어">
-        <button type="button" data-v="en" lang="en">English</button>
-        <button type="button" data-v="ko" lang="ko">한국어</button>
+      <div class="seg lang lang-switch" id="lang" role="group" aria-label="Language / 언어">
+        <button type="button" data-v="en" lang="en" aria-pressed="false">English</button>
+        <button type="button" data-v="ko" lang="ko" aria-pressed="false">한국어</button>
       </div>
     </div>
     <p class="sub" data-t="app.sub"></p>
@@ -41,7 +41,6 @@
         </div>
         <div class="buttons">
           <button id="startBtn" type="button" class="primary" data-t="setup.go"></button>
-          <button id="resumeBtn" type="button" class="hidden" data-t="setup.resume"></button>
         </div>
         <div class="daily">
           <button id="dailyBtn" type="button"></button>
@@ -49,22 +48,23 @@
         </div>
       </div>
       <div class="panel">
-        <h2><span data-t="fame.title"></span> <span class="muted" data-t="fame.sub"></span></h2>
+        <h2 class="panel-title"><span aria-hidden="true">🏆 </span><span data-t="fame.title"></span> <span class="muted" data-t="fame.sub"></span></h2>
         <div class="table-wrap"><table class="grid" id="fame"></table></div>
       </div>
       <div class="panel">
-        <h2><span data-t="ach.title"></span> <span class="muted" id="achSub"></span></h2>
+        <h2 class="panel-title"><span aria-hidden="true">🏅 </span><span data-t="ach.title"></span> <span class="muted" id="achSub"></span></h2>
         <div id="achList"></div>
       </div>
       <div class="panel">
-        <h2><span data-t="lives.title"></span> <span class="muted" data-t="lives.sub"></span></h2>
-        <div class="table-wrap"><table class="grid" id="lives"></table></div>
+        <h2 class="panel-title"><span aria-hidden="true">🕰️ </span><span data-t="lives.title"></span> <span class="muted" data-t="lives.sub"></span></h2>
+        <div id="lives" class="life-cards"></div>
       </div>
     </section>
 
     <!-- ---------- the game ---------- -->
     <section id="game" class="hidden">
-      <!-- Your life right now: an illustrated scene with you in it, your mood, and the basics. -->
+      <!-- Your life right now: an illustrated scene with you in it, your mood, and the basics. On a phone
+           the map folds into the place chip and the stats into a two-row strip, so the plan comes first. -->
       <section class="life">
         <div class="life-top">
           <div class="scene-wrap">
@@ -74,62 +74,84 @@
           <div class="map-side">
             <div class="map-head"><span id="mapHome"></span><small id="mapHint"></small></div>
             <div id="mainMap" class="main-map"></div>
+            <div class="map-legend" id="mapLegend"></div>
           </div>
         </div>
+        <button type="button" id="placeChip" class="place-chip"><span class="pc-name" id="placeName"></span><span class="pc-go" id="placeGo"></span></button>
         <div class="stats">
           <div class="stat"><span class="ic" aria-hidden="true">📅</span><span class="k" data-t="stat.date"></span><span class="v" id="sDate"></span><span class="s" id="sDday"></span></div>
           <div class="stat"><span class="ic" aria-hidden="true">🎒</span><span class="k" data-t="stat.attempt"></span><span class="v" id="sAttempt"></span><span class="s" id="sStatus"></span></div>
           <div class="stat"><span class="ic" aria-hidden="true">🎂</span><span class="k" data-t="stat.age"></span><span class="v" id="sAge"></span><span class="s" id="sName"></span></div>
           <div class="stat"><span class="ic" aria-hidden="true">💰</span><span class="k" data-t="stat.money"></span><span class="v" id="sMoney"></span><span class="s" id="sAllowance"></span></div>
-          <div class="stat fam" id="sFamCard"><span class="ic" aria-hidden="true">🏠</span><span class="k" data-t="stat.family"></span><span class="v" id="sFam"></span><span class="s" id="sFamSub"></span></div>
+          <div class="stat fam" id="sFamCard"><span class="ic" aria-hidden="true">🏠</span><span class="k" data-t="stat.family"></span><div class="chips" id="sFam"></div><span class="s" id="sFamSub"></span></div>
         </div>
       </section>
 
+      <!-- What the last turn did, in a few chips: built from the turn's log entry and the stats before it. -->
+      <section id="turnSum" class="turn-sum hidden" aria-live="polite"></section>
+
       <div class="row">
-        <section class="panel">
-          <h2><span data-t="ability.title"></span> <span class="muted" data-t="ability.sub"></span></h2>
-          <div id="skills" class="bars"></div>
-          <div id="traits" class="traits" aria-live="polite"></div>
-          <h2 class="gap" data-t="cond.title"></h2>
-          <div id="condition" class="bars"></div>
-          <div class="chart-head gap">
-            <h2 data-t="chart.title"></h2>
-            <div class="legend" id="legend"></div>
+        <section class="panel stats-panel" id="statsPanel">
+          <button type="button" class="fold-head" id="statsFold" aria-expanded="true" aria-controls="statsBody"><span data-t="stats.title"></span><span class="chev" aria-hidden="true"></span></button>
+          <div class="fold-body" id="statsBody">
+            <h2><span data-t="ability.title"></span> <span class="muted" data-t="ability.sub"></span></h2>
+            <div id="skills" class="bars"></div>
+            <div id="traits" class="traits" aria-live="polite"></div>
+            <h2 class="gap" data-t="cond.title"></h2>
+            <div id="condition" class="bars"></div>
+            <div class="chart-head gap">
+              <h2 data-t="chart.title"></h2>
+              <div class="legend" id="legend"></div>
+            </div>
+            <canvas id="chart" role="img"></canvas>
           </div>
-          <canvas id="chart"></canvas>
         </section>
 
         <section class="panel plan">
           <div class="plan-head">
             <h2 id="planTitle"></h2>
-            <span id="blocksLeft" class="pill"></span>
+            <!-- Big, rare decisions live in a menu, away from the Next button. -->
+            <div class="menu-wrap">
+              <button type="button" id="lifeBtn" class="ghost" aria-haspopup="true" aria-expanded="false" aria-controls="lifeMenu"><span data-t="life.menu"></span> <span aria-hidden="true">⋯</span></button>
+              <div id="lifeMenu" class="menu hidden" role="menu">
+                <button id="moveBtn" type="button" role="menuitem"><span aria-hidden="true">🚚 </span><span data-t="move.btn"></span></button>
+                <button id="quitBtn" type="button" role="menuitem" class="danger-text"><span aria-hidden="true">🚪 </span><span data-t="quit.btn"></span></button>
+                <button id="newLifeBtn" type="button" role="menuitem"><span aria-hidden="true">🌱 </span><span data-t="newLife"></span></button>
+              </div>
+            </div>
           </div>
-          <div id="slots" class="slots"></div>
-          <small class="tap-hint" data-t="plan.tap"></small>
           <small id="lessonNote" class="lesson-note"></small>
-          <div class="field">
-            <span class="flabel" data-t="plan.method"></span>
-            <div class="seg wrap" id="method"></div>
+          <div class="field method-field">
+            <span class="flabel" id="methodLabel" data-t="plan.method"></span>
+            <div class="seg wrap" id="method" role="group" aria-labelledby="methodLabel"></div>
             <small id="methodNote"></small>
           </div>
+          <small class="tap-hint" data-t="plan.tap"></small>
           <div id="activities" class="acts"></div>
           <div class="plan-foot">
             <span id="planCost" class="muted"></span>
-            <span id="planErr" class="err"></span>
+            <span id="planErr" class="err" role="alert"></span>
           </div>
-          <div class="buttons">
+          <div class="buttons plan-tools">
             <button id="repeatBtn" type="button" data-t="plan.repeat"></button>
             <button id="clearBtn" type="button" data-t="plan.clear"></button>
-            <button id="moveBtn" type="button" data-t="move.btn"></button>
-            <button id="quitBtn" type="button" data-t="quit.btn"></button>
-            <button id="nextBtn" type="button" class="primary"></button>
+          </div>
+          <!-- The turn bar sticks to the bottom of the screen while the plan is in view: the turn's time
+               as slots, how much is left, and Next. -->
+          <div class="turnbar" id="turnbar">
+            <div id="slots" class="slots"></div>
+            <div class="turnbar-row">
+              <span id="blocksLeft" class="pill" aria-live="polite"></span>
+              <small id="fullHint" class="full-hint" aria-live="polite"></small>
+              <button id="nextBtn" type="button" class="primary"></button>
+            </div>
           </div>
         </section>
       </div>
 
       <!-- The people in your life: classmates, friends, a rival, a crush, the homeroom teacher. -->
       <section class="panel people-panel">
-        <h2><span aria-hidden="true">🧑‍🤝‍🧑 </span><span data-t="people.title"></span> <span class="muted" data-t="people.sub"></span></h2>
+        <h2 class="panel-title"><span aria-hidden="true">🧑‍🤝‍🧑 </span><span data-t="people.title"></span> <span class="muted" data-t="people.sub"></span></h2>
         <p id="peopleTeacher" class="people-teacher hidden"></p>
         <div id="people" class="people"></div>
         <small id="peopleNote" class="people-note"></small>
@@ -137,17 +159,16 @@
 
       <div class="row">
         <section class="panel diary">
-          <h2><span aria-hidden="true">📔 </span><span data-t="log.title"></span></h2>
+          <h2 class="panel-title"><span aria-hidden="true">📔 </span><span data-t="log.title"></span></h2>
           <ul id="log" class="log"></ul>
         </section>
         <section class="panel">
-          <h2 data-t="history.title"></h2>
+          <h2 class="panel-title"><span aria-hidden="true">📝 </span><span data-t="history.title"></span></h2>
           <div class="table-wrap"><table class="grid" id="history"></table></div>
           <div class="buttons end">
             <button id="endBtn" type="button" class="hidden" data-t="end.reopen"></button>
             <button id="achBtn" type="button" data-t="ach.btn"></button>
             <button id="livesBtn" type="button" data-t="lives.btn"></button>
-            <button id="newLifeBtn" type="button" data-t="newLife"></button>
           </div>
         </section>
       </div>
@@ -163,6 +184,11 @@
 
   <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-card">
+      <!-- The page behind a dialog is inert, so the dialog carries its own language switch. -->
+      <div class="seg lang lang-switch modal-lang" role="group" aria-label="Language / 언어">
+        <button type="button" data-v="en" lang="en" aria-pressed="false">English</button>
+        <button type="button" data-v="ko" lang="ko" aria-pressed="false">한국어</button>
+      </div>
       <div id="modalArt" class="modal-art hidden"></div>
       <h2 id="modalTitle"></h2>
       <div id="modalBody"></div>
@@ -173,10 +199,25 @@
   <!-- Cutscenes: a letterboxed film over everything, shot by shot (app.js plays them, art.js draws them). -->
   <div id="cut" class="cut hidden" role="dialog" aria-modal="true">
     <div class="cut-progress" id="cutProg" aria-hidden="true"></div>
-    <button type="button" id="cutSkip" class="cut-skip"></button>
+    <div class="cut-top">
+      <div class="seg lang lang-switch cut-lang" role="group" aria-label="Language / 언어">
+        <button type="button" data-v="en" lang="en" aria-pressed="false">English</button>
+        <button type="button" data-v="ko" lang="ko" aria-pressed="false">한국어</button>
+      </div>
+      <button type="button" id="cutSkip" class="cut-skip"></button>
+    </div>
     <div class="cut-frame" id="cutFrame"></div>
     <p class="cut-cap" id="cutCap" aria-live="polite"></p>
     <span class="cut-hint" id="cutHint" aria-hidden="true"></span>
+  </div>
+
+  <!-- First-turn coach marks: a ring around one part of the screen and a short bubble, shown once. -->
+  <div id="coach" class="coach hidden" role="dialog" aria-modal="false" aria-labelledby="coachText">
+    <div class="coach-ring" id="coachRing" aria-hidden="true"></div>
+    <div class="coach-bubble" id="coachBubble">
+      <p id="coachText"></p>
+      <div class="coach-btns"><span class="coach-step" id="coachStep"></span><button type="button" id="coachSkip" class="ghost" data-t="coach.skip"></button><button type="button" id="coachNext" class="primary"></button></div>
+    </div>
   </div>
 
   <script src="places.js"></script>
