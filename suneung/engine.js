@@ -583,6 +583,8 @@
     { id: "kwangjuWomen", cut: 50.0, women: true, susi: 92, gk: 3.2, jh: 34 },
     { id: "college", cut: 25.0, susi: 92, gk: 3.7, jh: 25 },
   ];
+  // Best first: the app ranks offers and sim.js picks the best one by position in this list.
+  UNIVERSITIES.sort((a, b) => b.cut - a.cut);
   // in-Seoul+ (what sim.js reports): a 정시 cut of about 85 or more, the same line as before v6.0 (the
   // in-Seoul universities down to the Kookmin–Soongsil–Dankook tier, the big regional national
   // universities, Inha and Ajou), so the balance tables stay comparable.
