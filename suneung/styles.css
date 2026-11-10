@@ -57,6 +57,22 @@
   --a-omr: #ffe3e3; --a-river: #6fb0e6; --a-glass: #8fb7dc;
   --a-card: #fffaf0; --a-cardInk: #1c1f26; --a-cardSub: #6b7280;
   --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
+  /* characters (v6.4): skin, faces, hair, clothes and job gear for the people in the art; ch* overlays are cel shade, highlight and rim light. */
+  --a-chSkin0: #f0d2b9; --a-chSkin1: #e3b998; --a-chSkin2: #c99a78; --a-chLip: #c27c74; --a-chLipSh: #9e5a55;
+  --a-chWhite: #f3eee8; --a-chIris: #3a2a22; --a-chLash: #1f1816; --a-chHair0: #1c1b21; --a-chHair1: #2b221f;
+  --a-chHair2: #47342a; --a-chDye1: #6a5a52; --a-chDye2: #74402f; --a-chDye3: #9c7650; --a-chGrey: #a9a8a8;
+  --a-chWhiteH: #d8d4cd; --a-chBlazer: #2c3850; --a-chBlazerM: #36463f; --a-chSlacks: #363a45; --a-chShirt: #eceeee;
+  --a-chTie: #6c2a35; --a-chCheck: #3b4560; --a-chCheck2: #6b7590; --a-chSock: #ecebe5; --a-chTights: #2a2a30;
+  --a-chPad: #24272e; --a-chBeige: #c8b699; --a-chOlive: #6e7452; --a-chDusty: #7189a2; --a-chOat: #dcd1bc;
+  --a-chCamel: #a6825a; --a-chWine: #7a3f47; --a-chSlate: #5b6474; --a-chCharcoal: #3b3e45; --a-chKhaki: #8b8266;
+  --a-chDenim: #4e6582; --a-chHoodie: #8c8f96; --a-chMustard: #cfa441; --a-chSmock: #e6d8a9; --a-chOnesie: #e7e1d4;
+  --a-chOnesie2: #a8bac8; --a-chTrack: #2f4858; --a-chStripe: #e8e8e2; --a-chCoat: #f2f2ee; --a-chScrub: #5d8d88;
+  --a-chApron: #4a5847; --a-chVis: #d6a23c; --a-chWork: #5a6472; --a-chDriver: #a8bdd1; --a-chStraw: #d6bf8a;
+  --a-chFloral: #b48389; --a-chCardi: #9a8a79; --a-chShoe: #2a2726; --a-chSneaker: #e4e1da; --a-chBag: #5d6e85;
+  --a-chBag2: #b06f50; --a-chGold: #c6a14b; --a-chMetal: #98a0a8; --a-chFrame: #2b2828; --a-chHelmet: #eeeeea;
+  --a-chBlanket: #e9e2d6; --a-chBlanket2: #c9b9c6; --a-chCel: rgba(28, 26, 58, 0.2); --a-chCel2: rgba(20, 18, 44, 0.36); --a-chSkinSh: rgba(150, 72, 52, 0.24);
+  --a-chSkinSh2: rgba(120, 48, 40, 0.34); --a-chSheen: rgba(255, 255, 255, 0.26); --a-chRim: rgba(255, 240, 222, 0.55); --a-chBags: rgba(100, 60, 100, 0.2); --a-chLens: rgba(210, 228, 245, 0.22);
+  --a-chFlush: rgba(214, 92, 84, 0.22); --a-chPale: rgba(190, 210, 190, 0.32);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -115,6 +131,22 @@
     --a-omr: #e8c8cc; --a-river: #2d5a8a; --a-glass: #3d5a80;
     --a-card: #1f2330; --a-cardInk: #eef0f6; --a-cardSub: #9aa1b2;
     --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
+    /* characters (v6.4): skin, faces, hair, clothes and job gear for the people in the art; ch* overlays are cel shade, highlight and rim light. */
+    --a-chSkin0: #897976; --a-chSkin1: #816b64; --a-chSkin2: #735a52; --a-chLip: #6f4950; --a-chLipSh: #5b363e;
+    --a-chWhite: #8a8890; --a-chIris: #241c22; --a-chLash: #15121b; --a-chHair0: #131322; --a-chHair1: #1b1720;
+    --a-chHair2: #2b2127; --a-chDye1: #3e363d; --a-chDye2: #442829; --a-chDye3: #5a463c; --a-chGrey: #61626c;
+    --a-chWhiteH: #7b7a81; --a-chBlazer: #1c243c; --a-chBlazerM: #212b32; --a-chSlacks: #212536; --a-chShirt: #868893;
+    --a-chTie: #3f1c2d; --a-chCheck: #242b45; --a-chCheck2: #3f455f; --a-chSock: #86878e; --a-chTights: #1b1c2a;
+    --a-chPad: #171a29; --a-chBeige: #726964; --a-chOlive: #41453d; --a-chDusty: #425069; --a-chOat: #7d7878;
+    --a-chCamel: #604d41; --a-chWine: #472737; --a-chSlate: #363c50; --a-chCharcoal: #242736; --a-chKhaki: #514d48;
+    --a-chDenim: #2f3c57; --a-chHoodie: #515462; --a-chMustard: #765f33; --a-chSmock: #837c6d; --a-chOnesie: #848185;
+    --a-chOnesie2: #616c7e; --a-chTrack: #1e2c40; --a-chStripe: #84858d; --a-chCoat: #8a8b93; --a-chScrub: #37535b;
+    --a-chApron: #2d3537; --a-chVis: #7a5e31; --a-chWork: #353c4e; --a-chDriver: #616d83; --a-chStraw: #7a6e5c;
+    --a-chFloral: #674d5b; --a-chCardi: #595152; --a-chShoe: #1b1a24; --a-chSneaker: #828188; --a-chBag: #374159;
+    --a-chBag2: #65423c; --a-chGold: #715e39; --a-chMetal: #585d6c; --a-chFrame: #1b1b25; --a-chHelmet: #878891;
+    --a-chBlanket: #858286; --a-chBlanket2: #736b7d; --a-chCel: rgba(6, 8, 28, 0.32); --a-chCel2: rgba(4, 6, 20, 0.5); --a-chSkinSh: rgba(60, 30, 50, 0.34);
+    --a-chSkinSh2: rgba(40, 18, 36, 0.46); --a-chSheen: rgba(190, 210, 255, 0.14); --a-chRim: rgba(150, 178, 255, 0.26); --a-chBags: rgba(40, 20, 60, 0.3); --a-chLens: rgba(150, 180, 230, 0.2);
+    --a-chFlush: rgba(190, 70, 76, 0.24); --a-chPale: rgba(120, 160, 140, 0.3);
     color-scheme: dark;
   }
 }
@@ -173,6 +205,22 @@
   --a-omr: #e8c8cc; --a-river: #2d5a8a; --a-glass: #3d5a80;
     --a-card: #1f2330; --a-cardInk: #eef0f6; --a-cardSub: #9aa1b2;
   --cut-bg: #07080c; --cut-text: #f4f2ea; --cut-dim: rgba(244, 242, 234, 0.55); --cut-bar: rgba(244, 242, 234, 0.22); --cut-accent: #ffd36a;
+  /* characters (v6.4): skin, faces, hair, clothes and job gear for the people in the art; ch* overlays are cel shade, highlight and rim light. */
+  --a-chSkin0: #897976; --a-chSkin1: #816b64; --a-chSkin2: #735a52; --a-chLip: #6f4950; --a-chLipSh: #5b363e;
+  --a-chWhite: #8a8890; --a-chIris: #241c22; --a-chLash: #15121b; --a-chHair0: #131322; --a-chHair1: #1b1720;
+  --a-chHair2: #2b2127; --a-chDye1: #3e363d; --a-chDye2: #442829; --a-chDye3: #5a463c; --a-chGrey: #61626c;
+  --a-chWhiteH: #7b7a81; --a-chBlazer: #1c243c; --a-chBlazerM: #212b32; --a-chSlacks: #212536; --a-chShirt: #868893;
+  --a-chTie: #3f1c2d; --a-chCheck: #242b45; --a-chCheck2: #3f455f; --a-chSock: #86878e; --a-chTights: #1b1c2a;
+  --a-chPad: #171a29; --a-chBeige: #726964; --a-chOlive: #41453d; --a-chDusty: #425069; --a-chOat: #7d7878;
+  --a-chCamel: #604d41; --a-chWine: #472737; --a-chSlate: #363c50; --a-chCharcoal: #242736; --a-chKhaki: #514d48;
+  --a-chDenim: #2f3c57; --a-chHoodie: #515462; --a-chMustard: #765f33; --a-chSmock: #837c6d; --a-chOnesie: #848185;
+  --a-chOnesie2: #616c7e; --a-chTrack: #1e2c40; --a-chStripe: #84858d; --a-chCoat: #8a8b93; --a-chScrub: #37535b;
+  --a-chApron: #2d3537; --a-chVis: #7a5e31; --a-chWork: #353c4e; --a-chDriver: #616d83; --a-chStraw: #7a6e5c;
+  --a-chFloral: #674d5b; --a-chCardi: #595152; --a-chShoe: #1b1a24; --a-chSneaker: #828188; --a-chBag: #374159;
+  --a-chBag2: #65423c; --a-chGold: #715e39; --a-chMetal: #585d6c; --a-chFrame: #1b1b25; --a-chHelmet: #878891;
+  --a-chBlanket: #858286; --a-chBlanket2: #736b7d; --a-chCel: rgba(6, 8, 28, 0.32); --a-chCel2: rgba(4, 6, 20, 0.5); --a-chSkinSh: rgba(60, 30, 50, 0.34);
+  --a-chSkinSh2: rgba(40, 18, 36, 0.46); --a-chSheen: rgba(190, 210, 255, 0.14); --a-chRim: rgba(150, 178, 255, 0.26); --a-chBags: rgba(40, 20, 60, 0.3); --a-chLens: rgba(150, 180, 230, 0.2);
+  --a-chFlush: rgba(190, 70, 76, 0.24); --a-chPale: rgba(120, 160, 140, 0.3);
   color-scheme: dark;
 }
 
@@ -423,6 +471,9 @@ table.grid td.l { text-align: left; }
 .art g, .art path, .art circle, .art rect, .art ellipse { transform-box: fill-box; transform-origin: center; }
 .art .bob { animation: bob 3.2s ease-in-out infinite; transform-origin: center bottom; }
 .art .blink { animation: blink 4.6s infinite; }
+/* characters (v6.4): people breathe slowly instead of bouncing (off under reduced motion, like every .art animation). */
+.art .breathe { animation: breathe 5.2s ease-in-out infinite; transform-origin: center bottom; }
+@keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.008); } }
 .art .fall { animation: fall var(--d, 8s) linear infinite; animation-delay: var(--del, 0s); }
 .art .rise { animation: rise 3s ease-out infinite; animation-delay: var(--del, 0s); }
 .art .twinkle { animation: twinkle 2.6s ease-in-out infinite; animation-delay: var(--del, 0s); }
