@@ -6,7 +6,7 @@ Open `index.html` in a browser. There's no build step and no dependencies. Progr
 
 **Play it in English or Korean.** The switch in the top corner changes every word on the page, including the life log of a game in progress, and the choice is remembered. The first visit follows the browser's language.
 
-This version ends when you enroll at a university. College life and what comes after are planned for later versions.
+When you enroll (or put the pencil down), you can live the next ten years: a major, university life, military service for men, the job hunt, and where you are at 30, with your pay ranked against the family you were born into. Achievements and your past lives carry over from one life to the next, and every life ends with a share card.
 
 ## How to play
 
@@ -49,10 +49,23 @@ School years are counted the Korean way, with each school numbering its own year
    - retake at a 재수종합학원 or by self-study (독학재수);
    - or stop.
 
-The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수탐 standard-score total.
+9. **Live the next ten years** (optional, from the ending screen): choose a major, how you spend university, when and where you serve if you're a man, and what to aim for in the job hunt. A few years later you see yourself at 30. See After the exam below.
+
+The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수탐 standard-score total. **Achievements** and **Past lives** sit under it on the new-life screen (and behind buttons beside the exam history during a life), and **Live today's life** starts the life everyone gets on today's date.
 
 ## Features
 
+- **After the exam: the next ten years.** From the ending screen, an epilogue of a few screens with real choices, driven by real figures (see After the exam below):
+  - **A major** from your track (humanities, social sciences, education and arts on humanities; engineering, natural sciences, nursing and health, education and arts on sciences; medicine for 의대), shown with its real employment rate.
+  - **University years:** the library, a balance, an exchange semester (₩5M from your savings if your family can't pay), a year off for internships, or campus life. They set your GPA (out of 4.5) and your experience.
+  - **Military service for men:** when (after year 1, year 2 or graduating) and where, with 2026's real lengths: army and marines 18 months, navy 20, air force 21; social service 21 if your health has been poor; alternative service 36; a military doctor after residency.
+  - **The job hunt (취준):** a big company, a big company's production line (vocational high-school graduates), a public enterprise (blind hiring), the civil service exam (28.6 applicants a place in 2026), the teacher appointment exam, law school and the bar (about half pass each sitting), a hospital, a startup, graduate school, a small firm, a trade, a service job or your own shop; for doctors, a popular or an essential specialty or general practice. Chances depend on your university, major, GPA, experience, the ability you finished school with and a little on your family; a failed year lets you try again, take a small-firm job or work part-time.
+  - **At 30:** your job, your pay, your rank among Korean earners next to the family you were born into (↑ or ↓, the honest heart of it), and where you live: Seoul for big firms and law, the 혁신도시 for public enterprises, home for teachers and civil servants; with your parents, a studio flat, a jeonse apartment, or one you own with your parents' help.
+  - Everything rolls from its own seeded streams, so nothing before the ending moves, and an old save that already ended can play it too.
+- **Achievements:** 44 of them, from a perfect paper, SNU, 의대 and a fifth try to 개천에서 용 났다 (bottom fifth to SKY or medicine), leaving school and still reaching Seoul, a children's-home child reaching university, a retake-academy scholarship, surviving bullying, every High 3 month at a cram school, and at 30 a big company, the civil service, the top fifth, or bottom to top. They stay unlocked across lives on this device; locked ones show a hint. A toast announces each new one.
+- **Past lives:** the last 50 lives on this device with name, birth year, region, family, parents' jobs, outcome (and job at 30), best total, tries and achievements. **Live again** replays any of them from the same seed: the same family, talents and luck.
+- **Today's life:** a seed from the date, so everyone who starts it today is born into the same life. Compare with friends.
+- **A share card** at the end, drawn in SVG: your name, birth year and place, family, where you ended up, your best 수능 grades, tries and a five-step ladder from the family you were born into to your fifth at 30. Download it as a PNG (or press and hold the picture where downloads are blocked).
 - **A whole childhood, from birth.** Ability is on the 수능 scale from the start (50 is the average test taker), so a baby begins far below it and climbs. Ability never decays: a subject you don't study stops growing but keeps what you learned. Early habits decide how far you climb.
 - **Who raises you.** Most children are born to two parents; about 6% are born to a single mother, 2% to a single father, 0.7% are raised by grandparents (조손가정; grandparent households are under 1% of households) and 0.3% grow up in a children's home (보육원, see below). Each is rolled at birth from its own seeded stream and named on the birth screen.
   - **Divorce:** about one child in eight sees their parents divorce before High 3 (75% stay with their mother). The household drops an income fifth, with a stress and motivation hit and a lost block.
@@ -392,6 +405,45 @@ The cuts are ballpark figures from recent 정시 years, simplified to one per sc
 | 가천대 | 80.0 | 지방 사립대 | 60.0 |
 | 전문대 | 25.0 | | |
 
+## After the exam: the next ten years
+
+The epilogue's logic is in `engine.js` (`startEpilogue`, `epiChoose`), its figures in `data/korea-stats.md` sections 13–15.
+
+- **University tier** comes from where you enrolled: medical school; SKY; top Seoul (Sungkyunkwan to the University of Seoul); mid (Konkuk to Ajou, with Pusan and Kyungpook National); other four-year universities; junior college; none.
+- **GPA** = 3.35 + the university plan (library +0.35, balance +0.1, campus life −0.25) + 0.25 × (ability − 1) + noise (sd 0.3), on 4.5; the returning-student effect adds 0.1 after serving at the end of year 1.
+- **Experience** adds up from the plan (balance 0.5, exchange 1, a year off 0.8, campus life 0.3) and service (air force 0.3, social service 0.2, navy and marines 0.1).
+- **Each year of trying** for a target succeeds with chance sigmoid(tier row + field + 0.8 × (GPA − 3.35) + 0.35 × experience + ability + 0.25 × fortune + 0.35 a year of retrying), with weights by target: the school counts most for big firms and law school, not at all for blind-hired public enterprises and the civil service exam, where the ability you finished school with counts instead. The field term is the logit gap between your major's real employment rate and the 69.5% average. Three failed years and you take what comes (a small firm, a service job, part-time work or still looking).
+- **Pay at 30** is the job's level (big firm ₩5.2M a month, from the ₩50M graduate starting pay plus raises; SME ₩3.0M; resident ₩6.07M; others estimated), ±2% a year in the job beyond four, +2.5% per birth fifth above the middle (half the real top-vs-bottom gap, since the rest comes through school) and noise (sd 12%).
+- **Your fifth at 30** ranks your pay among all Korean wage earners (cuts ₩2.0M, ₩2.55M, ₩3.35M, ₩4.9M a month, from the official pay bands); no earnings is the bottom fifth. Your family's fifth is its household income at your birth. So the comparison is rank to rank, as mobility studies do it, but between a worker and a household.
+
+`node suneung/sim.js --epilogue 600` plays 600 whole lives with a mix of bots (slacker, balanced and smart, one or two tries), then the epilogue as a sensible job seeker (a big firm from a top university, a public enterprise or an SME lower down, the appointment exam for education majors, a hospital for nursing, a trade or service job without a university; one more year after a failure, then whatever comes). At 30, by university:
+
+| University | Lives | Big firm | Public enterprise, civil service, teacher | Doctor, lawyer, nurse, researcher | SME, startup, trade, shop, service | No steady job | Mean pay a month | Top two fifths |
+|---|---|---|---|---|---|---|---|---|
+| No university | 14 | 0% | 0% | 0% | 100% | 0% | ₩302만 | 29% |
+| Junior college | 39 | 3% | 10% | 8% | 77% | 3% | ₩335만 | 44% |
+| Other four-year university | 199 | 0% | 24% | 10% | 60% | 6% | ₩331만 | 45% |
+| Mid (flagship nationals, rest of in-Seoul) | 141 | 18% | 23% | 16% | 40% | 2% | ₩382만 | 57% |
+| Top Seoul (SKKU to UOS) | 122 | 43% | 18% | 16% | 20% | 2% | ₩427만 | 73% |
+| SKY | 59 | 59% | 14% | 14% | 14% | 0% | ₩458만 | 76% |
+| Medical school | 26 | 0% | 0% | 100% | 0% | 0% | ₩585만 | 100% |
+
+By the family you were born into (your own earnings fifth at 30 against your family's household fifth at birth):
+
+| Born into | Lives | Four-year university | SKY or medicine | Mean pay a month | Mean fifth at 30 | Up | Same | Down | Top fifth |
+|---|---|---|---|---|---|---|---|---|---|
+| Bottom fifth | 132 | 91% | 13% | ₩360만 | 3.53 | 95% | 5% | 0% | 17% |
+| Second fifth | 131 | 90% | 16% | ₩360만 | 3.54 | 92% | 5% | 3% | 15% |
+| Middle fifth | 111 | 93% | 9% | ₩386만 | 3.71 | 56% | 37% | 7% | 24% |
+| Fourth fifth | 107 | 94% | 20% | ₩422만 | 3.92 | 26% | 45% | 29% | 26% |
+| Top fifth | 119 | 88% | 13% | ₩408만 | 3.84 | 0% | 26% | 74% | 26% |
+
+How to read it against reality:
+
+- **The bots are good students.** Almost all of them reach a four-year university, far more than real school leavers, so the by-family table is about what happens after a decent education, not a picture of Korea.
+- **The school still matters most for big firms:** most SKY graduates aim for and reach one; few from other four-year universities do. Real figures by school tier aren't published (the national graduate survey stopped after 2019), so these rows are the game's estimate.
+- **Mobility is measured early.** At 30 you are ranked against all earners, older ones included, and your parents' household often had two incomes. Most top-fifth children land a fifth or two lower at 30; most bottom-fifth children who reach university climb. Real one-year mobility is low (17% of earners moved up a fifth in 2023 and 70% of the bottom fifth stayed), and real children of top-fifth parents earn about 19% more than those of bottom-fifth parents.
+
 ## Calibration and balance
 
 `node suneung/sim.js` runs three checks:
@@ -531,15 +583,18 @@ What the tables show:
 
 - `places.js`: generated by `tools/build_places.py` (don't edit by hand): province and municipality outlines, each game place's real districts and schools, and the special schools nationwide. The engine reads it for real school names and runs the same without it.
 - `engine.js`: the game, with no DOM, so it runs in Node. It holds no display text: log entries, events and outcomes are message keys with values.
-  - `Game` holds the state and the screen queue: `advance(plan, method)`, `choose(i)`, `dismiss()`, `chooseTrack(track, inq)`, `apply(ids)`, `decide(d)`.
+  - `Game` holds the state and the screen queue: `advance(plan, method)`, `choose(i)`, `dismiss()`, `chooseTrack(track, inq)`, `apply(ids)`, `decide(d)`, and after the ending `startEpilogue()` / `epiChoose(id)`.
+  - `achievements(meta)` lists the achievements a life has earned; `birthInfo()` rebuilds where and into what you were born; `Game.dailySeed(date)` is today's life. Other systems can add lines to the epilogue's "where they are now" through `EPILOGUE_HOOKS`.
   - It also holds the life stages, families, the exam simulation (`gradeSubject`), events, universities and constants.
 - `strings.js`: every piece of text, as an English and a Korean dictionary with the same keys. `make(lang, ctx)` returns the translator, including Korean money (만/억) and particle (이/가) handling.
 - `engine.js` people (v6.1): `g.social` holds the people (`soc()` builds it for old saves), `socialTurn(plan)` runs a turn of friendships, `rollSocial` the social events, `roleOf(p)` and `setFocus(id)` serve the Friends panel, and `friendOutcomes(n)` returns where your closest friends ended up: up to n (default 5) of `{ id, s, n, x, lk, role, cl, from, sci, total, pct, path: "uni" | "retake" | "work", uni, aim }`, closest first.
 - `art.js`: the artwork, as SVG strings built in code (no DOM, no image files; the only words drawn are names app.js passes in, in the current language). `scene(ctx)` draws the life-stage scene with the avatar, `eventArt(ctx)` an event's illustration (data-driven through `EVENT_ART`, with fallbacks for unknown event ids), `screenArt(name, ctx)` the birth, track, mock, exam, report, application, offers and ending pictures, `cutscene(name, ctx)` a cutscene's shots (each an SVG plus its length; the motion is CSS keyframes in `styles.css`), and `moodOf(game)` / `lookFor(seed)` the avatar's mood and looks, and `portrait` / `portraitFor(stage, look, mood)` a head-and-shoulders portrait for the Friends panel. An event that names people ({ lk, x } in `ctx.people`) draws them beside you. Colours are `--a-*` tokens in `styles.css`.
 - `app.js`: UI only. It renders the state and whatever screen is first in `game.queue`, and plays a milestone's cutscene first (`pendingCut` / `playCut`).
-- `sim.js`: the headless calibration and strategy-bot script.
+- `sim.js`: the headless calibration and strategy-bot script; `--epilogue [lives]` plays only the epilogue tables.
 
 ## Changelog
+
+- **v6.2 (epilogue):** what happens after the exam, and the meta-game. From the ending screen, live the next ten years: a major (with its real employment rate), university life (GPA and experience, an exchange semester, a year off), military service for men at the time and in the branch you pick (2026 lengths: army 18, navy 20, air force 21 months; social service 21; alternative service 36), and the job hunt (big companies, public enterprises with blind hiring, the civil service exam, the teacher appointment exam, law school and the bar, hospitals, startups, graduate school, small firms, trades; residency for doctors), with retries. At 30 you see your job, pay, where you live, and your rank among Korean earners next to the family you were born into. 44 achievements persist across lives; a Past lives list keeps the last 50 lives and replays any of them from its seed; today's life gives everyone the same start on a date; and each life ends with a share card you can save as a PNG. The epilogue rolls from its own seeded streams, so the admission tables don't move, and old saves (also ones that already ended) can play it. New section 15 in `data/korea-stats.md`; a new epilogue table from `sim.js --epilogue`.
 
 - **v6.1 (social):** the people in your life. Named classmates at every stage (kindergarten to the retake academy), with Korean names drawn by real frequency (romanized in English), seeded looks, personalities and their own ability; closeness that grows with your Friends blocks (tap a friend to choose who) and fades when you don't meet; a best friend, a rival, crushes, confessions and dating from Middle 2, and a new homeroom teacher every March whose style nudges the year. Twenty new events with names (seatmates, birthdays, fights and making up, friends moving away, group study, confessions, breakups before the exam, rival results, reunions, a friend at the 수능 gate), and the bully, the PC방 friend and your rival in existing events are named too. A Friends panel with portraits and closeness bars, and the ending shows where your closest friends ended up (`friendOutcomes`). Single-sex schools give single-sex classes. Everything rolls from its own seeded streams; old saves build their classmates on load. Balance tables regenerated (they moved by a few points; see the strategy table).
 

@@ -972,6 +972,48 @@
       ["c1", "c5", "c3"].forEach((c, i) => { s += G(200 + i * 100, 120, A("float", R(-40, -28, 80, 56, "paper", 3, c, 3) + P("M-40 -28 L0 4 L40 -28", null, c, 2) + O(0, 4, 6, c)), 1, "", "--del:-" + i * 0.7 + "s"); });
       return s;
     },
+    // ---------- the epilogue ----------
+    // A campus lawn with a lecture hall, a clock tower and cherry trees.
+    campus(ctx) {
+      let s = outdoorSky(EW, EH, { season: "spring", seed: 84 }) + R(0, 168, EW, 52, "grass") + P("M250 220 L280 168 L320 168 L350 220 Z", "path");
+      s += R(60, 70, 190, 100, "stone", 3) + R(52, 62, 206, 12, "stone2", 2) + R(140, 30, 30, 44, "stone2", 2) + clock(155, 46, 10, 10);
+      for (let i = 0; i < 4; i++) s += R(74 + i * 44, 92, 26, 30, "glass", 2) + R(74 + i * 44, 134, 26, 30, "glass", 2);
+      s += R(380, 96, 160, 74, "wall", 3) + R(372, 88, 176, 12, "wall2", 2);
+      for (let i = 0; i < 3; i++) s += R(392 + i * 50, 110, 34, 26, "glass", 2);
+      s += tree(30, 176, "spring", 1) + tree(570, 176, "spring", 1.1) + particles("spring", 0, 0, EW, 170, false, 12, 21);
+      return s + person(ctx, 300, EFEET, 0.95, { mood: "happy", prop: "book", pose: "hold" });
+    },
+    // A barracks on a hill, a flagpole and a duffel bag.
+    army(ctx) {
+      let s = outdoorSky(EW, EH, { season: "winter", seed: 85 }) + P("M0 150 Q160 110 320 146 T600 132 L600 220 L0 220 Z", "hill") + R(0, 178, EW, 42, "path");
+      s += R(330, 100, 220, 70, "stone2", 2) + P("M322 104 L440 74 L558 104 Z", "leaf2") + R(420, 130, 30, 40, "wood2", 2);
+      for (let i = 0; i < 4; i++) s += R(344 + i * 50, 116, 24, 16, "lamp", 2);
+      s += L(110, 178, 110, 60, "metal", 4) + G(112, 64, A("sway", R(0, 0, 40, 24, "c5", 2) + O(20, 12, 6, "c1")));
+      s += G(230, 196, E(0, 0, 34, 14, "hoodie2") + R(-30, -14, 60, 16, "hoodie", 8));
+      return s + particles("winter", 0, 0, EW, 170, false, 10, 22) + person(ctx, 300, EFEET, 0.95, { mood: ctx.mood || "ok" });
+    },
+    // An interview chair in front of a long desk, and a stack of applications.
+    hunt(ctx) {
+      let s = R(0, 0, EW, EF, "wall") + floorPlanks(EF, EW, EH - EF) + windowView(470, 30, 100, 90, { season: "fall", seed: 86, tree: false });
+      s += R(40, 120, 260, 20, "wood", 3) + R(52, 140, 10, 40, "wood2") + R(278, 140, 10, 40, "wood2");
+      for (let i = 0; i < 3; i++) s += G(80 + i * 80, 110, O(0, -26, 12, "hair") + R(-18, -16, 36, 26, "uniform", 8) + R(-14, 4, 28, 6, "paper", 1));
+      s += G(400, 170, R(-4, -40, 8, 40, "metal2") + R(-24, -46, 48, 10, "metal", 3));
+      for (let i = 0; i < 4; i++) s += R(500, 160 - i * 7, 60, 6, i % 2 ? "paper" : "paper2", 1, "line", 1);
+      return s + person(ctx, 400, EFEET, 0.92, { mood: ctx.mood || "ok" });
+    },
+    // A city at dusk: towers, an apartment block and you on a balcony-high bridge.
+    at30(ctx) {
+      const gid = nid("dusk");
+      let s = grad(gid, "dusk", "dusk2") + R(0, 0, EW, EH, null, 0, null, 0, "fill:url(#" + gid + ")") + O(470, 120, 30, "sun", null, 0, "opacity:0.85");
+      const r = rand(87);
+      for (let i = 0; i < 8; i++) {
+        const x = i * 78, h = 60 + r() * 90;
+        s += R(x, EF - h, 62, h, "city");
+        for (let yy = EF - h + 10; yy < EF - 8; yy += 14) for (let xx = x + 6; xx < x + 56; xx += 14) if (r() < 0.45) s += R(xx, yy, 7, 6, "lamp");
+      }
+      s += R(0, EF, EW, EH - EF, "road") + R(0, EF - 4, EW, 6, "metal");
+      return s + person(ctx, 300, EFEET, 0.95, { mood: ctx.mood || "happy" });
+    },
   };
   const SCENES_EV = {
     exam(ctx) {
@@ -1438,5 +1480,45 @@
       (o.aria ? ' role="img" aria-label="' + esc(o.aria) + '"' : ' aria-hidden="true"') + ' style="--k:' + k.toFixed(3) + '">' + s + "</svg>";
   }
 
-  root.SuneungArt = { portrait, portraitFor, koreaMap, areaBox, scene, sceneName, eventArt, screenArt, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
+  // ---------- the share card ----------
+  // A result card for the end of a life: you, where and into what you were born, how it ended, your
+  // best Suneung grades and a five-step ladder from the family you were born into to where you are at
+  // 30. All words are passed in by app.js. Colours are tokens like the rest of the art; app.js swaps
+  // them for their computed values before drawing the card to a canvas for the PNG.
+  const CARD_FONT = "font-family:system-ui,-apple-system,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif";
+  const TL = (x, y, text, fill, size, weight, anchor) =>
+    '<text x="' + x + '" y="' + y + '" text-anchor="' + (anchor || "start") + '" style="fill:' + C(fill) + ";font-size:" + size + "px;font-weight:" + (weight || 600) + ";" + CARD_FONT + '">' + esc(text) + "</text>";
+  // A string clipped to n characters, so long names and universities stay on the card.
+  const clip = (s, n) => (String(s).length > n ? String(s).slice(0, n - 1) + "…" : String(s));
+  function shareCard(o) {
+    const Wc = 600, Hc = 340;
+    let s = R(0, 0, Wc, Hc, "card", 20) + R(0, 0, Wc, 58, "c5", 20) + R(0, 38, Wc, 20, "c5");
+    s += TL(24, 37, o.title, "paper", 20, 800) + (o.daily ? TL(Wc - 24, 37, clip(o.daily, 30), "paper", 13, 700, "end") : "");
+    // You, standing on a little lawn.
+    s += E(96, 300, 62, 12, "shadow") + person(Object.assign({}, o.ctx, { stage: "uni" }), 96, 300, 1.05, { mood: o.mood || "happy" });
+    let y = 96;
+    s += TL(190, y, clip(o.name, 18), "cardInk", 28, 800);
+    y += 26;
+    for (const [k, v] of o.lines) { s += TL(190, y, k, "cardSub", 12, 600) + TL(290, y, clip(v, 24), "cardInk", 14, 700); y += 22; }
+    y += 6;
+    s += TL(190, y, o.gradesLabel, "cardSub", 12, 600);
+    if (o.grades) {
+      o.grades.forEach((gr, i) => {
+        const x = 190 + i * 38;
+        s += '<rect x="' + x + '" y="' + (y + 8) + '" width="32" height="32" rx="8" style="fill:var(--g' + Math.min(6, gr) + ')"/>' + TL(x + 16, y + 30, gr, "paper", 17, 800, "middle");
+      });
+    } else s += TL(190, y + 30, "—", "cardInk", 18, 800);
+    // The ladder: five steps, the family you were born into and (once known) where you are at 30.
+    const lx = 468, ly = 300, sw = 24, sh = 22;
+    for (let i = 0; i < 5; i++) s += R(lx + i * sw, ly - (i + 1) * sh, sw - 3, (i + 1) * sh, i + 1 === o.mob.to ? "gold" : i + 1 === o.mob.from ? "c3" : "line", 4, null, 0, "opacity:" + (i + 1 === o.mob.to || i + 1 === o.mob.from ? 1 : 0.45));
+    const cx = (k) => lx + (k - 1) * sw + (sw - 3) / 2, cy = (k) => ly - k * sh - 14;
+    s += O(cx(o.mob.from), cy(o.mob.from), 7, "c3", "paper", 2) + TL(cx(o.mob.from), ly + 18, o.mob.labels[0], "cardSub", 11, 700, "middle");
+    if (o.mob.to) {
+      if (o.mob.to !== o.mob.from) s += P("M" + cx(o.mob.from) + " " + (cy(o.mob.from) - 10) + " Q" + (cx(o.mob.from) + cx(o.mob.to)) / 2 + " " + (Math.min(cy(o.mob.from), cy(o.mob.to)) - 34) + " " + cx(o.mob.to) + " " + (cy(o.mob.to) - 12), null, "c1", 3, "stroke-dasharray:5 4");
+      s += G(cx(o.mob.to), cy(o.mob.to), P("M0 -10 L3 -3 L10 -3 L4 2 L6 9 L0 5 L-6 9 L-4 2 L-10 -3 L-3 -3 Z", "gold", "gold2", 1.5)) + TL(cx(o.mob.to), ly + 32, o.mob.labels[1], "cardSub", 11, 700, "middle");
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 ' + Wc + " " + Hc + '" class="share-card" role="img" aria-label="' + esc(o.aria || o.title) + '">' + s + "</svg>";
+  }
+
+  root.SuneungArt = { portrait, portraitFor, koreaMap, areaBox, scene, sceneName, eventArt, screenArt, shareCard, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
 })(typeof window !== "undefined" ? window : globalThis);

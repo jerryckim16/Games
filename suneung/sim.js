@@ -1,6 +1,7 @@
 // Headless checks for the Suneung Simulator. Usage:
 //   node suneung/sim.js            calibration table + strategy table
 //   node suneung/sim.js --seeds 200   (default 60; the README tables use 80)
+//   node suneung/sim.js --epilogue 600   only the epilogue table (the README uses 600)
 // The calibration table checks the simulated cohort against real 수능 numbers. The strategy table
 // plays whole careers with simple bots, so balance changes show up as numbers rather than vibes.
 "use strict";
@@ -345,10 +346,79 @@ function parents() {
   }
 }
 
+// ---------- 5. the epilogue: the next ten years ----------
+// Whole lives from a mix of bots (slacker, balanced, smart; one or two tries), then the epilogue played
+// by a sensible job seeker: a big firm from a top university, a public enterprise or an SME lower down,
+// 임용 for education majors, a hospital for nursing, a trade without a university; one more year if the
+// first try fails, then whatever comes along. Results at 30 by university tier and by birth fifth.
+function epiBot(g, top, i) {
+  const e = g.epi, ok = top.opts.filter((o) => !top.blocked[o]);
+  const pick = (...ids) => ids.find((id) => ok.indexOf(id) >= 0) || ok[0];
+  if (top.step === "major") return ok[i % ok.length];
+  if (top.step === "college") return "balance";
+  if (top.step === "armyWhen") return "y2";
+  if (top.step === "army") return pick("army", "social", "doctor");
+  if (top.step === "hunt") {
+    if (e.tier === 6) return e.gpa >= 3.8 ? "popular" : "essential";
+    if (e.field === "edu") return pick("teacher");
+    if (e.field === "health") return pick("hospital");
+    if (e.tier >= 4) return "big";
+    if (e.tier === 3) return e.gpa >= 3.6 ? "big" : "public";
+    if (e.tier >= 1) return i % 2 ? "public" : "sme";
+    return i % 2 ? "trade" : "service";
+  }
+  if (top.step === "hunt2") return e.tries < 2 && ok.indexOf("again") >= 0 ? "again" : pick("sme", "service", "essential", "parttime");
+  return ok[0];
+}
+function epilogue(n) {
+  const REG = new Set(["big", "bigline", "public", "civil", "teacher", "lawyer", "nurse", "resident", "gp", "research"]);
+  const byTier = S.TIER_IDS.map(() => ({ n: 0, big: 0, pub: 0, pro: 0, sme: 0, none: 0, pay: 0, top2: 0 }));
+  const byFam = S.FAMILY_IDS.map(() => ({ n: 0, uni: 0, sky: 0, pay: 0, fifth: 0, up: 0, same: 0, down: 0, top: 0 }));
+  const bots = [["slacker", "self", 1], ["balanced", "self", 1], ["smart", "online", 1], ["balanced", "self", 2], ["smart", "tutor", 2]];
+  for (let i = 0; i < n; i++) {
+    const [bot, method, tries] = bots[i % bots.length];
+    const { g } = playCareer(20000 + i, bot, { method, maxAttempts: tries, goal: "yonsei" });
+    g.startEpilogue();
+    let guard = 0;
+    while (g.queue.length && guard++ < 30) g.epiChoose(epiBot(g, g.queue[0], i));
+    const a = g.epi.at30, t = byTier[g.epi.tier], f = byFam[a.born - 1];
+    t.n++; t.pay += a.pay; if (a.fifth >= 4) t.top2++;
+    if (a.job === "big" || a.job === "bigline") t.big++;
+    else if (a.job === "public" || a.job === "civil" || a.job === "teacher") t.pub++;
+    else if (a.job === "lawyer" || a.job === "nurse" || a.job === "resident" || a.job === "gp" || a.job === "research") t.pro++;
+    else if (["sme", "startup", "startupWin", "trade", "shop", "service"].indexOf(a.job) >= 0) t.sme++;
+    if (!REG.has(a.job) && ["sme", "startup", "startupWin", "trade", "shop", "service"].indexOf(a.job) < 0) t.none++;
+    f.n++; f.pay += a.pay; f.fifth += a.fifth;
+    if (g.epi.tier >= 2) f.uni++;
+    if (g.epi.tier >= 5) f.sky++;
+    if (a.fifth > a.born) f.up++; else if (a.fifth === a.born) f.same++; else f.down++;
+    if (a.fifth === 5) f.top++;
+  }
+  const p = (v, m) => (m ? ((100 * v) / m).toFixed(0) : "-").padStart(4) + "%";
+  console.log("\nEpilogue at 30 (" + n + " lives, mixed bots; sensible job seeker), by university tier:");
+  console.log("tier     lives | big firm | public/civil/teacher | doctor/lawyer/nurse/research | SME/startup/trade/service | no steady job | pay 만원 | top 2 fifths");
+  S.TIER_IDS.forEach((id, k) => {
+    const t = byTier[k];
+    if (!t.n) return;
+    console.log(id.padEnd(8), String(t.n).padStart(5), "|", p(t.big, t.n), "|", p(t.pub, t.n), "|", p(t.pro, t.n), "|", p(t.sme, t.n), "|", p(t.none, t.n), "|", String(Math.round(t.pay / t.n / 1e4)).padStart(5), "|", p(t.top2, t.n));
+  });
+  console.log("\nBy birth fifth (household income at birth) against your own earnings fifth among workers at 30:");
+  console.log("born     lives | 4-year uni | SKY/med | pay 만원 | mean fifth at 30 | up | same | down | top fifth");
+  S.FAMILY_IDS.forEach((id, k) => {
+    const f = byFam[k];
+    if (!f.n) return;
+    console.log(id.padEnd(8), String(f.n).padStart(5), "|", p(f.uni, f.n), "|", p(f.sky, f.n), "|", String(Math.round(f.pay / f.n / 1e4)).padStart(5), "|", (f.fifth / f.n).toFixed(2).padStart(5), "|", p(f.up, f.n), "|", p(f.same, f.n), "|", p(f.down, f.n), "|", p(f.top, f.n));
+  });
+}
+
 const t0 = Date.now();
-calibration();
-strategies();
-parents();
-// The paired trait test is the slowest part; --no-traits skips it while tuning.
-if (args.indexOf("--no-traits") < 0) traits();
+// --epilogue [lives] plays only the epilogue table (default 600 lives).
+if (args.indexOf("--epilogue") >= 0) epilogue(Number(args[args.indexOf("--epilogue") + 1]) || 600);
+else {
+  calibration();
+  strategies();
+  parents();
+  // The paired trait test is the slowest part; --no-traits skips it while tuning.
+  if (args.indexOf("--no-traits") < 0) traits();
+}
 console.log("\n(" + ((Date.now() - t0) / 1000).toFixed(1) + "s)");

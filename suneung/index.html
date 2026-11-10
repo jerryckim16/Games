@@ -43,10 +43,22 @@
           <button id="startBtn" type="button" class="primary" data-t="setup.go"></button>
           <button id="resumeBtn" type="button" class="hidden" data-t="setup.resume"></button>
         </div>
+        <div class="daily">
+          <button id="dailyBtn" type="button"></button>
+          <small id="dailyNote" data-t="daily.note"></small>
+        </div>
       </div>
       <div class="panel">
         <h2><span data-t="fame.title"></span> <span class="muted" data-t="fame.sub"></span></h2>
         <div class="table-wrap"><table class="grid" id="fame"></table></div>
+      </div>
+      <div class="panel">
+        <h2><span data-t="ach.title"></span> <span class="muted" id="achSub"></span></h2>
+        <div id="achList"></div>
+      </div>
+      <div class="panel">
+        <h2><span data-t="lives.title"></span> <span class="muted" data-t="lives.sub"></span></h2>
+        <div class="table-wrap"><table class="grid" id="lives"></table></div>
       </div>
     </section>
 
@@ -132,6 +144,9 @@
           <h2 data-t="history.title"></h2>
           <div class="table-wrap"><table class="grid" id="history"></table></div>
           <div class="buttons end">
+            <button id="endBtn" type="button" class="hidden" data-t="end.reopen"></button>
+            <button id="achBtn" type="button" data-t="ach.btn"></button>
+            <button id="livesBtn" type="button" data-t="lives.btn"></button>
             <button id="newLifeBtn" type="button" data-t="newLife"></button>
           </div>
         </section>
@@ -143,6 +158,7 @@
       <div class="turn-card"><span class="turn-cap" id="turnCap"></span><span class="turn-date" id="turnDate"></span><span class="turn-age" id="turnAge"></span></div>
     </div>
     <div id="confetti" class="confetti" aria-hidden="true"></div>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   </main>
 
   <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">

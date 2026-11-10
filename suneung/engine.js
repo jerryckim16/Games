@@ -1576,6 +1576,125 @@
   const ref = (p) => (p ? { id: p.id, s: p.s, n: p.n, x: p.x } : null);
   const one = (p) => (p ? { a: ref(p) } : null);
 
+  // ---------- after the exam: the next ten years (the epilogue) ----------
+  // Once a life has ended (g.ending), startEpilogue() plays a few more screens: a major, how you spend
+  // university, military service for men, the job hunt (취준), and where you are at 30. Every roll comes
+  // from its own seeded stream (hashSeed(seed, "epi", step, ...)), so nothing before the ending moves and
+  // the same choices on the same life always give the same result. Figures: data/korea-stats.md
+  // sections 13 "After school", 14 "Jobs" and 15 "After university".
+  //
+  // University tier, by where you enrolled: 0 no university, 1 junior college, 2 other four-year,
+  // 3 mid (the flagship nationals and the rest of in-Seoul), 4 top Seoul, 5 SKY, 6 medical school.
+  const UNI_TIER = {
+    med: 6, snu: 5, yonsei: 5, korea: 5,
+    skku: 4, sogang: 4, hanyang: 4, cau: 4, khu: 4, hufs: 4, uos: 4,
+    konkuk: 3, dongguk: 3, hongik: 3, pnu: 3, knu: 3, kookmin: 3, soongsil: 3, inha: 3, ajou: 3,
+    gachon: 2, regional: 2, college: 1,
+  };
+  const TIER_IDS = ["none", "college", "low", "mid", "top", "sky", "med"];
+  const IN_SEOUL = new Set(["snu", "yonsei", "korea", "skku", "sogang", "hanyang", "cau", "khu", "hufs", "uos", "konkuk", "dongguk", "hongik", "kookmin", "soongsil"]);
+  // Graduate employment rate by field (MOE 2024 graduate employment statistics, %), turned into a
+  // logit nudge against the 69.5% overall rate. "health" is nursing and pharmacy; MOE's medicine field
+  // covers both it and medical school.
+  const FIELD_EMP = { hum: 61.1, soc: 69.0, edu: 71.1, eng: 70.4, nat: 65.4, arts: 66.7, health: 79.4, med: 79.4 };
+  const logit = (p) => Math.log(p / (1 - p));
+  const sigmoid = (x) => 1 / (1 + Math.exp(-x));
+  const FIELD_PT = Object.fromEntries(Object.entries(FIELD_EMP).map(([k, v]) => [k, logit(v / 100) - logit(0.695)]));
+  // Majors on offer by track (the humanities track can't take engineering or nursing in 정시).
+  const FIELDS_FOR = { soc: ["soc", "hum", "edu", "arts"], sci: ["eng", "nat", "health", "edu", "arts"] };
+  // How you spend university: GPA (on 4.5), 스펙 (internships, certificates, languages), extra years.
+  // The exchange semester costs money: open to a middle-income family or above, or ₩5M of savings.
+  const COLLEGE_PLANS = {
+    library: { gpa: 0.35, spec: 0, years: 0 },
+    balance: { gpa: 0.1, spec: 0.5, years: 0 },
+    exchange: { gpa: 0, spec: 1, years: 0.5, money: 5000000 },
+    gap: { gpa: 0, spec: 0.8, years: 1 },
+    campus: { gpa: -0.25, spec: 0.3, years: 0 },
+  };
+  // Military service for men (현역 lengths in 2026, months): army and marines 18, navy 20, air force 21;
+  // social service (사회복무요원, grade 4 at the draft physical) 21; alternative service (대체복무,
+  // conscientious objectors, in prisons) 36; 군의관 (military doctor, after residency) 36 + about 2 of
+  // training. spec: time for certificates and English (air force), gpa: the 복학생 effect after year 1.
+  const ARMY = {
+    army: { months: 18, spec: 0 },
+    navy: { months: 20, spec: 0.1 },
+    air: { months: 21, spec: 0.3 },
+    marine: { months: 18, spec: 0.1 },
+    social: { months: 21, spec: 0.2 },
+    alt: { months: 36, spec: 0 },
+    doctor: { months: 38, spec: 0 },
+  };
+  const ARMY_WHEN = { y1: { gpa: 0.1, hunt: 0 }, y2: { gpa: 0, hunt: 0 }, after: { gpa: 0, hunt: -0.2 } };
+  // Grade 4 (social service) when health has been poor; the game's own rule, not a real share.
+  const ARMY_SOCIAL_HEALTH = 45;
+  // The job hunt. Each target's chance per year of trying is sigmoid(tier row + field + GPA + 스펙 +
+  // ability + luck + retry), where ability is the mean θ you finished school with (exams like 공시
+  // and 임용 reward it; blind hiring in public enterprises (블라인드 채용, since 2017) ignores the school).
+  // Rows by tier: none, college, low, mid, top, sky, med (null: not on offer).
+  const HUNT = {
+    big: { tier: [null, -2.8, -2.2, -1.3, -0.5, 0.1, null], field: 1, gpa: 0.8, spec: 0.35, abil: 0.1 },
+    bigline: { tier: [-1.2, null, null, null, null, null, null], field: 0, gpa: 0, spec: 0, abil: 0.3 },
+    public: { tier: [null, -2.0, -1.7, -1.5, -1.4, -1.3, null], field: 0.5, gpa: 0.5, spec: 0.2, abil: 0.35 },
+    civil: { tier: [-2.6, -2.3, -2.1, -2.0, -1.9, -1.8, null], field: 0, gpa: 0, spec: 0, abil: 0.5 },
+    teacher: { tier: [null, null, -1.7, -1.4, -1.1, -0.9, null], field: 0, gpa: 0.5, spec: 0, abil: 0.45 },
+    law: { tier: [null, null, -2.8, -1.8, -1.0, -0.3, null], field: 0, gpa: 1.2, spec: 0.1, abil: 0.3 },
+    hospital: { tier: [null, 1.4, 1.6, 1.8, 2.0, 2.2, null], field: 0, gpa: 0.4, spec: 0, abil: 0 },
+    startup: { tier: [null, 0.5, 1, 1.4, 1.8, 2.2, null], field: 0.5, gpa: 0, spec: 0.3, abil: 0 },
+    grad: { tier: [null, null, 0.2, 1.2, 2, 2.5, null], field: 0, gpa: 1, spec: 0, abil: 0.2 },
+    sme: { tier: [0.4, 1.0, 0.8, 1.0, 1.2, 1.4, null], field: 1, gpa: 0.2, spec: 0.2, abil: 0 },
+    trade: { tier: [0.6, null, null, null, null, null, null], field: 0, gpa: 0, spec: 0, abil: 0.2 },
+    service: { tier: [1.5, null, null, null, null, null, null], field: 0, gpa: 0, spec: 0, abil: 0 },
+    shop: { tier: [0.6, null, null, null, null, null, null], field: 0, gpa: 0, spec: 0, abil: 0, money: 10000000 },
+    popular: { tier: [null, null, null, null, null, null, -0.4], field: 0, gpa: 1.5, spec: 0, abil: 0.4 },
+    essential: { tier: [null, null, null, null, null, null, 2.2], field: 0, gpa: 0.3, spec: 0, abil: 0 },
+    gp: { tier: [null, null, null, null, null, null, 4], field: 0, gpa: 0, spec: 0, abil: 0 },
+  };
+  const FAMILY_PAY = 0.025; // pay at 30 per birth fifth above the middle (see epiFinish)
+  const HUNT_RETRY = 0.35; // each extra year of preparing the same target
+  const HUNT_TRIES = 3; // years of trying before you have to take what's there
+  const BAR_PASS = 0.51; // 변호사시험 pass rate per sitting (2026: 1,714 of 3,364 sat)
+  // The job you hold, its monthly pay at 30 (₩, gross) and the job it becomes on success.
+  // big: 300+ employee firms' graduate starting pay ₩50.01M a year (2023) ≈ ₩4.17M a month, plus
+  // a few years of raises. sme: under-300 starting pay ₩32.38M ≈ ₩2.7M, SME mean ₩3.07M. resident:
+  // 레지던트 ₩72.8M a year ≈ ₩6.07M. Others are estimates (see data/korea-stats.md, Game mapping).
+  const JOB30 = {
+    big: 5200000, bigline: 4300000, public: 4300000, civil: 3000000, teacher: 3300000, lawyer: 6000000, nurse: 4000000,
+    startup: 3500000, startupWin: 8000000, research: 4500000, phd: 1800000, sme: 3000000, trade: 3300000, service: 2400000,
+    shop: 3200000, resident: 6070000, gp: 8000000, freelance: 2300000, parttime: 1400000, student: 0, barExam: 0, hunting: 0,
+  };
+  // What each target becomes when it works out.
+  const HUNT_JOB = { big: "big", bigline: "bigline", public: "public", civil: "civil", teacher: "teacher", law: "lawyer", hospital: "nurse", startup: "startup", grad: "research", sme: "sme", trade: "trade", service: "service", shop: "shop", popular: "resident", essential: "resident", gp: "gp" };
+  // Workers' monthly pay, fifths: under ₩2M is about the bottom 19%, the median is ₩2.88M, 62% earn
+  // under ₩3.5M and 17.6% earn ₩5M or more (calc from the 2024–26 official wage tables).
+  const PAY_FIFTHS = [2000000, 2550000, 3350000, 4900000];
+  const payFifth = (pay) => { let i = 0; while (i < PAY_FIFTHS.length && pay >= PAY_FIFTHS[i]) i++; return i + 1; };
+  // Jobs that pull you to Seoul, and public enterprises that moved out to the 혁신도시 (153 public
+  // bodies left the capital region in 2012–19).
+  const SEOUL_JOBS = new Set(["big", "lawyer", "startup", "startupWin", "research", "phd"]);
+  const AWAY_JOBS = { public: ["daegu", "busan", "jeonju", "jeju", "gwangju", "cheongju"] };
+
+  // A life's achievements: ids only (strings.js has the names, descriptions and hints). `epi`: needs the
+  // epilogue; `meta`: needs something outside this life (lives played on this device).
+  const ACHIEVEMENTS = [
+    "perfectPaper", "allOnes", "med", "snu", "sky", "inSeoul", "firstTry", "nsu5", "dragon", "dropoutSeoul", "careUni", "scholar",
+    "bullySurvivor", "hagwonAll", "selfMade", "early", "waitlist", "halfUp", "ruralSeoul", "daechi", "mover", "familyUp", "jackpot",
+    "omr", "stethoscope", "sciHigh", "vocUni", "noUni", "college",
+    "bigCo", "civil", "lawyer", "gavel", "doctor30", "topFifth", "riseTwo", "ragsToRiches", "served", "altService", "exchange", "startupWin",
+    "daily", "replay", "veteran",
+  ];
+  const EPI_ACH = new Set(["bigCo", "civil", "lawyer", "gavel", "doctor30", "topFifth", "riseTwo", "ragsToRiches", "served", "altService", "exchange", "startupWin"]);
+  // Other systems can add "where they are now" lines to the epilogue: a function (g) returning an
+  // array of { key, p }, called once when the epilogue finishes; the lines land in g.epi.extra and the
+  // ending screen renders them under the at-30 summary.
+  const EPILOGUE_HOOKS = [];
+  // Your three closest friends at 30: where their own 수능 took them (friendOutcomes, from their own
+  // seeded ability) and whether you're still in touch (a best friend, a partner or anyone you stayed
+  // close to keeps meeting you; the rest drift).
+  EPILOGUE_HOOKS.push((g) => (g.friendOutcomes ? g.friendOutcomes(3) : []).map((f) => ({
+    key: "epi.friend30",
+    p: { a: { id: f.id, s: f.s, n: f.n, x: f.x }, role: f.role, path: f.path, uni: f.uni, touch: f.role === "best" || f.role === "partner" || f.cl >= 60 },
+  })));
+
   // ---------- the game ----------
   class Game {
     constructor(opts) {
@@ -1624,7 +1743,8 @@
       this.money = 0; // your own savings; education is paid from the parents' budget first
       this.lostBlocks = 0;
       this.clock = 0; // months played, for event cooldowns
-      this.flags = {};
+      // mt: this life tracks study methods (old saves don't, so method achievements skip them).
+      this.flags = { mt: 1 };
       this.log = [];
       this.history = []; // finished 수능 results
       this.mocks = []; // mock exam results
@@ -1649,6 +1769,8 @@
 
     // Birth region, weighted only by population share.
     // A fortune between −1 and 1, most lives near the middle.
+    // Today's life: the same seed for everyone on a date ("2026-11-10"), so friends can compare.
+    static dailySeed(date) { return hashSeed("daily", date) & 0x7fffffff; }
     static rollLuck(seed) {
       const r = makeRng(hashSeed(seed, "saju"));
       return Math.round(clamp(r.normal() * 0.45, -1, 1) * 100) / 100;
@@ -2083,6 +2205,12 @@
       if (err) throw new Error(err);
       this.method = this.methodFixed() ? this.method : method;
       this.lastPlan = Object.assign({}, plan);
+      // For achievements: paid cram school or tutoring ever, and High 3 months spent at a 학원.
+      if (method === "hagwon" || method === "tutor") this.flags.paid = 1;
+      if (this.status === "hs3" && this.attempt === 1) {
+        this.flags.hs3Turns = (this.flags.hs3Turns || 0) + 1;
+        if (method === "hagwon" || method === "tutor") this.flags.hs3Hagwon = (this.flags.hs3Hagwon || 0) + 1;
+      }
       this.lostBlocks = 0;
       this.soc();
       // This year's homeroom teacher (see TEACHERS).
@@ -2951,6 +3079,320 @@
       return { sci, total, pct, path, uni: path === "uni" ? u.id : null, aim: u.id };
     }
 
+    // ---------- the epilogue: the next ten years ----------
+    // Where you started: the family, region, parents and parents' jobs at birth, from the first log
+    // entry and the seeded rolls (later changes don't count). For the mobility line and the Lives panel.
+    birthInfo() {
+      const b = (this.log || []).find((l) => l.key === "log.born");
+      const p = (b && b.p) || {};
+      const fam = p.fam || this.family;
+      const reg = REGION_BY_ID[p.reg] ? p.reg : this.region;
+      let par = p.care ? "care" : Game.rollParents(this.seed);
+      // A life rolled "care" before children's homes existed (no care flag on its birth) had grandparents.
+      if (par === "care" && !p.care) par = "grand";
+      if (this.parents === "both") par = "both";
+      const jobs = this.jobs === undefined ? null : Game.rollJobs(this.seed, fam, reg, par);
+      return { fam, reg, par, jobs, year: (this.startYear || 2026) - 6 };
+    }
+    // 0 no university … 6 medical school (see UNI_TIER).
+    uniTier() { return this.ending && this.ending.uni ? UNI_TIER[this.ending.uni] || 2 : 0; }
+    // The mean ability you finished school with (θ), which exams after school reward too.
+    finalAbility() { return SUBJECTS.reduce((a, s) => a + this.skills[s], 0) / SUBJECTS.length; }
+    // Men serve; old saves without a sex were drawn as boys.
+    servesArmy() { return this.sex !== "f"; }
+    epiRng(...k) { return makeRng(hashSeed(this.seed, "epi", ...k)); }
+    // Starts the epilogue on a finished life (also an old save that ended before it existed). Pushes its
+    // first screen; returns g.epi. Calling it again does nothing.
+    startEpilogue() {
+      if (!this.ending) throw new Error("The life hasn't ended yet.");
+      if (this.epi) return this.epi;
+      const tier = this.uniTier();
+      this.epi = { v: 1, tier, field: null, gpa: null, plan: null, spec: 0, years: 0, when: null, army: null, target: null, tries: 0, job: null, start: null, lines: [], extra: [], at30: null, done: false };
+      if (tier === 6) {
+        this.epi.field = "med";
+        this.epiPush("college");
+      } else if (tier === 0) this.epiPush(this.servesArmy() ? "army" : "hunt");
+      else this.epiPush("major");
+      return this.epi;
+    }
+    // The options a screen offers, and the ones closed (id → reason key).
+    epiPush(step) {
+      const e = this.epi, opts = [], blocked = {};
+      const famI = FAMILY_IDS.indexOf(this.family);
+      const careKid = this.parents === "care";
+      if (step === "major") opts.push(...FIELDS_FOR[this.track === "sci" ? "sci" : "soc"]);
+      else if (step === "college") {
+        opts.push(...(e.tier === 6 ? ["library", "balance", "campus"] : ["library", "balance", "exchange", "gap", "campus"]));
+        if (opts.indexOf("exchange") >= 0 && !((famI >= 2 && !careKid) || this.money >= COLLEGE_PLANS.exchange.money)) blocked.exchange = "money";
+      } else if (step === "armyWhen") opts.push("y1", "y2", "after");
+      else if (step === "army") {
+        if (e.tier === 6) opts.push("doctor");
+        if (this.health < ARMY_SOCIAL_HEALTH) opts.push("social");
+        else opts.push("army", "navy", "air", "marine");
+        opts.push("alt");
+      } else if (step === "hunt") opts.push(...this.huntTargets());
+      else if (step === "hunt2") {
+        if (e.tries < HUNT_TRIES && !(e.target === "law" && e.lawIn)) opts.push("again");
+        if (e.tier === 6) opts.push(...["essential", "gp"].filter((x) => x !== e.target));
+        else if (e.tier === 0) { if (e.target !== "service") opts.push("service"); }
+        else if (e.target !== "sme") opts.push("sme");
+        opts.push("parttime");
+      } else if (step === "at30") opts.push("ok");
+      if (step === "hunt" && opts.indexOf("shop") >= 0 && !((famI >= 2 && !careKid) || this.money >= HUNT.shop.money)) blocked.shop = "money";
+      this.queue.push({ type: "epi", step, opts, blocked, tier: e.tier });
+    }
+    // Job-hunt targets for your tier and major.
+    huntTargets() {
+      const e = this.epi, t = e.tier;
+      if (t === 6) return ["popular", "essential", "gp"];
+      if (t === 0) {
+        const voc = (this.log || []).some((l) => l.key === "log.school" && l.p && l.p.id === "vocHigh");
+        return (voc ? ["bigline"] : []).concat(["trade", "civil", "service", "shop"]);
+      }
+      const o = [];
+      if (HUNT.big.tier[t] != null) o.push("big");
+      o.push("public", "civil");
+      if (e.field === "edu" && t >= 2) o.push("teacher");
+      if (e.field === "health") o.push("hospital");
+      if (t >= 2) o.push("law");
+      o.push("startup");
+      if (t >= 2) o.push("grad");
+      o.push("sme");
+      return o;
+    }
+    epiYearsToReady() {
+      const e = this.epi;
+      return (e.tier === 6 ? 6 : e.tier === 1 ? 2 : e.tier === 0 ? 0 : 4) + e.years;
+    }
+    // Answers the epilogue screen at the front of the queue. Returns the outcome message { key, p }.
+    epiChoose(id) {
+      const top = this.queue[0];
+      if (!top || top.type !== "epi") throw new Error("No epilogue screen.");
+      if (top.opts.indexOf(id) < 0) throw new Error("Not an option: " + id);
+      if (top.blocked && top.blocked[id]) throw new Error("Closed: " + id);
+      this.queue.shift();
+      const e = this.epi, step = top.step;
+      let res = null;
+      if (step === "major") {
+        e.field = id;
+        res = { key: "epi.r.major", p: { f: id } };
+        this.epiPush("college");
+      } else if (step === "college") {
+        const plan = COLLEGE_PLANS[id];
+        const r = this.epiRng("college");
+        e.plan = id;
+        e.gpa = Math.round(clamp(3.35 + plan.gpa + 0.25 * (this.finalAbility() - 1) + r.normal() * 0.3 + 0.05 * (this.luck || 0), 2, 4.5) * 100) / 100;
+        e.spec += plan.spec;
+        e.years += plan.years;
+        // An exchange semester the family can't pay for comes out of your savings.
+        if (id === "exchange" && !(FAMILY_IDS.indexOf(this.family) >= 2 && this.parents !== "care")) this.money -= plan.money;
+        res = { key: "epi.r.college." + id, p: { gpa: e.gpa.toFixed(2) } };
+        this.epiPush(this.servesArmy() ? (e.tier === 6 ? "army" : "armyWhen") : "hunt");
+      } else if (step === "armyWhen") {
+        e.when = id;
+        if (e.gpa != null) e.gpa = Math.round(Math.min(4.5, e.gpa + ARMY_WHEN[id].gpa) * 100) / 100;
+        res = { key: "epi.r.when." + id, p: {} };
+        this.epiPush("army");
+      } else if (step === "army") {
+        e.army = id;
+        const a = ARMY[id];
+        // A 군의관 serves after residency, past 30.
+        if (id !== "doctor") e.years += a.months / 12;
+        e.spec += a.spec;
+        if (e.tier === 6 && id !== "doctor") e.when = "y2";
+        res = { key: "epi.r.army." + id, p: { m: a.months } };
+        this.epiPush("hunt");
+      } else if (step === "hunt") {
+        e.target = id;
+        e.tries = 1;
+        res = this.epiHunt();
+      } else if (step === "hunt2") {
+        if (id === "parttime") {
+          e.job = "parttime";
+          e.start = this.ending.age + this.epiYearsToReady() + e.tries;
+          res = { key: "epi.r.parttime", p: {} };
+          this.epiFinish();
+        } else {
+          if (id !== "again") { e.target = id; e.retarget = true; }
+          e.tries += 1;
+          res = this.epiHunt();
+        }
+      } else if (step === "at30") {
+        e.done = true;
+        res = { key: "epi.r.done", p: {} };
+      }
+      if (res && step !== "at30") e.lines.push(res);
+      return res;
+    }
+    // One year of trying for e.target. Pushes the next screen (another try, or at 30).
+    epiHunt() {
+      const e = this.epi, t = e.target, h = HUNT[t];
+      const r = this.epiRng("hunt", t, e.tries);
+      const famI = FAMILY_IDS.indexOf(this.birthInfo().fam);
+      // Connections and a cushion (부모 찬스) help a little where money and networks count.
+      const help = t === "big" || t === "startup" || t === "shop" ? 0.12 * (famI - 2) : 0;
+      const retry = e.retarget ? 0 : HUNT_RETRY * (e.tries - 1);
+      const x = h.tier[e.tier] + h.field * (FIELD_PT[e.field] || 0) + h.gpa * ((e.gpa == null ? 3.35 : e.gpa) - 3.35) + h.spec * e.spec +
+        h.abil * (this.finalAbility() - 1) + 0.25 * (this.luck || 0) + retry + (ARMY_WHEN[e.when] ? ARMY_WHEN[e.when].hunt : 0) + help;
+      const ok = r() < sigmoid(x);
+      const ready = this.ending.age + this.epiYearsToReady();
+      const p = { t, n: e.tries };
+      if (!ok) {
+        // Out of years to try: whatever comes along.
+        if (e.tries >= HUNT_TRIES) {
+          const fall = e.tier === 6 ? "gp" : e.tier === 0 ? "service" : "sme";
+          const r2 = this.epiRng("fallback");
+          // ...or nothing yet: still looking, or a part-time job meanwhile.
+          e.job = r2() < sigmoid(HUNT[fall].tier[e.tier] || 1) ? HUNT_JOB[fall] : r2() < 0.5 ? "parttime" : "hunting";
+          e.start = ready + e.tries;
+          this.epiFinish();
+          return { key: "epi.r.fallback", p: { t, job: e.job } };
+        }
+        this.epiPush("hunt2");
+        return { key: "epi.r.fail", p };
+      }
+      e.start = ready + (e.tries - 1) + 0.5;
+      if (t === "law") {
+        // Law school (3 years), then the bar: about half pass each sitting.
+        e.lawIn = true;
+        e.years += 3;
+        let age = ready + (e.tries - 1) + 3, n = 0, pass = false;
+        while (!pass && n < 5 && age <= 30) { n++; pass = r() < clamp(BAR_PASS + 0.1 * (this.finalAbility() - 1), 0.2, 0.9); age += 1; }
+        e.bar = n;
+        e.job = pass ? "lawyer" : "barExam";
+        e.start = pass ? Math.min(age - 0.5, 30) : 99;
+        this.epiFinish();
+        return { key: pass ? "epi.r.law" : "epi.r.lawWait", p: { n } };
+      }
+      if (t === "startup") {
+        const y = r();
+        e.job = y < 0.08 ? "startupWin" : y < 0.6 ? "startup" : "sme";
+        this.epiFinish();
+        return { key: "epi.r.startup." + e.job, p };
+      }
+      if (t === "grad") {
+        // A master's (2 years), then a research job or on to a PhD.
+        e.years += 2;
+        e.start += 2;
+        e.job = r() < 0.55 ? "research" : "phd";
+        this.epiFinish();
+        return { key: "epi.r.grad." + e.job, p };
+      }
+      if (t === "popular" || t === "essential") {
+        // Medical school, then a year's internship, then residency.
+        e.start = ready + 1 + (e.tries - 1);
+      }
+      if (t === "gp") e.start = ready + 1;
+      e.job = HUNT_JOB[t];
+      this.epiFinish();
+      return { key: "epi.r.ok", p: { t, n: e.tries, job: e.job } };
+    }
+    // Where you are at 30: the job you hold then (or still studying or looking), its pay, your fifth
+    // among workers against the family you were born into, where you live.
+    epiFinish() {
+      const e = this.epi;
+      const birth = this.birthInfo();
+      const ready = this.ending.age + this.epiYearsToReady();
+      let job = e.job;
+      if (job !== "phd" && job !== "barExam" && (e.start == null || e.start > 30)) job = ready >= 30 ? "student" : "hunting";
+      const yearsIn = Math.max(0, 30 - (e.start == null ? 30 : e.start));
+      const r = this.epiRng("pay");
+      const base = JOB30[job] || 0;
+      const born = FAMILY_IDS.indexOf(birth.fam) + 1;
+      // Pay: the job's level at 30, a little for years in it, the family's pull (FAMILY_PAY a fifth: half
+      // of the 19% top-vs-bottom-fifth wage gap KRIVET finds; the rest comes through school), and luck.
+      const pay = base ? Math.round((base * clamp(1 + 0.02 * (yearsIn - 4), 0.85, 1.15) * (1 + FAMILY_PAY * (born - 3)) * Math.exp(r.normal() * 0.12)) / 10000) * 10000 : 0;
+      const fifth = pay ? payFifth(pay) : 1;
+      // Where you live: big firms, law, startups and research pull you to Seoul; public enterprises sit
+      // in the 혁신도시 outside it; teachers and civil servants stay home; the rest mostly stay too.
+      const w = this.epiRng("where");
+      const seoulPick = () => (pay >= 6000000 && w() < 0.4 ? "gangnam" : pay < 3500000 ? "gwanak" : ["mapo", "gangdong", "mokdong", "nowon", "gwanak"][Math.floor(w() * 5)]);
+      let region = this.region;
+      if (SEOUL_JOBS.has(job) || ((job === "resident" || job === "gp") && e.tier === 6 && w() < 0.5)) region = SEOUL_AREAS.has(this.region) ? this.region : seoulPick();
+      else if (AWAY_JOBS[job]) region = AWAY_JOBS[job][Math.floor(w() * AWAY_JOBS[job].length)];
+      else if (job !== "civil" && job !== "teacher" && e.tier >= 3 && w() < 0.5) region = SEOUL_AREAS.has(this.region) ? this.region : seoulPick();
+      let home;
+      if (birth.par !== "care" && this.parents !== "care" && region === this.region && pay < 3200000) home = "parents";
+      else if (pay >= 4500000 && born >= 4 && w() < 0.6) home = "ownHelp";
+      else if (pay >= 4500000) home = "jeonse";
+      else home = "oneroom";
+      e.at30 = { job, pay, fifth, born, region, home };
+      e.extra = [];
+      for (const hook of EPILOGUE_HOOKS) {
+        try { const lines = hook(this); if (Array.isArray(lines)) e.extra.push(...lines); } catch (err) { /* a broken hook never stops the ending */ }
+      }
+      this.epiPush("at30");
+    }
+
+    // Which achievements this life has earned (ids from ACHIEVEMENTS). meta: { lives } played on this
+    // device, for the one that counts lives. Reads only state the game keeps, so old saves work.
+    achievements(meta) {
+      const out = [];
+      const has = (id) => out.push(id);
+      const log = this.log || [];
+      const end = this.ending, uni = end && end.uni;
+      const idx = uni ? UNIVERSITIES.findIndex((u) => u.id === uni) : -1;
+      const tier = this.uniTier();
+      const birth = this.birthInfo();
+      const seoulish = uni === "med" || IN_SEOUL.has(uni);
+      const hist = this.history || [];
+      // Korean History is excluded: full marks there are common.
+      // Full marks in Korean or math: a handful of takers a year (English and 탐구 papers are shorter and easier to ace).
+      if (hist.some((r) => ["kor", "math"].some((s) => r.subjects[s].raw === r.subjects[s].max))) has("perfectPaper");
+      if (hist.some((r) => SUBJECTS.every((s) => r.subjects[s].grade === 1))) has("allOnes");
+      const ev = (id) => log.some((l) => l.key === "log.event" && l.p && l.p.id === id);
+      if (end) {
+        if (uni === "med") has("med");
+        if (uni === "snu") has("snu");
+        if (tier === 5) has("sky");
+        if (seoulish) has("inSeoul");
+        if (seoulish && end.attempts === 1) has("firstTry");
+        if (uni && end.attempts >= 5) has("nsu5");
+        if (birth.fam === "q1" && tier >= 5) has("dragon");
+        if (this.dropout != null && seoulish) has("dropoutSeoul");
+        if (birth.par === "care" && uni) has("careUni");
+        if (uni && (this.flags.bullyN || 0) > 0) has("bullySurvivor");
+        if (this.flags.mt && !this.flags.paid && tier >= 5) has("selfMade");
+        if (this.flags.early && uni) has("early");
+        const half = log.filter((l) => l.key === "log.newyear" && l.p && l.p.st === "halfretake" && l.p.uni).map((l) => UNIVERSITIES.findIndex((u) => u.id === l.p.uni));
+        if (idx >= 0 && half.some((h) => idx < h)) has("halfUp");
+        if (this.regionInfo().kind === "rural" && seoulish) has("ruralSeoul");
+        if (this.traits && this.traits.indexOf("stethoscope") >= 0 && uni === "med") has("stethoscope");
+        if (log.some((l) => l.key === "log.school" && l.p && l.p.id === "vocHigh") && seoulish) has("vocUni");
+        if (!uni) has("noUni");
+        if (uni === "college") has("college");
+        if (this.daily) has("daily");
+        if (this.replayOf) has("replay");
+      }
+      if (log.some((l) => l.key === "log.newyear" && l.p && l.p.sch)) has("scholar");
+      if ((this.flags.hs3Turns || 0) >= 9 && this.flags.hs3Hagwon === this.flags.hs3Turns) has("hagwonAll");
+      if (log.some((l) => l.key === "log.waitlist")) has("waitlist");
+      if (birth.reg === "gangnam" || log.some((l) => l.key === "log.move" && l.p && l.p.to === "gangnam")) has("daechi");
+      if (log.filter((l) => l.key === "log.move").length >= 3) has("mover");
+      if (FAMILY_IDS.indexOf(this.family) - FAMILY_IDS.indexOf(birth.fam) >= 2) has("familyUp");
+      if (ev("jackpot")) has("jackpot");
+      if (log.some((l) => l.key === "log.event" && l.p && l.p.r && l.p.r.key === "ev.examluck.omr")) has("omr");
+      if (log.some((l) => l.key === "log.school" && l.p && l.p.id === "sciHigh")) has("sciHigh");
+      const e = this.epi;
+      if (e && e.done && e.at30) {
+        const j = e.at30.job;
+        if (j === "big" || j === "bigline") has("bigCo");
+        if (j === "civil") has("civil");
+        if (j === "lawyer") has("lawyer");
+        if (j === "lawyer" && this.traits && this.traits.indexOf("gavel") >= 0) has("gavel");
+        if (j === "resident" || j === "gp") has("doctor30");
+        if (e.at30.fifth === 5) has("topFifth");
+        if (e.at30.fifth - e.at30.born >= 2) has("riseTwo");
+        if (e.at30.born === 1 && e.at30.fifth === 5) has("ragsToRiches");
+        if (e.army && e.army !== "alt" && e.army !== "doctor") has("served");
+        if (e.army === "alt") has("altService");
+        if (e.plan === "exchange") has("exchange");
+        if (j === "startupWin") has("startupWin");
+      }
+      if (meta && meta.lives >= 10) has("veteran");
+      return out;
+    }
+
     toJSON() {
       const o = {};
       for (const k of Object.keys(this)) o[k] = this[k];
@@ -2983,6 +3425,7 @@
   const api = {
     Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SCHOOLS, TEMPERAMENTS, DOLJABI, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
     inquiryInfo, admissionScore, admitChance, chanceLabel, gradeSubject, makeRng, hashSeed,
+    UNI_TIER, TIER_IDS, IN_SEOUL, FIELDS_FOR, COLLEGE_PLANS, ARMY, HUNT, JOB30, PAY_FIFTHS, ACHIEVEMENTS, EPI_ACH, EPILOGUE_HOOKS,
     skillScore: (theta) => clamp(Math.round(50 + theta * 16.67), 0, 100),
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;

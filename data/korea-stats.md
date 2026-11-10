@@ -308,13 +308,44 @@ Retrieved: 2026-10-29 (figures read from the attached xlsx / pdf / hwpx / csv fi
 | Household income by head's status | regular employee 45.7% of households, mean ₩95.2M/yr; self-employed 21.1%, ₩80.0M; temp/daily 11.3%, ₩45.4M; other/not working 21.9%, ₩40.1M (all ₩74.3M, median ₩58.0M) | 2024 income | 만원/yr | 국가데이터처, 가계금융복지조사 2025 | https://mods.go.kr/boardDownload.es?bid=215&list_no=439535&seq=8 | official |
 | Dual earners by head's occupation | managers 52.7, professionals 63.6, clerks 66.1, service 67.2, sales 66.9, farm 80.5, craft 57.6, machine 54.7, elementary 52.7 | 2025 H2 | % of married households with an employed head | 국가데이터처, 맞벌이 가구 | https://mods.go.kr/boardDownload.es?bid=211&list_no=445516&seq=1 | official |
 
-## 15. Names
+---
+
+## 15. After university: service, the job hunt, pay at 30 and mobility
+Retrieved: 2026-11-10 (read from search-result text; the session's network blocked the primary pages themselves, so rows citing news are marked unverified)
+
+| Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
+|---|---|---|---|---|---|---|
+| Active-duty service length | army and marines 18; navy 20; air force 21 | 2026 | Months | Military Manpower Administration (병무청) | https://mma.go.kr/contents.do?mc=usr0000041 | official (search-result text of the MMA page) |
+| Alternative service (대체복무요원) | 36, living in correctional facilities | 2026 | Months | Military Manpower Administration | https://mma.go.kr/contents.do?mc=usr0000041 | official (search-result text) |
+| Social service agents (사회복무요원) | 21 (one report says 20 from 2026-01-01) | 2026 | Months | news citing MMA | https://jab-guyver.co.kr/m/1633 ; https://dazabi.com/insurance_magazine/article.php?id=3911 | unverified; sources disagree, the game uses 21 |
+| Industrial / research service | 산업기능요원 34 (현역) or 23 (보충역); 전문연구요원 36 | 2026 | Months | secondary guide | https://calcnara.com/guides/military-service-guide | unverified; not used |
+| Time to a first wage job after leaving school | 11.3 months (−0.2) | 2025-05 | Mean, youth 15–29 whose first job was a wage job | 국가데이터처, 경제활동인구조사 청년층 부가조사 | https://dailian.co.kr/news/view/1527230/ | unverified (news citing the release) |
+| Tenure of the first job | 1 year 6.4 months | 2025-05 | Mean | same | https://dailian.co.kr/news/view/1527230/ | unverified |
+| Not employed a year or more after leaving school | 46.6% (2025); 48.6% (2026, highest since 2009) | 2025-05 / 2026-05 | % of not-yet-employed school leavers 15–29 | 국가데이터처, 청년층 부가조사 | https://www.mt.co.kr/economy/2026/07/23/2026072308421586967 | unverified (news citing the release) |
+| What job seekers prepare for | general companies 36.0%, general civil service 18.2% | 2025-05 | % of youth preparing for a hiring exam | 국가데이터처, 청년층 부가조사 | https://dailian.co.kr/news/view/1527230/ | unverified |
+| Pay at the first job | ₩2–3M 42.1%; ₩1.5–2M 23.3%; ₩0.5–1M 11.8% (the largest bands) | 2026-05 | % of youth by monthly pay at their first job | 국가데이터처, 청년층 부가조사 | https://www.mt.co.kr/economy/2026/07/23/2026072308421586967 | unverified |
+| Time to graduate from university | 4 years 5.7 months (+1.3 months) | 2026-05 | Mean, including 3-year colleges | 국가데이터처, 청년층 부가조사 | https://nocutnews.co.kr/news/6552236 | unverified |
+| Graduate starting pay by firm size | 300+ employees ₩50.01M a year; under 300 ₩32.38M (64.7%); 30–299 ₩35.95M; 5–29 ₩30.70M; under 5 ₩27.31M | 2023 (published 2025-01) | Annual, regular graduate hires 34 or younger (fixed + special pay) | Korea Enterprises Federation (경총), from MOEL wage data | https://www.hankyung.com/article/202501120596Y | unverified (news citing the KEF report) |
+| Monthly pay by age (wage jobs) | 30s ₩3.97M; 40s ₩4.69M; 50s ₩4.45M; all ₩3.75M (median ₩2.88M) | 2024-12 | Won/month, before tax | 국가데이터처, 2024년 임금근로일자리 소득(보수) 결과 | https://www.newsis.com/view/NISX20260223_0003523081 | unverified (news); the all-worker mean and median match the official row in section 14 |
+| 30s "just resting" (쉬었음) | 309,000, the most since 2003 | 2025 | Persons in their 30s neither working nor looking, for no particular reason | 국가데이터처, 2025년 연간 고용동향 | https://www.heraldk.com/article/2026011317203905620 | unverified (news citing the release) |
+| Grade-9 national civil service exam | 108,718 applicants for 3,802 places: 28.6 to 1; 4,712 passed the written test | 2026 | Applicants per place | Ministry of Personnel Management (인사혁신처) | https://www.mpm.go.kr/mpm/comm/newsPress/newsPressRelease/?cntId=4208&mode=view | official (search-result text of the MPM release) |
+| Bar exam (변호사시험) | 1,714 passed; about 3,364 sat (50.95%) | 2026 (15th exam) | Persons; pass rate per sitter | Ministry of Justice | https://www.moj.go.kr/bbs/moj/182/605775/artclView.do | passes official; sitters and rate unverified (a blog's figures; calc 1,714 / 3,364) |
+| Doctors' pay | ₩285.18M a year on average (full-time, excluding interns and residents) | 2023 (survey published 2026-09) | Annual | Ministry of Health and Welfare, 제2차 보건의료인력 실태조사 | https://dailymedi.com/news/news_view.php?ca_id=&wr_id=940942 | unverified (news citing the survey) |
+| Residents' and interns' pay | residents ₩72.8M, interns ₩68.82M a year | 2022 | Annual | MOHW, 보건의료인력 실태조사 | https://www.newsis.com/view/NISX20241107_0002950965 | unverified (news) |
+| Income mobility in a year | 34.1% changed income fifth (up 17.3%, a record low); 29.9% of the bottom fifth left it (70.1% stayed); 85.9% of the top fifth stayed; 27.8% of those in the bottom fifth in 2017 were still there every year to 2023 | 2022→2023 | % of people with earned or business income | 국가데이터처, 2023년 소득이동통계 (2025-10-27) | https://www.newsis.com/view/NISX20251027_0003378081 | unverified (news citing the release) |
+| Parents' income and children's wages | children of top-fifth parents earn 19% more than children of bottom-fifth parents | KEEP panel | Wage gap | KRIVET (한국직업능력연구원) | https://krivet.re.kr/repository/handle/202405/7287 | unverified (search summary of the paper) |
+| Rank-rank slope | 0.25: parents 10 places higher in 100 → children 2.5 places higher | recent cohorts | Intergenerational income rank slope | Bank of Korea (as reported) | https://www.asiae.co.kr/en/article/2026021111135507777 | unverified (news summary; the report itself not read) |
+| Low-income youth outside the capital stuck in their class | about 80% | 2026-02 | Probability, Bank of Korea report | Bank of Korea | https://v.daum.net/v/20260211130015836 | unverified (news) |
+
+## 16. Names
 Retrieved: 2026-11-10
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
 | Most common surnames | 김 21.5% (10.69 million of 51.07 million); 이 14.7%; 박 8.4%; 최 4.7%; the top ten 63.9% | 2015-11-01 | Share of the population | Statistics Korea (2015 인구주택총조사, released 2016-09-07), via news | https://view.asiae.co.kr/article/2016090708573546435 ; https://m.seoul.co.kr/news/2021/01/25/20210125500093 | unverified (news citing the KOSTAT release); ranks 5–10 (정, 강, 조, 윤, 장, 임) and their shares (4.3, 2.3, 2.1, 2.1, 2.0, 1.7%) are from memory of the same release and sum to the stated top-ten total; ranks 11–20 are estimates (1.1–1.5% each) |
 | Most popular given names, 2023–24 births | boys 이준, 도윤, 하준, 은우, 서준; girls 서아, 이서, 아윤, 지아, 하윤 | 2023–2024 | Most-registered names (order as reported) | 대법원 전자가족관계등록시스템 통계서비스 (Supreme Court family-registration statistics), via news (Financial News, 2025-07) | https://www.fnnews.com/news/202507090655316630 | unverified: read only through a search summary; the article and the official statistics site (efamily.scourt.go.kr) could not be opened from this environment. The game's lists add 15 more names a sex from earlier 2020s rankings (시우, 지호, 수호, 유준, 예준, 선우 ...; 지안, 하은, 아린, 서윤, 시아, 수아 ...), not checked against the source |
+
+---
 
 ## Game mapping
 Retrieved: 2026-11-04 (real-figure and verdict columns; game values unchanged). The Suneung Simulator's constants (suneung/engine.js at commit 7846047) next to the closest real figure. "Life" means one simulated childhood from birth to High 3 unless noted.
@@ -354,24 +385,24 @@ Retrieved: 2026-11-04 (real-figure and verdict columns; game values unchanged). 
 | `med` cut / 의대 places | percentile cut 98.8 | 3,058 places (2026) for 493,896 takers ≈ 0.6%; 3,548 places from 2027 (≈0.7% of 2026's takers) | rough check only (most medical places are 수시, and N-수 dominate) |
 | `LOCAL_QUOTA` (지역인재) | 0.6 percentile points off the cut | 59.7% of places at obliged medical schools go to regional talent (2025) | a quota of seats, modelled as a cut bonus; no direct conversion |
 | `RURAL_QUOTA` (농어촌) | 0.8 percentile points off the cut | up to 4% of places, outside the quota | no direct conversion |
-<<<<<<< HEAD
 | School types counts | 8 gifted, 20 science, 28 foreign-language, 8 international, 32 autonomous private | official 2025-04-01: 8 gifted, 20 science, 28 foreign-language, 8 international, 33 자사고, 25 arts, 17 sports, 56 meister-type, 484 특성화; students: 특성화 13.0%, 특목 4.7%, 자율 6.8% of high school students | game only uses admission chances; consistent (33 vs 32 자사고 is a 2025 vs 2026 date difference) |
 | `intlMid` admission | 0.3 for applicants above z 0.6, else 0 | 대원 23.6 : 1, 영훈 ≈10.7 : 1 applicants per place (2026 entry, unverified news) | game is far easier than the real lottery among applicants (≈4–9% per applicant), but its gate already filters to strong students |
 | Kindergarten choice | ordinary kindergarten default | ages 3/4/5 in 2025: kindergarten 50.3 / 59.7 / 64.5%, daycare 42.5 / 32.4 / 29.1%, neither 7.2 / 7.9 / 6.4% (calc); preschool private-ed participation 47.6% | no game rate; `homeCare` (and English academies) fall in the ~7% in neither |
-=======
-| School types counts | 8 gifted, 20 science, 28 foreign-language, 8 international, 32 autonomous private | (news, 2025–26) | game only uses admission chances; consistent |
 | `SURNAMES` (classmates, teachers) | 김 21.5, 이 14.7, 박 8.4, 최 4.7, 정 4.3 ... 홍 1.1 (20 surnames, weights) | 2015 census shares (top four confirmed, top ten 63.9%) | matches the confirmed shares; the 20 cover about 77% of the population, the rest of Korea's surnames are left out |
 | `GIVEN` (classmates) | 20 boys' and 20 girls' names, weight 1/(rank + 4) | 2023–24 top five per sex (Supreme Court statistics, unverified) | top five match the reported order; the tail and the weights are estimates |
 | `CLASS_SIZE` (named classmates) | 6 per new elementary, middle and high school class | class sizes 19.3 / 24.9 / 23.4 (2025) | only the classmates who matter are named, not the whole class |
 | `TEACHER_F` (homeroom teacher is a woman) | elementary 75%, middle 68%, high 55% | no figure checked | estimate (see Gaps) |
-| Kindergarten choice | ordinary kindergarten default | public daycare share 28.3% (2023); preschool private-ed participation 47.6% | no game rate |
->>>>>>> worktree-agent-adaa7c91bebc43762
+| `ARMY` (epilogue service lengths) | army 18, navy 20, air force 21, marines 18, social service 21, alternative 36, military doctor 38 months | 18 / 20 / 21 / 18; social service 21 (or 20 from 2026, disputed); alternative 36; 군의관 36 + training (section 15) | matches; 군의관 training length is an estimate |
+| `FIELD_EMP` (epilogue, job-hunt nudge by major) | the MOE rates by field, as logit offsets from 69.5% | graduate employment by field (section 13) | matches (used directly) |
+| `HUNT` rows (epilogue job-hunt chances) | per year of trying; big firm about 50% from SKY, 35% top Seoul, 20% mid, 10% other four-year (sensible GPA) | no official hiring rate by school tier; 9급 28.6 applicants a place; bar 51% per sitting; first job takes 11.3 months; 46.6–48.6% of the not-yet-employed have looked a year or more | tier rows are game estimates; the exam rows follow the official odds loosely (many applicants never sit) |
+| `JOB30` (pay at 30) | big firm ₩5.2M, public enterprise ₩4.3M, SME ₩3.0M, civil servant ₩3.0M, teacher ₩3.3M, resident ₩6.07M, lawyer ₩6.0M, nurse ₩4.0M | big-firm graduate starting pay ₩50.01M a year (₩4.17M a month), under-300 ₩32.38M; SME mean ₩3.07M; 30s mean ₩3.97M; residents ₩72.8M a year (section 15) | big firm and SME calc from starting pay plus raises; resident matches; the rest are estimates |
+| `PAY_FIFTHS` (earnings fifths at 30) | cuts ₩2.0M / 2.55M / 3.35M / 4.9M a month | 19.1% of wage workers under ₩2M, 17.6% at ₩5M+ (2026 H1); median ₩2.88M; 62% under ₩3.5M (2024) | calc; the middle cuts are interpolated |
+| `FAMILY_PAY` | +2.5% pay at 30 per birth fifth (q5 vs q1: +10%) | children of top-fifth parents earn 19% more than bottom-fifth (KRIVET, unverified) | half the gap, since the rest comes through school in the game |
 
 ## Gaps (no verifiable figure found yet)
 Retrieved: 2026-11-04. Filled this week and removed: province and district populations (2025 census), new care cases 2023–25, kindergarten vs daycare by age, high schools and students by type, 2024 time-use sleep by age, 2025–26 수능 grade cuts and 한국사 grade-1 shares.
 - Share of children (not households) in single-parent or grandparent households, and grandparent households since 2015 (expected in the 2025 census 20% sample results, due end-Nov 2026); children who lose a parent before 18.
 - Mean monthly pay by occupation (the 고용형태별근로실태조사 occupation tables are only on KOSIS, which blocks automated requests); occupation mix within each household-income fifth; single mothers' employment rate.
-<<<<<<< HEAD
 - What a children's home spends on each child's education (tutoring, cram school) a month; how many care leavers choose to stay on to 24; why new cases and placements stopped adding up from 2022 (e-나라지표 1421).
 - Tuition at 자사고, 외고, 국제고 and 국제중; an official source for 국제중 competition ratios (only news citing 종로학원 found).
 - Private elementary school tuition (schoolinfo.go.kr was reachable on 2026-11-04, but no national tuition table or open file with 수업료 was found).
@@ -379,18 +410,8 @@ Retrieved: 2026-11-04. Filled this week and removed: province and district popul
 - 수능 grade cuts and 한국사 grade-1 share before 2025 (same KICE attachments, older releases).
 - National 검정고시 totals and high-school-level pass rates: no national release found; each provincial office publishes its own (Seoul rows in §7; Gyeonggi's notices give no rates). GED holders sitting the 수능 are now in §7.
 - Admission rates by family income or region: only news citing Korea Student Aid Foundation data obtained by lawmakers (scholarship applicants only). Scores by region and school type are now in §7 (KICE 2026 analysis), but not admissions.
-- Graduates' wages by school tier: KEIS's GOMS survey ended with the 2019 wave; only research papers using it were found.
 - Kindergartens by province (in the 교육기본통계 tables on kess.kedi.re.kr; the 2025 summary has only kindergarten children by province); the 2026 교육기본통계 attachments (eiec.kdi.re.kr refused automated requests).
-=======
-- What a children's home spends on each child's education (tutoring, cram school) a month; how many care leavers choose to stay on to 24; 2023–25 new care cases.
-- Kindergarten vs daycare vs home-care shares by age.
-- Students by high-school type nationally (자사고, 외고, 과학고, 특성화고, 마이스터고) and their tuition; 국제중 competition ratios.
-- Private elementary school tuition.
-- 2024 KYRBS sleep minutes and obesity rate; 2024 time-use sleep minutes by age.
-- 수능 grade cuts and 한국사 grade-1 share by year (in KICE xlsx attachments).
-- National 검정고시 totals and high-school-level pass rates.
-- Admission rates by family income or region.
-- Graduates' wages by school tier.
 - Women's share of teachers by school level (KEDI 교육기본통계 tables); share of middle and high schools that are boys' or girls' only.
 - Year-by-year 2020–2022 name rankings (the Supreme Court statistics site); how many teenagers date, and how many keep a best friend from elementary school.
->>>>>>> worktree-agent-adaa7c91bebc43762
+- Graduates' wages and big-firm hiring rates by school tier (GOMS stopped after its 2019 wave); employment rate at 30–34; share of 30-year-olds living with their parents; 대졸자직업이동경로조사 tables themselves.
+- Primary pages for section 15 (mma.go.kr, korea.kr, mods.go.kr were unreachable from the session that added it).
