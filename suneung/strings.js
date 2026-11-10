@@ -901,7 +901,7 @@
       "offers.enroll.sub": "End your exam years here.",
       "offers.enroll.kept": "Go back to the school you've been attending.",
       "offers.half": (p, h) => "Enroll at " + (p.id ? h.uniA(p.id) : p.uni) + ", but retake in secret",
-      "offers.half.sub": "Attend university (only 2 study blocks a month until June). Next year you can still choose {uni}.",
+      "offers.half.sub": (p, h) => "Attend university (only 2 study blocks a month until June). Next year you can still choose " + (p.id ? h.uniA(p.id) : p.uni) + ".",
       "offers.academy": "Full-time retake academy",
       "offers.academy.sub": "All-day academy: 6 blocks a month, ×1.45 study speed in every subject, and a schedule that keeps motivation up.",
       "offers.selfstudy": "Retake by self-study",
@@ -2098,8 +2098,9 @@
     volunteer: "학생부: 공동체역량. 스트레스 −",
     project: "학생부: 진로역량과 세특, 계열과 맞으면 더. 공부도 조금.",
   });
-  DATA.en.field = { med: "medicine", sci: "science and engineering", hum: "humanities and social sciences", biz: "business and economics" };
-  DATA.ko.field = { med: "의약 계열", sci: "자연·공학 계열", hum: "인문·사회 계열", biz: "상경 계열" };
+  // The intended field on the school record has its own names: DATA.*.field is the epilogue's majors.
+  DATA.en.recField = { med: "medicine", sci: "science and engineering", hum: "humanities and social sciences", biz: "business and economics" };
+  DATA.ko.recField = { med: "의약 계열", sci: "자연·공학 계열", hum: "인문·사회 계열", biz: "상경 계열" };
   DATA.en.club = { acad: "an academic club in your field", vol: "a volunteering club", fun: "a band or sports club" };
   DATA.ko.club = { acad: "진로 관련 학술 동아리", vol: "봉사 동아리", fun: "밴드·스포츠 동아리" };
   DATA.en.susiType = { gk: "School grades (gyogwa)", jh: "School record review (jonghap)", ns: "Essay exam (nonsul)" };
@@ -2134,7 +2135,7 @@
     "rec.career.tip": "Career exploration consistent with what you want to study: research projects, an academic club in your field, a field that fits your track.",
     "rec.comm.tip": "Community: club life, school volunteering, class office, working with others.",
     "rec.naesin": (p) => "School grades: " + (p.a != null ? p.a.toFixed(2) + " average" : "no semester finished yet"),
-    "rec.field": (p, h) => "Wants to study " + (p.f ? h.field(p.f) : "(not chosen yet)") + (p.fit === false ? ", which doesn't fit your track" : ""),
+    "rec.field": (p, h) => "Wants to study " + (p.f ? h.recField(p.f) : "(not chosen yet)") + (p.fit === false ? ", which doesn't fit your track" : ""),
     "rec.club": (p, h) => (p.c ? "Club: " + h.club(p.c) : "No club yet"),
     "rec.counts": (p) => "Volunteering " + Math.round(p.v) + " hours · " + Math.round(p.r) + " research reports",
     "rec.closed": "The record closed at the end of August of High 3. It's what you apply with, this year and in any retake.",
@@ -2153,7 +2154,7 @@
     "ev.club-pick.r2": "You join for fun. It's the best two hours of the week.",
     "ev.jinro-change.text": "Your homeroom teacher frowns at your record: the field you want to study doesn't fit the track you're on.",
     "ev.jinro-change.c": ["Change it to fit your track", "Keep it"],
-    "ev.jinro-change.r0": (p, h) => "You change it to " + h.field(p.f) + ". Some of what you did still counts.",
+    "ev.jinro-change.r0": (p, h) => "You change it to " + h.recField(p.f) + ". Some of what you did still counts.",
     "ev.jinro-change.r1": "You keep it. A reader may wonder why.",
     "ev.seteuk.text": "Your teacher assigns a presentation on a topic of your choice. Whatever you do will end up in the comments on your record.",
     "ev.seteuk.c": ["Go deep (a lost block)", "Do the minimum"],
@@ -2164,7 +2165,7 @@
     "ev.interview.r0": "Three teachers grill you after school for a week. By the end your answers come out whole.",
     "ev.interview.r1": "You reread your record until you can explain every line of it.",
     "ev.interview.r2": "You sleep for two days. You'll wing it.",
-    "log.field": (p, h) => (p.change ? "You change your intended field to " : "Intended field on your school record: ") + h.field(p.f) + ".",
+    "log.field": (p, h) => (p.change ? "You change your intended field to " : "Intended field on your school record: ") + h.recField(p.f) + ".",
     // The 수시 application screen.
     "susi.title": "Early admission (susi)",
     "susi.text": (p) => "September: applications open for early admission, which fills about 80% of university places (around 60% at the top Seoul schools, which keep 40% for regular admission). You can send up to six" +
@@ -2225,7 +2226,7 @@
     "rec.career.tip": "희망 진로와 맞는 탐구: 진로 탐구 보고서, 관련 학술 동아리, 계열과 맞는 진로 희망.",
     "rec.comm.tip": "공동체: 동아리, 학교 봉사, 학급 임원, 협업.",
     "rec.naesin": (p) => "내신: " + (p.a != null ? "평균 " + p.a.toFixed(2) + "등급" : "아직 끝난 학기 없음"),
-    "rec.field": (p, h) => "희망 진로: " + (p.f ? h.field(p.f) : "(아직 안 정함)") + (p.fit === false ? " (계열과 안 맞음)" : ""),
+    "rec.field": (p, h) => "희망 진로: " + (p.f ? h.recField(p.f) : "(아직 안 정함)") + (p.fit === false ? " (계열과 안 맞음)" : ""),
     "rec.club": (p, h) => (p.c ? "동아리: " + h.club(p.c) : "동아리 아직 없음"),
     "rec.counts": (p) => "봉사 " + Math.round(p.v) + "시간 · 탐구 보고서 " + Math.round(p.r) + "편",
     "rec.closed": "학생부는 고3 8월 말에 마감됐다. 올해도, 재수를 해도 이 기록으로 지원한다.",
@@ -2243,7 +2244,7 @@
     "ev.club-pick.r2": "재미로 들어갔다. 일주일 중 제일 좋은 두 시간이다.",
     "ev.jinro-change.text": "담임 선생님이 학생부를 보고 얼굴을 찌푸린다. 희망 진로가 지금 계열과 맞지 않는다.",
     "ev.jinro-change.c": ["계열에 맞게 바꾼다", "그대로 둔다"],
-    "ev.jinro-change.r0": (p, h) => h.field(p.f) + "로 바꿨다. 해 온 활동 일부는 그대로 인정된다.",
+    "ev.jinro-change.r0": (p, h) => h.recField(p.f) + "로 바꿨다. 해 온 활동 일부는 그대로 인정된다.",
     "ev.jinro-change.r1": "그대로 둔다. 읽는 사람이 고개를 갸웃할지도.",
     "ev.seteuk.text": "선생님이 자유 주제 발표를 내셨다. 뭘 하든 세특에 남는다.",
     "ev.seteuk.c": ["제대로 파고든다(한 칸 잃음)", "최소한만 한다"],
@@ -2254,7 +2255,7 @@
     "ev.interview.r0": "일주일 내내 방과 후에 선생님 세 분께 질문 공세를 받았다. 이제 대답이 술술 나온다.",
     "ev.interview.r1": "학생부의 모든 줄을 설명할 수 있을 때까지 다시 읽었다.",
     "ev.interview.r2": "이틀을 내리 잤다. 가서 부딪쳐 보자.",
-    "log.field": (p, h) => (p.change ? "희망 진로를 바꿨다: " : "학생부 희망 진로: ") + h.field(p.f) + ".",
+    "log.field": (p, h) => (p.change ? "희망 진로를 바꿨다: " : "학생부 희망 진로: ") + h.recField(p.f) + ".",
     "susi.title": "수시 원서 접수",
     "susi.text": (p) => "9월, 수시 원서 접수가 시작됐다. 대학 정원의 약 80%가 수시로 뽑힌다(정시 40%를 지키는 서울 상위권은 약 60%). 최대 6장" +
       (p.free ? "(카이스트는 횟수에 안 들어감)" : "") + "까지 쓸 수 있다. 내신 평균 " + (p.a != null ? p.a.toFixed(2) : "—") + "등급, 학생부 평가 " + p.r + "점." + (p.est != null ? " 9월 모평 기준 정시 환산 점수는 " + p.est.toFixed(1) + "점." : ""),
@@ -2525,7 +2526,7 @@
       uniA: (id) => (en && (id === "college" || id === "regional") ? "a " + D.uni[id].toLowerCase() : D.uni[id] || id),
       // "a" or "an" before an English word ("an upper-middle-income family"); Korean has no articles.
       an: (w) => (en ? (/^[aeiou]/i.test(w) ? "an " : "a ") + w : w),
-      field: (id) => D.field[id] || id,
+      recField: (id) => D.recField[id] || id,
       club: (id) => D.club[id] || id,
       susiType: (id) => D.susiType[id] || id,
       susiShort: (id) => D.susiShort[id] || id,
@@ -2911,7 +2912,7 @@
     "fx.up": "+{s}", "fx.down": "−{s}", "fx.downBig": "Big −{s}",
     "fx.free": "Free", "fx.events": "Things happen", "fx.all": "All subjects",
     "fx.cost": (p, h) => h.wonShort(p.a) + "/mo", "fx.pay": (p, h) => "+" + h.wonShort(p.a) + "/mo",
-    "fx.sub": { kor: "Korean", math: "Math", eng: "English", inq1: "Social studies" },
+    "fx.sub": { kor: "Korean", math: "Math", eng: "English", inq1: "Social studies" }, "fx.naesin": "School grades",
     "fx.ability": "Ability {v}", "fx.faster": "{p}% faster", "fx.slower": "{p}% slower",
     "plan.full": "Every block is used. Tap a filled slot or − to free one.",
     "place.move": "Move ›", "place.noMove": "Can't move now",
@@ -2939,7 +2940,7 @@
     "fx.up": "{s} +", "fx.down": "{s} −", "fx.downBig": "{s} 크게 −",
     "fx.free": "무료", "fx.events": "사건 발생", "fx.all": "전 과목",
     "fx.cost": (p, h) => "월 " + h.wonShort(p.a), "fx.pay": (p, h) => "월 +" + h.wonShort(p.a),
-    "fx.sub": { kor: "국어", math: "수학", eng: "영어", inq1: "사회" },
+    "fx.sub": { kor: "국어", math: "수학", eng: "영어", inq1: "사회" }, "fx.naesin": "내신",
     "fx.ability": "실력 {v}", "fx.faster": "{p}% 빠름", "fx.slower": "{p}% 느림",
     "plan.full": "칸을 모두 썼습니다. 채워진 칸이나 −를 눌러 비우세요.",
     "place.move": "이사 ›", "place.noMove": "지금은 이사 불가",

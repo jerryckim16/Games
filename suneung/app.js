@@ -121,6 +121,8 @@
     applyStatic();
     const focusLang = document.activeElement && document.activeElement.closest(".lang-switch");
     const where = focusLang ? (focusLang.closest("#modal") ? "#modal" : focusLang.closest("#cut") ? "#cut" : "header") : null;
+    // A toast is a moment's news in the old language; let it go rather than leave it untranslated.
+    els.toast.classList.add("hidden");
     if (cut) { cutCaption(); return; }
     redrawing = true;
     try {
@@ -528,6 +530,11 @@
     blocks: [["up", "math"], ["free"]],
     songs: [["up", "eng"], ["free"]],
     worksheet: [["cost", 40000], ["up", "kor"], ["up", "math"]],
+    // The school record (v6.0): what each builds in the 학생부.
+    prep: [["up", "naesin"], ["upBad", "stress"]],
+    club: [["up", "rec.comm"], ["up", "rec.career"], ["down", "stress"]],
+    volunteer: [["up", "rec.comm"], ["down", "stress"]],
+    project: [["up", "rec.career"], ["up", "rec.acad"]],
   };
   const COND = { health: 1, stress: 1, motivation: 1, practice: 1 };
   function actChips(g, a) {
@@ -538,7 +545,7 @@
       return c(T("fx.ability", { v: over ? "100+" : S.skillScore(g.skills[s]) }), "info") +
         (Math.abs(pct) >= 5 ? c(T(pct > 0 ? "fx.faster" : "fx.slower", { p: Math.abs(pct) }), pct > 0 ? "good" : "bad") : "");
     }
-    const what = (k) => (COND[k] ? T("cond." + k) : k === "all" ? T("fx.all") : T("fx.sub")[k]);
+    const what = (k) => (COND[k] ? T("cond." + k) : k === "all" ? T("fx.all") : k === "naesin" ? T("fx.naesin") : /^rec\./.test(k) ? T(k) : T("fx.sub")[k]);
     return (ACT_FX[a.id] || []).map(([kind, v]) => {
       if (kind === "free") return c(T("fx.free"), "info");
       if (kind === "events") return c(T("fx.events"), "info");
@@ -718,7 +725,9 @@
   function renderMap() {
     const g = game;
     const states = moveStates(g);
-    const why = g.ending ? null : moveWhyAll(g);
+    // While a screen is waiting ("busy") nothing is really closed: the map just can't be used yet.
+    const whyRaw = g.ending ? null : moveWhyAll(g);
+    const why = whyRaw === "busy" ? null : whyRaw;
     els.mapHome.textContent = "📍 " + L.region(g.region);
     // With nowhere open, say why instead of leaving every dot grey without a word.
     els.mapHint.textContent = g.ending ? "" : !why ? T("map.tapHint") : T("map.noMove");
@@ -902,7 +911,7 @@
     // Every 수능, plus the mocks since the last one (grade 10–11 mocks stay until the first 수능).
     const rows = g.history.concat(g.mocks.filter((m) => m.attempt === g.attempt && g.history.every((h) => h.attempt !== g.attempt)));
     if (!rows.length) {
-      els.history.innerHTML = '<tr><td class="muted">' + esc(T("history.empty")) + "</td></tr>";
+      els.history.innerHTML = '<tr><td class="muted empty">' + esc(T("history.empty")) + "</td></tr>";
       return;
     }
     els.history.innerHTML = "<thead><tr><th>" + esc(T("history.exam")) + "</th>" + SUBJECTS.map((s) => "<th>" + esc(L.subShort(s)) + "</th>").join("") +
@@ -929,6 +938,9 @@
     const dpr = window.devicePixelRatio || 1;
     const w = cv.clientWidth, h = cv.clientHeight;
     els.legend.innerHTML = SUBJECTS.map((s) => '<span><span class="dot" style="background:var(' + subColor[s] + ')"></span>' + esc(L.subShort(s)) + "</span>").join("");
+    // The picture as words, for screen readers: where each subject stands now.
+    const lastP = g.trace[g.trace.length - 1];
+    cv.setAttribute("aria-label", T("chart.aria", { list: SUBJECTS.map((s) => L.sub(s) + " " + S.skillScore(lastP.skills[s])).join(", ") }));
     if (!w || !h) return;
     cv.width = Math.round(w * dpr);
     cv.height = Math.round(h * dpr);
@@ -965,7 +977,10 @@
         c2.strokeStyle = col.border;
         c2.beginPath(); c2.moveTo(x(i), padT); c2.lineTo(x(i), h - padB); c2.stroke();
         c2.fillStyle = col.muted;
-        c2.fillText(L.phase(tr[i].ph), x(i) + 4, h - 6);
+        // A stage label that would run off the right edge is drawn leftwards from its line instead.
+        const lbl = L.phase(tr[i].ph), lw = c2.measureText(lbl).width;
+        if (x(i) + 4 + lw > w - 2) { c2.textAlign = "right"; c2.fillText(lbl, Math.min(x(i) - 4, w - 2), h - 6); c2.textAlign = "left"; }
+        else c2.fillText(lbl, x(i) + 4, h - 6);
       }
     }
     c2.setLineDash([]);
@@ -1074,6 +1089,7 @@
     const top = cut ? "cut" : !els.modal.classList.contains("hidden") ? "modal" : null;
     for (const el of [els.header, els.setup, els.game]) el.inert = !!top;
     els.modal.inert = top === "cut";
+    document.body.classList.toggle("modal-open", top === "modal");
     if (top) hideCoach();
   }
   // Tab and Shift+Tab cycle inside the open layer; Escape cancels an optional dialog.
@@ -1415,7 +1431,13 @@
   function showSusi(top) {
     const g = game;
     const opts = g.susiOptions();
+    // Picks live in `ui` (as "uni:type" keys) so a redraw keeps them; the Map is rebuilt from them.
+    const st = uiFor("susi", () => ({ keys: [], moreOpen: false }));
     const picked = new Map();
+    for (const k of st.keys) {
+      const o = opts.find((x) => x.uni + ":" + x.type === k && !x.blocked);
+      if (o) picked.set(k, { uni: o.uni, type: o.type, free: o.free });
+    }
     const mock = g.mocks.filter((x) => x.year === g.year && x.attempt === g.attempt && !x.pre).pop();
     const est = mock ? S.admissionScore(mock) : null;
     // One card per university, its 수시 types inside. Schools where nothing is open or every chance is
@@ -1432,22 +1454,25 @@
       const why = allOff ? T("susi.no." + u.opts[0].blocked) : "";
       const items = u.opts.map((o) => {
         const notes = [T("susi.min", { m: o.min, q: o.minP }), o.iv ? T("susi.iv") : "", o.quota ? quotaLabel(o.quota) : "", o.free ? T("susi.free") : ""].filter(Boolean).join(" · ");
-        return '<label class="sopt' + (o.blocked ? " off" : "") + '"><input type="checkbox" data-u="' + o.uni + '" data-t="' + o.type + '"' + (o.blocked ? " disabled" : "") + ">" +
+        return '<label class="sopt' + (o.blocked ? " off" : "") + '"><input type="checkbox" data-u="' + o.uni + '" data-t="' + o.type + '"' + (o.blocked ? " disabled" : "") + (picked.has(o.uni + ":" + o.type) ? " checked" : "") + ">" +
           '<span class="st"><b>' + esc(L.susiType(o.type)) + "</b>" + (o.blocked ? (allOff ? "" : '<small class="why">' + esc(T("susi.no." + o.blocked)) + "</small>") : "<small>" + esc(notes) + "</small>") + "</span>" +
           (o.blocked ? "" : '<span class="chance ' + chanceClass(o.all) + '">' + esc(T("susi.chance", { p: Math.round(o.all * 100) })) + "</span>") + "</label>";
       }).join("");
       return '<div class="susi-uni' + (allOff ? " off" : "") + '"><div class="nm">' + esc(L.uni(u.id)) + " <small>" + esc(T("susi.share", { s: meta.susi })) + "</small>" +
         (why ? '<small class="why">' + esc(why) + "</small>" : "") + "</div>" + items + "</div>";
     };
-    const main = byUni.filter((u) => u.opts.some((o) => !o.blocked && o.all >= 0.02));
+    // Best chance first, like the regular-admission list.
+    const best = (u) => Math.max(0, ...u.opts.filter((o) => !o.blocked).map((o) => o.all));
+    const main = byUni.filter((u) => u.opts.some((o) => !o.blocked && o.all >= 0.02)).sort((a, b) => best(b) - best(a));
     const rest = byUni.filter((u) => main.indexOf(u) < 0);
     const notes = [T("susi.warn")];
     const body = "<p>" + esc(T("susi.text", { a: g.naesinAvg(), r: g.record ? Math.round(g.recordScore()) : "—", est, free: opts.some((o) => o.free && !o.blocked) })) + "</p>" +
       '<p class="cond-note" role="note">' + esc(notes[0]) + "</p>" +
       (g.attempt > 1 ? '<p class="muted">' + esc(T("susi.retake")) + "</p>" : "") + (g.dropout != null ? '<p class="muted">' + esc(T("susi.ged")) + "</p>" : "") +
       '<p class="muted">' + esc(T("susi.types")) + "</p>" +
+      '<div class="picks" id="susiPicks" aria-live="polite"></div>' +
       '<div class="susi-list">' + main.map(card).join("") + "</div>" +
-      (rest.length ? '<details class="susi-more"><summary>' + esc(T("susi.more", { n: rest.length })) + '</summary><div class="susi-list">' + rest.map(card).join("") + "</div></details>" : "");
+      (rest.length ? '<details class="susi-more"' + (st.moreOpen ? " open" : "") + "><summary>" + esc(T("susi.more", { n: rest.length })) + '</summary><div class="susi-list">' + rest.map(card).join("") + "</div></details>" : "");
     openModal(T("susi.title"), body, [
       { label: T("susi.skip"), run: () => { game.applySusi([]); after(); } },
       { label: T("susi.submit", { n: 0 }), primary: true, run: () => {
@@ -1459,13 +1484,19 @@
     const boxes = els.modalBody.querySelectorAll(".sopt input");
     const submit = els.modalButtons.querySelector("button.primary");
     const counted = () => Array.from(picked.values()).filter((x) => !x.free).length;
+    const picksBox = $("susiPicks");
     const sync = () => {
       const full = counted() >= S.SUSI_MAX;
       for (const b of boxes) {
         const o = opts.find((x) => x.uni === b.dataset.u && x.type === b.dataset.t);
-        if (!b.checked) b.disabled = !!o.blocked || (full && !o.free);
+        b.checked = picked.has(b.dataset.u + ":" + b.dataset.t);
+        b.disabled = !!o.blocked || (!b.checked && full && !o.free);
         b.closest(".sopt").classList.toggle("picked", b.checked);
       }
+      st.keys = Array.from(picked.keys());
+      // The picks, pinned at the top as chips (tap one to take it back), like the apply screen.
+      picksBox.innerHTML = '<span class="picks-k">' + esc(T("apply.picked")) + " " + counted() + "/" + S.SUSI_MAX + "</span>" + (picked.size ? Array.from(picked.entries()).map(([k, x]) =>
+        '<button type="button" class="chip pick" data-unpick="' + esc(k) + '" aria-label="' + esc(T("apply.remove", { uni: L.uni(x.uni) + " " + L.susiShort(x.type) })) + '">' + esc(L.uni(x.uni)) + " · " + esc(L.susiShort(x.type)) + ' <span aria-hidden="true">×</span></button>').join("") : "");
       submit.textContent = T("susi.submit", { n: counted() });
       submit.disabled = !picked.size;
     };
@@ -1475,6 +1506,12 @@
       if (b.checked) picked.set(k, { uni: o.uni, type: o.type, free: o.free }); else picked.delete(k);
       sync();
     });
+    picksBox.addEventListener("click", (e) => {
+      const c = e.target.closest("[data-unpick]");
+      if (c) { picked.delete(c.dataset.unpick); sync(); }
+    });
+    const more = els.modalBody.querySelector(".susi-more");
+    if (more) more.addEventListener("toggle", () => { st.moreOpen = more.open; });
     sync();
   }
   function showSusiStage(top) {
@@ -1596,7 +1633,7 @@
     });
     if (offerIds.length) {
       const uni = L.uni(offerIds[0]);
-      html += btn("", "🤫", T("offers.half", { uni, id: offerIds[0] }), T("offers.half.sub", { uni }), "halfretake:" + offerIds[0]);
+      html += btn("", "🤫", T("offers.half", { uni, id: offerIds[0] }), T("offers.half.sub", { uni, id: offerIds[0] }), "halfretake:" + offerIds[0]);
     }
     const icons = { academy: "🏫", selfstudy: "📚" };
     for (const o of g.retakeOptions(top.score)) {
@@ -1784,16 +1821,21 @@
     els.achSub.textContent = T("ach.sub", { n: achCount(), m: S.ACHIEVEMENTS.length });
     els.achList.innerHTML = achHtml();
   }
+  // Past lives as cards (ten columns don't fit a phone): name, where and into what you were born,
+  // how it ended, and the numbers as chips; the column names label each fact.
   function livesHtml() {
     const list = loadLives();
-    if (!list.length) return '<tr><td class="muted">' + esc(T("lives.empty")) + "</td></tr>";
+    if (!list.length) return '<p class="muted">' + esc(T("lives.empty")) + "</p>";
+    const h = T("lives.h");
     const jobs = (j) => (j ? [j.mom, j.dad].filter(Boolean).map((x) => L.job(x)).join(" · ") : "") || "—";
-    return "<thead><tr>" + T("lives.h").map((x, i) => "<th" + ([0, 2, 3, 4, 5].indexOf(i) >= 0 ? ' class="l"' : "") + ">" + esc(x) + "</th>").join("") + "</tr></thead><tbody>" + list.map((e, i) =>
-      '<tr><td class="l">' + esc(e.name) + (e.daily ? '<br><span class="tag">' + esc(T("lives.dailyOn", { d: e.daily })) + "</span>" : "") + "</td><td>" + esc(e.by) +
-      '</td><td class="l">' + esc(L.regionShort(e.reg)) + '</td><td class="l">' + esc(e.par === "care" ? L.parents("care") : L.family(e.fam)) + '</td><td class="l">' + esc(jobs(e.jobs)) +
-      '</td><td class="l">' + esc(e.uni ? L.uni(e.uni) : T("fame.none")) + (e.at30 ? '<br><span class="muted">' + esc(T("lives.at30", { job: e.at30.job })) + "</span>" : "") +
-      "</td><td>" + (e.total != null ? e.total : "—") + "</td><td>" + esc(e.att) + "</td><td>" + (Array.isArray(e.ach) ? e.ach.length : 0) +
-      '</td><td><button type="button" class="small" data-replay="' + i + '">' + esc(T("lives.replay")) + "</button></td></tr>").join("") + "</tbody>";
+    const fact = (i, v) => '<span class="lf"><span class="k">' + esc(h[i]) + "</span> " + esc(v) + "</span>";
+    return '<div class="life-cards">' + list.map((e, i) =>
+      '<article class="card life-card"><div class="lc-head"><b>' + esc(e.name) + "</b>" + (e.daily ? ' <span class="tag">' + esc(T("lives.dailyOn", { d: e.daily })) + "</span>" : "") +
+      '<button type="button" class="small" data-replay="' + i + '">' + esc(T("lives.replay")) + "</button></div>" +
+      '<div class="lc-out">🎓 ' + esc(e.uni ? L.uni(e.uni) : T("fame.none")) + (e.at30 ? ' <span class="muted">· ' + esc(T("lives.at30", { job: e.at30.job })) + "</span>" : "") + "</div>" +
+      '<div class="lc-facts">' + fact(1, e.by) + fact(2, L.regionShort(e.reg)) + fact(3, e.par === "care" ? L.parents("care") : L.family(e.fam)) + fact(4, jobs(e.jobs)) + "</div>" +
+      '<div class="chips">' + '<span class="chip sm info">' + esc(h[6]) + " " + (e.total != null ? e.total : "—") + '</span><span class="chip sm info">' + esc(h[7]) + " " + esc(e.att) +
+      '</span><span class="chip sm info">🏅 ' + (Array.isArray(e.ach) ? e.ach.length : 0) + "</span></div></article>").join("") + "</div>";
   }
   function bindReplay(root) {
     for (const b of root.querySelectorAll("[data-replay]")) b.addEventListener("click", () => askReplay(loadLives()[Number(b.dataset.replay)]));
@@ -1805,11 +1847,12 @@
   // Live a past life again: the same seed and start year, so the same family, talents and luck.
   function askReplay(e) {
     if (!e) return;
+    dlg = { kind: "replay", e };
     const busy = !!(game && !game.ending);
     openModal(T("lives.replayTitle"), "<p>" + esc(T("lives.replayText", { name: e.name, busy })) + "</p>", [
-      { label: T("lives.replayKeep"), run: () => { closeModal(); if (game && !els.game.classList.contains("hidden")) render(); } },
-      { label: T("lives.replayGo"), primary: true, run: () => startLife({ seed: e.seed, name: e.name, sex: e.sex === "f" ? "f" : "m", sy: e.sy, replayOf: e.id, daily: e.daily }) },
-    ]);
+      { label: T("lives.replayKeep"), cancel: true, run: closeDialog },
+      { label: T("lives.replayGo"), primary: true, run: () => { dlg = null; startLife({ seed: e.seed, name: e.name, sex: e.sex === "f" ? "f" : "m", sy: e.sy, replayOf: e.id, daily: e.daily }); } },
+    ], null, { optional: true });
   }
   function today() {
     const d = new Date(), p = (n) => String(n).padStart(2, "0");
@@ -1825,6 +1868,7 @@
     if (o.daily) game.daily = o.daily;
     if (o.replayOf) game.replayOf = o.replayOf;
     plan = {};
+    dlg = null; ui = {}; turnSum = null;
     save();
     closeModal();
     showGame();
@@ -1832,15 +1876,18 @@
   els.dailyBtn.addEventListener("click", () => { const d = today(); startLife({ seed: Game.dailySeed(d), daily: d }); });
   // The same panels from inside a life, in the modal (only between screens).
   const freeModal = () => game && !game.queue.length && !outcome && !cut;
-  els.achBtn.addEventListener("click", () => {
-    if (!freeModal()) return;
-    openModal(T("ach.title"), '<p class="muted">' + esc(T("ach.sub", { n: achCount(), m: S.ACHIEVEMENTS.length })) + "</p>" + achHtml(), [{ label: T("continue"), primary: true, run: () => { closeModal(); render(); } }]);
-  });
-  els.livesBtn.addEventListener("click", () => {
-    if (!freeModal()) return;
-    openModal(T("lives.title"), '<div class="table-wrap"><table class="grid">' + livesHtml() + "</table></div>", [{ label: T("continue"), primary: true, run: () => { closeModal(); render(); } }]);
+  function openAch() {
+    dlg = { kind: "ach" };
+    openModal(T("ach.title"), '<p class="muted">' + esc(T("ach.sub", { n: achCount(), m: S.ACHIEVEMENTS.length })) + "</p>" + achHtml(),
+      [{ label: T("continue"), primary: true, cancel: true, run: closeDialog }], null, { optional: true });
+  }
+  function openLives() {
+    dlg = { kind: "lives" };
+    openModal(T("lives.title"), livesHtml(), [{ label: T("continue"), primary: true, cancel: true, run: closeDialog }], null, { optional: true });
     bindReplay(els.modalBody);
-  });
+  }
+  els.achBtn.addEventListener("click", () => { if (freeModal()) openAch(); });
+  els.livesBtn.addEventListener("click", () => { if (freeModal()) openLives(); });
   els.endBtn.addEventListener("click", () => { if (!freeModal() || !game.ending) return; game.endingSeen = false; after(); });
 
   // ---------- the epilogue screens ----------
@@ -2010,16 +2057,41 @@
   function playCut(c) {
     const shots = Art.cutscene(c.name, c.ctx);
     if (!shots.length) return;
-    cut = { c, shots, i: -1, timer: 0, capKey: c.cap };
+    const back = document.activeElement && !document.activeElement.closest("#modal") ? document.activeElement : null;
+    cut = { c, shots, i: -1, timer: 0, capKey: c.cap, back };
     els.cutFrame.innerHTML = "";
     els.cutProg.innerHTML = shots.map(() => "<i><b></b></i>").join("");
+    cutChrome();
+    els.cut.classList.remove("hidden");
+    document.body.classList.add("cutting");
+    syncInert();
+    els.cutSkip.focus({ preventScroll: true });
+    nextShot();
+  }
+  function cutChrome() {
     els.cutSkip.textContent = T("cut.skip");
     els.cutHint.textContent = T("cut.next");
     els.cut.setAttribute("aria-label", T("cut.label"));
-    els.cut.classList.remove("hidden");
-    document.body.classList.add("cutting");
-    els.cutSkip.focus({ preventScroll: true });
-    nextShot();
+  }
+  // A language switch mid-film: rebuild the film's words (captions and the names drawn in the shots)
+  // and redraw the shot on screen. The film's id is already marked seen, so lift it for the rebuild.
+  function cutCaption() {
+    if (!cut) return;
+    const seen = game.seenCuts, k = seen.lastIndexOf(cut.c.id);
+    if (k >= 0) seen.splice(k, 1);
+    const fresh = pendingCut();
+    if (k >= 0) seen.splice(k, 0, cut.c.id);
+    if (fresh && fresh.id === cut.c.id) {
+      cut.c = fresh;
+      const shots = Art.cutscene(fresh.name, fresh.ctx);
+      if (shots.length === cut.shots.length) {
+        cut.shots = shots;
+        const layer = els.cutFrame.lastElementChild;
+        if (layer && cut.i >= 0) layer.innerHTML = shots[cut.i].svg;
+      }
+    }
+    cutChrome();
+    if (cut.i >= 0) els.cutCap.textContent = T("cut." + cut.capKey + "." + cut.i, cut.c.p);
   }
   function nextShot() {
     if (!cut) return;
@@ -2048,19 +2120,101 @@
   function endCut() {
     if (!cut) return;
     clearTimeout(cut.timer);
+    const back = cut.back;
     cut = null;
     els.cut.classList.add("hidden");
     els.cutFrame.innerHTML = "";
     document.body.classList.remove("cutting");
+    syncInert();
     render();
+    // Focus goes back where it was, unless the screen the film belonged to opened (it takes focus).
+    if (els.modal.classList.contains("hidden") && back && back.isConnected && back.offsetParent !== null) back.focus({ preventScroll: true });
   }
   els.cutSkip.addEventListener("click", (e) => { e.stopPropagation(); endCut(); });
   els.cut.addEventListener("click", () => nextShot());
   document.addEventListener("keydown", (e) => {
     if (!cut) return;
     if (e.key === "Escape") { e.preventDefault(); endCut(); }
-    else if ((e.key === "Enter" || e.key === " ") && e.target !== els.cutSkip) { e.preventDefault(); nextShot(); }
+    // Enter and Space step through the film, except on the film's own buttons (Skip, the language).
+    else if ((e.key === "Enter" || e.key === " ") && !(e.target.closest && e.target.closest("#cut button"))) { e.preventDefault(); nextShot(); }
   });
+
+  // ---------- "Your stats" folds away on a phone ----------
+  // The plan comes first on a phone; ability, condition and the chart sit below it in a section that
+  // starts folded (remembered per browser). On wider screens CSS ignores the fold.
+  const FOLD_KEY = "suneung.statsOpen";
+  function setFold(folded) {
+    els.statsPanel.classList.toggle("folded", folded);
+    els.statsFold.setAttribute("aria-expanded", folded ? "false" : "true");
+    if (!folded && game) drawChart();
+  }
+  els.statsFold.addEventListener("click", () => {
+    const folded = !els.statsPanel.classList.contains("folded");
+    setFold(folded);
+    store.set(FOLD_KEY, folded ? "0" : "1");
+  });
+  setFold(store.get(FOLD_KEY) !== "1");
+
+  // ---------- first-turn coach marks ----------
+  // Three short pointers on the first plan screen of a new player: the blocks and cards, the bars and
+  // stars, and Next. A ring around the part and a bubble beside it; shown once per browser.
+  const COACH_KEY = "suneung.coach.v1";
+  const COACH = [
+    { key: "coach.1", target: () => els.activities.querySelector(".act") },
+    { key: "coach.2", target: () => els.skills, unfold: true },
+    { key: "coach.3", target: () => els.nextBtn },
+  ];
+  let coachI = -1;
+  function maybeCoach() {
+    if (coachI >= 0 || !game || game.ending || game.queue.length || outcome || cut) return;
+    if (!els.modal.classList.contains("hidden") || els.game.classList.contains("hidden")) return;
+    if (store.get(COACH_KEY)) return;
+    coachI = 0;
+    showCoach();
+  }
+  function showCoach() {
+    const step = COACH[coachI];
+    if (!step) return endCoach();
+    if (step.unfold) setFold(false);
+    const t = step.target();
+    if (!t || !t.offsetParent) return endCoach();
+    t.scrollIntoView({ block: "center" });
+    els.coach.classList.remove("hidden");
+    els.coachText.textContent = T(step.key);
+    els.coachStep.textContent = T("coach.step", { i: coachI + 1, n: COACH.length });
+    els.coachNext.textContent = T(coachI === COACH.length - 1 ? "coach.done" : "coach.next");
+    els.coachSkip.textContent = T("coach.skip");
+    placeCoach();
+    els.coachNext.focus({ preventScroll: true });
+  }
+  function placeCoach() {
+    if (coachI < 0) return;
+    const t = COACH[coachI].target();
+    if (!t) return;
+    const r = t.getBoundingClientRect(), sx = window.scrollX, sy = window.scrollY, pad = 6;
+    Object.assign(els.coachRing.style, { left: r.left + sx - pad + "px", top: r.top + sy - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
+    const b = els.coachBubble, bw = Math.min(340, document.documentElement.clientWidth - 32);
+    b.style.width = bw + "px";
+    const left = Math.max(16, Math.min(r.left + sx, sx + document.documentElement.clientWidth - bw - 16));
+    const below = r.bottom + 12 + b.offsetHeight < window.innerHeight;
+    b.style.left = left + "px";
+    b.style.top = (below ? r.bottom + sy + 12 : Math.max(sy + 8, r.top + sy - 12 - b.offsetHeight)) + "px";
+  }
+  function endCoach() {
+    store.set(COACH_KEY, "1");
+    coachI = -1;
+    els.coach.classList.add("hidden");
+  }
+  // Closing for a dialog (or the new-life screen) without marking it seen: it comes back next time.
+  function hideCoach() {
+    if (coachI < 0) return;
+    coachI = -1;
+    els.coach.classList.add("hidden");
+  }
+  els.coachNext.addEventListener("click", () => { coachI++; if (coachI >= COACH.length) endCoach(); else showCoach(); });
+  els.coachSkip.addEventListener("click", endCoach);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && coachI >= 0) { e.preventDefault(); endCoach(); } });
+  window.addEventListener("resize", () => placeCoach());
 
   // ---------- boot ----------
   applyStatic();

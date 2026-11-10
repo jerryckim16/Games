@@ -19,7 +19,7 @@ School years are counted the Korean way, with each school numbering its own year
    - A fortune-teller's reading (사주) tells you how lucky a life you've been dealt. Luck runs through everything from here on (see Luck below).
    - Ages 0–5 are played a year at a time, with play instead of study, and a kindergarten choice at 3.
 2. **Pick a school** at 3 (kindergarten) and at the start of elementary, middle and high school. The local public school is always open; private and special schools have fees, lotteries or entry requirements (see Schools below).
-3. **Grow up.** Each turn you assign blocks of free time. You can also **move house** to another region (once a year) with the Move house button:
+3. **Grow up.** Each turn you assign blocks of free time. You can also **move house** to another region (once a year) from the **Life choices ⋯** menu, or by tapping the map (on a phone, the 📍 place chip):
 
    | Stage | One turn is | Blocks |
    |---|---|---|
@@ -32,7 +32,7 @@ School years are counted the Korean way, with each school numbering its own year
 
    Pick a study method too; it applies to every study block that turn.
 
-   From Middle 1 you can also **leave school** (자퇴) with the Leave school button. Out of school you get two more blocks a turn in Middle 1 to High 2 but lose the school lessons, which otherwise raise every subject a little each turn on their own. See Leaving school below.
+   From Middle 1 you can also **leave school** (자퇴) from the Life choices menu. Out of school you get two more blocks a turn in Middle 1 to High 2 but lose the school lessons, which otherwise raise every subject a little each turn on their own. See Leaving school below.
 4. **Handle events.** Most turns bring one: a sports day, a math olympiad, the smartphone debate, a move to Daechi-dong, class elections, 중2, a PC방 invitation, a crush, a slump, a star lecturer's new course. Some only need an OK; others ask you to choose. Some lives also run into bullying (학교폭력), which hangs over every turn until it's dealt with.
 5. **Watch your standing.**
    - The elementary-school teacher leaves a note each year.
@@ -45,7 +45,7 @@ School years are counted the Korean way, with each school numbering its own year
    - In November you make two last choices: how you spend the night before, and what's in your 수능 lunch box. The day itself may deal you some luck, good or bad. Then you sit the 수능 period by period.
    - The score report comes in December.
 8. **Early admission (수시).** In September of High 3, after the September mock, send up to six applications by school grades (학생부교과), school record review (학생부종합) or essay exam (논술), each with its chance and any minimum 수능 grades. Record reviews with an interview announce a first round in October and interview after the 수능; final results, after the minimum-grade check, come in December. Any early offer rules out regular admission that year (수시 납치).
-9. **Regular admission (정시) and the decision.** Without an early offer, apply to up to three universities (정시, one per 가·나·다 group). The real cuts only show when the results come out, and a rejection can still turn into a February waitlist call. Then, with early or regular offers:
+9. **Regular admission (정시) and the decision.** Without an early offer, apply to up to three universities (정시). The real cuts only show when the results come out, and a rejection can still turn into a February waitlist call. Then, with early or regular offers:
    - enroll;
    - enroll but secretly retake (반수);
    - retake at a 재수종합학원 or by self-study (독학재수);
@@ -54,6 +54,22 @@ School years are counted the Korean way, with each school numbering its own year
 9. **Live the next ten years** (optional, from the ending screen): choose a major, how you spend university, when and where you serve if you're a man, and what to aim for in the job hunt. A few years later you see yourself at 30. See After the exam below.
 
 The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수탐 standard-score total. **Achievements** and **Past lives** sit under it on the new-life screen (and behind buttons beside the exam history during a life), and **Live today's life** starts the life everyone gets on today's date.
+
+## The interface
+
+Built for a first-time player on a phone as much as a desktop (checked at 390px and 1200px, light and dark, in both languages).
+
+- **The turn bar.** The bottom of the plan sticks to the screen while you plan: the turn's blocks as slots (tap one to take it back), an "N of M blocks left" pill (read out to screen readers as it changes) and the **Next** button. On a desktop it sticks to the bottom of the plan panel. A double click on Next only plays one turn.
+- **Activity cards.** Two compact columns: icon, name, aptitude stars, what the activity does as small coloured chips (green helps, red costs, amber is money), and a − / + stepper with 44px buttons. With every block used, + greys out and a one-time hint says how to free a block.
+- **"This turn".** After each Next, a card of up to four chips sums up what the turn did: the biggest subject gain, the biggest change in stress or health, the money spent (or earned) and the class rank in middle school. It's read from the turn's log entry, so it never changes the game.
+- **First-turn coach marks.** On a new player's first plan screen, three short pointers (the blocks and cards; lessons, ability bars and aptitude stars; Next), each with a highlight ring, a bubble and Skip. Shown once per browser (`suneung.coach.v1`).
+- **Phone order.** On a phone the subtitle goes once a life starts, the map folds into a "📍 place · Move ›" chip, the basics become a two-row strip with the family as chips ([class meter] [who raises you] [Mom: job] [Dad: job]), and the plan comes before **Your stats** (ability, the school record, condition and the chart), which folds away.
+- **Life choices ⋯.** Moving house, leaving school (in red) and starting a new life sit in a menu beside the plan's title, away from Next.
+- **The map.** A legend (home, can move, closed) under the map, a hint that says why when nothing is open, and place names that stay at least 11px on screen: a small map only names home and the place picked, and Seoul's six districts are named only when picked (every dot still has its name on hover and for screen readers).
+- **Dialogs** are real dialogs: the page behind them is inert, Tab stays inside, focus returns where it was when they close, and Escape cancels the optional ones (Move, Leave school, New life, Achievements, Past lives, Live again). Each dialog and cutscene has its own language switch, and switching keeps what you'd picked (application ticks, the track and its subjects, a school, the place on the move map). Buttons sit in a sticky footer, and irreversible choices (Leave school) are drawn in red with the safe answer as the primary button.
+- **Applications.** Regular and early admission list schools by your chance, fold the long shots away (10% or less for 정시), pin your picks as chips at the top (tap one to take it back) and keep Apply in the sticky footer.
+- **Korean typography:** words aren't broken mid-word (`keep-all`), with a little more line height, and each screen keeps one register (합니다체 for the interface, 한다체 for the story).
+- **Accessible colour:** light mode's grade chips, chance pills, gold stars and warning colours are darkened to pass WCAG AA; dark mode keeps its own brighter set. The ability chart is labelled for screen readers with where each subject stands.
 
 ## Features
 
@@ -688,10 +704,16 @@ What the tables show:
 - `strings.js`: every piece of text, as an English and a Korean dictionary with the same keys. `make(lang, ctx)` returns the translator, including Korean money (만/억) and particle (이/가) handling.
 - `engine.js` people (v6.1): `g.social` holds the people (`soc()` builds it for old saves), `socialTurn(plan)` runs a turn of friendships, `rollSocial` the social events, `roleOf(p)` and `setFocus(id)` serve the Friends panel, and `friendOutcomes(n)` returns where your closest friends ended up: up to n (default 5) of `{ id, s, n, x, lk, role, cl, from, sci, total, pct, path: "uni" | "retake" | "work", uni, aim }`, closest first.
 - `art.js`: the artwork, as SVG strings built in code (no DOM, no image files; the only words drawn are names app.js passes in, in the current language). `scene(ctx)` draws the life-stage scene with the avatar, `eventArt(ctx)` an event's illustration (data-driven through `EVENT_ART`, with fallbacks for unknown event ids), `screenArt(name, ctx)` the birth, track, mock, exam, report, application, offers and ending pictures, `cutscene(name, ctx)` a cutscene's shots (each an SVG plus its length; the motion is CSS keyframes in `styles.css`), and `moodOf(game)` / `lookFor(seed)` the avatar's mood and looks, and `portrait` / `portraitFor(stage, look, mood)` a head-and-shoulders portrait for the Friends panel. An event that names people ({ lk, x } in `ctx.people`) draws them beside you. Colours are `--a-*` tokens in `styles.css`.
-- `app.js`: UI only. It renders the state and whatever screen is first in `game.queue`, and plays a milestone's cutscene first (`pendingCut` / `playCut`).
+- `app.js`: UI only. It renders the state and whatever screen is first in `game.queue`, and plays a milestone's cutscene first (`pendingCut` / `playCut`). Dialog state lives outside the DOM (`dlg` for optional dialogs, `ui` for picks on queued screens via `uiFor(name, init)`), so a redraw (a language switch) restores it; `openModal(title, body, buttons, art, { optional })` takes buttons with `primary`, `danger` and `cancel` (what Escape runs).
 - `sim.js`: the headless calibration and strategy-bot script; `--epilogue [lives]` plays only the epilogue tables.
 
 ## Changelog
+
+- **v6.3 (design):** a design pass and an interface bug-fix round (see The interface above).
+  - **Design:** a sticky turn bar with Next; compact activity cards with effect chips and 44px steppers; a "This turn" summary; first-turn coach marks; on a phone the plan first, a place chip for the map, a two-row stats strip and a folding "Your stats"; family facts as chips; a Life choices menu for Move, Leave school and New life; a map legend and readable names; applications (정시 and 수시) sorted by chance with long shots folded, picks pinned as chips and a sticky submit; past lives as cards; one look (cards, chips, headings, details lists) across the Friends panel, achievements, past lives, the school record, report cards and the epilogue.
+  - **Bugs:** switching language no longer loses a dialog's picks or closes optional dialogs; the language switch works while a dialog or cutscene is open; dialogs trap focus, make the page inert, restore focus and answer Escape (optional ones only), and so does the cutscene; the birth picture shows a baby held by whoever raises you (grandparents and children's homes included); the offers picture names the best offer; one moon on the setup banner; status lines wrap to two lines; the hall of fame and empty tables wrap at 390px, with the Name column aligned; the chart's last stage label stays inside; the grandmother has grey hair; the Move dialog says why nothing is open; Enter in the name field starts a life; a double click on Next plays one turn; the achievement cards on the new-life screen had lost their layout to the report card's `.ach` style.
+  - **Wording:** "an upper-middle-income family"; she/he for a single parent ("Your mom … she notices"); Korean particles after the swapped words (선생님이, 할머니 할아버지가, 엄마한테) and after a parenthesis (전문직(…)입니다); names take 은/는 by their last letter; school names in English ("Korea Science Academy", "Busan Centum Girls' High School", "… University Affiliated", "Christian"); "Enroll at a junior college"; "Full-time retake academy"; applications no longer promise 가·나·다 groups.
+  - The engine's rules and random streams are unchanged; the balance tables don't move.
 
 - **v5.6:** after a divorce, if the parent you live with dies, the other parent takes you in (not grandparents or a children's home); a move to Daechi-dong or Daegu agreed in a turn that also brought a layoff or a loss no longer goes ahead.
 

@@ -960,7 +960,7 @@
       s += mom(ctx, 340, EFEET, 0.95, { gear: JOB_GEAR[j.mom] || "", mood: "happy", pose: dadHolds ? "stand" : "hold" });
       s += dad(ctx, 450, EFEET, 0.98, { gear: JOB_GEAR[j.dad] || "", mood: "happy", pose: dadHolds ? "hold" : "wave" });
       // The bundle sits in the holding arm (feet-relative offsets scaled with the figure).
-      s += dadHolds ? bundle(450 + 26, EFEET - 72, 0.75) : bundle(340 + 25, EFEET - 70, 0.75);
+      s += dadHolds ? bundle(450 + 8, EFEET - 76, 1.05) : bundle(340 + 8, EFEET - 74, 1.05);
       return s;
     },
     track() {
@@ -1493,8 +1493,12 @@
     const minU = Math.ceil(11.5 / unit);
     const big = Math.max(21, minU), small = Math.max(15, minU);
     const tight = minU > 24;
-    const named = (id) => !tight || id === o.home || id === o.sel || id === o.from || states[id] === "home";
-    if (labels.seoul) s += mapLabel(sx - 6, sy, labels.seoul, "l", Math.max(20, minU), "kmap-seoul");
+    // Seoul's six districts are too close for six names at a readable size, so the inset only names
+    // home and the place picked (the rest have their name as a tooltip and an aria-label).
+    const key = (id) => id === o.home || id === o.sel || id === o.from || states[id] === "home";
+    const named = (id) => key(id) || (!tight && SEOUL_IDS.indexOf(id) < 0);
+    // On a small map the big Seoul label sits above-left of its ring, clear of Suwon and Incheon-side names.
+    if (labels.seoul) s += mapLabel(sx - 6, tight ? sy - minU * 0.8 : sy, labels.seoul, "l", Math.max(20, minU), "kmap-seoul");
     // Your school, as a small star where it really is (in the inset if it's in Seoul).
     for (const m of o.schools || []) {
       const p = [mx(m.lon), my(m.lat)];
