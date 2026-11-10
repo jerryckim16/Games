@@ -883,7 +883,7 @@
     let n = 0;
     for (const o of opts) if (o.real) o.n = ++n;
     const rows = opts.map((o) => {
-      const why = o.blocked ? T("school.no." + (o.blocked === "admit" && o.id === "artsHigh" ? "arts" : o.blocked)) : "";
+      const why = o.blocked ? T("school.no." + (o.blocked === "admit" && o.id === "artsHigh" ? "arts" : o.blocked), { sex: g.sex }) : "";
       const cls = o.def ? "ch-safe" : o.blocked ? "ch-long" : o.p >= 0.55 ? "ch-match" : o.p >= 0.25 ? "ch-reach" : "ch-long";
       const tag = '<span class="chance ' + cls + '" title="' + esc(T("school.chance", { p: o.p, def: o.def })) + '">' + esc(o.def ? T("school.tag.def") : o.blocked ? T("school.tag.no") : Math.round(o.p * 100) + "%") + "</span>";
       const facts = [T("school.fee", { fee: o.fee }), o.track ? T("school.track", { t: o.track }) : ""].filter(Boolean).join(" · ");

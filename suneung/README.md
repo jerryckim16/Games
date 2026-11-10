@@ -274,6 +274,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **Real schools.** Each game school stands for a real one, from the national list of 12,004 schools (`data/schools/`):
   - **Local schools** (public and private elementary, middle and 일반고) are picked from the operating schools in your area's real districts: Gangnam is 서초·강남·송파, Nowon is 노원 and its five neighbours, Suwon is 수원시, Busan is the whole city, Haenam is 해남군, and so on. The pick comes from its own seeded stream, so the same life always gets the same schools.
   - **Special schools** (the 26 science and gifted schools, the 10 nationwide 자사고, 39 foreign-language and international high schools, 5 international middle schools, 50 arts and sports high schools, 351 vocational high schools) are the nearest one to your area, with its city and distance; a local arts or vocational school is used when your area has one.
+  - **Boys', girls' and coed schools:** about a quarter of Korean middle and high schools take only boys or only girls (NEIS, `data/schools/korea-school-coed-2026-11.csv`). You're only ever placed in a school that takes your sex, nationwide schools included (김천고 and 북일고 are boys' 자사고; 이화외고 is a girls' 외고). An option whose only local schools are for the other sex says so. Saves from before this fix that hold a school of the other sex move to one that takes you.
   - A private school that doesn't exist where you live is closed ("not offered here"), as in Pyeongchang, which has no private middle school, or Jeonju and Jeju, which have no private elementary school.
   - The school screen shows a close-up map of your area with each option's school as a numbered marker (tap one to pick it), and the log and outcome name the school you start at.
   - Kinds come from the verified named lists in `data/schools.md` and, for arts and vocational schools, from words in the school's name. `tools/build_places.py` rebuilds `places.js` from the school list and the boundary files.
@@ -524,6 +525,8 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script.
 
 ## Changelog
+
+- **v5.3:** fix: girls could be placed in boys' schools and boys in girls' schools. Every middle and high school now carries its real 남녀공학구분 from NEIS (5,691 of 5,718 looked up one by one), and real schools are only picked among those that take you; older saves holding a school of the other sex are moved to one that does.
 
 - **v5.2:** parents' jobs. Each parent is dealt a real job at birth (16 jobs, plus staying at home), drawn from official 2025 occupation shares for working mothers and for men aged 30–49 and fitted to the family's income fifth by real pay. Jobs change with layoffs (often into a fried-chicken shop), divorce and bereavement, and mothers go back to work at the real rate as children grow. Jobs have small effects, seven new events, work clothes on the birth screen and a line on the Family strip. New Jobs section in `data/korea-stats.md`. Balance tables regenerated.
 
