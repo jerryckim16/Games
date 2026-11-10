@@ -719,6 +719,7 @@
       id: "divorce", anyStage: true, luck: -1, weight: (g) => ((g.parents || "both") === "both" && g.grade <= 12 && g.attempt === 1 ? 0.08 : 0), when: () => true,
       run: (g) => {
         g.parents = g.rng() < 0.75 ? "mom" : "dad";
+        g.flags.divorced = 1; // the other parent is still alive (see bereaved)
         g.addLog("log.parents", { now: g.parents, why: "divorce" }, "milestone");
         g.toWork("divorce");
         g.shiftFamily(-1, "divorce");
@@ -738,7 +739,8 @@
         const lost = was === "both" ? (g.rng() < 0.6 ? "dad" : "mom") : was;
         // Losing your only parent: grandparents if they can, otherwise a children's home (parental death
         // is about one in nine of the children who come into care).
-        g.parents = was === "both" ? (lost === "dad" ? "mom" : "dad") : g.rng() < 0.7 ? "grand" : "care";
+        // After a divorce the other parent is alive and takes you in.
+        g.parents = was === "both" ? (lost === "dad" ? "mom" : "dad") : g.flags.divorced ? (was === "mom" ? "dad" : "mom") : g.rng() < 0.7 ? "grand" : "care";
         if (g.parents === "care") g.family = "q1";
         if (g.parents === "grand" || g.parents === "care") g.jobs = null;
         g.addLog("log.parents", { now: g.parents, why: "bereaved", lost }, "milestone");
@@ -936,7 +938,8 @@
       id: "daechi", weight: 2, when: (g) => g.grade >= 3 && g.grade <= 8 && (g.family === "q4" || g.family === "q5") && !g.flags.daechi && g.region !== "gangnam", choices: 2,
       run: (g, i) => {
         g.flags.daechi = 1;
-        if (i === 1) { bump(g, { stress: -3 }); return "r1"; }
+        // Answered after this turn's other events: a layoff or a loss may have ended the plan.
+        if (i === 1 || !(g.family === "q4" || g.family === "q5") || g.parents === "care") { bump(g, { stress: -3 }); return "r1"; }
         g.relocate("gangnam"); // the new kid at school, which makes bullying likelier for a while
         for (const s of ["kor", "math", "eng"]) studyBoost(g, s, 0.03);
         bump(g, { stress: 8, motivation: 5 }); return "r0";
@@ -981,7 +984,7 @@
       when: (g) => (REGION_BY_ID[g.region] || {}).capital && (g.family === "q4" || g.family === "q5") && g.grade >= 4 && g.grade <= 6 && !g.flags.medMove && g.skills.math > g.skills.kor,
       run: (g, i) => {
         g.flags.medMove = 1;
-        if (i === 0) { g.relocate("daegu"); bump(g, { stress: 6, motivation: 4 }); return "r0"; }
+        if (i === 0 && (g.family === "q4" || g.family === "q5") && g.parents !== "care") { g.relocate("daegu"); bump(g, { stress: 6, motivation: 4 }); return "r0"; }
         return "r1";
       },
     },
