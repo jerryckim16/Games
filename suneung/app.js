@@ -21,6 +21,8 @@
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
     modalArt: $("modalArt"), setupArt: $("setupArt"), scene: $("scene"), moodName: $("moodName"), moodText: $("moodText"),
     slots: $("slots"), turn: $("turn"), turnCap: $("turnCap"), turnDate: $("turnDate"), turnAge: $("turnAge"), confetti: $("confetti"),
+    dailyBtn: $("dailyBtn"), dailyNote: $("dailyNote"), achSub: $("achSub"), achList: $("achList"), lives: $("lives"), toast: $("toast"),
+    endBtn: $("endBtn"), achBtn: $("achBtn"), livesBtn: $("livesBtn"),
     cut: $("cut"), cutFrame: $("cutFrame"), cutCap: $("cutCap"), cutProg: $("cutProg"), cutSkip: $("cutSkip"), cutHint: $("cutHint"), cutToggle: $("cutToggle"),
   };
   const Art = window.SuneungArt;
@@ -119,7 +121,10 @@
     }
     els.name.placeholder = T("setup.namePh." + sex);
     els.setupArt.innerHTML = Art.scene({ scene: "start", aria: T("art.place.start") });
+    els.dailyBtn.textContent = T("daily.label", { d: today() });
     renderFame();
+    renderAch();
+    renderLives();
   }
   function renderFame() {
     const list = loadFame();
@@ -148,14 +153,8 @@
     sex = b.dataset.v;
     renderSetup();
   });
-  els.startBtn.addEventListener("click", () => {
-    // Born this year, so elementary school starts six years on.
-    game = new Game({ name: els.name.value.trim() || T("setup.namePh." + sex), sex, startYear: new Date().getFullYear() + 6 });
-    game.seenCuts = [];
-    plan = {};
-    save();
-    showGame();
-  });
+  // Born this year, so elementary school starts six years on (startLife's default).
+  els.startBtn.addEventListener("click", () => startLife({}));
 
   // ---------- game screen ----------
   let game = null;
@@ -215,6 +214,7 @@
     renderPlan();
     renderLog();
     renderHistory();
+    els.endBtn.classList.toggle("hidden", !game.ending);
     drawChart();
     renderModal();
   }
@@ -808,7 +808,7 @@
     if (first) first.focus({ preventScroll: true });
   }
   function closeModal() { els.modal.classList.add("hidden"); }
-  function after() { save(); render(); }
+  function after() { save(); unlock(game); render(); }
 
   function renderModal() {
     const g = game;
@@ -823,7 +823,7 @@
     }
     if (outcome) {
       // The outcome keeps the event's picture, redrawn with how things turned out.
-      const art = outcome.id ? Art.eventArt(artCtx({ id: outcome.id, variant: outcome.variant })) : "";
+      const art = outcome.id ? Art.eventArt(artCtx({ id: outcome.id, variant: outcome.variant })) : outcome.art ? Art.screenArt(outcome.art, artCtx({ stage: "uni" })) : "";
       openModal(outcome.title, '<div class="outcome">' + esc(T(outcome.msg.key, outcome.msg.p)) + "</div>",
         [{ label: T("continue"), primary: true, run: () => { outcome = null; after(); } }], art);
       return;
@@ -842,6 +842,7 @@
     if (top.type === "exam") return examStep === 0 ? showExamDay(top) : showReport(top);
     if (top.type === "apply") return showApply(top);
     if (top.type === "offers") return showOffers(top);
+    if (top.type === "epi") return showEpi(top);
     closeModal();
   }
 
@@ -1159,24 +1160,269 @@
     const u = e.uni ? UNIVERSITIES.find((x) => x.id === e.uni) : null;
     const best = e.best;
     const gr = best ? [best.subjects.kor.grade, best.subjects.math.grade, best.subjects.eng.grade] : null;
+    const epi = g.epi && g.epi.done ? g.epi : null;
     if (!g.endingRecorded && best) {
       addFame({ name: g.name, total: best.total, g: gr, uni: u ? u.id : null, attempts: e.attempts });
       g.endingRecorded = true;
-      save(); // so reopening the finished life doesn't add the same entry again
       if (u) setTimeout(() => confetti(120), 300);
     }
+    // The Lives list gets the life when it ends, and again with its at-30 line once the epilogue is done.
+    const stage = epi ? 2 : 1;
+    if ((g.lifeRecorded || 0) < stage) { recordLife(g); g.lifeRecorded = stage; }
+    save(); // so reopening the finished life doesn't add the same entries again
+    unlock(g);
     const verdict = !u ? "end.none" : u.id === "med" ? "end.med" : ["snu", "yonsei", "korea"].indexOf(u.id) >= 0 ? "end.sky" :
       u.cut >= 93 ? "end.top" : u.cut >= 85 ? "end.solid" : "end.fresh";
     const tile = (k, v) => '<div><span class="k">' + esc(T(k)) + '</span><span class="v">' + esc(v) + "</span></div>";
+    const list = T("ach.list"), mine = g.achievements({ lives: loadLives().length });
+    const ach = mine.length ? '<div class="ach-chips">' + mine.map((id) => '<span class="chip' + (freshAch.has(id) ? " new" : "") + '" title="' + esc(list[id][1]) + '">🏅 ' + esc(list[id][0]) +
+      (freshAch.has(id) ? " <small>" + esc(T("end.achNew")) + "</small>" : "") + "</span>").join("") + "</div>" : '<p class="muted">' + esc(T("end.achNone")) + "</p>";
     openModal(u ? T("end.title", { uni: L.uni(u.id) }) : T("end.titleNone"),
       '<p class="story">' + esc(T(verdict)) + '</p><div class="summary">' +
-      tile("end.attempts", e.attempts) + tile("end.age", L.age(e.age)) + tile("end.best", best ? best.total : "—") + tile("end.grades", gr ? gr.join("·") : "—") +
-      '</div><p class="muted">' + esc(T("end.note")) + "</p>",
+      tile("end.attempts", e.attempts) + tile("end.age", L.age(e.age)) + tile("end.best", best ? best.total : "—") + tile("end.grades", gr ? gr.join("·") : "—") + "</div>" +
+      (epi ? "<h3>" + esc(T("epi.title.at30", { name: g.name })) + "</h3>" + at30Html(g) : "") +
+      "<h3>" + esc(T("end.card")) + '</h3><div class="card-wrap">' + cardSvg(g) + '</div><div class="card-out"></div>' +
+      "<h3>" + esc(T("end.ach")) + "</h3>" + ach +
+      '<p class="muted">' + esc(T("end.note")) + "</p>",
       [
         { label: T("end.look"), run: () => { g.endingSeen = true; after(); } },
-        { label: T("newLife"), primary: true, run: startOver },
-      ],
+        { label: T("end.png"), run: downloadCard },
+        g.epi ? { label: T("newLife"), primary: true, run: startOver } : { label: T("newLife"), run: startOver },
+      ].concat(g.epi ? [] : [{ label: T("end.epi"), primary: true, run: () => { g.startEpilogue(); after(); } }]),
       Art.screenArt("ending", artCtx({ stage: "uni", label: u ? L.uni(u.id) : "", mood: u ? "happy" : "ok" })));
+  }
+
+
+  // ---------- across lives: achievements, past lives, today's life ----------
+  // Unlocked achievements ({ id: time }) and the last 50 lives live under their own keys, so starting
+  // over never clears them. Everything is best effort: without storage the game still plays.
+  const ACH_KEY = "suneung.ach.v1";
+  const LIVES_KEY = "suneung.lives.v1";
+  const LIVES_MAX = 50;
+  function loadJSON(k, d) { try { const v = JSON.parse(store.get(k) || "null"); return v == null ? d : v; } catch (e) { return d; } }
+  function loadAch() { const o = loadJSON(ACH_KEY, {}); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; }
+  function loadLives() { const a = loadJSON(LIVES_KEY, []); return Array.isArray(a) ? a.filter((e) => e && typeof e === "object") : []; }
+  // A life's id in the Lives list: set when it starts; older saves use their seed, start year and name.
+  const lifeId = (g) => g.lifeId || g.seed + ":" + (g.startYear || 0) + ":" + g.name;
+  function lifeEntry(g) {
+    const b = g.birthInfo(), e = g.ending, best = e && e.best;
+    const a = g.epi && g.epi.done ? g.epi.at30 : null;
+    return {
+      id: lifeId(g), seed: g.seed, name: g.name, sex: g.sex || null, sy: g.startYear, by: b.year, reg: b.reg, fam: b.fam, par: b.par, jobs: b.jobs,
+      uni: e ? e.uni : null, total: best ? best.total : null, att: e ? e.attempts : g.attempt, ach: g.achievements({ lives: loadLives().length }),
+      daily: g.daily || null, at30: a ? { job: a.job, pay: a.pay, fifth: a.fifth } : null, t: Date.now(),
+    };
+  }
+  function recordLife(g) {
+    const id = lifeId(g);
+    const list = [lifeEntry(g)].concat(loadLives().filter((e) => e.id !== id)).slice(0, LIVES_MAX);
+    store.set(LIVES_KEY, JSON.stringify(list));
+  }
+  // Achievements unlocked during this page's visit, marked "new" on the ending screen.
+  const freshAch = new Set();
+  function unlock(g) {
+    if (!g || typeof g.achievements !== "function") return;
+    const have = loadAch(), fresh = [];
+    for (const id of g.achievements({ lives: loadLives().length })) if (!have[id]) { have[id] = Date.now(); fresh.push(id); freshAch.add(id); }
+    if (!fresh.length) return;
+    store.set(ACH_KEY, JSON.stringify(have));
+    const list = T("ach.list");
+    toast("🏅 " + T("ach.toast") + ": " + fresh.map((id) => list[id][0]).join(", "));
+  }
+  let toastTimer = 0;
+  function toast(text) {
+    els.toast.textContent = text;
+    els.toast.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => els.toast.classList.add("hidden"), 4500);
+  }
+  // Unlocked ones first; the locked ones fold away under their hints (44 cards are a long list on a phone).
+  function achHtml() {
+    const have = loadAch(), list = T("ach.list");
+    const card = (id) => {
+      const [name, desc, hint] = list[id];
+      const on = !!have[id];
+      return '<div class="ach' + (on ? " on" : "") + '"><span class="ai" aria-hidden="true">' + (on ? "🏅" : "🔒") + "</span><span><b>" + esc(on ? name : hint) + "</b><small>" +
+        esc(on ? desc : T("ach.locked")) + "</small></span></div>";
+    };
+    const on = S.ACHIEVEMENTS.filter((id) => have[id]), off = S.ACHIEVEMENTS.filter((id) => !have[id]);
+    return (on.length ? '<div class="ach-grid">' + on.map(card).join("") + "</div>" : "") +
+      (off.length ? '<details class="ach-more"><summary>' + esc(T("ach.lockedN", { n: off.length })) + '</summary><div class="ach-grid">' + off.map(card).join("") + "</div></details>" : "");
+  }
+  const achCount = () => { const have = loadAch(); return S.ACHIEVEMENTS.filter((id) => have[id]).length; };
+  function renderAch() {
+    els.achSub.textContent = T("ach.sub", { n: achCount(), m: S.ACHIEVEMENTS.length });
+    els.achList.innerHTML = achHtml();
+  }
+  function livesHtml() {
+    const list = loadLives();
+    if (!list.length) return '<tr><td class="muted">' + esc(T("lives.empty")) + "</td></tr>";
+    const jobs = (j) => (j ? [j.mom, j.dad].filter(Boolean).map((x) => L.job(x)).join(" · ") : "") || "—";
+    return "<thead><tr>" + T("lives.h").map((x, i) => "<th" + ([0, 2, 3, 4, 5].indexOf(i) >= 0 ? ' class="l"' : "") + ">" + esc(x) + "</th>").join("") + "</tr></thead><tbody>" + list.map((e, i) =>
+      '<tr><td class="l">' + esc(e.name) + (e.daily ? '<br><span class="tag">' + esc(T("lives.dailyOn", { d: e.daily })) + "</span>" : "") + "</td><td>" + esc(e.by) +
+      '</td><td class="l">' + esc(L.regionShort(e.reg)) + '</td><td class="l">' + esc(e.par === "care" ? L.parents("care") : L.family(e.fam)) + '</td><td class="l">' + esc(jobs(e.jobs)) +
+      '</td><td class="l">' + esc(e.uni ? L.uni(e.uni) : T("fame.none")) + (e.at30 ? '<br><span class="muted">' + esc(T("lives.at30", { job: e.at30.job })) + "</span>" : "") +
+      "</td><td>" + (e.total != null ? e.total : "—") + "</td><td>" + esc(e.att) + "</td><td>" + (Array.isArray(e.ach) ? e.ach.length : 0) +
+      '</td><td><button type="button" class="small" data-replay="' + i + '">' + esc(T("lives.replay")) + "</button></td></tr>").join("") + "</tbody>";
+  }
+  function bindReplay(root) {
+    for (const b of root.querySelectorAll("[data-replay]")) b.addEventListener("click", () => askReplay(loadLives()[Number(b.dataset.replay)]));
+  }
+  function renderLives() {
+    els.lives.innerHTML = livesHtml();
+    bindReplay(els.lives);
+  }
+  // Live a past life again: the same seed and start year, so the same family, talents and luck.
+  function askReplay(e) {
+    if (!e) return;
+    const busy = !!(game && !game.ending);
+    openModal(T("lives.replayTitle"), "<p>" + esc(T("lives.replayText", { name: e.name, busy })) + "</p>", [
+      { label: T("lives.replayKeep"), run: () => { closeModal(); if (game && !els.game.classList.contains("hidden")) render(); } },
+      { label: T("lives.replayGo"), primary: true, run: () => startLife({ seed: e.seed, name: e.name, sex: e.sex === "f" ? "f" : "m", sy: e.sy, replayOf: e.id, daily: e.daily }) },
+    ]);
+  }
+  function today() {
+    const d = new Date(), p = (n) => String(n).padStart(2, "0");
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  }
+  // A new life. o: { seed, name, sex, sy (the year elementary school starts), daily, replayOf }.
+  function startLife(o) {
+    o = o || {};
+    const s = o.sex || sex;
+    game = new Game({ seed: o.seed, name: o.name || els.name.value.trim() || T("setup.namePh." + s), sex: s, startYear: o.sy || new Date().getFullYear() + 6 });
+    game.seenCuts = [];
+    game.lifeId = game.seed + ":" + Date.now();
+    if (o.daily) game.daily = o.daily;
+    if (o.replayOf) game.replayOf = o.replayOf;
+    plan = {};
+    save();
+    closeModal();
+    showGame();
+  }
+  els.dailyBtn.addEventListener("click", () => { const d = today(); startLife({ seed: Game.dailySeed(d), daily: d }); });
+  // The same panels from inside a life, in the modal (only between screens).
+  const freeModal = () => game && !game.queue.length && !outcome && !cut;
+  els.achBtn.addEventListener("click", () => {
+    if (!freeModal()) return;
+    openModal(T("ach.title"), '<p class="muted">' + esc(T("ach.sub", { n: achCount(), m: S.ACHIEVEMENTS.length })) + "</p>" + achHtml(), [{ label: T("continue"), primary: true, run: () => { closeModal(); render(); } }]);
+  });
+  els.livesBtn.addEventListener("click", () => {
+    if (!freeModal()) return;
+    openModal(T("lives.title"), '<div class="table-wrap"><table class="grid">' + livesHtml() + "</table></div>", [{ label: T("continue"), primary: true, run: () => { closeModal(); render(); } }]);
+    bindReplay(els.modalBody);
+  });
+  els.endBtn.addEventListener("click", () => { if (!freeModal() || !game.ending) return; game.endingSeen = false; after(); });
+
+  // ---------- the epilogue screens ----------
+  const EPI_ART = { major: "campus", college: "campus", armyWhen: "army", army: "army", hunt: "hunt", hunt2: "hunt" };
+  const EPI_ICON = {
+    hum: "📜", soc: "📊", edu: "🍎", eng: "⚙️", nat: "🔬", health: "🩺", arts: "🎨",
+    library: "📚", balance: "⚖️", exchange: "✈️", gap: "💼", campus: "🎉", y1: "1️⃣", y2: "2️⃣", after: "🎓",
+    army: "🪖", navy: "⚓", air: "✈️", marine: "🦅", social: "🏢", alt: "🕊️", doctor: "⚕️",
+    big: "🏢", bigline: "🏭", public: "⚡", civil: "🏛️", teacher: "🍎", law: "⚖️", hospital: "🏥", startup: "🚀", grad: "🧪", sme: "🏬",
+    trade: "🔧", service: "🛍️", shop: "🏪", popular: "💉", essential: "🩺", gp: "🏥", again: "🔁", parttime: "⏰",
+  };
+  function epiText(g, top) {
+    const st = top.step, med = top.tier === 6, none = top.tier === 0;
+    const e = g.epi;
+    const p = { age: Math.round(g.ending.age + g.epiYearsToReady()), gpa: e.gpa != null ? e.gpa.toFixed(2) : "", t: e.target };
+    let k = "epi.text." + st;
+    if (st === "college" && med) k += ".med";
+    if (st === "army") k += top.opts.indexOf("social") >= 0 ? ".social" : med ? ".med" : none ? ".none" : "";
+    if (st === "hunt") k += med ? ".med" : none ? ".none" : "";
+    return T(k, p);
+  }
+  function showEpi(top) {
+    const g = game, st = top.step;
+    if (st === "at30") {
+      openModal(T("epi.title.at30", { name: g.name }), at30Html(g), [{ label: T("epi.at30.ok"), primary: true, run: () => { g.epiChoose("ok"); g.endingSeen = false; after(); } }],
+        Art.screenArt("at30", artCtx({ stage: "uni", mood: g.epi.at30.fifth >= g.epi.at30.born ? "happy" : "ok" })));
+      return;
+    }
+    const title = T("epi.title." + st + (st === "college" && top.tier === 6 ? ".med" : ""));
+    const labels = T("epi.o." + st), descs = T("epi.d." + st);
+    let html = '<p class="story">' + esc(epiText(g, top)) + '</p><div class="decide">';
+    top.opts.forEach((id, i) => {
+      const closed = top.blocked && top.blocked[id];
+      html += '<button type="button"' + (i === 0 ? ' class="primary"' : "") + ' data-epi="' + (closed ? "" : id) + '"><span class="di" aria-hidden="true">' + (EPI_ICON[id] || "•") + "</span><span>" +
+        esc(labels[id]) + "<small>" + esc(closed ? T("epi.blocked." + closed) : descs[id]) + "</small></span></button>";
+    });
+    html += "</div>";
+    openModal(title, html, [], Art.screenArt(EPI_ART[st] || "campus", artCtx({ stage: "uni" })));
+    for (const b of els.modalBody.querySelectorAll(".decide button")) {
+      const id = b.dataset.epi;
+      if (!id) { b.disabled = true; continue; }
+      b.addEventListener("click", () => {
+        const msg = g.epiChoose(id);
+        outcome = { title, msg, art: EPI_ART[st] || "campus" };
+        after();
+      });
+    }
+  }
+  // At 30: job, pay, rank among earners against the family you were born into, home; the ten years'
+  // story; and any "where they are now" lines other systems added (g.epi.extra).
+  function at30Html(g) {
+    const e = g.epi, a = e.at30;
+    const tile = (k, v, cls) => "<div" + (cls ? ' class="' + cls + '"' : "") + '><span class="k">' + esc(T(k)) + '</span><span class="v">' + esc(v) + "</span></div>";
+    const d = a.fifth - a.born;
+    let h = '<div class="summary">' + tile("epi.at30.job", L.job30(a.job)) + tile("epi.at30.pay", a.pay ? L.won(a.pay) : T("epi.at30.noPay")) +
+      tile("epi.at30.fifth", L.fifth("q" + a.fifth)) + tile("epi.at30.born", L.fifth("q" + a.born)) + tile("epi.at30.where", T("epi.at30.lives", { reg: a.region, home: a.home }), "wide") + "</div>";
+    h += '<p class="mob ' + (d > 0 ? "up" : d < 0 ? "down" : "") + '">' + (d > 0 ? "↑ " : d < 0 ? "↓ " : "→ ") + esc(T("epi.at30.mob", { from: a.born, to: a.fifth })) + "</p>";
+    h += "<h3>" + esc(T("epi.at30.story")) + '</h3><ol class="epi-story">' + e.lines.map((l) => "<li>" + esc(T(l.key, l.p)) + "</li>").join("") + "</ol>";
+    if (e.extra && e.extra.length) h += "<h3>" + esc(T("epi.at30.extra")) + '</h3><ul class="epi-story">' + e.extra.map((l) => "<li>" + esc(T(l.key, l.p)) + "</li>").join("") + "</ul>";
+    return h + '<p class="muted small">' + esc(T("epi.at30.note")) + "</p>";
+  }
+
+  // ---------- the share card ----------
+  function cardSvg(g) {
+    const b = g.birthInfo(), e = g.ending, best = e.best;
+    const a = g.epi && g.epi.done ? g.epi.at30 : null;
+    const lines = [[T("card.born"), b.year + " · " + L.regionShort(b.reg)], [T("card.family"), b.par === "care" ? L.parents("care") : L.family(b.fam)],
+      [T("card.outcome"), e.uni ? L.uni(e.uni) : T("card.none")], [T("card.tries"), L.att(e.attempts)]];
+    // English job names start with "a" / "an", which the card doesn't need.
+    if (a) lines.push([T("card.at30"), L.job30(a.job).replace(/^an? /, "")]);
+    return Art.shareCard({
+      ctx: artCtx({ stage: "uni" }), title: T("card.title"), daily: g.daily ? T("card.daily", { d: g.daily }) : "", name: g.name, lines,
+      gradesLabel: T("card.grades"), grades: best ? SUBJECTS.map((s) => best.subjects[s].grade) : null, mood: e.uni ? "happy" : "ok",
+      mob: { from: S.FAMILY_IDS.indexOf(b.fam) + 1, to: a ? a.fifth : null, labels: [T("card.mobBorn"), T("card.mobNow")] },
+      aria: g.name + ", " + (e.uni ? L.uni(e.uni) : T("card.none")),
+    });
+  }
+  // The PNG: the card with its colour tokens resolved (an image can't read the page's CSS), drawn to a
+  // canvas. If the browser blocks the download, the picture is shown to save by hand.
+  function downloadCard() {
+    const out = els.modalBody.querySelector(".card-out");
+    const fail = () => { if (out) out.innerHTML = '<p class="err">' + esc(T("end.pngFail")) + "</p>"; };
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      const svgStr = cardSvg(game).replace(/var\(--([\w-]+)\)/g, (m, n) => cs.getPropertyValue("--" + n).trim() || "#888888");
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const cv = document.createElement("canvas");
+          cv.width = 1200; cv.height = 680;
+          cv.getContext("2d").drawImage(img, 0, 0, 1200, 680);
+          const url = cv.toDataURL("image/png");
+          // ASCII only: some browsers drop a download name with Hangul in it.
+          const file = "suneung-" + (String(game.name).replace(/[^\w-]+/g, "_").replace(/^_+|_+$/g, "") || "life") + ".png";
+          // A blob link keeps the file name; the data URL is the fallback and the picture on screen.
+          const save = (href) => {
+            const link = document.createElement("a");
+            link.href = href;
+            link.download = file;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            if (href !== url) setTimeout(() => URL.revokeObjectURL(href), 10000);
+          };
+          if (cv.toBlob && window.URL && URL.createObjectURL) cv.toBlob((blob) => save(blob ? URL.createObjectURL(blob) : url), "image/png");
+          else save(url);
+          if (out) out.innerHTML = '<img src="' + url + '" alt="' + esc(game.name) + '"><p class="muted small">' + esc(T("end.pngHelp")) + "</p>";
+        } catch (err) { fail(); }
+      };
+      img.onerror = fail;
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
+    } catch (err) { fail(); }
   }
 
   // ---------- cutscenes ----------
