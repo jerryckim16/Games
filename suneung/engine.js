@@ -134,6 +134,13 @@
     { id: "songs", kind: "play", early: true },
     { id: "worksheet", kind: "play", early: true, fromAge: 4, cost: 40000 },
     { id: "job", kind: "life", from: 10 },
+    // The school record (v6.0): offered while it's open, High 1 to August of High 3 (recordOpen).
+    // prep: studying for your school's midterm or final (내신 대비). club: your 동아리. volunteer:
+    // school volunteering. project: a 진로 research project or report in the field you want to study.
+    { id: "prep", kind: "life", hs: true },
+    { id: "club", kind: "life", hs: true },
+    { id: "volunteer", kind: "life", hs: true },
+    { id: "project", kind: "life", hs: true },
   ];
   const JOB_PAY = 250000; // won per block per month
   // mult: study speed. sens: how much the gain depends on motivation (a tutor keeps you on task,
@@ -212,14 +219,14 @@
     { id: "suwon", kind: "capital", capital: true, pop: 32.6 },
     { id: "busan", kind: "metro", pop: 8.5, view: "sea", nat: "pnu" },
     { id: "daegu", kind: "metro", pop: 4.6, nat: "knu" },
-    { id: "gwangju", kind: "metro", pop: 2.7 },
-    { id: "daejeon", kind: "metro", pop: 3.6 },
+    { id: "gwangju", kind: "metro", pop: 2.7, nat: "jnu" },
+    { id: "daejeon", kind: "metro", pop: 3.6, nat: "cnu" },
     { id: "pohang", kind: "city", pop: 8.2, view: "sea", nat: "knu" },
     { id: "jeonju", kind: "city", pop: 4.3 },
     { id: "cheongju", kind: "city", pop: 7.3 },
     { id: "jeju", kind: "city", pop: 1.3, view: "sea" },
     { id: "pyeongchang", kind: "rural", pop: 6.1, view: "country" },
-    { id: "haenam", kind: "rural", pop: 2.5, view: "sea" },
+    { id: "haenam", kind: "rural", pop: 2.5, view: "sea", nat: "jnu" },
   ];
   const REGION_BY_ID = Object.fromEntries(REGIONS.map((r) => [r.id, r]));
 
@@ -511,36 +518,75 @@
   // 수능-year mocks (month → true); grades 10–11 sit 학력평가 in June and November instead.
   const MOCKS = { 3: true, 6: true, 9: true };
 
-  // ---------- universities (정시, rough) ----------
-  // cut: the 국수탐 percentile average (after the English/History deductions below) where an
+  // ---------- universities ----------
+  // cut: the 정시 국수탐 percentile average (after the English/History deductions below) where an
   // application is about a coin flip. Ballpark 2025-era 정시 numbers, simplified to one per school.
   // SNU and med sit where roughly the top 0.3% and 0.15% of simulated test takers land, so a player
   // at ability 100 (θ ≈ 3, top 0.13%) is a likely but not certain SNU admit and about a coin flip for med.
+  // Schools added in v6.0 (the women's universities, the next in-Seoul tier, two more regional
+  // national universities, KAIST and POSTECH) are placed between the old ones by their usual tier
+  // (see data/korea-stats.md "8. University admission"); like the rest, not an admissions predictor.
+  //
+  // 수시 (early admission, v6.0). susi: the share of the school's places filled in 수시 (%): about
+  // 80% nationally, near 60% at the Seoul schools asked to keep 40% for 정시, 90% in the provinces.
+  // Each 수시 type a school runs (absent if it doesn't):
+  //   gk: 학생부교과, the 내신 average (5-grade scale) where an application is a coin flip.
+  //   jh: 학생부종합, the record score (0–100, see recordScore) where it's a coin flip; iv: an
+  //       interview stage after a document round (서류 → 면접).
+  //   ns: 논술 (essay): true when the school runs one.
+  // gkMin / jhMin / nsMin: 수능 최저 (minimum 수능 grades), [n, sum]: your best n grades among Korean,
+  // Math, English and your better inquiry subject must add up to sum or less. Absent: no minimum.
+  // Typical of the school's tier in recent years, not any one year's exact rule.
+  // gkGrad: false when 교과 takes only this year's graduates (학교장추천 at the top schools).
+  // women: admits women only. susiOnly: no 정시 at all (KAIST, POSTECH). free: outside the six-
+  // application limit (KAIST is a science and technology institute, not under the Higher Education
+  // Act). sky / seoul: the groups sim.js reports (SKY+ and in-Seoul+).
   const UNIVERSITIES = [
-    { id: "med", cut: 98.8, sci: true },
-    { id: "snu", cut: 98.0 },
-    { id: "yonsei", cut: 97.6 },
-    { id: "korea", cut: 97.4 },
-    { id: "skku", cut: 96.1 },
-    { id: "sogang", cut: 95.8 },
-    { id: "hanyang", cut: 95.6 },
-    { id: "cau", cut: 94.2 },
-    { id: "khu", cut: 93.6 },
-    { id: "hufs", cut: 93.3 },
-    { id: "uos", cut: 93.8 },
-    { id: "konkuk", cut: 91.0 },
-    { id: "dongguk", cut: 90.6 },
-    { id: "hongik", cut: 90.0 },
-    { id: "pnu", cut: 88.5 },
-    { id: "knu", cut: 87.5 },
-    { id: "kookmin", cut: 86.8 },
-    { id: "soongsil", cut: 86.5 },
-    { id: "inha", cut: 85.0 },
-    { id: "ajou", cut: 85.8 },
-    { id: "gachon", cut: 80.0 },
-    { id: "regional", cut: 60.0 },
-    { id: "college", cut: 25.0 },
+    { id: "med", cut: 98.8, sci: true, sky: true, susi: 68, gk: 1.03, gkMin: [3, 4], jh: 92, jhMin: [3, 5], iv: true, ns: true, nsMin: [3, 4] },
+    { id: "kaist", cut: 98.0, sci: true, sky: true, susiOnly: true, free: true, susi: 100, jh: 88, iv: true },
+    { id: "snu", cut: 98.0, sky: true, susi: 62, jh: 91, iv: true },
+    { id: "postech", cut: 97.8, sci: true, sky: true, susiOnly: true, susi: 100, jh: 87, iv: true },
+    { id: "yonsei", cut: 97.6, sky: true, susi: 60, gk: 1.08, gkGrad: false, jh: 86, iv: true, ns: true },
+    { id: "korea", cut: 97.4, sky: true, susi: 62, gk: 1.12, gkMin: [3, 7], gkGrad: false, jh: 85, jhMin: [4, 8], ns: true, nsMin: [4, 8] },
+    { id: "skku", cut: 96.1, susi: 60, gk: 1.12, gkMin: [3, 7], jh: 83, ns: true, nsMin: [3, 6] },
+    { id: "sogang", cut: 95.8, susi: 60, gk: 1.18, gkMin: [3, 7], jh: 82, ns: true, nsMin: [3, 7] },
+    { id: "hanyang", cut: 95.6, susi: 60, gk: 1.08, gkMin: [3, 7], jh: 83, ns: true },
+    { id: "cau", cut: 94.2, susi: 60, gk: 1.18, gkMin: [3, 7], jh: 79, ns: true, nsMin: [3, 6] },
+    { id: "khu", cut: 93.6, susi: 62, gk: 1.32, gkMin: [2, 5], jh: 78, ns: true, nsMin: [2, 5] },
+    { id: "hufs", cut: 93.3, susi: 61, gk: 1.32, gkMin: [2, 4], jh: 77, ns: true, nsMin: [2, 4] },
+    { id: "uos", cut: 93.8, susi: 58, gk: 1.27, gkMin: [3, 7], jh: 77, iv: true },
+    { id: "ewha", cut: 93.0, women: true, susi: 70, gk: 1.22, gkGrad: false, jh: 78, ns: true, nsMin: [3, 6] },
+    { id: "konkuk", cut: 91.0, susi: 62, gk: 1.38, jh: 74, ns: true, nsMin: [2, 5] },
+    { id: "dongguk", cut: 90.6, susi: 62, gk: 1.38, gkMin: [2, 5], jh: 73, ns: true, nsMin: [2, 5] },
+    { id: "hongik", cut: 90.0, susi: 63, gk: 1.52, gkMin: [3, 8], jh: 72, ns: true, nsMin: [3, 8] },
+    { id: "sookmyung", cut: 89.5, women: true, susi: 66, gk: 1.42, gkMin: [2, 5], jh: 72, ns: true, nsMin: [2, 5] },
+    { id: "seoultech", cut: 89.0, susi: 63, gk: 1.57, jh: 71, ns: true },
+    { id: "pnu", cut: 88.5, susi: 76, gk: 1.42, gkMin: [2, 5], jh: 70, ns: true, nsMin: [2, 5] },
+    { id: "knu", cut: 87.5, susi: 74, gk: 1.62, gkMin: [2, 5], jh: 69, ns: true, nsMin: [2, 5] },
+    { id: "kookmin", cut: 86.8, susi: 63, gk: 1.62, gkMin: [2, 6], jh: 68 },
+    { id: "soongsil", cut: 86.5, susi: 62, gk: 1.57, jh: 68 },
+    { id: "kwangwoon", cut: 86.3, susi: 62, gk: 1.72, jh: 67, ns: true },
+    { id: "sejong", cut: 86.0, susi: 62, gk: 1.77, jh: 66 },
+    { id: "jnu", cut: 86.0, susi: 80, gk: 1.72, gkMin: [2, 6], jh: 66 },
+    { id: "inha", cut: 85.0, susi: 70, gk: 1.57, jh: 66, ns: true },
+    { id: "ajou", cut: 85.8, susi: 68, gk: 1.57, jh: 67, ns: true },
+    { id: "cnu", cut: 85.0, susi: 78, gk: 1.87, gkMin: [2, 6], jh: 64 },
+    { id: "sungshin", cut: 85.0, women: true, susi: 66, gk: 1.82, jh: 64 },
+    { id: "dankook", cut: 84.8, susi: 66, gk: 1.72, jh: 64, ns: true },
+    { id: "swu", cut: 84.0, women: true, susi: 67, gk: 1.92, jh: 62 },
+    { id: "myongji", cut: 83.8, susi: 68, gk: 1.92, jh: 62 },
+    { id: "incheon", cut: 83.5, susi: 70, gk: 1.87, jh: 60 },
+    { id: "duksung", cut: 83.2, women: true, susi: 68, gk: 1.97, jh: 60 },
+    { id: "dongduk", cut: 82.8, women: true, susi: 72, gk: 2.02, jh: 59 },
+    { id: "gachon", cut: 80.0, susi: 75, gk: 1.77, jh: 56, ns: true },
+    { id: "regional", cut: 60.0, susi: 88, gk: 2.9, jh: 40 },
+    { id: "kwangjuWomen", cut: 50.0, women: true, susi: 92, gk: 3.2, jh: 34 },
+    { id: "college", cut: 25.0, susi: 92, gk: 3.7, jh: 25 },
   ];
+  // in-Seoul+ (what sim.js reports): a 정시 cut of about 85 or more, the same line as before v6.0 (the
+  // in-Seoul universities down to the Kookmin–Soongsil–Dankook tier, the big regional national
+  // universities, Inha and Ajou), so the balance tables stay comparable.
+  for (const u of UNIVERSITIES) u.seoul = u.cut >= 84.5;
   const ENG_DEDUCT = [0, 0, 0.8, 2.0, 3.5, 5.5, 8, 11, 14, 17]; // by English grade 1..9
   const UNI_BY_ID = Object.fromEntries(UNIVERSITIES.map((u) => [u.id, u]));
   const UNI_SLOPE = 0.7; // percentile points per logit: how quickly your odds move around the cut
@@ -560,6 +606,102 @@
   }
   function chanceLabel(p) {
     return p >= 0.85 ? "safe" : p >= 0.55 ? "match" : p >= 0.25 ? "reach" : "long";
+  }
+  const logistic = (x) => 1 / (1 + Math.exp(-x));
+
+  // ---------- 내신 (school grades), v6.0 ----------
+  // From High 1 to the first semester of High 3 you sit a midterm (중간고사) and a final (기말고사)
+  // each semester, graded against the classmates in your year at your school. Everyone who entered
+  // high school from 2025 is on the 5-grade relative scale (MOE, 2028 대입 개편 확정안, 2023-12-27):
+  // 1등급 the top 10%, 2등급 to 34%, 3등급 to 66%, 4등급 to 90%, 5등급 the rest.
+  const NAESIN_CUTS = [0.10, 0.34, 0.66, 0.90];
+  // Which turns end in an exam: (semester, midterm or final) by the month the turn starts. Grades 10–11
+  // move a season a turn, so each season has one exam; High 3 is monthly (April and July). The
+  // second semester of High 3 doesn't count for 수시, which closes the record at the end of August.
+  const NAESIN_TERMS = { high: { 3: [1, "mid"], 6: [1, "fin"], 9: [2, "mid"], 12: [2, "fin"] }, hs3: { 4: [1, "mid"], 7: [1, "fin"] } };
+  // Graded subjects: the five 수능 slots, plus Korean History in High 1 (the common subjects).
+  const NAESIN_SUBJ = ["kor", "math", "eng", "inq1", "inq2"];
+  // Your classmates' ability in a subject: around the typical line for your grade, sd COHORT_SD, set
+  // so that sim.js's balanced bot (a fairly diligent child) ranks near the middle of its year at an
+  // ordinary school (내신 about 3). Selective schools pick strong
+  // students, so the same ability ranks lower there (the real "내신 불리"), most of all in the subjects
+  // the school selects on; Seoul's academy districts are a little stronger too.
+  const COHORT_MEAN = 0.25, COHORT_SD = 0.85;
+  const SCHOOL_COHORT = {
+    privHigh: { all: 0.05 },
+    autoHigh: { all: 0.7, sd: 0.65 },
+    sciHigh: { all: 0.9, math: 1.5, inq2: 1.5, sd: 0.5 },
+    langHigh: { all: 0.6, eng: 1.3, kor: 0.8, sd: 0.55 },
+    artsHigh: { all: -0.4 },
+    vocHigh: { all: -0.9, sd: 0.9 },
+  };
+  const REGION_COHORT = { gangnam: 0.35, seoulAcad: 0.25, seoul: 0.1, capital: 0, metro: 0, city: -0.05, rural: -0.25 };
+  // How much a school exam swings for you (θ), and what preparing for it (내신 대비: the teacher's
+  // handouts, past papers of your school) adds at most. A semester grade is 35% midterm, 40% final and
+  // 25% performance assessment (수행평가), which follows how engaged you are in class.
+  const NAESIN_NOISE = 0.22;
+  const PREP_MAX = 0.22;
+  const SEM_W = { mid: 0.35, fin: 0.4, perf: 0.25 };
+  function naesinGrade(top) {
+    for (let i = 0; i < NAESIN_CUTS.length; i++) if (top <= NAESIN_CUTS[i]) return i + 1;
+    return 5;
+  }
+
+  // ---------- 학생부 (school record), v6.0 ----------
+  // Built up from High 1 to the end of August in High 3. Universities read it as three qualities, the
+  // common 학생부종합 evaluation of 2024 onwards (five-university joint study, 2022): 학업역량
+  // (academic: your 내신 and the teachers' subject comments, 세특), 진로역량 (career exploration
+  // consistent with what you want to study) and 공동체역량 (community: clubs, volunteering,
+  // leadership). Points go into running totals; each quality is a saturating curve of its total.
+  // From 2024 individual reading lists, awards and outside volunteering are no longer sent to
+  // universities, so reading counts only through what teachers write in 세특.
+  // SETE_K etc.: how many points take a quality about two-thirds of the way up its curve.
+  const SETE_K = 18, CAREER_K = 14, COMM_K = 12;
+  const RECORD_W = { acad: 0.65, career: 0.2, comm: 0.15 };
+  // 종합 readers know a selective school's 내신 is harder: they read its average this much better.
+  // A vocational or arts school's academic grades were earned among weaker classmates and read worse.
+  const SCHOOL_READ = { autoHigh: 0.35, sciHigh: 0.7, langHigh: 0.45, vocHigh: -0.6, artsHigh: -0.3 };
+  // 교과 at most universities is built for general-school curricula: vocational graduates compete in
+  // a small separate quota (특성화고졸 특별전형) and arts-school students mostly apply by audition, so
+  // their 내신 (earned among weaker academic classmates) counts this much worse.
+  const GK_PENALTY = { vocHigh: 0.5, artsHigh: 0.3 };
+  // Intended fields (진로 희망) and the track each fits.
+  const FIELDS = { med: "sci", sci: "sci", hum: "soc", biz: "soc" };
+
+  // ---------- 수시 (early admission), v6.0 ----------
+  // Up to six applications in September (KAIST outside the count). Anyone admitted in 수시, even off a
+  // waitlist, can't apply in 정시 that year (수시 납치): you take a 수시 place or none.
+  const SUSI_MAX = 6;
+  // Quotas, as an easier cut: 교과 in 내신 grades, 종합 in record points. 지역인재 at medical schools
+  // and the regional national university; 농어촌 (rural) nearly everywhere; 기회균형 (opportunity
+  // balance: basic-livelihood and near-poverty households, children in care) nearly everywhere.
+  const SUSI_QUOTA = { local: { gk: 0.25, jh: 6 }, rural: { gk: 0.3, jh: 8 }, balance: { gk: 0.3, jh: 8 } };
+  // This year's hidden swing in each cut (교과 grades, 종합 points), like CUT_SWING in 정시.
+  const SUSI_SWING = { gk: 0.06, jh: 2 };
+  // 종합 odds move 1 logit every JH_SLOPE points; a document round passes about three times as many as
+  // the school admits (JH_STAGE points easier).
+  const JH_SLOPE = 5, JH_STAGE = 7;
+  // 논술: even a strong writer is never sure (competition runs 40:1 and more at Seoul schools), so the
+  // chance tops out at NS_MAX. The essay draws on Korean and on math (sciences) or social studies.
+  const NS_MAX = 0.18, NS_SLOPE = 0.3, NS_EDGE = 0.6;
+  // Interview: what the prep choice adds (record points), and how much the day swings.
+  const IV_PREP = [3, 1.5, 0], IV_DAY = 3;
+  // Inverse of phi, for turning a 정시 percentile cut into an ability line.
+  function invPhi(p) {
+    let lo = -6, hi = 6;
+    for (let i = 0; i < 50; i++) { const mid = (lo + hi) / 2; if (phi(mid) < p) lo = mid; else hi = mid; }
+    return (lo + hi) / 2;
+  }
+  // 교과: odds move faster near the top, where a tenth of a grade separates hundreds of applicants.
+  function gkChance(avg, cut) { return logistic((cut - avg) / (0.05 + 0.05 * (cut - 1))); }
+  // Best n of your 수능 grades in Korean, Math, English and the better inquiry subject.
+  function minGrades(res) {
+    const s = res.subjects;
+    return [s.kor.grade, s.math.grade, s.eng.grade, Math.min(s.inq1.grade, s.inq2.grade)].sort((a, b) => a - b);
+  }
+  function meetsMin(min, res) {
+    if (!min) return true;
+    return minGrades(res).slice(0, min[0]).reduce((a, b) => a + b, 0) <= min[1];
   }
 
   // ---------- exam simulation ----------
@@ -1154,11 +1296,63 @@
       id: "president", weight: 1, when: (g) => g.grade >= 4 && g.grade <= 11 && !g.dropoutActive(), choices: 2,
       run: (g, i) => {
         if (i === 1) return "r1";
-        if (g.rng() < 0.45) { bump(g, { motivation: 8, stress: 4 }); return "r0a"; }
+        // In high school a class office goes on the record (공동체역량: leadership).
+        if (g.rng() < 0.45) { bump(g, { motivation: 8, stress: 4 }); if (g.recordOpen()) g.record.comm += 6; return "r0a"; }
         bump(g, { stress: 5, motivation: -2 }); return "r0b";
       },
     },
     { id: "career", weight: 100, when: (g) => g.grade === 7 && g.month === 3 && !g.flags.career && !g.dropoutActive(), run: (g) => { g.flags.career = 1; bump(g, { motivation: 8 }); return "r"; } },
+    // ----- the school record (v6.0) -----
+    // High 1, the first weeks: the 진로 survey asks what you want to study (it goes on the record and
+    // 진로역량 is judged against it), and the club fair.
+    {
+      id: "jinro", weight: 100, choices: 4, when: (g) => !!g.record && !g.record.field && g.recordOpen(),
+      run: (g, i) => {
+        g.record.field = ["med", "sci", "hum", "biz"][i];
+        bump(g, { motivation: 4 });
+        g.addLog("log.field", { f: g.record.field }, "event");
+        return "r" + i;
+      },
+    },
+    {
+      id: "club-pick", weight: 100, choices: 3, when: (g) => !!g.record && !g.record.club && g.recordOpen(),
+      run: (g, i) => {
+        g.record.club = ["acad", "vol", "fun"][i];
+        bump(g, { stress: -2, motivation: 2 });
+        return "r" + i;
+      },
+    },
+    // A field that doesn't fit your track (medicine on the humanities track) reads oddly to a 종합
+    // reader. Switching keeps some of what you've done.
+    {
+      id: "jinro-change", weight: 1.5, choices: 2,
+      when: (g) => g.recordOpen() && !!g.track && !!g.record.field && FIELDS[g.record.field] !== g.track && !g.flags.jinroChange,
+      run: (g, i) => {
+        g.flags.jinroChange = 1;
+        if (i === 1) return "r1";
+        g.record.field = g.track === "sci" ? "sci" : "hum";
+        g.record.career *= 0.6;
+        g.addLog("log.field", { f: g.record.field, change: 1 }, "event");
+        return ["r0", { f: g.record.field }];
+      },
+    },
+    // A teacher's project or presentation (수행평가): going deep is what 세특 is written from.
+    {
+      id: "seteuk", weight: 2, choices: 2, when: (g) => g.recordOpen() && (g.status !== "hs3" || g.month <= 7),
+      run: (g, i) => {
+        if (i === 0) { g.record.sete += 3; g.record.career += 2 * g.fieldFit(); g.lostBlocks += 1; bump(g, { stress: 4, motivation: 3 }); return "r0"; }
+        g.record.sete += 0.5; bump(g, { stress: -2 }); return "r1";
+      },
+    },
+    // The 종합 interview after the 수능 (pushed by dismiss when a document round was passed).
+    {
+      id: "interview", weight: 0, when: () => false, choices: 3,
+      run: (g, i) => {
+        if (g.susi) g.susi.iv = IV_PREP[i];
+        if (i === 2) bump(g, { stress: -5 }); else bump(g, { stress: 2 });
+        return "r" + i;
+      },
+    },
     {
       id: "jung2", weight: 100, when: (g) => g.grade === 8 && !g.flags.jung2, choices: 2,
       run: (g, i) => {
@@ -1222,7 +1416,7 @@
     {
       id: "festival", weight: 1, when: (g) => g.dropout == null && ((g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high"), choices: 2,
       run: (g, i) => {
-        if (i === 0) { bump(g, { stress: -14, motivation: 4 }); return "r0"; }
+        if (i === 0) { bump(g, { stress: -14, motivation: 4 }); if (g.recordOpen()) g.record.comm += 1; return "r0"; }
         studyBoost(g, pickWeak(g), 0.025); bump(g, { stress: 4 }); return "r1";
       },
     },
@@ -1948,7 +2142,9 @@
     }
     activities() {
       if (this.isEarly()) return ACTIVITIES.filter((a) => (a.early && (a.fromAge || 0) <= this.age) || a.alsoEarly);
-      return ACTIVITIES.filter((a) => !a.early && (a.from || 1) <= this.grade && this.grade <= (a.to || 12));
+      const rec = this.recordOpen();
+      return ACTIVITIES.filter((a) => !a.early && (a.from || 1) <= this.grade && this.grade <= (a.to || 12) &&
+        (!a.hs || (rec && (a.id !== "prep" || !!this.examSoon()))));
     }
     allowance() {
       const a = this.grossBudget();
@@ -2299,6 +2495,21 @@
           this.skills[s] += g;
           lessons += g;
         }
+        // The school record (High 1 to August of High 3): what you did this turn goes into it.
+        if (this.recordOpen()) {
+          const total = Object.keys(plan).reduce((a, x) => a + (plan[x] || 0), 0);
+          this.recordTurn(plan, months, attend, total ? studied / total : 0);
+        }
+      }
+      // 내신 prep is study too, aimed at the school's own papers: a little of a study block's gain,
+      // spread over the graded subjects. A 진로 project feeds the two subjects of its field.
+      const prepN = plan.prep || 0, projN = plan.project || 0;
+      if (prepN || projN) {
+        const feed = {};
+        for (const s of NAESIN_SUBJ) feed[s] = (feed[s] || 0) + prepN * 0.3 / NAESIN_SUBJ.length;
+        const f = (this.record && this.record.field) || "sci";
+        for (const s of f === "med" || f === "sci" ? ["math", "inq2"] : f === "biz" ? ["math", "inq1"] : ["kor", "inq1"]) feed[s] = (feed[s] || 0) + projN * 0.2;
+        for (const s in feed) this.skills[s] += feed[s] * 0.24 * SUBJECT_INFO[s].rate * this.aptitude[s] * eff * headroom(this.skills[s]) * k;
       }
       const mock = plan.mock || 0;
       if (mock) {
@@ -2312,10 +2523,13 @@
       // Stress and health also recover on their own toward a baseline, so a steady workload settles
       // at a level instead of spiralling; heavy turns push the level up.
       const d = {
-        stress: pressure + studied * 1.6 + mock * 3 + (25 + this.trait("stressRest") + PARENT_STRESS[this.home()] - this.stress) * 0.25 + (plan.worksheet || 0) * 4,
-        health: -1 - studied * 0.6 + (72 + this.trait("healthRest") - this.health) * 0.15,
+        stress: pressure + (studied + prepN + projN) * 1.6 + mock * 3 + (25 + this.trait("stressRest") + PARENT_STRESS[this.home()] - this.stress) * 0.25 + (plan.worksheet || 0) * 4,
+        health: -1 - (studied + prepN + projN) * 0.6 + (72 + this.trait("healthRest") - this.health) * 0.15,
         motivation: 0,
       };
+      // Clubs and volunteering are a change from the desk.
+      d.stress -= (plan.club || 0) * (this.record && this.record.club === "fun" ? 7 : 5) + (plan.volunteer || 0) * 4;
+      d.motivation += (plan.club || 0) * 1 + (plan.volunteer || 0) * 1 + projN * 1;
       // Traits make some of these go further (a good sleeper rests better, a smiley child gets more out
       // of friends).
       const tRest = this.trait("rest"), tEx = this.trait("exercise");
@@ -2390,6 +2604,12 @@
       // How the rival did: on the mock just sat, or in middle school's semester ranks.
       if (this.queue.length > mocks) this.rivalCheck(true);
       else if (this.status === "mid" && !drop) this.rivalCheck(false);
+      // Midterms and finals (내신), then 수시: applications after the September mock, the 종합 document
+      // round in October.
+      const term = this.naesinTerm();
+      if (term) this.queue.push(this.sitNaesin(term));
+      if (!school && this.month === 9 && this.susiOpen()) this.queue.push({ type: "susi" });
+      if (!school && this.month === 10 && this.susi && this.susi.y === this.year && this.susi.att === this.attempt && this.susi.apps.some((a) => a.type === "jh" && a.iv)) this.queue.push(this.susiStage());
       if (this.status === "high" && this.grade === 10 && this.month === 12) this.queue.push({ type: "track" });
       if (this.status !== "elem" && !school && this.month === 11) {
         this.queue.push(this.examEveEvent());
@@ -2593,6 +2813,8 @@
           this.makePerson(this.srng("march"), { st: cst, x: this.schoolSex(), th: SCHOOL_TH[this.schoolInfo().id] || 0 });
           this.prunePeople();
         }
+        // High 1: report cards and the school record start (old saves reaching it get them too).
+        if (this.status === "high" && was === "mid" && this.dropout == null && !this.record) this.newRecord();
         if (this.grade === 11 && this.dropout != null && this.flags.ged != null) this.queue.push({ type: "event", id: "early", choices: 2 });
       }
       // Severe bullying costs a block a turn: days you can't face school, or can't focus when you're there.
@@ -2616,6 +2838,10 @@
           this.addLog("log.suneung", { y: this.year, g: grades(top.result), total: top.result.total }, "milestone");
           return;
         }
+        if (top.type === "susiResult" && !top.results) {
+          top.results = this.susiResults(top.result);
+          return;
+        }
         if (top.type === "nextMonth") {
           this.queue.shift();
           this.nextTurn();
@@ -2631,10 +2857,23 @@
       if (top.type === "event" && top.choices) throw new Error("This event needs a choice.");
       if (top.type === "event") return this.choose(0);
       if (top.type === "track") throw new Error("Choose a track first.");
+      if (top.type === "susi") throw new Error("Apply or skip 수시 first.");
       this.queue.shift();
       if (top.type === "exam") {
         this.month = 12;
-        this.queue.push({ type: "apply", score: admissionScore(top.result), result: top.result });
+        // With 수시 applications in, their interviews and results come first (December, before 정시).
+        const su = this.susi;
+        if (su && su.y === this.year && su.att === this.attempt && su.apps.length && !su.done) {
+          if (su.apps.some((a) => a.pass1)) this.queue.push({ type: "event", id: "interview", choices: 3 });
+          this.queue.push({ type: "susiResult", result: top.result });
+        } else this.queue.push({ type: "apply", score: admissionScore(top.result), result: top.result });
+      }
+      // 수시 납치: any 수시 offer takes you out of 정시, so you choose among those (or retake).
+      if (top.type === "susiResult") {
+        const offers = Array.from(new Set(top.results.filter((r) => r.admitted).map((r) => r.id)));
+        const score = admissionScore(top.result);
+        if (offers.length) this.queue.push({ type: "offers", results: top.results, offers, score, susi: true });
+        else this.queue.push({ type: "apply", score, result: top.result });
       }
       this.flush();
     }
@@ -2683,10 +2922,12 @@
     options() {
       const top = this.queue[0];
       if (!top || top.type !== "apply") return [];
-      return UNIVERSITIES.map((u) => {
+      // KAIST and POSTECH admit only in 수시, so they aren't listed.
+      return UNIVERSITIES.filter((u) => !u.susiOnly).map((u) => {
         const q = this.quotaFor(u);
-        const p = admitChance(top.score + (q ? q.pts : 0), u, this.track);
-        return { id: u.id, p, label: chanceLabel(p), blocked: u.sci && this.track !== "sci", quota: q ? q.kind : null };
+        const blocked = u.sci && this.track !== "sci" ? "sci" : this.menBlocked(u) ? "women" : null;
+        const p = blocked ? 0 : admitChance(top.score + (q ? q.pts : 0), u, this.track);
+        return { id: u.id, p, label: chanceLabel(p), blocked, quota: q ? q.kind : null };
       });
     }
     // Apply to up to three schools (가/나/다군). Returns the offers.
@@ -2694,6 +2935,8 @@
       const top = this.queue[0];
       if (!top || top.type !== "apply") throw new Error("Not application season.");
       ids = Array.from(new Set(ids)).slice(0, 3);
+      const open = new Set(this.options().filter((o) => !o.blocked).map((o) => o.id));
+      if (ids.some((id) => !open.has(id))) throw new Error("apply.closed");
       const results = ids.map((id) => {
         const u = UNI_BY_ID[id];
         const q = this.quotaFor(u);
@@ -2776,6 +3019,282 @@
       if (!this.bully) return;
       endBully(this);
       this.addLog("log.bullyEnd", { why: "grad" }, "event");
+    }
+
+    // ----- 내신 and the school record (v6.0) -----
+    // Both start at High 1 (nextTurn). Saves from before v6.0 that were already in high school have
+    // neither: no report cards, no record, and no 수시 (정시 only, as before).
+    newRecord() {
+      this.naesin = { exams: [], sems: [] };
+      this.record = { field: null, club: null, sete: 0, career: 0, comm: 0, vol: 0, proj: 0, prep: 0, school: this.schoolInfo().id };
+    }
+    // The record is open in High 1–2 and High 3 until the end of August, at school, on your first try.
+    recordOpen() {
+      return !!this.record && this.attempt === 1 && this.inClass() && (this.status === "high" || (this.status === "hs3" && this.month <= 8));
+    }
+    // The school exam this turn ends in, as [semester, "mid" | "fin"], or null.
+    naesinTerm() {
+      if (!this.naesin || !this.recordOpen()) return null;
+      const t = NAESIN_TERMS[this.status];
+      return (t && t[this.month]) || null;
+    }
+    // An exam this turn or next (High 3 plays monthly, so prep in March counts for April's midterm).
+    examSoon() { return this.naesinTerm() || (this.status === "hs3" && (this.month === 3 || this.month === 6) ? [1, this.month === 3 ? "mid" : "fin"] : null); }
+    // Your classmates' ability in one subject at your school: { mean, sd }.
+    classmates(s) {
+      const x = this.schoolInfo();
+      const spec = SCHOOL_COHORT[x.id] || {};
+      const general = x.id === "pubHigh" || x.id === "privHigh";
+      const shift = (spec[s] != null ? spec[s] : spec.all || 0) + (general ? REGION_COHORT[regionKind(this)] || 0 : 0);
+      return { mean: this.typicalLevel() + COHORT_MEAN + shift, sd: spec.sd || COHORT_SD };
+    }
+    // Sits this turn's school exam: per subject a raw score out of 100, the absolute achievement (A–E)
+    // and the relative grade (1–5); after a final, the semester grades. Its own seeded stream, so the
+    // main RNG never moves. Returns the report-card screen.
+    sitNaesin(term) {
+      const [sem, kind] = term;
+      const r = makeRng(hashSeed(this.seed, "naesin", this.year, this.month));
+      const rec = this.record;
+      const bonus = PREP_MAX * (1 - Math.exp(-(rec.prep || 0) / 1.5));
+      rec.prep = 0;
+      const stressHit = this.stress > 70 ? -0.12 * (this.stress - 70) / 30 : 0;
+      const subs = this.grade === 10 ? NAESIN_SUBJ.concat("hist") : NAESIN_SUBJ;
+      const out = {};
+      for (const s of subs) {
+        const c = this.classmates(s);
+        const th = this.skills[s] + bonus + stressHit + r.normal() * NAESIN_NOISE;
+        const z = (th - c.mean) / c.sd;
+        const top = Math.round((1 - phi(z)) * 1000) / 1000;
+        const raw = clamp(Math.round(100 / (1 + Math.exp(-1.3 * (th - c.mean + 0.5)))), 0, 100);
+        out[s] = { raw, ach: raw >= 90 ? "A" : raw >= 80 ? "B" : raw >= 70 ? "C" : raw >= 60 ? "D" : "E", top, g: naesinGrade(top) };
+      }
+      const avgOf = (o) => Math.round(100 * Object.keys(o).reduce((a, s) => a + (o[s].g || o[s]), 0) / Object.keys(o).length) / 100;
+      const exam = { y: this.year, m: this.month, gr: this.grade, sem, kind, s: out, avg: avgOf(out), prep: Math.round(bonus * 100) / 100 };
+      const prev = this.naesin.exams[this.naesin.exams.length - 1];
+      this.naesin.exams.push(exam);
+      let semRec = null;
+      if (kind === "fin") {
+        // The semester grade: both exams and the performance assessments, which follow engagement.
+        const mid = this.naesin.exams.find((e) => e.gr === this.grade && e.sem === sem && e.kind === "mid");
+        const g = {};
+        for (const s of subs) {
+          const c = this.classmates(s);
+          const perf = 1 - phi((this.skills[s] + 0.35 * (this.motivation - 60) / 40 + r.normal() * 0.2 - c.mean) / c.sd);
+          const m = mid && mid.s[s] ? mid.s[s].top : out[s].top;
+          g[s] = naesinGrade(SEM_W.mid * m + SEM_W.fin * out[s].top + SEM_W.perf * perf);
+        }
+        semRec = { y: this.year, gr: this.grade, sem, g, avg: avgOf(g) };
+        this.naesin.sems.push(semRec);
+      }
+      // Exam weeks are tense; a better report than last time lifts you, a worse one stings.
+      const d = { stress: 3, motivation: prev ? clamp(Math.round((prev.avg - exam.avg) * 4), -4, 4) : 0 };
+      bump(this, d);
+      const run = this.naesinAvg();
+      this.addLog("log.naesin", { gr: this.grade, sem, kind, avg: exam.avg, sa: semRec && semRec.avg, run }, "mock");
+      return { type: "naesin", result: exam, sem: semRec, run };
+    }
+    // Your 내신 average: every semester grade of every subject, equally weighted (real schools weight
+    // by credit hours). null before the first semester ends, or with no record.
+    naesinAvg() {
+      if (!this.naesin || !this.naesin.sems.length) return null;
+      let n = 0, t = 0;
+      for (const x of this.naesin.sems) for (const s in x.g) { t += x.g[s]; n++; }
+      return Math.round((t / n) * 100) / 100;
+    }
+    // How well your intended field fits your track: 1 when it matches, 0.4 when it doesn't, 0.9
+    // before the track choice, 0.5 with no field yet.
+    fieldFit() {
+      const f = this.record && this.record.field;
+      if (!f) return 0.5;
+      if (!this.track) return 0.9;
+      return FIELDS[f] === this.track ? 1 : 0.4;
+    }
+    // One turn's additions to the record (called by advance while the record is open).
+    recordTurn(plan, months, attend, studyShare) {
+      const r = this.record;
+      const fit = this.fieldFit();
+      r.school = this.schoolInfo().id;
+      r.prep += plan.prep || 0;
+      // Teachers write 세특 about the students who engage: attention in class, how much of your time
+      // goes to study, research projects and books that come up in class.
+      r.sete += months * attend * (0.35 + 0.65 * studyShare) * 0.75 + 0.6 * (plan.project || 0) * months + 0.25 * (plan.reading || 0) * months;
+      const cb = (plan.club || 0) * months;
+      if (cb) {
+        const c = r.club || "fun";
+        if (c === "acad") { r.career += 0.8 * cb * fit; r.sete += 0.3 * cb; r.comm += 0.5 * cb; }
+        else if (c === "vol") { r.comm += 1.2 * cb; r.career += 0.2 * cb; }
+        else r.comm += 0.8 * cb;
+      }
+      const vb = (plan.volunteer || 0) * months;
+      if (vb) { r.comm += 1.2 * vb; r.vol += 8 * vb; }
+      const pb = (plan.project || 0) * months;
+      if (pb) { r.career += 1.4 * pb * fit; r.proj += pb / 3; }
+      // Group work and class life: time with friends shows up as collaboration.
+      r.comm += 0.15 * (plan.friends || 0) * months;
+    }
+    // The three qualities universities read (0–100), and the 내신 behind them. With u, as that
+    // university reads them: medical schools want a medical field, science institutes a science one.
+    recordScores(u) {
+      const r = this.record;
+      if (!r) return null;
+      const avg = this.naesinAvg();
+      const read = SCHOOL_READ[r.school] || 0;
+      const nScore = avg == null ? 50 : clamp(100 - 35 * (Math.max(1, avg - read) - 1), 0, 100);
+      const sete = 100 * (1 - Math.exp(-r.sete / SETE_K));
+      const acad = 0.7 * nScore + 0.3 * sete;
+      let career = 100 * (1 - Math.exp(-(r.career + (r.field ? 4 * this.fieldFit() : 0)) / CAREER_K));
+      if (u && u.id === "med" && r.field !== "med") career *= 0.6;
+      else if (u && u.sci && FIELDS[r.field] !== "sci") career *= 0.7;
+      const comm = 20 + 80 * (1 - Math.exp(-r.comm / COMM_K));
+      const rd = (x) => Math.round(x * 10) / 10;
+      return { acad: rd(acad), career: rd(career), comm: rd(comm), naesin: avg, sete: rd(sete) };
+    }
+    recordScore(u) {
+      const s = this.recordScores(u);
+      return s ? Math.round((RECORD_W.acad * s.acad + RECORD_W.career * s.career + RECORD_W.comm * s.comm) * 10) / 10 : 0;
+    }
+
+    // ----- 수시 (v6.0) -----
+    // 기회균형 eligibility: in care, or a low-income household on basic livelihood or near-poverty
+    // support (about half the bottom fifth here; its own stream, so it's fixed for the life).
+    balanceQuota() {
+      return this.parents === "care" || (this.family === "q1" && makeRng(hashSeed(this.seed, "balance"))() < 0.5);
+    }
+    // The best 수시 quota you qualify for at a university, or null.
+    susiQuota(u) {
+      if (this.dropout != null || !this.record) return null;
+      if (this.localQuota() && (u.id === "med" || u.id === this.regionInfo().nat)) return "local";
+      if (this.ruralQuota() && u.id !== "college") return "rural";
+      if (this.balanceQuota() && u.id !== "college") return "balance";
+      return null;
+    }
+    // Whether this year's 수시 round is open to you: on your first try with a record, or later with
+    // the record you left school with; out of school (검정고시), only 논술.
+    susiOpen() {
+      if (this.susi && this.susi.y === this.year && this.susi.att === this.attempt) return false;
+      return !!this.record || this.dropout != null;
+    }
+    // A woman-only university for a man. Saves from before the sex choice have none: allowed.
+    menBlocked(u) { return !!u.women && this.sex === "m"; }
+    // The odds of a 논술 application before 최저: your essay ability against the school's line.
+    nsChance(u) {
+      const essay = 0.6 * this.skills.kor + 0.4 * (this.track === "sci" ? this.skills.math : this.skills.inq1);
+      return NS_MAX * logistic((essay - (invPhi(u.cut / 100) + NS_EDGE)) / NS_SLOPE);
+    }
+    // The chance of meeting a 수능 최저 [n, sum], from this year's latest mock (or your ability before
+    // any), allowing for a grade either way on the day. A fixed stream, so the number doesn't flicker.
+    minChance(min) {
+      if (!min) return 1;
+      const mock = this.mocks.filter((x) => x.year === this.year && x.attempt === this.attempt).pop();
+      const base = {};
+      for (const s of ["kor", "math", "eng", "inq1", "inq2"]) {
+        if (mock && !mock.pre) base[s] = mock.subjects[s].grade;
+        else { const q = 1 - phi(this.skills[s]); let gr = 9; for (let i = 0; i < GRADE_CUTS.length; i++) if (q < GRADE_CUTS[i]) { gr = i + 1; break; } base[s] = gr; }
+      }
+      const r = makeRng(hashSeed(this.seed, "minp", this.year, this.attempt));
+      let ok = 0;
+      const N = 400;
+      for (let k = 0; k < N; k++) {
+        const g = (s) => clamp(Math.round(base[s] + r.normal() * 0.9), 1, 9);
+        const gs = [g("kor"), g("math"), g("eng"), Math.min(g("inq1"), g("inq2"))].sort((a, b) => a - b);
+        if (gs.slice(0, min[0]).reduce((a, b) => a + b, 0) <= min[1]) ok++;
+      }
+      return ok / N;
+    }
+    // Every 수시 option on the application screen: one per university and type, with its chance before
+    // the 수능 (p: the record, 내신 or essay part; minP: meeting the 최저; all: both) and why it's closed.
+    susiOptions() {
+      const top = this.queue[0];
+      if (!top || top.type !== "susi") return [];
+      const out = [];
+      const avg = this.naesinAvg();
+      const grad = this.attempt > 1;
+      const minP = {};
+      const mp = (m) => { const k = m ? m.join(",") : "-"; if (minP[k] == null) minP[k] = this.minChance(m); return minP[k]; };
+      for (const u of UNIVERSITIES) {
+        const q = this.susiQuota(u);
+        for (const type of ["gk", "jh", "ns"]) {
+          if (type === "ns" ? !u.ns : u[type] == null) continue;
+          const min = u[type + "Min"] || null;
+          let p = 0, blocked = null;
+          if (u.sci && this.track !== "sci") blocked = "sci";
+          else if (this.menBlocked(u)) blocked = "women";
+          else if (type !== "ns" && (this.dropout != null || !this.record)) blocked = "ged";
+          else if (type === "gk" && grad && u.gkGrad === false) blocked = "grad";
+          else if (type === "gk" && avg == null) blocked = "ged";
+          if (!blocked) {
+            if (type === "gk") p = gkChance(avg + (GK_PENALTY[this.record.school] || 0), u.gk + (q ? SUSI_QUOTA[q].gk : 0));
+            else if (type === "jh") p = logistic((this.recordScore(u) - u.jh + (q ? SUSI_QUOTA[q].jh : 0)) / JH_SLOPE);
+            else p = this.nsChance(u);
+          }
+          const m = blocked ? 1 : mp(min);
+          out.push({ uni: u.id, type, p, min, minP: m, all: p * m, label: chanceLabel(p * m), blocked, quota: type === "ns" ? null : q, iv: type === "jh" && !!u.iv, free: !!u.free });
+        }
+      }
+      return out;
+    }
+    // Apply in 수시: picks = [{ uni, type }], at most six (KAIST free). An empty list skips 수시.
+    applySusi(picks) {
+      const top = this.queue[0];
+      if (!top || top.type !== "susi") throw new Error("Not 수시 season.");
+      const opts = this.susiOptions();
+      const seen = new Set();
+      const apps = [];
+      for (const pk of picks || []) {
+        const o = opts.find((x) => x.uni === pk.uni && x.type === pk.type);
+        if (!o || o.blocked) throw new Error("susi.closed");
+        if (seen.has(o.uni + o.type)) continue;
+        seen.add(o.uni + o.type);
+        apps.push({ uni: o.uni, type: o.type, quota: o.quota, p: Math.round(o.p * 1000) / 1000, min: o.min, iv: o.iv, free: o.free,
+          s: o.type === "jh" ? this.recordScore(UNI_BY_ID[o.uni]) : null });
+      }
+      if (apps.filter((a) => !a.free).length > SUSI_MAX) throw new Error("susi.max");
+      this.susi = { y: this.year, att: this.attempt, apps, avg: this.naesinAvg() };
+      this.queue.shift();
+      if (apps.length) this.addLog("log.susiApply", { r: apps.map((a) => [a.uni, a.type]) }, "milestone");
+      else this.addLog("log.susiSkip", null, "event");
+      this.flush();
+    }
+    // The 종합 document round for schools with an interview, announced in October.
+    susiStage() {
+      const apps = this.susi.apps.filter((a) => a.type === "jh" && a.iv);
+      for (const a of apps) {
+        const u = UNI_BY_ID[a.uni];
+        const cut = u.jh - (a.quota ? SUSI_QUOTA[a.quota].jh : 0);
+        a.pass1 = makeRng(hashSeed(this.seed, "susi1", this.year, a.uni))() < logistic((a.s - cut + JH_STAGE) / JH_SLOPE);
+      }
+      this.addLog("log.susiStage", { r: apps.map((a) => [a.uni, a.pass1]) }, "milestone");
+      return { type: "susiStage", r: apps.map((a) => ({ uni: a.uni, pass: a.pass1 })) };
+    }
+    // Final 수시 results, after the 수능 (December): each application's verdict, the 최저 check, and
+    // waitlist places. Own streams, one per application.
+    susiResults(res) {
+      const out = [];
+      const ivb = this.susi.iv || 0;
+      for (const a of this.susi.apps) {
+        const u = UNI_BY_ID[a.uni];
+        const r = makeRng(hashSeed(this.seed, "susi", this.year, a.uni, a.type));
+        const q = a.quota ? SUSI_QUOTA[a.quota] : null;
+        let real;
+        if (a.type === "gk") real = gkChance(this.susi.avg + (GK_PENALTY[this.record.school] || 0), u.gk + (q ? q.gk : 0) + r.normal() * SUSI_SWING.gk);
+        else if (a.type === "jh") {
+          const cut = u.jh - (q ? q.jh : 0) + r.normal() * SUSI_SWING.jh;
+          if (a.iv) {
+            // Given the document round, the interview decides: the odds you'd have with the
+            // interview's points, over the odds of having passed the first round.
+            const p1 = logistic((a.s - cut + JH_STAGE) / JH_SLOPE);
+            real = a.pass1 ? clamp(logistic((a.s + ivb + r.normal() * IV_DAY - cut) / JH_SLOPE) / p1, 0, 1) : 0;
+          } else real = logistic((a.s - cut) / JH_SLOPE);
+        } else real = NS_MAX * logistic((0.6 * this.skills.kor + 0.4 * (this.track === "sci" ? this.skills.math : this.skills.inq1) - (invPhi(u.cut / 100) + NS_EDGE)) / NS_SLOPE + r.normal() * 0.3);
+        const minOk = meetsMin(a.min, res);
+        let admitted = r() < real, wait = false;
+        if (!admitted && real > 0 && r() < WAITLIST * real) { admitted = true; wait = true; }
+        if (!minOk) admitted = wait = false;
+        out.push({ id: a.uni, type: a.type, quota: a.quota, admitted, wait, minFail: !minOk, stage1Fail: a.iv && a.pass1 === false, p: a.p });
+      }
+      this.susi.done = true;
+      this.addLog("log.susiResult", { r: out.map((x) => [x.id, x.type, x.admitted, x.minFail]) }, "milestone");
+      return out;
     }
 
     bestResult() {
@@ -3446,6 +3965,7 @@
     inquiryInfo, admissionScore, admitChance, chanceLabel, gradeSubject, makeRng, hashSeed,
     UNI_TIER, TIER_IDS, IN_SEOUL, FIELDS_FOR, COLLEGE_PLANS, ARMY, HUNT, JOB30, PAY_FIFTHS, ACHIEVEMENTS, EPI_ACH, EPILOGUE_HOOKS,
     skillScore: (theta) => clamp(Math.round(50 + theta * 16.67), 0, 100),
+    NAESIN_CUTS, FIELDS, SUSI_MAX, meetsMin, minGrades,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Suneung = api;

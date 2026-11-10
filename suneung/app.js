@@ -38,8 +38,10 @@
     sturdy: "💪", calm: "😌", curious: "👀", sleeper: "🌙", steady: "🛡️", smiley: "😊",
     pencil: "✏️", book: "📕", mouse: "🖱️", stethoscope: "🩺", mic: "🎤", gavel: "⚖️", ball: "⚽", thread: "🧵", money: "💴", brush: "🖌️",
   };
-  const ACT_ICON = { kor: "📖", math: "📐", eng: "🔤", hist: "🏯", reading: "📚", arts: "🎹", mock: "⏱️", rest: "😴", exercise: "🏃", friends: "🧑‍🤝‍🧑", games: "🎮", job: "🏪" };
-  const ACT_COLOR = { reading: "--a-c5", arts: "--a-c4", mock: "--a-c1", rest: "--a-c3", exercise: "--pos", friends: "--a-c2", games: "--a-c4", job: "--a-gold" };
+  const ACT_ICON = { kor: "📖", math: "📐", eng: "🔤", hist: "🏯", reading: "📚", arts: "🎹", mock: "⏱️", rest: "😴", exercise: "🏃", friends: "🧑‍🤝‍🧑", games: "🎮", job: "🏪",
+    prep: "📝", club: "🎸", volunteer: "🤝", project: "🔎" };
+  const ACT_COLOR = { reading: "--a-c5", arts: "--a-c4", mock: "--a-c1", rest: "--a-c3", exercise: "--pos", friends: "--a-c2", games: "--a-c4", job: "--a-gold",
+    prep: "--a-c1", club: "--a-c4", volunteer: "--pos", project: "--a-c5" };
   const METHOD_ICON = { self: "✏️", online: "💻", hagwon: "🏫", tutor: "🧑‍🏫" };
   function actIcon(id) {
     const tr = game && game.track;
@@ -366,6 +368,7 @@
       bar(T("cond.motivation"), g.motivation, lvl(g.motivation, true), 0, T("cond.motivation.tip"), "🔥") +
       bar(T("cond.practice"), g.practice * 100, "var(--accent)", 0, T("cond.practice.tip"), "⏱️") +
       bullyNote(g) + dropoutNote(g);
+    renderRecord(g);
     // Traits from the newborn and 돌잡이 reveals, with what each does.
     els.traits.innerHTML = (g.traits || []).map((id) => '<span class="trait-chip" title="' + esc(L.traitFx(id)) + '"><b><span aria-hidden="true">' + (TRAIT_ICON[id] || "✨") + " </span>" + esc(L.trait(id)) + "</b><small>" + esc(L.traitFx(id)) + "</small></span>").join("");
     if (animate) {
@@ -434,8 +437,11 @@
         '<span class="n">' + k + "</span>" +
         '<button type="button" data-a="' + a.id + '" data-d="1" aria-label="' + esc(T("plan.more", { a: nm })) + '"' + (used < n && !done ? "" : " disabled") + ">+</button></div></div>";
     };
-    const study = acts.filter((a) => a.kind === "study" || a.kind === "play"), life = acts.filter((a) => a.kind !== "study" && a.kind !== "play");
+    const study = acts.filter((a) => a.kind === "study" || a.kind === "play"), life = acts.filter((a) => a.kind !== "study" && a.kind !== "play" && !a.hs);
+    // High school: the school-record activities get their own group (v6.0).
+    const rec = acts.filter((a) => a.hs);
     els.activities.innerHTML = '<h3 class="grp">' + esc(T(early ? "plan.play" : "plan.study")) + "</h3>" + study.map(card).join("") +
+      (rec.length ? '<h3 class="grp">' + esc(T("plan.record")) + '</h3><p class="grp-note">' + esc(T("plan.recordNote")) + "</p>" + rec.map(card).join("") : "") +
       '<h3 class="grp">' + esc(T("plan.life")) + "</h3>" + life.map(card).join("");
 
     // The turn's time as a row of slots, filled in activity order.
@@ -671,7 +677,7 @@
     "log.born": "👶", "log.stage": "🏫", "log.grade": "🎒", "log.teacher": "🍎", "log.report": "📊", "log.sebae": "🧧", "log.track": "🔀",
     "log.birthday": "🎂", "log.dropout": "🚪", "log.ged": "📜", "log.early": "⏩", "log.school": "🏫", "log.schoolMove": "🏫",
     "log.homeroom": "🧑‍🏫", "log.soc.class": "👋", "log.soc.best": "🤞", "log.soc.drift": "🍂", "log.soc.partner": "💕", "log.soc.ex": "💔",
-    "log.month": "🗓️", "log.mock": "📝", "log.suneung": "🎯", "log.apply": "📮", "log.enroll": "🎓", "log.quit": "🚪", "log.halfpay": "💸", "log.newyear": "🌱",
+    "log.month": "🗓️", "log.mock": "📝", "log.naesin": "📋", "log.field": "🧭", "log.susiApply": "📨", "log.susiSkip": "📨", "log.susiStage": "📬", "log.susiResult": "📬", "log.suneung": "🎯", "log.apply": "📮", "log.enroll": "🎓", "log.quit": "🚪", "log.halfpay": "💸", "log.newyear": "🌱",
   };
   function logIcon(l) {
     if (l.key === "log.event" && l.p) return Art.iconFor(l.p.id);
@@ -843,6 +849,10 @@
     if (top.type === "event") return showEvent(top);
     if (top.type === "mock") return showMock(top);
     if (top.type === "exam") return examStep === 0 ? showExamDay(top) : showReport(top);
+    if (top.type === "naesin") return showNaesin(top);
+    if (top.type === "susi") return showSusi(top);
+    if (top.type === "susiStage") return showSusiStage(top);
+    if (top.type === "susiResult") return showSusiResult(top);
     if (top.type === "apply") return showApply(top);
     if (top.type === "offers") return showOffers(top);
     if (top.type === "epi") return showEpi(top);
@@ -1071,6 +1081,134 @@
     countUp($("cScore"), score, 1);
   }
 
+  // ---------- 내신 report cards and 수시 (v6.0) ----------
+  const naesinChip = (g) => '<span class="gr gr5-' + g + '">' + g + "</span>";
+  const NAESIN_ORDER = ["kor", "math", "eng", "hist", "inq1", "inq2"];
+  function showNaesin(top) {
+    const g = game;
+    const r = top.result;
+    const subs = NAESIN_ORDER.filter((s) => r.s[s]);
+    const h = T("naesin.h").concat(top.sem ? [T("naesin.hSem")] : []);
+    const rows = subs.map((s, i) => {
+      const x = r.s[s];
+      return '<tr style="--i:' + i + '"><td class="l"><span aria-hidden="true">' + actIcon(s) + " </span>" + esc(L.sub(s)) + "</td><td>" + x.raw + '</td><td><span class="ach ach-' + x.ach + '">' + x.ach + "</span></td><td>" + naesinChip(x.g) + "</td>" +
+        (top.sem ? "<td>" + naesinChip(top.sem.g[s]) + "</td>" : "") + "</tr>";
+    }).join("");
+    const tile = (k, v) => '<div><span class="k">' + esc(T(k)) + '</span><span class="v">' + esc(v) + "</span></div>";
+    const strong = ["autoHigh", "sciHigh", "langHigh"].indexOf(g.schoolInfo().id) >= 0;
+    openModal(T("naesin.title", r),
+      "<p>" + esc(T("naesin.text")) + '</p><div class="paper"><div class="table-wrap"><table class="grid reveal naesin"><thead><tr>' + h.map((x) => "<th>" + esc(x) + "</th>").join("") + "</tr></thead><tbody>" + rows + "</tbody></table></div>" +
+      '<div class="summary">' + tile("naesin.avg", r.avg.toFixed(2)) + (top.sem ? tile("naesin.semAvg", top.sem.avg.toFixed(2)) : "") + tile("naesin.run", top.run != null ? top.run.toFixed(2) : "—") + "</div></div>" +
+      (r.prep >= 0.02 ? '<p class="muted">' + esc(T("naesin.prep", { b: r.prep })) + "</p>" : "") + (strong ? '<p class="muted">' + esc(T("naesin.strong")) + "</p>" : ""),
+      [{ label: T("naesin.back"), primary: true, run: () => { game.dismiss(); after(); } }],
+      Art.screenArt("naesin", artCtx({ grades: subs.map((s) => r.s[s].g) })));
+  }
+  // The school record, under the ability and condition bars from High 1 on.
+  function renderRecord(g) {
+    const box = $("record");
+    if (!box) return;
+    const sc = g.recordScores();
+    const show = !!sc || (g.status === "high" || g.status === "hs3") && g.dropout == null;
+    box.classList.toggle("hidden", !show);
+    if (!show) { box.innerHTML = ""; return; }
+    let html = '<h2 class="gap"><span aria-hidden="true">🗂️ </span>' + esc(T("rec.title")) + ' <span class="muted">' + esc(T("rec.sub")) + "</span></h2>";
+    if (!sc) { box.innerHTML = html + '<p class="muted">' + esc(T("rec.none")) + "</p>"; return; }
+    const r = g.record;
+    html += '<div class="bars">' + bar(T("rec.acad"), sc.acad, "var(--a-c5)", 0, T("rec.acad.tip"), "📘") + bar(T("rec.career"), sc.career, "var(--a-c3)", 0, T("rec.career.tip"), "🧭") +
+      bar(T("rec.comm"), sc.comm, "var(--a-c2)", 0, T("rec.comm.tip"), "🤝") + "</div>";
+    const sems = (g.naesin ? g.naesin.sems : []).map((x) => '<span class="sem-chip"><b>' + esc(L.schoolGrade(x.gr) + "-" + x.sem) + "</b> " + x.avg.toFixed(2) + "</span>").join("");
+    html += '<p class="rec-facts">' + esc(T("rec.naesin", { a: sc.naesin })) + (sems ? ' <span class="sems">' + sems + "</span>" : "") + "</p>" +
+      '<p class="rec-facts">' + esc(T("rec.field", { f: r.field, fit: r.field && g.track ? g.fieldFit() >= 1 : null })) + " · " + esc(T("rec.club", { c: r.club })) + " · " + esc(T("rec.counts", { v: r.vol, r: r.proj })) + "</p>";
+    if (!g.recordOpen()) html += '<p class="muted">' + esc(T("rec.closed")) + "</p>";
+    box.innerHTML = html;
+  }
+  const quotaLabel = (q) => T("apply.quota." + q);
+  function showSusi(top) {
+    const g = game;
+    const opts = g.susiOptions();
+    const picked = new Map();
+    const mock = g.mocks.filter((x) => x.year === g.year && x.attempt === g.attempt && !x.pre).pop();
+    const est = mock ? S.admissionScore(mock) : null;
+    // One card per university, its 수시 types inside. Schools where nothing is open or every chance is
+    // under 2% fold into a "long shots" list, so the screen stays short on a phone.
+    const byUni = [];
+    for (const o of opts) {
+      let u = byUni.find((x) => x.id === o.uni);
+      if (!u) byUni.push(u = { id: o.uni, opts: [] });
+      u.opts.push(o);
+    }
+    const card = (u) => {
+      const meta = UNIVERSITIES.find((x) => x.id === u.id);
+      const allOff = u.opts.every((o) => o.blocked);
+      const why = allOff ? T("susi.no." + u.opts[0].blocked) : "";
+      const items = u.opts.map((o) => {
+        const notes = [T("susi.min", { m: o.min, q: o.minP }), o.iv ? T("susi.iv") : "", o.quota ? quotaLabel(o.quota) : "", o.free ? T("susi.free") : ""].filter(Boolean).join(" · ");
+        return '<label class="sopt' + (o.blocked ? " off" : "") + '"><input type="checkbox" data-u="' + o.uni + '" data-t="' + o.type + '"' + (o.blocked ? " disabled" : "") + ">" +
+          '<span class="st"><b>' + esc(L.susiType(o.type)) + "</b>" + (o.blocked ? (allOff ? "" : '<small class="why">' + esc(T("susi.no." + o.blocked)) + "</small>") : "<small>" + esc(notes) + "</small>") + "</span>" +
+          (o.blocked ? "" : '<span class="chance ' + chanceClass(o.all) + '">' + esc(T("susi.chance", { p: Math.round(o.all * 100) })) + "</span>") + "</label>";
+      }).join("");
+      return '<div class="susi-uni' + (allOff ? " off" : "") + '"><div class="nm">' + esc(L.uni(u.id)) + " <small>" + esc(T("susi.share", { s: meta.susi })) + "</small>" +
+        (why ? '<small class="why">' + esc(why) + "</small>" : "") + "</div>" + items + "</div>";
+    };
+    const main = byUni.filter((u) => u.opts.some((o) => !o.blocked && o.all >= 0.02));
+    const rest = byUni.filter((u) => main.indexOf(u) < 0);
+    const notes = [T("susi.warn")];
+    const body = "<p>" + esc(T("susi.text", { a: g.naesinAvg(), r: g.record ? Math.round(g.recordScore()) : "—", est, free: opts.some((o) => o.free && !o.blocked) })) + "</p>" +
+      '<p class="cond-note" role="note">' + esc(notes[0]) + "</p>" +
+      (g.attempt > 1 ? '<p class="muted">' + esc(T("susi.retake")) + "</p>" : "") + (g.dropout != null ? '<p class="muted">' + esc(T("susi.ged")) + "</p>" : "") +
+      '<p class="muted">' + esc(T("susi.types")) + "</p>" +
+      '<div class="susi-list">' + main.map(card).join("") + "</div>" +
+      (rest.length ? '<details class="susi-more"><summary>' + esc(T("susi.more", { n: rest.length })) + '</summary><div class="susi-list">' + rest.map(card).join("") + "</div></details>" : "");
+    openModal(T("susi.title"), body, [
+      { label: T("susi.skip"), run: () => { game.applySusi([]); after(); } },
+      { label: T("susi.submit", { n: 0 }), primary: true, run: () => {
+        if (!picked.size) return;
+        game.applySusi(Array.from(picked.values()));
+        after();
+      } },
+    ], Art.screenArt("susi", artCtx()));
+    const boxes = els.modalBody.querySelectorAll(".sopt input");
+    const submit = els.modalButtons.querySelector("button.primary");
+    const counted = () => Array.from(picked.values()).filter((x) => !x.free).length;
+    const sync = () => {
+      const full = counted() >= S.SUSI_MAX;
+      for (const b of boxes) {
+        const o = opts.find((x) => x.uni === b.dataset.u && x.type === b.dataset.t);
+        if (!b.checked) b.disabled = !!o.blocked || (full && !o.free);
+        b.closest(".sopt").classList.toggle("picked", b.checked);
+      }
+      submit.textContent = T("susi.submit", { n: counted() });
+      submit.disabled = !picked.size;
+    };
+    for (const b of boxes) b.addEventListener("change", () => {
+      const k = b.dataset.u + ":" + b.dataset.t;
+      const o = opts.find((x) => x.uni === b.dataset.u && x.type === b.dataset.t);
+      if (b.checked) picked.set(k, { uni: o.uni, type: o.type, free: o.free }); else picked.delete(k);
+      sync();
+    });
+    sync();
+  }
+  function showSusiStage(top) {
+    const rows = top.r.map((x, i) => '<div class="result" style="--i:' + i + '"><span>' + esc(L.uni(x.uni)) + ' <small class="muted">' + esc(L.susiShort("jh")) + "</small></span>" +
+      '<span class="stamp ' + (x.pass ? "ok" : "no") + '">' + esc(T(x.pass ? "susiStage.pass" : "susiStage.fail")) + "</span></div>").join("");
+    openModal(T("susiStage.title"), "<p>" + esc(T("susiStage.text")) + '</p><div class="results">' + rows + "</div>",
+      [{ label: T("continue"), primary: true, run: () => { game.dismiss(); after(); } }],
+      Art.screenArt("susiStage", artCtx({ mood: top.r.some((x) => x.pass) ? "happy" : "tired" })));
+  }
+  function showSusiResult(top) {
+    const res = top.results || [];
+    const any = res.some((x) => x.admitted);
+    const rows = res.map((x, i) => {
+      const k = x.admitted ? (x.wait ? "susiResult.wait" : "susiResult.yes") : x.minFail ? "susiResult.min" : x.stage1Fail ? "susiResult.stage1" : "susiResult.no";
+      return '<div class="result" style="--i:' + i + '"><span>' + esc(L.uni(x.id)) + ' <small class="muted">' + esc(L.susiShort(x.type)) + "</small></span>" +
+        '<span class="stamp ' + (x.admitted ? "ok" : "no") + '">' + esc(T(k)) + "</span></div>";
+    }).join("");
+    openModal(T("susiResult.title"), "<p>" + esc(T("susiResult.text")) + '</p><div class="results">' + rows + "</div>" + (any ? '<p class="cond-note">' + esc(T("susiResult.lock")) + "</p>" : ""),
+      [{ label: T(any ? "susiResult.go" : "susiResult.jeongsi"), primary: true, run: () => { game.dismiss(); after(); } }],
+      Art.screenArt("susiResult", artCtx({ mood: any ? "happy" : "tired" })));
+    if (any && !calm()) setTimeout(() => confetti(50), 700);
+  }
+
   function chanceClass(p) { return p >= 0.85 ? "ch-safe" : p >= 0.55 ? "ch-match" : p >= 0.25 ? "ch-reach" : "ch-long"; }
   function showApply(top) {
     const opts = game.options();
@@ -1079,7 +1217,7 @@
       "<p>" + esc(T("apply.text", { s: top.score.toFixed(1) })) + "</p>" +
       '<div class="unis">' + opts.map((o) =>
         '<label class="uni' + (o.blocked ? " off" : "") + '"><input type="checkbox" value="' + o.id + '"' + (o.blocked ? " disabled" : "") + '><span class="nm">' + esc(L.uni(o.id)) +
-        "<small>" + esc(o.blocked ? T("apply.sciOnly") : T("apply.chance", { p: Math.round(o.p * 100) }) + (o.quota ? " · " + T("apply.quota." + o.quota) : "")) +
+        "<small>" + esc(o.blocked ? T(o.blocked === "women" ? "apply.no.women" : "apply.sciOnly") : T("apply.chance", { p: Math.round(o.p * 100) }) + (o.quota ? " · " + T("apply.quota." + o.quota) : "")) +
         '</small></span><span class="chance ' + chanceClass(o.p) + '">' + esc(L.chance(o.label)) + "</span></label>").join("") +
       "</div>";
     openModal(T("apply.title"), body, [
@@ -1122,12 +1260,12 @@
     const g = game;
     // Results arrive one envelope at a time, each stamped Admitted or Rejected.
     const results = top.results.map((r, i) =>
-      '<div class="result" style="--i:' + i + '"><span>' + esc(L.uni(r.id)) + "</span>" + (r.admitted ? '<span class="stamp ok">' + esc(T("offers.yes")) + "</span>" : '<span class="stamp no">' + esc(T("offers.no")) + "</span>") + "</div>").join("");
+      '<div class="result" style="--i:' + i + '"><span>' + esc(L.uni(r.id)) + (r.type ? ' <small class="muted">' + esc(L.susiShort(r.type)) + "</small>" : "") + "</span>" + (r.admitted ? '<span class="stamp ok">' + esc(T("offers.yes")) + "</span>" : '<span class="stamp no">' + esc(T("offers.no")) + "</span>") + "</div>").join("");
     const offerIds = top.offers.slice();
     if (g.enrolled && offerIds.indexOf(g.enrolled) < 0) offerIds.push(g.enrolled);
     offerIds.sort((a, b) => UNIVERSITIES.findIndex((u) => u.id === a) - UNIVERSITIES.findIndex((u) => u.id === b));
     const btn = (cls, icon, label, small, data) => '<button type="button" class="' + cls + '" data-act="' + data + '"><span class="di" aria-hidden="true">' + icon + "</span><span>" + esc(label) + "<small>" + esc(small) + "</small></span></button>";
-    let html = "<p>" + esc(T("offers.intro", { y: g.year + 1 })) + '</p><div class="results">' + results + '</div><div class="decide">';
+    let html = "<p>" + esc(top.susi ? T("offers.susiIntro", { y: g.year }) : T("offers.intro", { y: g.year + 1 })) + '</p><div class="results">' + results + '</div><div class="decide">';
     offerIds.forEach((id, i) => {
       const kept = id === g.enrolled && top.offers.indexOf(id) < 0;
       html += btn(i === 0 ? "primary" : "", "🎓", T("offers.enroll", { uni: L.uni(id) }), T(kept ? "offers.enroll.kept" : "offers.enroll.sub"), "enroll:" + id);
@@ -1180,7 +1318,7 @@
     if ((g.lifeRecorded || 0) < stage) { recordLife(g); g.lifeRecorded = stage; }
     save(); // so reopening the finished life doesn't add the same entries again
     unlock(g);
-    const verdict = !u ? "end.none" : u.id === "med" ? "end.med" : ["snu", "yonsei", "korea"].indexOf(u.id) >= 0 ? "end.sky" :
+    const verdict = !u ? "end.none" : u.id === "med" ? "end.med" : ["snu", "yonsei", "korea", "kaist", "postech"].indexOf(u.id) >= 0 ? "end.sky" :
       u.cut >= 93 ? "end.top" : u.cut >= 85 ? "end.solid" : "end.fresh";
     const tile = (k, v) => '<div><span class="k">' + esc(T(k)) + '</span><span class="v">' + esc(v) + "</span></div>";
     const list = T("ach.list"), mine = g.achievements({ lives: loadLives().length });
