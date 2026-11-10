@@ -5,7 +5,7 @@
 //
 // Every color is a CSS token (--a-* in styles.css), so the art follows the light and dark themes:
 // dark mode turns daytime skies to dusk and dims the rooms. Animation is plain CSS on SVG elements
-// (classes .bob, .blink, .fall, .rise, .twinkle, .pulse, .sway), which styles.css switches off under
+// (classes .bob, .breathe, .blink, .fall, .rise, .twinkle, .pulse, .sway), which styles.css switches off under
 // prefers-reduced-motion.
 (function (root) {
   "use strict";
@@ -82,14 +82,14 @@
     const d = dir === "h" ? [0, 0, 1, 0] : Array.isArray(dir) ? dir : [0, 0, 0, 1];
     return '<linearGradient id="' + id + '" x1="' + d[0] + '" y1="' + d[1] + '" x2="' + d[2] + '" y2="' + d[3] + '">' + stops.map(stp).join("") + "</linearGradient>";
   }
-  function rad(id, stops, cx, cy, r) {
+  function radial(id, stops, cx, cy, r) {
     return '<radialGradient id="' + id + '"' + (cx != null ? ' cx="' + cx + '" cy="' + cy + '" r="' + r + '"' : "") + ">" + stops.map(stp).join("") + "</radialGradient>";
   }
   const fill = (u, extra) => "fill:" + u + (extra ? ";" + extra : "");
   const poly = (pts) => "M" + pts.map((p) => (+p[0]).toFixed(1) + " " + (+p[1]).toFixed(1)).join(" L") + " Z";
   // Shared fills: a soft contact shadow, a light's glow, ambient occlusion fading off an edge.
-  const shadowF = () => def("sh", (id) => rad(id, [[0, "aoC", 0.5], [0.6, "aoC", 0.22], [1, "aoC", 0]]));
-  const glowF = (tok) => def("gl" + tok, (id) => rad(id, [[0, tok, 0.95], [0.3, tok, 0.45], [1, tok, 0]]));
+  const shadowF = () => def("sh", (id) => radial(id, [[0, "aoC", 0.5], [0.6, "aoC", 0.22], [1, "aoC", 0]]));
+  const glowF = (tok) => def("gl" + tok, (id) => radial(id, [[0, tok, 0.95], [0.3, tok, 0.45], [1, tok, 0]]));
   const aoF = (dir) => def("ao" + dir, (id) => lin(id, [[0, "aoC", 0], [1, "aoC", 1]], { d: [0, 0, 0, 1], u: [0, 1, 0, 0], r: [0, 0, 1, 0], l: [1, 0, 0, 0] }[dir]));
   // A soft shadow on the ground under something (cx, cy: its centre).
   const shadow = (cx, cy, rx, ry, op) => E(cx, cy, rx, ry, null, null, 0, fill(shadowF(), op != null ? "opacity:" + op : ""));
@@ -98,7 +98,7 @@
   // Ambient occlusion: a band darkening toward one edge of the box (dir: d down, u up, l left, r right).
   const ao = (x, y, w, h, dir, op) => R(x, y, w, h, null, 0, null, 0, fill(aoF(dir), "opacity:" + (op || 0.22)));
   // The whole frame darkens a little toward its corners, like a lens.
-  const vignette = (w, h, op) => R(0, 0, w, h, null, 0, null, 0, fill(def("vig", (id) => rad(id, [[0.5, "aoC", 0], [1, "aoC", 0.6]], 0.5, 0.42, 0.78)), "opacity:" + (op || "var(--a-vigOp)")));
+  const vignette = (w, h, op) => R(0, 0, w, h, null, 0, null, 0, fill(def("vig", (id) => radial(id, [[0.5, "aoC", 0], [1, "aoC", 0.6]], 0.5, 0.42, 0.78)), "opacity:" + (op || "var(--a-vigOp)")));
   // Where the art is set (see viewKind). Set per drawing.
   let REGION = "";
   // How bright the lit windows of other buildings are: by theme (--a-litOp), or fully lit at night.
@@ -316,185 +316,773 @@
     return s;
   }
 
-  // ---------- the avatar ----------
-  // o: { age: child|teen|adult, outfit: kid|uniform|hoodie|casual, mood, look: {hair, skin, shirt}, pose, prop, backpack,
-  //      gear } where gear dresses a parent for their job (see JOB_GEAR).
-  // Drawn with its feet at (0, 0).
-  const BODY = {
-    child: { leg: 30, body: 36, head: 23, w: 34, arm: 30 },
-    teen: { leg: 54, body: 48, head: 20, w: 38, arm: 42 },
-    adult: { leg: 58, body: 52, head: 19.5, w: 40, arm: 45 },
+  // ---------- people (v6.4) ----------
+  // Everyone is drawn by avatar(o), front on, feet at (0, 0), in a semi-realistic drama-webtoon style:
+  // real proportions per age, flat fills with one or two cel-shade steps (light from the upper left, so
+  // the shade sits on the right), a soft rim light on the left, no outlines.
+  //
+  // o: { age, outfit, mood, look, pose, prop, backpack, gear, season, school, still }
+  //   age: toddler (0–2) | child (3–12; scale it down for kindergarten) | teen | adult | elder. A look
+  //     with grey: true makes an adult an elder.
+  //   outfit: onesie | smock (kindergarten, with the yellow hat) | kid | uniform | pe | hoodie | casual.
+  //     season (spring | summer | fall | winter) picks short sleeves, a blazer or a long padded coat.
+  //     school: "mid" gives the middle-school blazer colour, anything else the high school's.
+  //   gear: work clothes over an adult's outfit (JOB_GEAR values: suit, coat, scrubs, apron, hardhat,
+  //     vest, cap, straw; also helmet and carer).
+  //   pose: stand | cheer (both arms up) | wave (right arm, animated) | hold (right hand holds the prop
+  //     at the chest; without a prop, hands clasped in front; with prop "baby", a baby in the arms) |
+  //     sit | study (seated, forearms forward on a desk the scene draws) | run.
+  //   prop: book | phone | baton | envelope | medal | mask | headphones | baby.
+  //   look (from lookFor): { hair, skin, shirt, sex, hc, dye, glasses, lid, grey }.
+  // Every colour is a --a-* token (characters block in styles.css); ch-overlays (chCel, chSheen,
+  // chRim, chSkinSh) are translucent so one shade works on every fill.
+  const n1 = (v) => (Math.round(v * 10) / 10);
+  // Path data, compact: no space after a command letter or before a minus sign.
+  const D = (...a) => {
+    let o = "";
+    for (const v of a) {
+      if (typeof v === "number") { const t = String(n1(v)); o += o && t[0] !== "-" && !/[A-Za-z ]$/.test(o) ? " " + t : t; } else o += v;
+    }
+    return o;
   };
-  const SHIRTS = ["c1", "c3", "c4", "c5"];
-  function avatar(o) {
-    const b = BODY[o.age] || BODY.teen;
-    const look = o.look || { hair: 0, skin: 0, shirt: 0 };
-    const skin = look.skin ? "skinb" : "skin";
-    // Grandparents have grey hair (--a-hairGrey); everyone else the usual dark hair.
-    const hairC = look.grey ? "hairGrey" : "hair";
-    const hw = b.w / 2, hipY = -b.leg, shY = hipY - b.body, hr = b.head, hy = shY - 3 - hr + 2;
-    const outfit = o.outfit || "uniform";
-    const gear = o.gear || "";
-    const top = outfit === "uniform" ? "uniform" : outfit === "hoodie" ? "hoodie" : gear === "suit" ? "uniform2" : gear === "coat" ? "paper" : gear === "scrubs" ? "c3" : SHIRTS[(look.shirt || 0) % SHIRTS.length];
-    const pants = outfit === "uniform" ? "uniform2" : outfit === "kid" ? "jeans" : outfit === "casual" ? "jeans" : "pants";
-    const mood = o.mood || "ok";
-    let s = E(0, 2, hw + 8, 4, "shadow");
+  // A circle as path data, so circles can share one path with other shapes of the same colour.
+  const ring = (x, y, r) => D("M", x - r, y, "a", r, r, 0, 1, 0, r * 2, 0, "a", r, r, 0, 1, 0, -r * 2, 0);
+  // Adjacent paths with the same style become one path (fewer, shorter elements on a phone), and the
+  // round caps and joins are set once on the figure's group instead of on every stroke.
+  function compact(s) {
+    s = s.split(";stroke-linecap:round;stroke-linejoin:round").join("");
+    let prev;
+    do {
+      prev = s;
+      s = s.replace(/<path d="([^"]*)" style="([^"]*)"\/><path d="([^"]*)" style="\2"\/>/g, (m, a, st2, b) => (st2.indexOf("evenodd") >= 0 ? m : '<path d="' + a + b + '" style="' + st2 + '"/>'));
+    } while (s !== prev);
+    return s;
+  }
+  const rad = (a) => (a * Math.PI) / 180;
+  // A tapered capsule from (x1, y1) to (x2, y2), half-widths w1 and w2.
+  function capsule(x1, y1, x2, y2, w1, w2) {
+    const dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy) || 0.01, ux = dx / l, uy = dy / l, nx = -uy, ny = ux;
+    return D("M", x1 + nx * w1, y1 + ny * w1, "L", x2 + nx * w2, y2 + ny * w2, "A", w2, w2, 0, 0, 0, x2 - nx * w2, y2 - ny * w2,
+      "L", x1 - nx * w1, y1 - ny * w1, "A", w1, w1, 0, 0, 0, x1 + nx * w1, y1 + ny * w1, "Z");
+  }
+  // A limb with its shaded side (the one facing +x, away from the light); with (x3, y3, w3) it bends at
+  // (x2, y2), like an arm at the elbow or a leg at the knee.
+  function limbD(x1, y1, x2, y2, w1, w2) {
+    const dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy) || 0.01;
+    let nx = -dy / l, ny = dx / l;
+    if (nx < 0 || (nx === 0 && ny < 0)) { nx = -nx; ny = -ny; }
+    const o1 = w1 * 0.42, o2 = w2 * 0.42;
+    return [capsule(x1, y1, x2, y2, w1, w2), capsule(x1 + nx * o1, y1 + ny * o1, x2 + nx * o2, y2 + ny * o2, w1 * 0.58, w2 * 0.58)];
+  }
+  function limb(x1, y1, x2, y2, w1, w2, fill, x3, y3, w3) {
+    const a = limbD(x1, y1, x2, y2, w1, w2), b = x3 == null ? ["", ""] : limbD(x2, y2, x3, y3, w2, w3);
+    return P(a[0] + b[0], fill) + P(a[1] + b[1], "chCel");
+  }
+  const SKINS = ["chSkin0", "chSkin1", "chSkin2"];
+  const HAIRS = ["chHair0", "chHair1", "chHair2"];
+  const DYES = [null, "chDye1", "chDye2", "chDye3"];
+  // Body plans: H is the height, hd the head (crown to chin), ar the head's width to height, sh and hip
+  // the half-widths of shoulders and hips [male, female], leg the crotch height as a share of H.
+  const BODY = {
+    toddler: { H: 74, hd: 19, ar: 0.86, sh: [10.5, 10.5], hip: [9.6, 9.8], leg: 0.33, neck: 0.04, arm: 0.36, kid: 2 },
+    child: { H: 114, hd: 20.5, ar: 0.8, sh: [13, 12.6], hip: [11, 11.4], leg: 0.44, neck: 0.18, arm: 0.38, kid: 1 },
+    teen: { H: 142, hd: 21, ar: 0.74, sh: [17.5, 15.4], hip: [13.4, 15], leg: 0.48, neck: 0.3, arm: 0.4 },
+    adult: { H: 149, hd: 20.6, ar: 0.72, sh: [19.4, 16.4], hip: [14.6, 16.4], leg: 0.48, neck: 0.31, arm: 0.4 },
+    elder: { H: 141, hd: 20.2, ar: 0.74, sh: [17.4, 15.6], hip: [15.4, 17.2], leg: 0.455, neck: 0.22, arm: 0.4, old: 1 },
+  };
+  function ageOf(o) {
+    const look = o.look || {};
+    let a = o.age === "kinder" ? "child" : BODY[o.age] ? o.age : o.age === "uni" ? "adult" : "teen";
+    if (look.grey && a === "adult") a = "elder";
+    return a;
+  }
+  // The skeleton every part of the drawing hangs off. Exposed through avatar.metrics for portraits.
+  function metrics(o) {
+    const look = o.look || {}, age = ageOf(o), b = BODY[age], fem = look.sex === "f", k = fem ? 1 : 0;
+    const pose = o.pose || "stand", seated = pose === "sit" || pose === "study";
+    const H = b.H, hd = b.hd, legL = H * b.leg;
+    const drop = seated ? legL * 0.45 : 0;
+    const top = -H + drop + (b.old ? 3 : 0);
+    const hh = hd / 2, hw = hh * b.ar * (fem && !b.kid ? 0.96 : 1), cy = top + hh, chin = top + hd;
+    const shY = chin + hd * b.neck + (b.old ? -1.5 : 0);
+    const hipY = -legL + drop;
+    return { age, b, fem, k, pose, seated, H, hd, hh, hw, cy, chin, top, shY, hipY, legL, drop,
+      waistY: shY + (hipY - shY) * 0.62, SW: b.sh[k], HW: b.hip[k], arm: H * b.arm };
+  }
 
-    // Back layer: backpack and long hair.
-    if (o.backpack) s += R(-hw - 4, shY + 4, b.w + 8, b.body * 0.8, "c2", 8, "c2dark", 1.5);
-    if (look.hair === 2) s += P("M" + (-hr - 2) + " " + (hy - 2) + " Q" + (-hr - 4) + " " + (hy + hr + 10) + " " + (-hr + 4) + " " + (hy + hr + 14) + " L" + (hr - 4) + " " + (hy + hr + 14) + " Q" + (hr + 4) + " " + (hy + hr + 10) + " " + (hr + 2) + " " + (hy - 2) + " Z", hairC);
-    if (look.hair === 3) s += P("M" + (-hr - 2) + " " + hy + " Q" + (-hr - 3) + " " + (hy + hr * 0.95) + " " + (-hr + 6) + " " + (hy + hr * 0.95) + " L" + (hr - 6) + " " + (hy + hr * 0.95) + " Q" + (hr + 3) + " " + (hy + hr * 0.95) + " " + (hr + 2) + " " + hy + " Z", hairC);
-
-    // Legs and shoes. Children wear shorts; girls wear a skirt with the school uniform and as children.
-    const skirt = look.sex === "f" && (outfit === "uniform" || outfit === "kid");
-    if (skirt) {
-      const sl = b.leg * (outfit === "kid" ? 0.42 : 0.5);
-      s += R(-hw + 7, hipY + sl - 3, hw - 10, b.leg - sl - 3, skin) + R(3, hipY + sl - 3, hw - 10, b.leg - sl - 3, skin);
-      if (outfit === "uniform") s += R(-hw + 6, -14, hw - 8, 9, "snow") + R(2, -14, hw - 8, 9, "snow");
-      s += P("M" + (-hw + 1) + " " + (hipY - 3) + " L" + (hw - 1) + " " + (hipY - 3) + " L" + (hw + 5) + " " + (hipY + sl) + " L" + (-hw - 5) + " " + (hipY + sl) + " Z", outfit === "uniform" ? pants : "c5");
-      if (outfit === "uniform") s += L(-hw / 2, hipY, -hw / 2 - 2, hipY + sl, "shadow", 1) + L(0, hipY, 0, hipY + sl, "shadow", 1) + L(hw / 2, hipY, hw / 2 + 2, hipY + sl, "shadow", 1);
-    } else if (outfit === "kid") {
-      s += R(-hw + 5, hipY, hw - 6, b.leg * 0.45, pants, 3) + R(1, hipY, hw - 6, b.leg * 0.45, pants, 3);
-      s += R(-hw + 7, hipY + b.leg * 0.4, hw - 10, b.leg * 0.6 - 3, skin) + R(3, hipY + b.leg * 0.4, hw - 10, b.leg * 0.6 - 3, skin);
-      s += R(-hw + 6, -6, hw - 7, 4, "snow");
-    } else {
-      s += R(-hw + 4, hipY - 2, hw - 5, b.leg, pants, 3) + R(1, hipY - 2, hw - 5, b.leg, pants, 3);
-    }
-    s += E(-hw / 2 - 1, -2, hw / 2 + 2, 4, outfit === "kid" ? "c1" : "shoe") + E(hw / 2 + 1, -2, hw / 2 + 2, 4, outfit === "kid" ? "c1" : "shoe");
-
-    // Torso.
-    const torso = "M" + (-hw) + " " + (shY + 8) + " Q" + (-hw) + " " + shY + " " + (-hw + 9) + " " + shY + " L" + (hw - 9) + " " + shY + " Q" + hw + " " + shY + " " + hw + " " + (shY + 8) +
-      " L" + (hw - 1) + " " + (hipY + 3) + " L" + (-hw + 1) + " " + (hipY + 3) + " Z";
-    s += P(torso, top);
-    if (outfit === "uniform") {
-      s += P("M-8 " + shY + " L0 " + (shY + 18) + " L8 " + shY + " Z", "shirt");
-      // Boys wear a tie, girls a ribbon bow.
-      s += look.sex === "f"
-        ? P("M0 " + (shY + 6) + " L-8 " + (shY + 1) + " L-8 " + (shY + 11) + " Z M0 " + (shY + 6) + " L8 " + (shY + 1) + " L8 " + (shY + 11) + " Z", "tie") + O(0, shY + 6, 2.4, "tie")
-        : P("M-2 " + (shY + 4) + " L2 " + (shY + 4) + " L3 " + (shY + 20) + " L0 " + (shY + 24) + " L-3 " + (shY + 20) + " Z", "tie");
-      s += P("M-8 " + shY + " L-3 " + (shY + 22) + " M8 " + shY + " L3 " + (shY + 22), null, "uniform2", 1.5) + R(hw - 13, shY + 14, 8, 3, "shirt", 1);
-    } else if (outfit === "hoodie") {
-      s += P("M-10 " + shY + " Q0 " + (shY + 10) + " 10 " + shY, null, "hoodie2", 3) + L(-3, shY + 4, -3, shY + 14, "snow", 1.2) + L(3, shY + 4, 3, shY + 14, "snow", 1.2);
-      s += R(-hw + 7, hipY - 14, b.w - 14, 11, "hoodie2", 4);
-    } else if (outfit === "casual") {
-      s += P("M-7 " + shY + " L0 " + (shY + 7) + " L7 " + shY, "shirt") + L(0, shY + 9, 0, hipY, "shadow", 1.2);
-    } else {
-      s += R(-hw + 2, shY + 14, b.w - 4, 4, "snow", 0, null, 0, "opacity:0.7");
-    }
-    // Work clothes: a long white coat, an apron, a hi-vis vest, a suit and tie.
-    if (gear === "coat") s += R(-hw - 1, shY + 2, 13, b.body + 16, "paper", 3, "line", 1.2) + R(hw - 12, shY + 2, 13, b.body + 16, "paper", 3, "line", 1.2) + R(hw - 10, shY + 12, 6, 8, "c3", 1);
-    if (gear === "apron") s += R(-hw + 5, shY + 10, b.w - 10, b.body + 4, "paper", 4, "line", 1.5) + L(-hw + 6, shY + 10, -4, shY, "line", 1.5) + L(hw - 6, shY + 10, 4, shY, "line", 1.5);
-    if (gear === "vest") s += R(-hw + 1, shY + 2, b.w - 2, b.body - 4, "gold", 4) + R(-hw + 1, shY + 20, b.w - 2, 4, "snow") + R(-hw + 1, shY + 34, b.w - 2, 4, "snow");
-    if (gear === "suit") s += P("M-8 " + shY + " L0 " + (shY + 16) + " L8 " + shY + " Z", "shirt") + P("M-2 " + (shY + 4) + " L2 " + (shY + 4) + " L3 " + (shY + 20) + " L0 " + (shY + 24) + " L-3 " + (shY + 20) + " Z", "tie");
-    if (o.backpack) s += L(-hw + 5, shY + 1, -hw + 7, hipY + 2, "c2dark", 3) + L(hw - 5, shY + 1, hw - 7, hipY + 2, "c2dark", 3);
-    if (o.prop === "medal") s += L(-6, shY, 0, shY + 16, "c5", 2.5) + L(6, shY, 0, shY + 16, "c1", 2.5) + O(0, shY + 20, 5.5, "gold", "gold2", 1.5);
-
-    // Arms. Poses: stand, cheer (both up), wave (right up), hold (right forward).
-    const arm = (side, angle) => {
-      const x = side * (hw + 2);
-      const body = R(-4, 0, 8, b.arm, top, 4) + O(0, b.arm + 1, 4.2, skin);
-      return '<g transform="translate(' + x + " " + (shY + 3) + ") rotate(" + angle + ')">' + body + "</g>";
+  // ---------- hair ----------
+  // Styles by index: the first four keep their old meaning (0 crop, 1 side part, 2 long, 3 bob).
+  // Men: 0 crop, 1 side part, 4 two-block, 5 comma, 6 perm, 7 buzz, 8 swept back, 9 shaggy.
+  // Women: 2 long, 3 bob, 10 ponytail, 11 bun, 12 long waves, 13 shoulder C-curl, 14 short, 15 braid
+  // (pigtails on a child).
+  const HAIR_M = [0, 1, 4, 5, 6, 7, 8, 9], HAIR_F = [2, 3, 10, 11, 12, 13, 14, 15];
+  function hairColour(look, age) {
+    if (age === "elder") return look.sex === "f" ? "chGrey" : "chWhiteH";
+    // Dyed hair only once you're grown (school rules), and only some people.
+    if (age === "adult" && look.dye && DYES[look.dye]) return DYES[look.dye];
+    return HAIRS[(look.hc || 0) % HAIRS.length];
+  }
+  // Returns { back, front, over }: back goes behind the body, front over the face, over in front of the
+  // shoulders (long strands, braids).
+  function hairParts(m, look, col) {
+    const { hw, hh, hd, cy, top, shY, age } = m;
+    let style = look.hair == null ? 0 : look.hair;
+    if (age === "elder") style = look.sex === "f" ? 16 : 17;
+    else if (age === "toddler") style = look.sex === "f" ? 18 : 19;
+    else if (age === "child" && style === 11) style = 10;
+    const kid = m.b.kid;
+    const T = top - hd * 0.05;
+    let back = "", front = "", over = "";
+    // A cap over the crown: vol above, side past the temples, down to yS at the sides; edge is the
+    // forehead line drawn from the right temple to the left one.
+    const cap = (vol, side, yS, edge, yS2) => {
+      const X = hw + side, t = T - vol;
+      return D("M", -X, yS, "C", -X, cy - hh * 0.62, -X * 0.64, t, 0, t, "C", X * 0.64, t, X, cy - hh * 0.62, X, yS2 == null ? yS : yS2) + " " + edge + " Z";
     };
-    const pose = o.pose || "stand";
-    s += arm(-1, pose === "cheer" ? 150 : 8);
-    s += pose === "cheer" || pose === "wave" ? '<g class="' + (pose === "wave" ? "wave" : "") + '" style="transform-origin:' + (hw + 2) + "px " + (shY + 3) + 'px">' + arm(1, -150) + "</g>" : arm(1, pose === "hold" ? -40 : -8);
+    const shade = (vol, side, yS) => {
+      const X = hw + side, t = T - vol;
+      return P(D("M", hw * 0.15, t + 0.4, "C", X * 0.7, t, X + 0.1, cy - hh * 0.55, X, yS, "L", X - hd * 0.13, yS, "C", X * 0.8, cy - hh * 0.45, hw * 0.55, t + hd * 0.13, hw * 0.15, t + 0.4, "Z"), "chCel");
+    };
+    const sheen = (vol, side) => {
+      const X = hw + side, t = T - vol;
+      return P(D("M", -X * 0.8, cy - hh * 0.42, "Q", -X * 0.62, t + hd * 0.1, -X * 0.25, t + hd * 0.05, "M", -X * 0.62, cy - hh * 0.46, "Q", -X * 0.45, t + hd * 0.16, -X * 0.1, t + hd * 0.1,
+        "M", -X * 0.4, t + hd * 0.08, "Q", -X * 0.1, t + hd * 0.02, X * 0.15, t + hd * 0.06), null, "chSheen", hd * 0.022, "opacity:0.75");
+    };
+    const strands = (pts, w) => pts.map((d) => P(d, null, "chCel", w || hd * 0.035)).join("");
+    // Long hair falling behind the shoulders to y, a little wider than the head.
+    const mane = (y, wide, wave) => {
+      const X = hw + wide;
+      const side = (s) => D("Q", s * (X + 1.5), cy + hh * 0.6, s * (X + (wave ? 2.5 : 1)), (cy + y) / 2, "Q", s * (X + (wave ? 3.5 : 1.2)), y - hd * 0.2, s * (X - 1), y);
+      return P(D("M", -X, cy - hh * 0.2) + " " + side(-1) + " " + D("Q", 0, y + hd * 0.12, X - 1, y) + " " + D("Q", X + (wave ? 3.5 : 1.2), y - hd * 0.2, X + (wave ? 2.5 : 1), (cy + y) / 2, "Q", X + 1.5, cy + hh * 0.6, X, cy - hh * 0.2) + " Z", col) +
+        P(D("M", X * 0.35, cy, "Q", X + 1.4, cy + hh * 0.6, X + (wave ? 2.5 : 1), (cy + y) / 2, "Q", X + (wave ? 3.5 : 1.2), y - hd * 0.2, X - 1, y, "Q", X * 0.6, y + hd * 0.06, X * 0.35, y, "Z"), "chCel");
+    };
+    // A curtain of hair in front of the shoulder on side s, from the temple down to y.
+    const curtain = (s, y, w, wave) => {
+      const x0 = s * (hw + 0.6), x1 = s * (hw - w * 0.4);
+      const d = D("M", x0, cy - hh * 0.3, "Q", s * (hw + w * 0.9), cy + hh * 0.8, s * (hw + w * (wave ? 1.3 : 0.9)), y - hd * 0.4, "Q", s * (hw + w * 0.7), y - hd * 0.05, s * (hw + w * 0.25), y,
+        "Q", s * (hw - w * 0.05), y - hd * 0.5, x1, cy + hh * 0.75, "Q", s * (hw - w * 0.25), cy, x0, cy - hh * 0.3, "Z");
+      return P(d, col) + (s > 0 ? P(d, "chCel") : P(D("M", s * (hw + w * 0.55), cy + hh * 0.4, "Q", s * (hw + w * 0.8), y - hd * 0.6, s * (hw + w * 0.6), y - hd * 0.2), null, "chSheen", hd * 0.04));
+    };
+    const fr = (y) => cy - hh * y;
+    switch (style) {
+      case 1: { // side part: a swept fringe from a part on the left
+        front = P(cap(hd * 0.1, 1.1, fr(0.05), D("L", hw * 0.92, fr(0.3), "Q", hw * 0.3, fr(0.34), -hw * 0.3, fr(0.6), "L", -hw * 0.82, fr(0.45))), col) + shade(hd * 0.1, 1.1, fr(0.05)) +
+          strands([D("M", -hw * 0.38, T - hd * 0.06, "Q", hw * 0.2, T + hd * 0.02, hw * 0.75, fr(0.38)), D("M", -hw * 0.3, fr(0.62), "Q", hw * 0.2, fr(0.5), hw * 0.6, fr(0.36))]) + sheen(hd * 0.1, 1.1);
+        break;
+      }
+      case 2: case 12: { // long straight (center part) or long waves (side part)
+        const wave = style === 12, y = shY + hd * (kid ? 1.1 : 1.55), px = wave ? -hw * 0.3 : 0;
+        back = mane(y, 2.2, wave);
+        front = P(cap(hd * 0.06, 1.4, fr(-0.3), D("Q", hw * 0.55, fr(0.25), px + hw * 0.1, fr(0.82), "Q", px - hw * 0.2, fr(0.6), -hw * 0.95, fr(0.05), "L", -hw - 1.4, fr(-0.3))), col) + shade(hd * 0.06, 1.4, fr(-0.3)) +
+          strands([D("M", px, T, "Q", hw * 0.4, fr(0.5), hw * 0.8, fr(-0.2)), D("M", px, T, "Q", -hw * 0.4, fr(0.55), -hw * 0.85, fr(0)) ]) + sheen(hd * 0.06, 1.4);
+        over = curtain(-1, y - hd * 0.1, hd * 0.15, wave) + curtain(1, y - hd * 0.3, hd * 0.13, wave);
+        break;
+      }
+      case 3: { // bob to the jaw with see-through bangs
+        const y = cy + hh * 0.92, X0 = hw + 2;
+        back = P(D("M", -X0, fr(0.5), "C", -X0 - 2.6, cy + hh * 0.1, -X0 - 2.2, y - hd * 0.05, -hw * 0.7, y + 0.6, "Q", 0, y + 1.8, hw * 0.7, y + 0.6, "C", X0 + 2.2, y - hd * 0.05, X0 + 2.6, cy + hh * 0.1, X0, fr(0.5), "Z"), col) +
+          P(D("M", hw * 0.3, y + 1.2, "Q", hw * 0.6, y + 1.2, hw - 0.6, y + 0.8, "C", X0 + 1, y - hd * 0.12, X0 + 1.6, cy + hh * 0.2, X0, fr(0.5), "L", hw + 0.5, fr(0.2), "C", hw + 1.2, cy + hh * 0.3, hw + 0.4, y - 2, hw * 0.3, y + 1.2, "Z"), "chCel");
+        front = P(cap(hd * 0.1, 2, cy, D("Q", hw + 0.5, fr(0.1), hw * 0.72, fr(0.26), "L", hw * 0.45, fr(0.18), "L", hw * 0.2, fr(0.28), "L", -hw * 0.1, fr(0.17), "L", -hw * 0.4, fr(0.28), "L", -hw * 0.7, fr(0.2), "Q", -hw - 0.5, fr(0.1), -hw - 0.6, cy)), col) +
+          shade(hd * 0.1, 2, cy) + strands([D("M", -hw * 0.1, T, "Q", -hw * 0.3, fr(0.5), -hw * 0.4, fr(0.3)), D("M", hw * 0.15, T, "Q", hw * 0.3, fr(0.5), hw * 0.42, fr(0.22))]) + sheen(hd * 0.1, 2);
+        break;
+      }
+      case 4: { // two-block: a heavy fringe to the brows, short sides
+        front = P(cap(hd * 0.13, 0.7, fr(0.0), D("L", hw * 0.9, fr(0.22), "L", hw * 0.62, fr(0.16), "L", hw * 0.4, fr(0.24), "L", hw * 0.12, fr(0.15), "L", -hw * 0.18, fr(0.24), "L", -hw * 0.46, fr(0.16), "L", -hw * 0.72, fr(0.25), "L", -hw * 0.92, fr(0.2))), col) +
+          P(D("M", -hw - 0.7, fr(0), "L", -hw - 0.5, fr(0.35), "L", -hw + 1.3, fr(0.3), "L", -hw + 1, fr(0), "Z M", hw + 0.7, fr(0), "L", hw + 0.5, fr(0.35), "L", hw - 1.3, fr(0.3), "L", hw - 1, fr(0), "Z"), "chCel") +
+          shade(hd * 0.13, 0.7, fr(0.2)) + strands([D("M", -hw * 0.5, T - hd * 0.08, "Q", -hw * 0.4, fr(0.5), -hw * 0.5, fr(0.2)), D("M", hw * 0.1, T - hd * 0.1, "Q", hw * 0.15, fr(0.5), hw * 0.1, fr(0.18)), D("M", hw * 0.55, T - hd * 0.05, "Q", hw * 0.6, fr(0.5), hw * 0.55, fr(0.2))]) + sheen(hd * 0.13, 0.7);
+        break;
+      }
+      case 5: { // comma hair: a parted fringe curling in on one side
+        front = P(cap(hd * 0.12, 0.9, fr(0.05), D("L", hw * 0.9, fr(0.3), "Q", hw * 0.5, fr(0.22), hw * 0.15, fr(0.42), "L", -hw * 0.05, fr(0.6), "Q", -hw * 0.3, fr(0.3), -hw * 0.6, fr(0.12), "Q", -hw * 0.45, fr(0.3), -hw * 0.62, fr(0.36), "Q", -hw * 0.85, fr(0.3), -hw * 0.9, fr(0.4))), col) +
+          shade(hd * 0.12, 0.9, fr(0.05)) + strands([D("M", 0, T - hd * 0.08, "Q", -hw * 0.4, fr(0.55), -hw * 0.55, fr(0.18)), D("M", hw * 0.05, T - hd * 0.08, "Q", hw * 0.5, fr(0.5), hw * 0.75, fr(0.3))]) + sheen(hd * 0.12, 0.9);
+        break;
+      }
+      case 6: { // perm: curly volume on top
+        let bumps = "";
+        for (let i = 0; i < 7; i++) { const a = rad(200 + i * 23.3); bumps += O(Math.cos(a) * (hw + 1.6), cy - hh * 0.2 + Math.sin(a) * (hh + hd * 0.06), hd * 0.13, col); }
+        front = bumps + P(cap(hd * 0.12, 1.4, fr(0.05), D("Q", hw * 0.8, fr(0.42), hw * 0.45, fr(0.3), "Q", hw * 0.2, fr(0.48), -hw * 0.1, fr(0.32), "Q", -hw * 0.45, fr(0.5), -hw * 0.7, fr(0.32), "Q", -hw * 0.9, fr(0.4), -hw - 1.4, fr(0.05))), col) +
+          shade(hd * 0.12, 1.4, fr(0.05)) + strands([D("M", -hw * 0.4, fr(0.75), "q", 1.5, -1.5, 3, 0, "t", 3, 0), D("M", hw * 0.1, fr(0.9), "q", 1.5, -1.5, 3, 0, "t", 3, 0), D("M", -hw * 0.1, fr(0.55), "q", 1.5, -1.5, 3, 0)]) + sheen(hd * 0.12, 1.4);
+        break;
+      }
+      case 7: { // buzz cut
+        front = P(cap(hd * 0.02, 0.3, fr(0.05), D("L", hw * 0.85, fr(0.45), "Q", 0, fr(0.6), -hw * 0.85, fr(0.45))), col, null, 0, "opacity:0.88") + shade(hd * 0.02, 0.3, fr(0.05));
+        break;
+      }
+      case 8: { // swept back
+        front = P(cap(hd * 0.15, 1, fr(0.05), D("L", hw * 0.8, fr(0.55), "Q", hw * 0.4, fr(0.6), hw * 0.1, fr(0.68), "Q", -hw * 0.1, fr(0.6), -hw * 0.3, fr(0.68), "Q", -hw * 0.6, fr(0.6), -hw * 0.8, fr(0.55))), col) +
+          shade(hd * 0.15, 1, fr(0.05)) + strands([D("M", -hw * 0.3, fr(0.66), "Q", -hw * 0.25, T - hd * 0.1, hw * 0.2, T - hd * 0.12), D("M", hw * 0.15, fr(0.66), "Q", hw * 0.25, T - hd * 0.08, hw * 0.7, T - hd * 0.02), D("M", -hw * 0.7, fr(0.55), "Q", -hw * 0.7, T, -hw * 0.2, T - hd * 0.1)]) + sheen(hd * 0.15, 1);
+        break;
+      }
+      case 9: { // shaggy, covering the ears, short at the nape
+        back = P(D("M", -hw - 1.6, fr(0.2), "L", -hw - 1.2, cy + hh * 0.75, "Q", 0, cy + hh * 0.95, hw + 1.2, cy + hh * 0.75, "L", hw + 1.6, fr(0.2), "Z"), col);
+        front = P(cap(hd * 0.12, 1.6, cy + hh * 0.5, D("L", hw - 0.4, cy + hh * 0.3, "L", hw * 0.8, fr(0.2), "L", hw * 0.55, fr(0.12), "L", hw * 0.3, fr(0.28), "L", 0, fr(0.14), "L", -hw * 0.3, fr(0.3), "L", -hw * 0.58, fr(0.15), "L", -hw * 0.82, fr(0.22), "L", -hw + 0.4, cy + hh * 0.3), cy + hh * 0.55), col) +
+          shade(hd * 0.12, 1.6, cy + hh * 0.5) + strands([D("M", -hw * 0.2, T - hd * 0.1, "Q", -hw * 0.3, fr(0.6), -hw * 0.32, fr(0.28)), D("M", hw * 0.3, T - hd * 0.08, "Q", hw * 0.35, fr(0.5), hw * 0.3, fr(0.28)), D("M", -hw - 1, fr(0.1), "L", -hw - 0.6, cy + hh * 0.45)]) + sheen(hd * 0.12, 1.6);
+        break;
+      }
+      case 10: case 11: { // ponytail or bun: pulled back from a soft hairline, a few loose wisps
+        if (style === 10) {
+          const tx = kid ? 0 : hw * 0.35;
+          back = P(D("M", tx - hd * 0.12, T + hd * 0.05, "Q", hw + hd * 0.25, T, hw + hd * 0.12, shY - hd * 0.1, "Q", hw + hd * 0.08, shY + hd * (kid ? 0.6 : 0.9), hw - hd * 0.05, shY + hd * (kid ? 0.7 : 1.05), "Q", hw - hd * 0.12, shY, tx + hd * 0.05, T + hd * 0.15, "Z"), col) +
+            P(D("M", hw + hd * 0.05, cy, "Q", hw + hd * 0.12, shY + hd * 0.6, hw - hd * 0.05, shY + hd * (kid ? 0.7 : 1.05), "Q", hw + hd * 0.02, shY, hw - hd * 0.02, cy, "Z"), "chCel") + O(tx, T + hd * 0.06, hd * 0.07, "chCel2");
+        } else back = O(0, T - hd * 0.08, hd * 0.22, col) + P(D("M", hd * 0.02, T - hd * 0.28, "A", hd * 0.22, hd * 0.22, 0, 0, 1, hd * 0.12, T + hd * 0.1, "Q", hd * 0.1, T - hd * 0.1, hd * 0.02, T - hd * 0.28, "Z"), "chCel") + P(D("M", -hd * 0.14, T - hd * 0.15, "Q", -hd * 0.05, T - hd * 0.24, hd * 0.06, T - hd * 0.2), null, "chSheen", hd * 0.04);
+        front = P(cap(hd * 0.05, 0.8, fr(-0.05), D("Q", hw * 0.8, fr(0.45), hw * 0.4, fr(0.55), "Q", 0, fr(0.68), -hw * 0.4, fr(0.55), "Q", -hw * 0.8, fr(0.45), -hw - 0.8, fr(-0.05))), col) +
+          shade(hd * 0.05, 0.8, fr(-0.05)) + strands([D("M", -hw * 0.5, fr(0.5), "Q", -hw * 0.2, T, hw * 0.3, T - hd * 0.02), D("M", hw * 0.45, fr(0.5), "Q", hw * 0.3, T + hd * 0.05, -hw * 0.05, T - hd * 0.04)]) +
+          P(D("M", -hw - 0.4, fr(0.2), "Q", -hw - 0.2, cy + hh * 0.3, -hw + 0.6, cy + hh * 0.5) + " " + D("M", hw + 0.4, fr(0.2), "Q", hw + 0.2, cy + hh * 0.3, hw - 0.6, cy + hh * 0.5), null, col, hd * 0.04) + sheen(hd * 0.05, 0.8);
+        break;
+      }
+      case 13: { // shoulder length, C-curl, see-through bangs
+        const y = shY + hd * 0.25;
+        back = P(D("M", -hw - 2, fr(0.3), "Q", -hw - 3.6, y - hd * 0.4, -hw - 2, y, "Q", -hw * 0.4, y + hd * 0.08, 0, y - 0.5, "Q", hw * 0.4, y + hd * 0.08, hw + 2, y, "Q", hw + 3.6, y - hd * 0.4, hw + 2, fr(0.3), "Z"), col) +
+          P(D("M", hw * 0.5, y, "Q", hw + 2, y + 0.5, hw + 2, y, "Q", hw + 3.6, y - hd * 0.4, hw + 2, fr(0.3), "L", hw, cy, "Q", hw + 1, y - hd * 0.3, hw * 0.5, y, "Z"), "chCel");
+        front = P(cap(hd * 0.08, 1.8, cy + hh * 0.85, D("Q", hw + 0.3, cy, hw * 0.75, fr(0.25), "L", hw * 0.45, fr(0.12), "L", hw * 0.3, fr(0.3), "L", 0, fr(0.14), "L", -hw * 0.3, fr(0.28), "L", -hw * 0.52, fr(0.12), "L", -hw * 0.75, fr(0.25), "Q", -hw - 0.3, cy, -hw - 0.4, cy + hh * 0.85, "L", -hw - 1.8, cy + hh * 0.85)), col) +
+          shade(hd * 0.08, 1.8, cy + hh * 0.85) + strands([D("M", 0, T, "Q", -hw * 0.2, fr(0.5), -hw * 0.3, fr(0.3)), D("M", hw * 0.1, T, "Q", hw * 0.25, fr(0.5), hw * 0.32, fr(0.3))]) + sheen(hd * 0.08, 1.8);
+        over = P(D("M", -hw - 1.8, cy + hh * 0.5, "Q", -hw - 2.6, y - hd * 0.2, -hw - 0.4, y - hd * 0.05, "Q", -hw - 0.4, cy + hh, -hw + 0.6, cy + hh * 0.4, "Z"), col) +
+          P(D("M", hw + 1.8, cy + hh * 0.5, "Q", hw + 2.6, y - hd * 0.2, hw + 0.4, y - hd * 0.05, "Q", hw + 0.4, cy + hh, hw - 0.6, cy + hh * 0.4, "Z"), col);
+        break;
+      }
+      case 14: { // short women's cut: a long side-swept fringe, ears showing
+        back = P(D("M", -hw - 1.4, fr(0.1), "L", -hw - 0.8, cy + hh * 0.55, "Q", 0, cy + hh * 0.7, hw + 0.8, cy + hh * 0.55, "L", hw + 1.4, fr(0.1), "Z"), col);
+        front = P(cap(hd * 0.1, 1.4, fr(-0.1), D("Q", hw * 0.95, fr(0.15), hw * 0.75, fr(0.18), "Q", hw * 0.2, fr(0.12), -hw * 0.35, fr(0.62), "Q", -hw * 0.75, fr(0.5), -hw - 0.4, fr(0.1), "L", -hw - 1.4, fr(-0.1))), col) +
+          shade(hd * 0.1, 1.4, fr(-0.1)) + strands([D("M", -hw * 0.35, T - hd * 0.05, "Q", hw * 0.1, fr(0.4), hw * 0.7, fr(0.2)), D("M", -hw * 0.2, fr(0.6), "Q", hw * 0.2, fr(0.35), hw * 0.55, fr(0.2))]) + sheen(hd * 0.1, 1.4);
+        break;
+      }
+      case 15: { // braid over the shoulder, or pigtails on a child
+        back = mane(kid ? cy + hh * 0.8 : shY + hd * 0.3, 1.4);
+        front = P(cap(hd * 0.06, 1.2, fr(-0.1), D("Q", hw * 0.6, fr(0.4), 0, fr(0.75), "Q", -hw * 0.6, fr(0.4), -hw - 1.2, fr(-0.1))), col) + shade(hd * 0.06, 1.2, fr(-0.1)) +
+          strands([D("M", 0, T, "Q", hw * 0.5, fr(0.45), hw * 0.9, fr(0)), D("M", 0, T, "Q", -hw * 0.5, fr(0.45), -hw * 0.9, fr(0))]) + sheen(hd * 0.06, 1.2);
+        if (kid) {
+          for (const s of [-1, 1]) {
+            const x = s * (hw + hd * 0.08), y = cy + hh * 0.35;
+            over += P(D("M", x, y, "Q", x + s * hd * 0.3, y + hd * 0.3, x + s * hd * 0.12, y + hd * 0.75, "Q", x - s * hd * 0.05, y + hd * 0.4, x, y, "Z"), col) + O(x, y, hd * 0.06, "chWine");
+          }
+        } else {
+          let br = "";
+          for (let i = 0; i < 6; i++) br += E(hw * 0.75 + i * 0.3, shY + hd * (0.05 + i * 0.22), hd * 0.11, hd * 0.13, col) + P(D("M", hw * 0.65 + i * 0.3, shY + hd * (0.05 + i * 0.22), "q", hd * 0.1, hd * 0.06, hd * 0.2, 0), null, "chCel", hd * 0.03);
+          over = P(D("M", hw * 0.4, cy + hh * 0.4, "Q", hw + 1, cy + hh * 0.9, hw * 0.75, shY + hd * 0.05), null, col, hd * 0.2) + br + O(hw * 0.75 + 1.8, shY + hd * 1.35, hd * 0.06, "chWine") +
+            P(D("M", hw * 0.75 + 1.8, shY + hd * 1.38, "l", -1.2, hd * 0.25, "l", 2.4, 0, "z"), col);
+        }
+        break;
+      }
+      case 16: { // grandmother: a short tight perm
+        let curls = "";
+        for (let i = 0; i < 11; i++) { const a = rad(170 + i * 20); curls += O(Math.cos(a) * (hw + 0.8), cy - hh * 0.1 + Math.sin(a) * (hh + hd * 0.02), hd * 0.12, col); }
+        back = O(-hw - 0.5, cy + hh * 0.15, hd * 0.14, col) + O(hw + 0.5, cy + hh * 0.15, hd * 0.14, col);
+        front = curls + P(cap(hd * 0.08, 1.6, fr(0.05), D("Q", hw * 0.6, fr(0.45), 0, fr(0.5), "Q", -hw * 0.6, fr(0.45), -hw - 1.6, fr(0.05))), col) + shade(hd * 0.08, 1.6, fr(0.05)) +
+          strands([D("M", -hw * 0.5, fr(0.7), "q", 1.2, -1.2, 2.4, 0, "t", 2.4, 0), D("M", hw * 0.05, fr(0.85), "q", 1.2, -1.2, 2.4, 0, "t", 2.4, 0), D("M", -hw * 0.2, fr(0.55), "q", 1.2, -1.2, 2.4, 0)], hd * 0.03);
+        break;
+      }
+      case 17: { // grandfather: thinning, a receding hairline, combed to the side
+        front = P(cap(hd * 0.03, 0.8, fr(0.05), D("L", hw * 0.8, fr(0.35), "Q", hw * 0.55, fr(0.62), hw * 0.2, fr(0.66), "Q", -hw * 0.2, fr(0.7), -hw * 0.55, fr(0.62), "Q", -hw * 0.75, fr(0.4), -hw * 0.85, fr(0.35))), col) +
+          shade(hd * 0.03, 0.8, fr(0.05)) + strands([D("M", -hw * 0.5, fr(0.62), "Q", 0, T, hw * 0.6, fr(0.5)), D("M", -hw * 0.3, fr(0.68), "Q", hw * 0.1, T + hd * 0.05, hw * 0.6, fr(0.6))], hd * 0.03);
+        break;
+      }
+      case 18: { // toddler girl: fine hair with a little top-knot
+        front = P(cap(hd * 0.02, 0.5, fr(0.1), D("Q", hw * 0.5, fr(0.5), 0, fr(0.45), "Q", -hw * 0.5, fr(0.5), -hw - 0.5, fr(0.1))), col) + shade(hd * 0.02, 0.5, fr(0.1)) +
+          P(D("M", -hd * 0.05, T, "Q", -hd * 0.12, T - hd * 0.2, hd * 0.02, T - hd * 0.24, "Q", hd * 0.04, T - hd * 0.1, hd * 0.06, T), col) + O(0, T - hd * 0.04, hd * 0.05, "chWine");
+        break;
+      }
+      case 19: { // toddler boy: fine short hair
+        front = P(cap(hd * 0.02, 0.4, fr(0.15), D("L", hw * 0.6, fr(0.42), "L", hw * 0.2, fr(0.5), "L", 0, fr(0.4), "L", -hw * 0.3, fr(0.52), "L", -hw * 0.7, fr(0.4))), col) + shade(hd * 0.02, 0.4, fr(0.15));
+        break;
+      }
+      default: { // 0, crop: short and neat
+        front = P(cap(hd * 0.09, 0.9, fr(0.05), D("L", hw * 0.86, fr(0.4), "L", hw * 0.62, fr(0.36), "L", hw * 0.45, fr(0.44), "L", hw * 0.2, fr(0.38), "L", 0, fr(0.46), "L", -hw * 0.25, fr(0.38), "L", -hw * 0.5, fr(0.45), "L", -hw * 0.72, fr(0.38), "L", -hw * 0.88, fr(0.42))), col) +
+          shade(hd * 0.09, 0.9, fr(0.05)) + strands([D("M", -hw * 0.2, T - hd * 0.05, "Q", -hw * 0.1, fr(0.6), -hw * 0.25, fr(0.42)), D("M", hw * 0.35, T - hd * 0.03, "Q", hw * 0.4, fr(0.6), hw * 0.3, fr(0.42))]) + sheen(hd * 0.09, 0.9);
+      }
+    }
+    // Sideburns for short men's cuts.
+    if (!m.fem && !kid && [0, 1, 4, 5, 6, 8].indexOf(style) >= 0) front += P(D("M", -hw + 0.1, fr(0.1), "L", -hw + 0.4, cy + hh * 0.08, "L", -hw + 1.1, cy + hh * 0.04, "L", -hw + 1.3, fr(0.1), "Z M", hw - 0.1, fr(0.1), "L", hw - 0.4, cy + hh * 0.08, "L", hw - 1.1, cy + hh * 0.04, "L", hw - 1.3, fr(0.1), "Z"), col, null, 0, "opacity:0.85");
+    return { back, front, over };
+  }
 
-    // Head.
-    s += R(-4, shY - 6, 8, 8, skin);
-    s += O(-hr + 1, hy + 2, 4, skin) + O(hr - 1, hy + 2, 4, skin);
-    s += O(0, hy, hr, skin);
-    if (mood === "sick") s += O(0, hy, hr, "sickface", null, 0, "opacity:0.35");
-    s += face(hr, hy, mood, o.age === "child");
-    s += hairFront(look.hair || 0, hr, hy, hairC);
-    // Grey hair comes with a bun on top, so a grandmother never reads as the mother.
-    if (look.grey) s += O(0, hy - hr - 3, hr * 0.42, hairC);
-    // Hats: a driver's cap, a hard hat, a farmer's straw hat.
-    if (gear === "cap") s += P("M" + (-hr - 1) + " " + (hy - hr * 0.35) + " Q0 " + (hy - hr - 10) + " " + (hr + 1) + " " + (hy - hr * 0.35) + " Z", "c2") + R(-hr - 1, hy - hr * 0.42, hr * 2 + 12, 5, "c2dark", 2);
-    if (gear === "hardhat") s += P("M" + (-hr - 2) + " " + (hy - hr * 0.3) + " Q0 " + (hy - hr - 12) + " " + (hr + 2) + " " + (hy - hr * 0.3) + " Z", "gold", "gold2", 1.5) + R(-hr - 6, hy - hr * 0.38, hr * 2 + 12, 4, "gold2", 2);
-    if (gear === "straw") s += E(0, hy - hr * 0.45, hr + 13, 5, "paper", "line", 1) + P("M" + (-hr + 2) + " " + (hy - hr * 0.45) + " Q0 " + (hy - hr - 12) + " " + (hr - 2) + " " + (hy - hr * 0.45) + " Z", "paper", "line", 1) + R(-hr + 2, hy - hr * 0.62, hr * 2 - 4, 4, "c5");
-    if (o.prop === "headphones") s += P("M" + (-hr - 2) + " " + hy + " Q" + (-hr) + " " + (hy - hr - 8) + " 0 " + (hy - hr - 8) + " Q" + hr + " " + (hy - hr - 8) + " " + (hr + 2) + " " + hy, null, "dark", 3.5) + R(-hr - 6, hy - 5, 7, 13, "c1", 3) + R(hr - 1, hy - 5, 7, 13, "c1", 3);
-
-    // Props in hand.
-    const hx = hw + 2, hyHand = shY + 3 + b.arm;
-    if (o.prop === "book") s += G(pose === "hold" ? hx + 22 : hx + 4, pose === "hold" ? shY + 22 : hyHand - 6, R(-10, -8, 20, 15, "c5", 2) + R(-8, -6, 16, 11, "paper", 1) + L(0, -6, 0, 5, "c5", 1.5));
-    if (o.prop === "phone") s += G(pose === "hold" ? hx + 20 : hx + 3, pose === "hold" ? shY + 24 : hyHand - 4, R(-5, -9, 10, 17, "dark", 2) + R(-4, -7, 8, 12, "screen", 1));
-    if (o.prop === "baton") s += G(hx + 2, pose === "cheer" ? shY - b.arm - 6 : hyHand - 4, R(-3, -10, 6, 18, "c1", 2, "c1dark", 1));
-    if (o.prop === "envelope") s += G(hx + 18, shY + 24, R(-11, -7, 22, 15, "paper", 1, "line", 1) + P("M-11 -7 L0 2 L11 -7", null, "line", 1) + O(0, 2, 2.5, "c1"));
-    if (o.prop === "mask") s += P("M" + (-hr * 0.62) + " " + (hy + hr * 0.25) + " Q0 " + (hy + hr * 0.15) + " " + (hr * 0.62) + " " + (hy + hr * 0.25) + " L" + (hr * 0.55) + " " + (hy + hr * 0.75) + " Q0 " + (hy + hr * 0.95) + " " + (-hr * 0.55) + " " + (hy + hr * 0.75) + " Z", "paper", "line", 1);
-    // still: no bobbing (the small portraits in the Friends panel).
-    return o.still ? s : A("bob", s);
-  }
-  // A head-and-shoulders portrait of the same avatar, for the Friends panel. o: avatar options.
-  function portrait(o, label) {
-    const b = BODY[o.age] || BODY.teen;
-    const shY = -b.leg - b.body, hy = shY - 1 - b.head;
-    const size = b.head * 2 + 22;
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + (-size / 2) + " " + (hy - b.head - 9) + " " + size + " " + size + '" class="art portrait"' +
-      (label ? ' role="img" aria-label="' + esc(label) + '"' : ' aria-hidden="true" focusable="false"') + ">" + avatar(Object.assign({ still: true }, o)) + "</svg>";
-  }
-  function hairFront(v, r, hy, color) {
-    // Four styles: short, side part, long (back drawn earlier) and bob.
-    const top = hy - r - 3;
-    if (v === 1) return P("M" + (-r - 2) + " " + (hy + 3) + " Q" + (-r - 2) + " " + top + " 0 " + top + " Q" + (r + 3) + " " + top + " " + (r + 2) + " " + (hy + 4) +
-      " Q" + (r * 0.4) + " " + (hy - r * 0.7) + " " + (-r * 0.5) + " " + (hy - r * 0.35) + " Q" + (-r * 0.8) + " " + (hy - r * 0.2) + " " + (-r - 2) + " " + (hy + 3) + " Z", color || "hair");
-    if (v === 2 || v === 3) return P("M" + (-r - 2) + " " + (hy + 4) + " Q" + (-r - 2) + " " + top + " 0 " + top + " Q" + (r + 2) + " " + top + " " + (r + 2) + " " + (hy + 4) +
-      " L" + (r - 3) + " " + (hy - r * 0.35) + " L" + (-r + 3) + " " + (hy - r * 0.35) + " Z", color || "hair");
-    return P("M" + (-r - 1.5) + " " + (hy + 2) + " Q" + (-r - 1) + " " + (top - 1) + " 0 " + top + " Q" + (r + 1) + " " + (top - 1) + " " + (r + 1.5) + " " + (hy + 2) +
-      " Q" + (r * 0.7) + " " + (hy - r * 0.5) + " " + (r * 0.2) + " " + (hy - r * 0.42) + " L" + (r * 0.05) + " " + (hy - r * 0.3) + " L" + (-r * 0.15) + " " + (hy - r * 0.45) +
-      " Q" + (-r * 0.7) + " " + (hy - r * 0.5) + " " + (-r - 1.5) + " " + (hy + 2) + " Z", color || "hair");
-  }
-  function face(r, hy, mood, child) {
-    const ex = r * 0.38, ey = hy + r * 0.12, er = child ? 2.8 : 2.3, my = hy + r * 0.52;
+  // ---------- head and face ----------
+  // Expressions: how open the eyes are (lid 0 = wide, 1 = shut), the lower lid's lift (smiling eyes),
+  // the brows (inner end and outer end raised or lowered), and the mouth (curve, width, open).
+  const EXPR = {
+    happy: { lid: 0.16, low: 0.5, bi: 0, bo: 0.05, curve: 0.85, mw: 1.08, open: 0.35 },
+    ok: { lid: 0.1, low: 0.12, bi: 0, bo: 0, curve: 0.25, mw: 0.95, open: 0 },
+    tired: { lid: 0.46, low: 0.05, bi: 0.05, bo: -0.18, curve: -0.1, mw: 0.9, open: 0, bags: 1 },
+    stressed: { lid: 0.0, low: 0.05, bi: 0.32, bo: -0.08, curve: -0.35, mw: 0.85, open: 0, knit: 1, sweat: 1 },
+    sick: { lid: 0.42, low: 0.1, bi: 0.18, bo: -0.12, curve: -0.25, mw: 0.85, open: 0.25, bags: 1, flush: 1, pale: 1 },
+    grumpy: { lid: 0.3, low: 0.3, bi: -0.3, bo: 0.08, curve: -0.6, mw: 0.9, open: 0, knit: 1 },
+  };
+  function head(m, look, mood, skin, col, o) {
+    const { hw, hh, hd, cy, age, fem } = m;
+    const kid = m.b.kid, old = m.b.old;
+    const ex = EXPR[mood] || EXPR.ok;
+    // Face outline: cranium, cheekbones, jaw and chin; rounder for children, a narrower V for women.
+    const jx = hw * (kid === 2 ? 0.94 : kid ? 0.86 : fem ? 0.78 : 0.86), jy = cy + hh * (kid === 2 ? 0.56 : kid ? 0.48 : 0.46), cw = hw * (kid === 2 ? 0.5 : kid ? 0.38 : fem ? 0.28 : 0.34);
+    const face = D("M", 0, cy - hh, "C", hw * 0.56, cy - hh, hw, cy - hh * 0.62, hw, cy - hh * 0.08, "C", hw, cy + hh * 0.2, jx + hw * 0.08, jy - hh * 0.2, jx, jy,
+      "C", jx - hw * 0.1, jy + hh * 0.28, cw + hw * 0.18, cy + hh, cw * 0.4, cy + hh, "L", -cw * 0.4, cy + hh, "C", -cw - hw * 0.18, cy + hh, -jx + hw * 0.1, jy + hh * 0.28, -jx, jy,
+      "C", -jx - hw * 0.08, jy - hh * 0.2, -hw, cy + hh * 0.2, -hw, cy - hh * 0.08, "C", -hw, cy - hh * 0.62, -hw * 0.56, cy - hh, 0, cy - hh, "Z");
     let s = "";
-    const dots = (cls) => G(0, 0, E(-ex, ey, er * 0.85, er, "ink") + E(ex, ey, er * 0.85, er, "ink") + O(-ex + 0.8, ey - 1, 0.8, "paper") + O(ex + 0.8, ey - 1, 0.8, "paper"), 1, cls);
-    if (mood === "happy") {
-      s += P("M" + (-ex - 3) + " " + (ey + 1) + " Q" + (-ex) + " " + (ey - 3.5) + " " + (-ex + 3) + " " + (ey + 1) + " M" + (ex - 3) + " " + (ey + 1) + " Q" + ex + " " + (ey - 3.5) + " " + (ex + 3) + " " + (ey + 1), null, "ink", 1.8);
-      s += P("M-5 " + my + " Q0 " + (my + 7) + " 5 " + my + " Z", "mouth", "ink", 1.2);
-      s += E(-ex - 3, ey + 6, 3.2, 2, "blush", null, 0, "opacity:0.7") + E(ex + 3, ey + 6, 3.2, 2, "blush", null, 0, "opacity:0.7");
-    } else if (mood === "tired") {
-      s += L(-ex - 3, ey, -ex + 3, ey, "ink", 1.8) + L(ex - 3, ey, ex + 3, ey, "ink", 1.8);
-      s += P("M" + (-ex - 3) + " " + (ey + 3.5) + " Q" + (-ex) + " " + (ey + 5.5) + " " + (-ex + 3) + " " + (ey + 3.5) + " M" + (ex - 3) + " " + (ey + 3.5) + " Q" + ex + " " + (ey + 5.5) + " " + (ex + 3) + " " + (ey + 3.5), null, "bags", 1.4);
-      s += L(-3.5, my + 1, 3.5, my + 1, "ink", 1.6);
-    } else if (mood === "stressed") {
-      s += dots("blink");
-      s += L(-ex - 3.5, ey - 4, -ex + 2.5, ey - 6, "ink", 1.5) + L(ex + 3.5, ey - 4, ex - 2.5, ey - 6, "ink", 1.5);
-      s += P("M-5 " + (my + 1) + " q1.25 -2 2.5 0 t2.5 0 t2.5 0 t2.5 0", null, "ink", 1.4);
-      s += G(r - 3, hy - r * 0.35, A("drip", P("M0 -4 Q3 1 0 3 Q-3 1 0 -4 Z", "sweat")));
-    } else if (mood === "sick") {
-      s += P("M" + (-ex - 3) + " " + (ey - 1) + " Q" + (-ex) + " " + (ey + 2.5) + " " + (-ex + 3) + " " + (ey - 1) + " M" + (ex - 3) + " " + (ey - 1) + " Q" + ex + " " + (ey + 2.5) + " " + (ex + 3) + " " + (ey - 1), null, "ink", 1.6);
-      s += E(-ex - 3, ey + 6, 3.4, 2.2, "fever", null, 0, "opacity:0.8") + E(ex + 3, ey + 6, 3.4, 2.2, "fever", null, 0, "opacity:0.8");
-      s += P("M-3 " + (my + 2) + " Q0 " + (my - 1) + " 3 " + (my + 2), null, "ink", 1.4);
-    } else if (mood === "grumpy") {
-      s += dots("blink");
-      s += L(-ex - 3.5, ey - 6, -ex + 2.5, ey - 3.5, "ink", 1.8) + L(ex + 3.5, ey - 6, ex - 2.5, ey - 3.5, "ink", 1.8);
-      s += P("M-4 " + (my + 2) + " Q0 " + (my - 1.5) + " 4 " + (my + 2), null, "ink", 1.6);
-    } else {
-      s += dots("blink");
-      s += P("M-3.5 " + my + " Q0 " + (my + 3.5) + " 3.5 " + my, null, "ink", 1.5);
-      s += E(-ex - 3, ey + 6, 3, 1.8, "blush", null, 0, "opacity:0.45") + E(ex + 3, ey + 6, 3, 1.8, "blush", null, 0, "opacity:0.45");
+    // Ears, behind the face.
+    for (const sd of [-1, 1]) s += P(D("M", sd * (hw - 0.6), cy - hh * 0.08, "Q", sd * (hw + hd * 0.1), cy - hh * 0.2, sd * (hw + hd * 0.09), cy + hh * 0.12, "Q", sd * (hw + hd * 0.06), cy + hh * 0.36, sd * (hw - 0.6), cy + hh * 0.3, "Z"), skin) +
+      (sd > 0 ? P(D("M", hw - 0.2, cy - hh * 0.05, "Q", hw + hd * 0.07, cy - hh * 0.12, hw + hd * 0.06, cy + hh * 0.12, "Q", hw + hd * 0.04, cy + hh * 0.3, hw - 0.2, cy + hh * 0.26, "Z"), "chSkinSh") : "");
+    s += P(face, skin);
+    const faceSh = kid === 2 ? "opacity:0.55" : "";
+    // Cel shade down the right of the face and under the jaw; a rim of light on the left cheek.
+    s += P(D("M", hw * 0.62, cy - hh * 0.85, "C", hw * 0.95, cy - hh * 0.6, hw, cy - hh * 0.2, hw, cy - hh * 0.08, "C", hw, cy + hh * 0.2, jx + hw * 0.08, jy - hh * 0.2, jx, jy,
+      "C", jx - hw * 0.1, jy + hh * 0.28, cw + hw * 0.18, cy + hh, cw * 0.4, cy + hh, "C", cw + hw * 0.1, cy + hh * 0.8, jx - hw * 0.12, jy, hw * 0.68, cy + hh * 0.1, "C", hw * 0.78, cy - hh * 0.3, hw * 0.75, cy - hh * 0.6, hw * 0.62, cy - hh * 0.85, "Z"), "chSkinSh", null, 0, faceSh);
+    s += P(D("M", -hw + 0.4, cy - hh * 0.1, "C", -hw + 0.4, cy + hh * 0.2, -jx - hw * 0.02, jy - hh * 0.2, -jx + 0.6, jy), null, "chRim", hd * 0.035);
+    if (!kid) {
+      // Cheekbone shadow and the jaw line, stronger on men and with age.
+      s += P(D("M", hw * 0.92, cy + hh * 0.08, "Q", hw * 0.62, cy + hh * 0.3, hw * 0.5, cy + hh * 0.5), null, "chSkinSh", hd * (fem ? 0.03 : 0.05));
+    }
+    if (ex.pale) s += P(face, "chPale", null, 0, "opacity:0.6");
+    // Eyes: almond shapes under a lid; children's larger and set lower.
+    const ey = cy + hh * (kid === 2 ? 0.2 : kid ? 0.14 : 0.04), ex0 = hw * (kid ? 0.42 : 0.43), ew = hw * (kid === 2 ? 0.22 : kid ? 0.24 : fem ? 0.23 : 0.22), eh = hd * (kid === 2 ? 0.085 : kid ? 0.072 : 0.06);
+    const look_ = look;
+    const studying = m.pose === "study";
+    const lid = Math.min(0.85, ex.lid + (studying ? 0.25 : 0) + (old ? 0.08 : 0)), low = ex.low;
+    // The eyeballs are clipped to the two almonds, so the lid can close over the iris. The lash line is a
+    // filled crescent along the lid, thickest toward the outer corner.
+    const Hh = ew * (kid === 2 ? 0.66 : kid ? 0.55 : 0.42);
+    const L = { white: "", iris: "", pupil: "", glint: "", lidSkin: "", lidSh: "", lash: "", low: "", crease: "", bags: "" };
+    for (const sd of [-1, 1]) {
+      const x = sd * ex0, ix = x - sd * ew, ox = x + sd * ew; // inner and outer corners
+      const iy = ey + Hh * 0.2, oy = ey - Hh * (kid ? 0.05 : 0.25);
+      const cU = ey - Hh * 2.0, cL = ey + Hh * (1.6 - low * 1.1);
+      L.white += D("M", ix, iy, "Q", x - sd * ew * 0.12, cU, ox, oy, "Q", x + sd * ew * 0.12, cL, ix, iy, "Z");
+      const irisX = x + sd * ew * 0.03, irisY = ey + Hh * (studying ? 0.55 : 0.1), ir = Hh * 1.12;
+      const cLid = cU + lid * (cL - cU) * 1.05;
+      const lidC = D("M", ix, iy, "Q", x - sd * ew * 0.12, cLid, ox, oy);
+      L.iris += ring(irisX, irisY, ir); L.pupil += ring(irisX, irisY, ir * 0.48); L.glint += ring(irisX - ir * 0.35, irisY - ir * 0.35, ir * 0.16);
+      L.lidSkin += lidC + D("L", ox + sd * 2, oy, "L", ox + sd * 2, ey - Hh * 6, "L", ix - sd * 2, ey - Hh * 6, "Z");
+      L.lidSh += lidC + D("Q", x - sd * ew * 0.12, cLid + Hh * 1.1, ix, iy, "Z");
+      // Lash line along the lid; a faint lower lid; a crease above for some looks.
+      const t = hd * (kid ? 0.022 : fem ? 0.04 : 0.03);
+      L.lash += D("M", ix, iy, "Q", x - sd * ew * 0.12, cLid, ox, oy, "L", ox + sd * (fem && !kid ? t * 1.6 : t * 0.4), oy - t * (fem && !kid ? 1.4 : 0.6), "Q", x - sd * ew * 0.05, cLid - t * 2.2, ix + sd * ew * 0.1, iy - t * 0.6, "Z");
+      L.low += D("M", ix + sd * ew * 0.25, iy + Hh * 0.05, "Q", x + sd * ew * 0.12, cL - Hh * 0.1, ox - sd * ew * 0.1, oy + Hh * 0.35);
+      if (look_.lid && kid !== 2) L.crease += D("M", ix + sd * ew * 0.35, iy - Hh * 1.0, "Q", x, cLid - Hh * 1.3, ox - sd * ew * 0.08, oy - Hh * 0.9);
+      if (ex.bags || old) L.bags += D("M", ix + sd * ew * 0.25, iy + Hh * 1.0, "Q", x + sd * ew * 0.2, cL + Hh * 0.6, ox - sd * ew * 0.05, oy + Hh * 1.3);
+    }
+    // The eyeballs are clipped to the two almonds, so the lid can close over the iris; the lash line is a
+    // filled crescent along the lid, thickest toward the outer corner.
+    const cid = nid("eye");
+    let eyes = '<clipPath id="' + cid + '"><path d="' + L.white + '"/></clipPath><g clip-path="url(#' + cid + ')">' +
+      P(L.white, "chWhite") + P(L.iris, "chIris") + P(L.pupil, "chLash") + P(L.glint, "chSheen") + P(L.lidSkin, skin) + P(L.lidSh, "chCel") + "</g>" +
+      P(L.lash, "chLash") + P(L.low, null, "chSkinSh2", hd * 0.018) + (L.crease ? P(L.crease, null, "chSkinSh2", hd * 0.016) : "") +
+      (L.bags ? P(L.bags, null, ex.bags ? "chBags" : "chSkinSh", hd * (ex.bags ? 0.05 : 0.022)) : "");
+    s += o.still ? eyes : A("blink", eyes);
+    // Brows: tapered, thicker at the inner end; women's straighter and finer.
+    const by = ey - eh * (kid ? 3.2 : 3.6);
+    for (const sd of [-1, 1]) {
+      const x0 = sd * hw * 0.14, x1 = sd * hw * 0.82;
+      const yi = by - ex.bi * hd * 0.07 + (ex.knit ? hd * 0.012 : 0), yo = by - ex.bo * hd * 0.07 + hd * (fem ? 0.005 : 0.015);
+      const t = hd * (kid === 2 ? 0.012 : kid ? 0.02 : fem ? 0.024 : 0.032);
+      s += P(D("M", x0 + (ex.knit ? sd * -0.3 : 0), yi + t, "Q", (x0 + x1) / 2, (yi + yo) / 2 - hd * (fem ? 0.025 : 0.03) - t * 0.5, x1, yo + t * 0.3, "Q", (x0 + x1) / 2, (yi + yo) / 2 - hd * 0.005 + t, x0 + (ex.knit ? sd * -0.3 : 0), yi + t * 2.2, "Z"), col, null, 0, kid === 2 ? "opacity:0.45" : kid ? "opacity:0.8" : "");
+    }
+    if (ex.knit && !kid) s += P(D("M", -hw * 0.05, by - hd * 0.02, "l", 0.2, hd * 0.06, "M", hw * 0.06, by - hd * 0.015, "l", -0.15, hd * 0.06), null, "chSkinSh2", hd * 0.02);
+    if (old) s += P(D("M", -hw * 0.5, cy - hh * 0.5, "Q", 0, cy - hh * 0.56, hw * 0.5, cy - hh * 0.5, "M", -hw * 0.4, cy - hh * 0.38, "Q", 0, cy - hh * 0.43, hw * 0.4, cy - hh * 0.38), null, "chSkinSh", hd * 0.02);
+    // Nose: a shadow down the right of the bridge and under the tip, a touch of light on the tip.
+    const ny = cy + hh * (kid ? 0.42 : 0.4);
+    if (kid) s += P(D("M", -hw * 0.08, ny, "Q", 0, ny + hd * 0.03, hw * 0.1, ny), null, "chSkinSh2", hd * 0.03);
+    else s += P(D("M", hw * 0.05, ey + eh, "Q", hw * 0.12, ny - hd * 0.06, hw * 0.16, ny - hd * 0.01, "Q", hw * 0.04, ny + hd * 0.03, -hw * 0.06, ny, "Q", hw * 0.04, ny - hd * 0.02, hw * 0.05, ey + eh, "Z"), "chSkinSh") +
+      P(D("M", -hw * 0.17, ny - hd * 0.005, "Q", -hw * 0.1, ny + hd * 0.035, 0, ny + hd * 0.02, "Q", hw * 0.1, ny + hd * 0.035, hw * 0.17, ny - hd * 0.005), null, "chSkinSh2", hd * 0.028) +
+      O(-hw * 0.04, ny - hd * 0.03, hd * 0.025, "chSheen");
+    if (old) s += P(D("M", -hw * 0.3, ny - hd * 0.02, "Q", -hw * 0.42, ny + hd * 0.1, -hw * 0.38, ny + hd * 0.18, "M", hw * 0.3, ny - hd * 0.02, "Q", hw * 0.42, ny + hd * 0.1, hw * 0.38, ny + hd * 0.18), null, "chSkinSh", hd * 0.025);
+    if (ex.flush) s += E(0, ny - hd * 0.04, hw * 0.75, hd * 0.06, "chFlush");
+    // Mouth: lips with the corners set by the expression; a hint of teeth on a real smile.
+    const my = cy + hh * (kid ? 0.66 : 0.64), mw = hw * (kid ? 0.26 : fem ? 0.3 : 0.32) * ex.mw, cv = ex.curve * hd * 0.035;
+    const lipA = fem && !kid ? 1 : 0.55;
+    const opn = ex.open * hd * 0.04;
+    s += P(D("M", -mw, my - cv, "Q", -mw * 0.4, my - hd * 0.035, 0, my - hd * 0.022, "Q", mw * 0.4, my - hd * 0.035, mw, my - cv, "Q", 0, my + cv * 0.3 + opn * 0.4, -mw, my - cv, "Z"), "chLipSh", null, 0, "opacity:" + lipA);
+    if (opn) s += P(D("M", -mw * 0.8, my - cv * 0.8, "Q", 0, my + opn * 1.6 + cv * 0.2, mw * 0.8, my - cv * 0.8, "Q", 0, my + cv * 0.1, -mw * 0.8, my - cv * 0.8, "Z"), "chWhite");
+    s += P(D("M", -mw * 0.85, my - cv * 0.7 + opn, "Q", 0, my + hd * 0.06 + opn, mw * 0.85, my - cv * 0.7 + opn, "Q", 0, my + opn * 0.6 + cv * 0.2, -mw * 0.85, my - cv * 0.7 + opn, "Z"), "chLip", null, 0, "opacity:" + lipA);
+    s += P(D("M", -mw - 0.2, my - cv * 1.05, "Q", 0, my + cv * 0.35 + opn * 0.3, mw + 0.2, my - cv * 1.05), null, "chLipSh", hd * 0.03);
+    if (!kid) s += P(D("M", -mw * 0.45, my + hd * 0.1 + opn, "Q", 0, my + hd * 0.12 + opn, mw * 0.45, my + hd * 0.1 + opn), null, "chSkinSh", hd * 0.025, "opacity:0.6");
+    if (old) s += P(D("M", -mw - hw * 0.12, my - hd * 0.06, "Q", -mw - hw * 0.18, my + hd * 0.02, -mw - hw * 0.08, my + hd * 0.08, "M", mw + hw * 0.12, my - hd * 0.06, "Q", mw + hw * 0.18, my + hd * 0.02, mw + hw * 0.08, my + hd * 0.08), null, "chSkinSh", hd * 0.022);
+    if (ex.knit && mood === "stressed" && !kid) s += P(D("M", jx - hw * 0.05, jy - hh * 0.05, "q", -hw * 0.06, hh * 0.1, -hw * 0.02, hh * 0.18), null, "chSkinSh", hd * 0.025);
+    if (ex.sweat) s += G(hw * 0.86, cy - hh * 0.3, A("drip", P(D("M", 0, -hd * 0.08, "Q", hd * 0.05, 0, 0, hd * 0.04, "Q", -hd * 0.05, 0, 0, -hd * 0.08, "Z"), "chLens", "chSheen", 0.3)));
+    // Glasses: thin frames over the eyes.
+    if (look.glasses && age !== "toddler" && o.outfit !== "smock") {
+      const gw = ew * 1.45, gh = eh * 2.7;
+      s += P(D("M", -ex0 - gw, ey - gh * 0.55, "h", gw * 2, "v", gh, "h", -gw * 2, "Z", "M", ex0 - gw, ey - gh * 0.55, "h", gw * 2, "v", gh, "h", -gw * 2, "Z"), "chLens") +
+        R(n1(-ex0 - gw), n1(ey - gh * 0.55), n1(gw * 2), n1(gh), null, gh * 0.3, "chFrame", hd * 0.018) + R(n1(ex0 - gw), n1(ey - gh * 0.55), n1(gw * 2), n1(gh), null, gh * 0.3, "chFrame", hd * 0.018) +
+        P(D("M", -ex0 + gw, ey - gh * 0.25, "Q", 0, ey - gh * 0.45, ex0 - gw, ey - gh * 0.25, "M", -ex0 - gw, ey - gh * 0.3, "L", -hw - 0.3, ey - gh * 0.4, "M", ex0 + gw, ey - gh * 0.3, "L", hw + 0.3, ey - gh * 0.4), null, "chFrame", hd * 0.018);
     }
     return s;
   }
 
+  // ---------- clothes ----------
+  // What a figure wears, worked out once: top (garment kind and colour), sleeves, bottom, legs, shoes
+  // and any layer over the top.
+  const CASUAL_TOPS = [["knit", "chDusty"], ["cardi", "chBeige"], ["over", "chOlive"], ["sweat", "chOat"], ["knit", "chWine"], ["cardi", "chSlate"]];
+  function dressFor(o, m, look) {
+    const season = o.season || "spring", gear = o.gear || "", outfit = o.outfit || "uniform", fem = m.fem;
+    const hot = season === "summer", cold = season === "winter";
+    const sh = (look.shirt || 0) | 0;
+    const d = { top: "tee", topC: "chDusty", sleeve: "long", bottom: "pants", botC: "chSlacks", legs: "skin", shoes: "chShoe", neck: "", layer: "", hat: "", trim: "" };
+    // Adults: grandparents, carers and work clothes first, then everyday casual wear.
+    if (m.age === "elder") return Object.assign(d, fem ? { top: "blouse", topC: "chFloral", layer: "cardigan", layerC: "chCardi", bottom: "pants", botC: "chSlate", shoes: "chShoe" }
+      : { top: "shirt", topC: "chOat", layer: "jvest", layerC: "chOlive", bottom: "pants", botC: "chSlacks", shoes: "chShoe" });
+    if (m.age === "toddler") return Object.assign(d, { top: "onesie", topC: "chOnesie", bottom: "onesie", botC: "chOnesie", shoes: "chOnesie2", sleeve: hot ? "short" : "long" });
+    if (outfit === "smock") return Object.assign(d, { top: "smock", topC: "chSmock", bottom: fem ? "skirt" : "shorts", botC: "chSlate", legs: "socks", shoes: "chSneaker", hat: "kinder", sleeve: "long" });
+    if (outfit === "kid" || (m.b.kid && outfit !== "uniform" && outfit !== "pe")) {
+      const c = ["chDusty", "chMustard", "chOlive", "chWine"][sh % 4];
+      Object.assign(d, { top: "tee", topC: c, trim: "stripe", sleeve: hot ? "short" : "long", shoes: "chSneaker", legs: hot ? "skin" : "socks" });
+      if (fem && sh % 2) Object.assign(d, { bottom: "skirt", botC: sh % 4 === 1 ? "chCheck" : "chSlate", legs: cold ? "tights" : "socks" });
+      else Object.assign(d, { bottom: hot ? "shorts" : "pants", botC: sh % 2 ? "chKhaki" : "chDenim" });
+      if (cold) d.layer = "puffer";
+      return d;
+    }
+    if (outfit === "pe") return Object.assign(d, { top: "track", topC: "chTrack", bottom: "pants", botC: "chTrack", trim: "track", shoes: "chSneaker" });
+    if (outfit === "uniform") {
+      const blz = o.school === "mid" ? "chBlazerM" : "chBlazer";
+      Object.assign(d, { top: hot ? "shirt" : "blazer", topC: hot ? "chShirt" : blz, sleeve: hot ? "short" : "long", neck: fem ? "ribbon" : "tie",
+        bottom: fem ? "pleats" : "pants", botC: fem ? "chCheck" : "chSlacks", legs: fem ? (cold ? "tights" : "socks") : "skin", shoes: "chShoe" });
+      if (cold) d.layer = "longpad";
+      return d;
+    }
+    if (outfit === "hoodie") {
+      Object.assign(d, { top: hot ? "tee" : "hoodie", topC: hot ? "chOat" : "chHoodie", sleeve: hot ? "short" : "long", bottom: "pants", botC: hot ? "chSlate" : "chCharcoal", shoes: "chSneaker" });
+      if (cold) d.layer = "longpad";
+      return d;
+    }
+    if (gear === "suit") return Object.assign(d, { top: "suit", topC: "chCharcoal", neck: fem ? "blouse" : "tie", bottom: fem ? "pencil" : "pants", botC: "chCharcoal", legs: "skin", shoes: "chShoe" });
+    if (gear === "coat") return Object.assign(d, { top: "shirt", topC: fem ? "chOat" : "chDriver", neck: fem ? "" : "tie", bottom: "pants", botC: "chSlacks", layer: "whitecoat", shoes: "chShoe" });
+    if (gear === "scrubs") return Object.assign(d, { top: "scrubs", topC: "chScrub", sleeve: "short", bottom: "pants", botC: "chScrub", shoes: "chSneaker" });
+    if (gear === "apron") return Object.assign(d, { top: "shirt", topC: sh % 2 ? "chOat" : "chSlate", sleeve: "rolled", bottom: "pants", botC: "chSlacks", layer: "apron", layerC: "chApron", shoes: "chShoe" });
+    if (gear === "carer") return Object.assign(d, { top: "knit", topC: "chDusty", bottom: "pants", botC: "chSlacks", layer: "apron", layerC: "chOat", shoes: "chSneaker" });
+    if (gear === "hardhat") return Object.assign(d, { top: "work", topC: "chKhaki", bottom: "pants", botC: "chKhaki", layer: "visvest", hat: "hardhat", shoes: "chShoe" });
+    if (gear === "vest") return Object.assign(d, { top: "work", topC: "chWork", bottom: "pants", botC: "chWork", layer: "visvest", shoes: "chShoe" });
+    if (gear === "cap") return Object.assign(d, { top: "shirt", topC: "chDriver", sleeve: hot ? "short" : "long", bottom: "pants", botC: "chBlazer", hat: "cap", shoes: "chShoe" });
+    if (gear === "straw") return Object.assign(d, { top: "work", topC: "chOlive", bottom: "pants", botC: "chKhaki", hat: "straw", neck: "towel", shoes: "chShoe" });
+    if (gear === "helmet") return Object.assign(d, { top: "work", topC: "chBlazer", bottom: "pants", botC: "chBlazer", hat: "helmet", shoes: "chShoe" });
+    const [kind, col] = CASUAL_TOPS[sh % CASUAL_TOPS.length];
+    Object.assign(d, { top: hot ? "tee" : kind, topC: hot ? ["chOat", "chDusty", "chOlive", "chSlate"][sh % 4] : col, sleeve: hot ? "short" : "long", shoes: sh % 2 ? "chSneaker" : "chShoe" });
+    const bot = (sh + (look.hair || 0)) % 3;
+    if (fem && bot === 1) Object.assign(d, { bottom: "longskirt", botC: sh % 2 ? "chOlive" : "chOat" });
+    else Object.assign(d, { bottom: "pants", botC: bot === 0 ? "chDenim" : bot === 1 ? "chBeige" : "chSlacks" });
+    if (cold) Object.assign(d, { layer: "coat", layerC: sh % 2 ? "chCharcoal" : "chCamel", neck: "scarf" });
+    return d;
+  }
+  // The torso outline from the neck down to hemY (hem half-width hw2), with an optional puff.
+  function torsoPath(m, hemY, hw2, puff) {
+    const { SW, HW, shY, waistY, fem, hw } = m;
+    const p = puff || 0, nw = hw * 0.52, wW = (fem ? HW * 0.8 : Math.max(HW * 0.98, SW * 0.82)) + p, aY = shY + m.hd * 0.75;
+    return D("M", -nw, shY - 3.2, "Q", -SW * 0.72, shY - 3.4 - p * 0.3, -(SW + p * 0.4), shY + 2, "Q", -(SW + 1.5 + p), shY + 6, -(SW - 0.6 + p * 0.6), aY,
+      "Q", -(wW + 0.4), (aY + waistY) / 2, -wW, waistY, "Q", -wW, (waistY + hemY) / 2, -hw2, hemY, "L", hw2, hemY) + " " + reverseSide(m, hemY, hw2, p, 1) + " Z";
+  }
+  // The right-hand outline of torsoPath walked upward from the hem to the neck.
+  function reverseSide(m, hemY, hw2, p, s) {
+    const { SW, HW, shY, waistY, fem, hw } = m;
+    const nw = hw * 0.52, wW = (fem ? HW * 0.8 : Math.max(HW * 0.98, SW * 0.82)) + p, aY = shY + m.hd * 0.75;
+    return D("Q", s * wW, (waistY + hemY) / 2, s * wW, waistY, "Q", s * (wW + 0.4), (aY + waistY) / 2, s * (SW - 0.6 + p * 0.6), aY, "Q", s * (SW + 1.5 + p), shY + 6, s * (SW + p * 0.4), shY + 2,
+      "Q", s * SW * 0.72, shY - 3.4 - p * 0.3, s * nw, shY - 3.2);
+  }
+  // Cel shade down the right of a torso shape.
+  function torsoShade(m, hemY, hw2, p) {
+    const { SW, shY } = m;
+    return P(D("M", SW * 0.45, shY - 2.6, "Q", SW * 0.72, shY - 3.2 - (p || 0) * 0.3, SW + (p || 0) * 0.4, shY + 2, "L", hw2, hemY, "L", hw2 * 0.55, hemY, "Q", SW * 0.42, (shY + hemY) / 2, SW * 0.45, shY - 2.6, "Z"), "chCel");
+  }
+
+  // ---------- the figure ----------
+  // Arm angles per pose, in degrees from hanging straight down; positive swings away from the body,
+  // 180 is straight up. [upper arm, forearm] for the left (s = -1) and right (s = 1) arms.
+  const POSES = {
+    stand: { l: [7, 3], r: [7, 3] }, cheer: { l: [138, 160], r: [138, 160] }, wave: { l: [7, 3], r: [128, 172] },
+    hold: { l: [7, 3], r: [10, -138] }, clasp: { l: [12, -52], r: [12, -58] }, baby: { l: [22, -78], r: [12, -96] },
+    sit: { l: [6, -28], r: [6, -28] }, study: { l: [16, -78], r: [16, -84] }, run: { l: [26, -150], r: [18, -55] },
+  };
+  function avatar(o) {
+    const look = o.look || { hair: 0, skin: 0, shirt: 0 };
+    const m = metrics(o);
+    const { hd, hw, cy, shY, hipY, SW, HW, fem, legL, age } = m;
+    const kid = m.b.kid;
+    const skin = SKINS[(look.skin || 0) % SKINS.length];
+    const col = hairColour(look, age);
+    const mood = o.mood || "ok";
+    const prop = o.prop || "";
+    let pose = o.pose || "stand";
+    const armPose = pose === "hold" ? (prop === "baby" ? "baby" : prop && prop !== "medal" && prop !== "mask" && prop !== "headphones" ? "hold" : "clasp") : POSES[pose] ? pose : "stand";
+    const d = dressFor(o, m, look);
+    const sc = m.H / 154;
+    const hair = hairParts(m, look, col);
+    let s = E(0, 1.5, SW + 6, 3.4, "shadow");
+
+    // Back layer: long hair, a backpack, the hood of a padded coat.
+    if (o.backpack) s += R(n1(-SW - 2), n1(shY + 2), n1(SW * 2 + 4), n1(hd * 1.6), d.topC === "chBag2" ? "chBag" : kid ? "chBag2" : "chBag", 6 * sc) + R(n1(SW - 1), n1(shY + 2), 3, n1(hd * 1.6), "chCel", 2);
+    if (d.layer === "longpad") s += P(D("M", -hw * 1.4, shY - 1, "Q", 0, shY - hd * 0.5, hw * 1.4, shY - 1, "Z"), "chPad");
+    if (d.top === "hoodie" && !d.layer) s += P(D("M", -hw * 1.3, shY, "Q", 0, shY - hd * 0.45, hw * 1.3, shY, "Z"), d.topC) + P(D("M", 0, shY - hd * 0.42, "Q", hw * 1.3, shY - hd * 0.3, hw * 1.3, shY, "L", hw * 0.6, shY, "Z"), "chCel");
+    s += hair.back;
+
+    // Legs: thighs and shins as tapered limbs, from the hip joints to the ankles.
+    const seated = m.seated, run = pose === "run";
+    const legW = (pants) => {
+      const w = HW * (pants ? 1.08 : 1) * (d.bottom === "onesie" ? 1.1 : 1);
+      return [w * 0.5, w * 0.34, w * (pants ? 0.3 : 0.2)];
+    };
+    const kneeY = seated ? hipY + hd * 0.38 : -legL * 0.56;
+    const legPts = (sd) => {
+      const hx = sd * HW * 0.48;
+      if (seated) return [hx, hipY, sd * HW * 0.62, kneeY, sd * HW * 0.58, -3];
+      if (run && sd > 0) return [hx, hipY, sd * HW * 0.35, hipY + legL * 0.3, sd * HW * 0.62, -legL * 0.22];
+      if (run) return [hx, hipY, sd * HW * 0.62, kneeY, sd * HW * 0.82, -3];
+      return [hx, hipY, sd * HW * 0.44, kneeY, sd * HW * 0.42, -3];
+    };
+    const longBottom = d.bottom === "pants" || d.bottom === "onesie";
+    const LW = legW(longBottom);
+    const legSkin = d.legs === "tights" ? "chTights" : skin;
+    let legs = "";
+    for (const sd of [-1, 1]) {
+      const [x1, y1, x2, y2, x3, y3] = legPts(sd);
+      const lc = longBottom ? d.botC : legSkin;
+      legs += limb(x1, y1, x2, y2, LW[0], LW[1], lc, x3, y3, LW[2]);
+      if (!longBottom && d.legs === "socks") legs += limb(x2 + (x3 - x2) * 0.62, y2 + (y3 - y2) * 0.62, x3, y3, LW[1] * 0.86, LW[2] * 1.12, "chSock");
+      if (longBottom && !seated) legs += P(D("M", x2 - sd * 0.5, y2 - legL * 0.12, "L", x2 - sd * 0.3, y2 + legL * 0.2), null, "chCel", 0.5);
+      // Shoes.
+      const sw = HW * (kid === 2 ? 0.3 : 0.3), shH = hd * (kid === 2 ? 0.22 : 0.2);
+      legs += P(D("M", x3 - sw * 1.05, y3 + 2.6, "Q", x3 - sw * 1.15, y3 - shH * 0.9, x3 - sd * sw * 0.1, y3 - shH, "Q", x3 + sw * 1.15, y3 - shH * 0.9, x3 + sw * 1.05, y3 + 2.6, "Z"), d.shoes) +
+        P(D("M", x3 + sw * 0.1, y3 - shH * 0.95, "Q", x3 + sw * 1.1, y3 - shH * 0.8, x3 + sw * 1.05, y3 + 2.6, "L", x3 + sw * 0.2, y3 + 2.6, "Z"), "chCel") +
+        (d.shoes === "chSneaker" ? R(n1(x3 - sw * 1.05), n1(y3 + 1.4), n1(sw * 2.1), 1.3, "chCel", 0.6) : P(D("M", x3 - sw * 0.6, y3 - shH * 0.6, "Q", x3 - sw * 0.3, y3 - shH * 0.9, x3, y3 - shH * 0.95), null, "chSheen", 0.8));
+    }
+    s += legs;
+    // The garment over the hips: trousers' seat, shorts, skirts.
+    const wW = (fem ? HW * 0.8 : Math.max(HW * 0.98, SW * 0.82));
+    const pelvis = (y2, w2) => D("M", -wW, m.waistY, "Q", -HW - 0.6, (m.waistY + hipY) / 2, -w2, y2, "L", w2, y2, "Q", HW + 0.6, (m.waistY + hipY) / 2, wW, m.waistY, "Z");
+    if (d.bottom === "pants" || d.bottom === "onesie") s += P(pelvis(hipY + hd * 0.12, HW * 1.02), d.botC) + P(D("M", 0, hipY - hd * 0.5, "L", 0, hipY + hd * 0.1), null, "chCel", 0.6);
+    else if (d.bottom === "shorts") {
+      const y2 = seated ? hipY + hd * 0.3 : hipY + legL * 0.2;
+      s += P(pelvis(hipY, HW * 1.04), d.botC) + limb(-HW * 0.48, hipY, -HW * (seated ? 0.6 : 0.47), y2, HW * 0.55, HW * 0.48, d.botC) + limb(HW * 0.48, hipY, HW * (seated ? 0.6 : 0.47), y2, HW * 0.55, HW * 0.48, d.botC);
+    } else {
+      // Skirts: pleated school skirt above the knee, a pencil skirt, a long skirt, a kid's skirt.
+      const len = d.bottom === "longskirt" ? (seated ? 0.28 : 0.68) : d.bottom === "pencil" ? 0.42 : d.bottom === "pleats" ? 0.36 : 0.32;
+      const y2 = seated ? Math.max(kneeY + 2, hipY + legL * len * 0.5) : hipY + legL * len;
+      const flare = d.bottom === "pencil" ? HW * 0.98 : d.bottom === "longskirt" ? HW * 1.22 : HW * 1.3 + (seated ? 2 : 0);
+      s += P(D("M", -wW, m.waistY, "Q", -HW - 1, hipY - hd * 0.2, -flare, y2, "Q", 0, y2 + 1.5, flare, y2, "Q", HW + 1, hipY - hd * 0.2, wW, m.waistY, "Z"), d.botC);
+      s += P(D("M", wW * 0.3, m.waistY, "L", wW, m.waistY, "Q", HW + 1, hipY - hd * 0.2, flare, y2, "Q", flare * 0.6, y2 + 1, flare * 0.4, y2, "Z"), "chCel");
+      if (d.bottom === "pleats") {
+        let pl = "";
+        for (let i = -3; i <= 3; i++) pl += D("M", i * wW * 0.28, m.waistY + 1, "L", i * flare * 0.28, y2);
+        s += P(pl, null, "chCel", 0.6) + P(D("M", -flare + 1, y2 - 3, "L", flare - 1, y2 - 3, "M", -wW * 0.4, m.waistY + 2, "L", -flare * 0.42, y2, "M", wW * 0.5, m.waistY + 2, "L", flare * 0.5, y2), null, "chCheck2", 0.6);
+      }
+    }
+
+    // Torso: the main top, then the details that make it a blazer, hoodie, coat or uniform.
+    const tc = d.top === "smock" || d.top === "onesie" ? d.topC : d.topC;
+    const hemY = d.top === "smock" ? hipY + legL * 0.22 : d.top === "blazer" || d.top === "suit" ? hipY + hd * 0.15 : d.top === "onesie" ? hipY + hd * 0.1 : hipY + hd * 0.05;
+    const hemW = d.top === "smock" ? HW * 1.35 : HW * (d.top === "blazer" || d.top === "suit" ? 1.06 : 1.02);
+    const neckC = d.top === "blazer" || d.top === "suit" || (d.top === "shirt" && d.neck) || d.top === "scrubs";
+    s += P(torsoPath(m, hemY, hemW), tc) + torsoShade(m, hemY, hemW);
+    const midY = (shY + hipY) / 2;
+    const V = (depth, wide) => D("M", -hw * wide, shY - 3, "L", 0, shY + depth, "L", hw * wide, shY - 3, "Z");
+    if (d.top === "blazer" || d.top === "suit") {
+      const vd = hd * (d.top === "suit" ? 1.25 : 1.15);
+      s += P(V(vd, 0.62), d.neck === "blouse" ? "chOat" : "chShirt");
+      if (d.neck === "tie") s += P(D("M", -hw * 0.12, shY - 1.6, "L", hw * 0.12, shY - 1.6, "L", hw * 0.16, shY + vd * 0.85, "L", 0, shY + vd + 1, "L", -hw * 0.16, shY + vd * 0.85, "Z"), d.top === "suit" ? "chWine" : "chTie") + P(D("M", -hw * 0.14, shY - 2.4, "L", hw * 0.14, shY - 2.4, "L", hw * 0.1, shY, "L", -hw * 0.1, shY, "Z"), "chTie");
+      if (d.neck === "ribbon") s += P(D("M", 0, shY + 0.4, "L", -hw * 0.5, shY - 1.6, "L", -hw * 0.45, shY + hd * 0.2, "Z M", 0, shY + 0.4, "L", hw * 0.5, shY - 1.6, "L", hw * 0.45, shY + hd * 0.2, "Z"), "chTie") + O(0, shY + 0.4, hd * 0.06, "chTie") +
+        P(D("M", -hw * 0.08, shY + 0.6, "L", -hw * 0.25, shY + hd * 0.42, "M", hw * 0.08, shY + 0.6, "L", hw * 0.25, shY + hd * 0.4), null, "chTie", hd * 0.06);
+      // Lapels, buttons, a breast pocket with the school badge, and the opening down the front.
+      s += P(D("M", -hw * 0.62, shY - 3, "L", -hw * 0.95, shY + hd * 0.25, "L", -hw * 0.55, shY + hd * 0.4, "L", 0, shY + vd + 0.5, "Z"), "chCel") +
+        P(D("M", hw * 0.62, shY - 3, "L", hw * 0.95, shY + hd * 0.25, "L", hw * 0.55, shY + hd * 0.4, "L", 0, shY + vd + 0.5, "Z"), "chCel2") +
+        P(D("M", 0, shY + vd, "L", hw * 0.05, hemY), null, "chCel2", 0.7) + O(hw * 0.22, shY + vd + hd * 0.25, hd * 0.045, "chCel2") + O(hw * 0.22, shY + vd + hd * 0.6, hd * 0.045, "chCel2") +
+        P(D("M", -SW * 0.75, midY + hd * 0.2, "L", -SW * 0.3, midY + hd * 0.2), null, "chCel2", 0.7) + P(D("M", SW * 0.3, midY + hd * 0.2, "L", SW * 0.75, midY + hd * 0.2), null, "chCel2", 0.7);
+      if (d.top === "blazer") s += P(D("M", -SW * 0.68, shY + hd * 0.45, "l", hd * 0.28, 0, "l", 0, hd * 0.2, "q", -hd * 0.14, hd * 0.12, -hd * 0.28, 0, "z"), "chGold");
+    } else if (d.top === "shirt" || d.top === "work" || d.top === "blouse") {
+      s += P(D("M", 0, shY + 1, "L", -hw * 0.75, shY - 2.6, "L", -hw * 0.55, shY + hd * 0.28, "Z M", 0, shY + 1, "L", hw * 0.75, shY - 2.6, "L", hw * 0.55, shY + hd * 0.28, "Z"), d.top === "work" ? "chCel" : "chSheen") +
+        P(D("M", 0, shY + 1, "L", 0, hemY), null, "chCel", 0.6);
+      for (let i = 0; i < 3; i++) s += O(0.8, n1(shY + hd * (0.5 + i * 0.6)), hd * 0.03, "chCel2");
+      if (d.top === "work") s += R(n1(-SW * 0.7), n1(shY + hd * 0.4), n1(hd * 0.4), n1(hd * 0.35), "chCel", 1) + R(n1(SW * 0.25), n1(shY + hd * 0.4), n1(hd * 0.4), n1(hd * 0.35), "chCel", 1);
+      if (d.top === "blouse") for (let i = 0; i < 9; i++) s += O(n1(-SW * 0.6 + (i % 3) * SW * 0.55), n1(shY + hd * (0.5 + Math.floor(i / 3) * 0.6)), hd * 0.05, "chSheen");
+      if (d.neck === "tie") s += P(D("M", -hw * 0.12, shY - 1.4, "L", hw * 0.12, shY - 1.4, "L", hw * 0.16, shY + hd * 1.1, "L", 0, shY + hd * 1.25, "L", -hw * 0.16, shY + hd * 1.1, "Z"), "chTie");
+      if (d.neck === "ribbon") s += P(D("M", 0, shY + 0.4, "L", -hw * 0.5, shY - 1.6, "L", -hw * 0.45, shY + hd * 0.2, "Z M", 0, shY + 0.4, "L", hw * 0.5, shY - 1.6, "L", hw * 0.45, shY + hd * 0.2, "Z"), "chTie") + O(0, shY + 0.4, hd * 0.06, "chTie");
+    } else if (d.top === "hoodie" || d.top === "sweat" || d.top === "track") {
+      if (d.top === "hoodie") s += P(D("M", -hw * 0.9, shY - 3, "Q", 0, shY + hd * 0.35, hw * 0.9, shY - 3, "Q", 0, shY + hd * 0.12, -hw * 0.9, shY - 3, "Z"), "chCel2") +
+        P(D("M", -hw * 0.25, shY + hd * 0.1, "l", -0.3, hd * 0.6, "M", hw * 0.25, shY + hd * 0.1, "l", 0.3, hd * 0.6), null, "chStripe", 0.8) +
+        P(D("M", -HW * 0.62, hemY - hd * 0.1, "L", -HW * 0.5, hemY - hd * 0.75, "L", HW * 0.5, hemY - hd * 0.75, "L", HW * 0.62, hemY - hd * 0.1), null, "chCel2", 0.8);
+      if (d.top === "sweat") s += P(D("M", -hw * 0.6, shY - 3, "Q", 0, shY + hd * 0.12, hw * 0.6, shY - 3), null, "chCel2", 1.6) + R(n1(-wW), n1(hemY - hd * 0.18), n1(wW * 2), n1(hd * 0.18), "chCel");
+      if (d.top === "track") s += P(D("M", -hw * 0.6, shY - 3.2, "L", 0, shY + 0.5, "L", hw * 0.6, shY - 3.2), null, "chStripe", 1.2) + P(D("M", 0, shY + 0.5, "L", 0, hemY), null, "chStripe", 0.8);
+    } else if (d.top === "knit" || d.top === "tee" || d.top === "scrubs") {
+      if (d.top === "scrubs") s += P(V(hd * 0.7, 0.55), skin) + P(D("M", -hw * 0.55, shY - 3, "L", 0, shY + hd * 0.7, "L", hw * 0.55, shY - 3), null, "chCel2", 1) + R(n1(-SW * 0.7), n1(midY), n1(hd * 0.45), n1(hd * 0.4), "chCel", 1) +
+        P(D("M", -hw * 0.6, shY - 2, "L", -hw * 0.2, midY + hd * 0.4), null, "chWine", 0.6) + R(n1(-hw * 0.4), n1(midY + hd * 0.4), n1(hd * 0.22), n1(hd * 0.3), "chCoat", 0.5);
+      else s += P(D("M", -hw * 0.62, shY - 3, "Q", 0, shY + hd * 0.2, hw * 0.62, shY - 3, "Q", 0, shY + hd * 0.05, -hw * 0.62, shY - 3, "Z"), skin) + P(D("M", -hw * 0.62, shY - 3, "Q", 0, shY + hd * 0.2, hw * 0.62, shY - 3), null, "chCel2", d.top === "knit" ? 1.6 : 0.9);
+      if (d.top === "knit") s += R(n1(-wW), n1(hemY - hd * 0.22), n1(wW * 2), n1(hd * 0.22), "chCel");
+      if (d.trim === "stripe") s += R(n1(-SW + 0.6), n1(shY + hd * 0.55), n1(SW * 2 - 1.2), n1(hd * 0.16), "chStripe", 0, null, 0, "opacity:0.85") + R(n1(-SW + 0.6), n1(shY + hd * 0.85), n1(SW * 2 - 1.2), n1(hd * 0.08), "chStripe", 0, null, 0, "opacity:0.85");
+    } else if (d.top === "cardi" || d.top === "over") {
+      s += P(V(hd * 1.6, 0.6).replace(/L 0 [\d.-]+/, "L " + 0 + " " + n1(hemY)), d.top === "cardi" ? "chShirt" : "chOat") + P(D("M", -hw * 0.6, shY - 3, "L", -hw * 0.1, hemY, "M", hw * 0.6, shY - 3, "L", hw * 0.1, hemY), null, "chCel2", 0.8);
+      if (d.top === "cardi") for (let i = 0; i < 4; i++) s += O(n1(-hw * 0.25 + i * 0.05), n1(shY + hd * (0.6 + i * 0.5)), hd * 0.035, "chCel2");
+    } else if (d.top === "smock") {
+      s += P(D("M", -hw * 0.9, shY - 3, "Q", -hw * 0.9, shY + hd * 0.3, 0, shY + hd * 0.32, "Q", hw * 0.9, shY + hd * 0.3, hw * 0.9, shY - 3, "Q", 0, shY + 0.5, -hw * 0.9, shY - 3, "Z"), "chShirt") +
+        R(n1(-HW * 0.7), n1(hipY - hd * 0.1), n1(hd * 0.42), n1(hd * 0.38), "chCel", 1.5) + P(D("M", -HW * 1.2, hemY - hd * 0.3, "L", HW * 1.2, hemY - hd * 0.3), null, "chCel", 0.6);
+    } else if (d.top === "onesie") {
+      for (let i = 0; i < 3; i++) s += R(n1(-SW + 0.4), n1(shY + hd * (0.35 + i * 0.45)), n1(SW * 2 - 0.8), n1(hd * 0.14), "chOnesie2", 0, null, 0, "opacity:0.7");
+      s += P(D("M", -hw * 0.55, shY - 3, "Q", 0, shY + hd * 0.1, hw * 0.55, shY - 3), null, "chOnesie2", 1.2);
+    }
+    // Layers over the top: coats, aprons, vests.
+    const lay = d.layer;
+    if (lay === "longpad" || lay === "puffer" || lay === "coat" || lay === "whitecoat") {
+      const lh = lay === "longpad" ? -legL * 0.22 : lay === "whitecoat" ? hipY + legL * 0.36 : lay === "coat" ? hipY + legL * 0.48 : hipY + hd * 0.1;
+      const lw = lay === "longpad" ? HW * 1.32 : lay === "puffer" ? HW * 1.2 : HW * 1.18;
+      const pf = lay === "longpad" || lay === "puffer" ? 1.8 : 0.4;
+      const lc = lay === "longpad" ? "chPad" : lay === "puffer" ? (look.shirt || 0) % 2 ? "chWine" : "chOlive" : lay === "whitecoat" ? "chCoat" : d.layerC;
+      const open = lay === "whitecoat" || lay === "coat" ? hw * 0.75 : hw * 0.42;
+      const shape = torsoPath(m, lh, lw, pf);
+      // The coat's two front panels: drawn as the coat minus a V opening down to the waist.
+      s += P(shape + " " + D("M", -open, shY - 3, "L", -open * 0.35, lay === "longpad" ? shY + hd * 1.3 : m.waistY + hd * 0.2, "L", 0, lh, "L", open * 0.35, lay === "longpad" ? shY + hd * 1.3 : m.waistY + hd * 0.2, "L", open, shY - 3, "Z"), lc, null, 0, "fill-rule:evenodd") + torsoShade(m, lh, lw, pf);
+      if (lay === "longpad" || lay === "puffer") {
+        let q = "";
+        for (let y = shY + hd * 0.55; y < lh - 2; y += hd * 0.5) q += D("M", -lw - 0.5, y, "Q", -SW * 0.5, y + 1.4, -open * 0.5, y + 0.3, "M", open * 0.5, y + 0.3, "Q", SW * 0.5, y + 1.4, lw + 0.5, y);
+        s += P(q, null, "chCel2", 0.7) + P(D("M", -open * 0.35 - 0.5, shY + hd * 0.6, "L", -1, lh), null, "chSheen", 0.6);
+        s += P(D("M", -hw * 1.15, shY - 1.5, "Q", 0, shY + hd * 0.25, hw * 1.15, shY - 1.5), null, lc, hd * 0.2);
+      } else {
+        // Lapels on a wool coat or a doctor's coat, pockets, a pen.
+        s += P(D("M", -open, shY - 3, "L", -SW * 0.85, shY + hd * 0.45, "L", -open * 0.4, shY + hd * 1.1, "Z"), "chCel") + P(D("M", open, shY - 3, "L", SW * 0.85, shY + hd * 0.45, "L", open * 0.4, shY + hd * 1.1, "Z"), "chCel2") +
+          P(D("M", -lw * 0.85, hipY, "l", hd * 0.55, 0, "M", lw * 0.85, hipY, "l", -hd * 0.55, 0), null, "chCel2", 0.7);
+        if (lay === "whitecoat") s += R(n1(SW * 0.35), n1(shY + hd * 0.5), n1(hd * 0.4), 1, "chCel2") + R(n1(SW * 0.45), n1(shY + hd * 0.32), 1, n1(hd * 0.3), "chTie");
+      }
+    }
+    if (lay === "apron") s += P(D("M", -HW * 0.85, shY + hd * 0.25, "L", HW * 0.85, shY + hd * 0.25, "L", HW * 0.95, hipY + legL * 0.4, "L", -HW * 0.95, hipY + legL * 0.4, "Z"), d.layerC) +
+      P(D("M", HW * 0.4, shY + hd * 0.25, "L", HW * 0.85, shY + hd * 0.25, "L", HW * 0.95, hipY + legL * 0.4, "L", HW * 0.5, hipY + legL * 0.4, "Z"), "chCel") +
+      P(D("M", -HW * 0.8, shY + hd * 0.27, "L", -hw * 0.5, shY - 3, "M", HW * 0.8, shY + hd * 0.27, "L", hw * 0.5, shY - 3), null, d.layerC, 1.2) + R(n1(-HW * 0.5), n1(m.waistY + hd * 0.3), n1(HW), n1(hd * 0.45), "chCel", 1) +
+      P(D("M", -wW, m.waistY, "L", wW, m.waistY), null, "chCel2", 1);
+    if (lay === "visvest") s += P(torsoPath(m, hipY - hd * 0.05, HW * 1.02) + " " + D("M", -hw * 0.6, shY - 3, "L", 0, shY + hd * 1.1, "L", hw * 0.6, shY - 3, "Z"), "chVis", null, 0, "fill-rule:evenodd") +
+      R(n1(-wW - 0.5), n1(midY), n1(wW * 2 + 1), n1(hd * 0.16), "chStripe") + R(n1(-wW - 0.5), n1(midY + hd * 0.5), n1(wW * 2 + 1), n1(hd * 0.16), "chStripe") + torsoShade(m, hipY - hd * 0.05, HW * 1.02);
+    if (lay === "cardigan" || lay === "jvest") s += P(torsoPath(m, hipY + hd * 0.15, HW * 1.06) + " " + D("M", -hw * 0.6, shY - 3, "L", 0, lay === "jvest" ? shY + hd * 1.1 : hipY + hd * 0.15, "L", hw * 0.6, shY - 3, "Z"), d.layerC, null, 0, "fill-rule:evenodd") +
+      torsoShade(m, hipY + hd * 0.15, HW * 1.06) + O(-hw * 0.3, n1(shY + hd * 1.2), hd * 0.04, "chCel2") + O(-hw * 0.32, n1(shY + hd * 1.7), hd * 0.04, "chCel2");
+    if (d.neck === "scarf") s += P(D("M", -hw * 0.95, shY - 2, "Q", 0, shY + hd * 0.35, hw * 0.95, shY - 2, "Q", 0, shY - 4, -hw * 0.95, shY - 2, "Z"), "chWine") + R(n1(-hw * 0.6), n1(shY), n1(hd * 0.3), n1(hd * 0.9), "chWine", 1.5) + P(D("M", -hw * 0.6, shY + hd * 0.5, "l", hd * 0.3, 0), null, "chCel", 0.6);
+    if (d.neck === "towel") s += P(D("M", -hw * 1.1, shY - 2, "Q", 0, shY + hd * 0.3, hw * 1.1, shY - 2), null, "chCoat", hd * 0.18) + R(n1(hw * 0.3), n1(shY - 1), n1(hd * 0.22), n1(hd * 0.7), "chCoat", 1);
+    if (o.backpack) s += limb(-SW + 2.5, shY - 1, -SW + 3.6, hipY - hd * 0.3, 1.2, 1.2, kid ? "chBag2" : "chBag") + limb(SW - 2.5, shY - 1, SW - 3.6, hipY - hd * 0.3, 1.2, 1.2, kid ? "chBag2" : "chBag");
+    if (prop === "medal") s += P(D("M", -hw * 0.5, shY - 2, "L", 0, shY + hd * 0.9, "L", hw * 0.5, shY - 2), null, "chWine", hd * 0.09) + O(0, n1(shY + hd * 1.05), hd * 0.17, "chGold") + O(-hd * 0.05, n1(shY + hd), hd * 0.06, "chSheen");
+    if (o.lanyard) s += P(D("M", -hw * 0.5, shY - 2, "L", 0, shY + hd * 1.2, "L", hw * 0.5, shY - 2), null, "chCel2", 0.6);
+
+    // Arms: upper arm and forearm under the sleeve, then the hand.
+    const P0 = POSES[armPose];
+    const ua = m.arm * 0.5, fa = m.arm * 0.44, handL = hd * (kid ? 0.42 : 0.5);
+    const aw = SW * (fem ? 0.19 : 0.21) * (kid ? 1.12 : 1);
+    const puff = d.layer === "longpad" || d.layer === "puffer" ? 1.5 : d.layer === "coat" || d.layer === "whitecoat" || d.top === "hoodie" ? 0.6 : 0.3;
+    const sleeveC = d.layer === "longpad" ? "chPad" : d.layer === "puffer" ? ((look.shirt || 0) % 2 ? "chWine" : "chOlive") : d.layer === "coat" ? d.layerC : d.layer === "whitecoat" ? "chCoat" : d.layer === "cardigan" ? d.layerC : d.top === "smock" ? "chSmock" : d.topC;
+    const short = !d.layer && (d.sleeve === "short") ;
+    const hands = {};
+    const armSVG = (sd) => {
+      const [a1, a2] = P0[sd < 0 ? "l" : "r"];
+      const sx = sd * (SW - aw * 0.9), sy = shY + 2.2;
+      const ex = sx + sd * Math.sin(rad(a1)) * ua, ey2 = sy + Math.cos(rad(a1)) * ua;
+      const wx = ex + sd * Math.sin(rad(a2)) * fa, wy = ey2 + Math.cos(rad(a2)) * fa;
+      hands[sd] = { x: wx, y: wy, a: a2 };
+      let a = "";
+      const W1 = aw + puff, W2 = aw * 0.86 + puff, W3 = aw * 0.68 + puff * 0.8;
+      if (short || d.sleeve === "rolled") {
+        const cut = d.sleeve === "rolled" ? 0.25 : 1;
+        const mx = ex + (wx - ex) * (1 - cut) * (d.sleeve === "rolled" ? 1 : 0), my2 = ey2 + (wy - ey2) * (1 - cut) * (d.sleeve === "rolled" ? 1 : 0);
+        a += limb(sx, sy, ex, ey2, aw * 0.95, aw * 0.8, skin, wx, wy, aw * 0.6);
+        if (d.sleeve === "rolled") a += limb(sx, sy, ex, ey2, W1, W2, sleeveC, mx, my2, W2 * 1.05);
+        else a += limb(sx, sy, sx + (ex - sx) * 0.62, sy + (ey2 - sy) * 0.62, W1 + 0.4, W2 + 0.5, sleeveC);
+      } else {
+        a += limb(sx, sy, ex, ey2, W1, W2, sleeveC, wx, wy, W3);
+        if (d.trim === "track") a += P(D("M", sx + sd * W1 * 0.7, sy, "L", ex + sd * W2 * 0.7, ey2, "L", wx + sd * W3 * 0.6, wy), null, "chStripe", 0.7);
+        a += P(capsule(wx - (wx - ex) * 0.06, wy - (wy - ey2) * 0.06, wx, wy, W3 + 0.2, W3 + 0.2), "chCel");
+      }
+      // The hand, along the forearm: a palm, fingers together, a thumb on the inner side.
+      const ang = Math.atan2(-(sd * Math.sin(rad(a2))), Math.cos(rad(a2))) * 180 / Math.PI;
+      const fist = armPose === "cheer" || armPose === "run" || (armPose === "hold" && sd > 0) || armPose === "baby";
+      const hl = fist ? handL * 0.72 : handL, hwid = aw * 1.05;
+      const tx = -sd * hwid * 0.75 * (Math.cos(rad(a2)) < 0 ? -1 : 1);
+      a += '<g transform="translate(' + n1(wx) + " " + n1(wy) + ") rotate(" + n1(-ang) + ')">' +
+        P(D("M", -hwid * 0.8, 0, "Q", -hwid, hl * 0.7, -hwid * 0.4, hl, "Q", 0, hl * 1.08, hwid * 0.4, hl, "Q", hwid, hl * 0.7, hwid * 0.8, 0, "Z"), skin) +
+        E(n1(tx), n1(hl * 0.3), n1(hwid * 0.38), n1(hl * 0.3), skin) +
+        P(D("M", 0, hl * 0.2, "Q", hwid * 0.9, hl * 0.6, hwid * 0.4, hl, "Q", hwid * 0.8, hl * 0.5, hwid * 0.6, 0, "Z"), "chSkinSh") +
+        (fist ? "" : P(D("M", -hwid * 0.2, hl * 0.55, "L", -hwid * 0.25, hl * 0.95, "M", hwid * 0.2, hl * 0.55, "L", hwid * 0.22, hl * 0.95), null, "chSkinSh2", 0.4)) + "</g>";
+      return a;
+    };
+    let arms = "";
+    // A baby lies across the forearms: the left arm behind it, the right in front.
+    const babyAt = prop === "baby" && armPose === "baby";
+    arms += armSVG(-1);
+    if (babyAt) arms += G(n1(hw * 0.15), n1(shY + hd * 1.62), bundleBody(), n1(0.86 * (fem ? 0.95 : 1)));
+    const right = armSVG(1);
+    arms += pose === "wave" ? '<g class="wave" style="transform-origin:' + n1(SW - aw * 0.9) + "px " + n1(shY + 2.2) + 'px">' + right + "</g>" : right;
+    s += arms;
+
+    // Neck, head, hair.
+    const nw = hw * (fem ? 0.44 : kid ? 0.46 : 0.54);
+    s += P(D("M", -nw, m.chin - hd * 0.2, "L", -nw - 0.2, shY - 1, "Q", 0, shY + 2.2, nw + 0.2, shY - 1, "L", nw, m.chin - hd * 0.2, "Z"), skin) +
+      P(D("M", -nw, m.chin - hd * 0.12, "Q", 0, m.chin + hd * 0.2, nw, m.chin - hd * 0.12, "L", nw + 0.2, shY - 1, "Q", nw * 0.6, shY - 0.5, nw * 0.45, m.chin + hd * 0.1, "Q", 0, m.chin + hd * 0.14, -nw, m.chin - hd * 0.05, "Z"), "chSkinSh");
+    // Collars that sit around the neck.
+    if (neckC && d.layer !== "longpad") s += P(D("M", -nw - 1, shY - 2.5, "L", -nw * 0.1, shY + 1.2, "L", -nw * 0.4, shY - 3.6, "Z M", nw + 1, shY - 2.5, "L", nw * 0.1, shY + 1.2, "L", nw * 0.4, shY - 3.6, "Z"), d.top === "scrubs" ? "chScrub" : d.neck === "blouse" ? "chOat" : "chShirt");
+    s += head(m, look, mood, skin, col, o);
+    s += hair.front + hair.over;
+    // Hats and things on the head.
+    const T = m.top - hd * 0.05;
+    if (d.hat === "kinder") s += P(D("M", -hw - 1.2, cy - hd * 0.22, "Q", -hw - 0.8, T - hd * 0.08, 0, T - hd * 0.1, "Q", hw + 0.8, T - hd * 0.08, hw + 1.2, cy - hd * 0.22, "Z"), "chMustard") +
+      P(D("M", -hw - 2.6, cy - hd * 0.2, "Q", 0, cy - hd * 0.3, hw + 2.6, cy - hd * 0.2, "Q", 0, cy - hd * 0.12, -hw - 2.6, cy - hd * 0.2, "Z"), "chMustard") + P(D("M", hw * 0.2, T - hd * 0.09, "Q", hw + 0.8, T - hd * 0.06, hw + 1.2, cy - hd * 0.22, "L", hw * 0.6, cy - hd * 0.22, "Z"), "chCel") +
+      P(D("M", -hw - 2.6, cy - hd * 0.2, "Q", 0, cy - hd * 0.12, hw + 2.6, cy - hd * 0.2), null, "chCel", 0.5);
+    if (d.hat === "cap" || d.hat === "helmet") {
+      const hc = d.hat === "cap" ? "chBlazer" : "chHelmet";
+      s += P(D("M", -hw - 1.4, cy - hd * 0.22, "Q", -hw - 1.2, T - hd * 0.22, 0, T - hd * 0.24, "Q", hw + 1.2, T - hd * 0.22, hw + 1.4, cy - hd * 0.22, "Z"), hc) +
+        P(D("M", hw * 0.2, T - hd * 0.22, "Q", hw + 1.2, T - hd * 0.2, hw + 1.4, cy - hd * 0.22, "L", hw * 0.6, cy - hd * 0.22, "Z"), "chCel") +
+        (d.hat === "cap" ? P(D("M", -hw - 1.6, cy - hd * 0.22, "Q", 0, cy - hd * 0.05, hw + 1.6, cy - hd * 0.22, "Q", 0, cy - hd * 0.3, -hw - 1.6, cy - hd * 0.22, "Z"), "chCel2") + O(0, n1(T), hd * 0.06, "chGold")
+          : R(n1(-hw - 1.4), n1(cy - hd * 0.3), n1(hw * 2 + 2.8), n1(hd * 0.1), "chBlazer", 1) + P(D("M", -hw * 0.7, T - hd * 0.05, "Q", -hw * 0.3, T - hd * 0.18, hw * 0.1, T - hd * 0.18), null, "chSheen", hd * 0.06));
+    }
+    if (d.hat === "hardhat") s += P(D("M", -hw - 1.6, cy - hd * 0.18, "Q", -hw - 1.4, T - hd * 0.3, 0, T - hd * 0.32, "Q", hw + 1.4, T - hd * 0.3, hw + 1.6, cy - hd * 0.18, "Z"), "chVis") +
+      R(n1(-hw - 3), n1(cy - hd * 0.24), n1(hw * 2 + 6), n1(hd * 0.1), "chVis", 1) + P(D("M", 0, T - hd * 0.32, "L", 0, cy - hd * 0.24), null, "chCel", hd * 0.12) +
+      P(D("M", hw * 0.2, T - hd * 0.3, "Q", hw + 1.4, T - hd * 0.28, hw + 1.6, cy - hd * 0.18, "L", hw * 0.6, cy - hd * 0.18, "Z"), "chCel") + P(D("M", -hw * 0.75, T - hd * 0.1, "Q", -hw * 0.4, T - hd * 0.28, -hw * 0.05, T - hd * 0.28), null, "chSheen", hd * 0.05);
+    if (d.hat === "straw") s += E(0, n1(cy - hd * 0.22), n1(hw + hd * 0.55), n1(hd * 0.13), "chStraw") + P(D("M", -hw - 0.6, cy - hd * 0.22, "Q", -hw, T - hd * 0.3, 0, T - hd * 0.3, "Q", hw, T - hd * 0.3, hw + 0.6, cy - hd * 0.22, "Z"), "chStraw") +
+      R(n1(-hw - 0.6), n1(cy - hd * 0.34), n1(hw * 2 + 1.2), n1(hd * 0.1), "chOlive") + P(D("M", hw * 0.2, T - hd * 0.3, "Q", hw, T - hd * 0.3, hw + 0.6, cy - hd * 0.22, "L", hw * 0.5, cy - hd * 0.22, "Z"), "chCel") +
+      P(D("M", -hw - hd * 0.5, cy - hd * 0.2, "Q", 0, cy - hd * 0.05, hw + hd * 0.5, cy - hd * 0.2), null, "chCel", 0.8);
+    if (prop === "headphones") s += P(D("M", -hw - 1.6, cy, "Q", -hw - 1.2, T - hd * 0.25, 0, T - hd * 0.26, "Q", hw + 1.2, T - hd * 0.25, hw + 1.6, cy), null, "chFrame", hd * 0.1) +
+      R(n1(-hw - hd * 0.24), n1(cy - hd * 0.18), n1(hd * 0.26), n1(hd * 0.4), "chSlate", hd * 0.1) + R(n1(hw - hd * 0.02), n1(cy - hd * 0.18), n1(hd * 0.26), n1(hd * 0.4), "chSlate", hd * 0.1) + R(n1(hw + hd * 0.08), n1(cy - hd * 0.18), n1(hd * 0.16), n1(hd * 0.4), "chCel", hd * 0.08);
+    if (prop === "mask") s += P(D("M", -hw * 0.95, cy + hd * 0.1, "Q", 0, cy + hd * 0.02, hw * 0.95, cy + hd * 0.1, "L", hw * 0.8, cy + hd * 0.38, "Q", 0, cy + hd * 0.56, -hw * 0.8, cy + hd * 0.38, "Z"), "chCoat") +
+      P(D("M", 0, cy + hd * 0.06, "L", 0, cy + hd * 0.52), null, "chCel", 0.5) + P(D("M", hw * 0.3, cy + hd * 0.08, "Q", hw * 0.95, cy + hd * 0.1, hw * 0.8, cy + hd * 0.38, "Q", hw * 0.5, cy + hd * 0.5, hw * 0.3, cy + hd * 0.5, "Z"), "chCel") +
+      P(D("M", -hw * 0.95, cy + hd * 0.12, "L", -hw - 0.3, cy, "M", hw * 0.95, cy + hd * 0.12, "L", hw + 0.3, cy), null, "chCoat", 0.6);
+    if (d.layer === "whitecoat") s += P(D("M", -nw - 1.5, shY - 1, "Q", -SW * 0.6, shY + hd * 0.9, -SW * 0.15, shY + hd * 1.35, "M", nw + 1.5, shY - 1, "Q", SW * 0.55, shY + hd * 0.7, SW * 0.35, shY + hd * 1.15), null, "chFrame", 0.9) + O(n1(-SW * 0.15), n1(shY + hd * 1.42), hd * 0.1, "chMetal");
+
+    // Props in the right hand (and the medal, already on the chest).
+    const h = hands[1], hx = h.x, hy = h.y + handL * 0.35;
+    const scP = sc * (kid ? 1.15 : 1);
+    if (prop === "book") s += G(n1(hx - 2 * scP), n1(hy - 2 * scP), R(-9.5, -11, 19, 14, "chWine", 1.5) + R(-8.6, -10.4, 17.2, 12.6, "chOat", 0.8) + P("M0 -10.4 L0 2.2", null, "chCel2", 0.8) + P("M0 -10.4 L8.6 -10.4 L8.6 2.2 L0 2.2 Z", "chCel") + P("M-7 -7 L-2 -7 M-7 -4.5 L-2 -4.5 M-7 -2 L-3 -2 M2 -7 L7 -7 M2 -4.5 L7 -4.5", null, "chCel2", 0.5), scP);
+    if (prop === "phone") s += G(n1(hx), n1(hy - 3 * scP), R(-3.4, -6.2, 6.8, 12, "chFrame", 1.4) + R(-2.7, -5.4, 5.4, 10.2, "chDusty", 0.8) + P("M-2.7 -5.4 L2.7 -5.4 L-2.7 2 Z", "chSheen"), scP);
+    if (prop === "baton") s += G(n1(hx), n1(h.y + handL * 0.2), R(-2.4, -11, 4.8, 16, "chWine", 2) + R(0.2, -11, 2.2, 16, "chCel", 1), scP);
+    if (prop === "envelope") s += G(n1(hx - 1), n1(hy - 3), R(-9, -6, 18, 12, "chCoat", 1) + P("M-9 -6 L0 1.5 L9 -6", null, "chCel2", 0.7) + O(0, 1.5, 1.8, "chWine") + P("M2 -6 L9 -6 L9 6 L4 6 Z", "chCel"), scP);
+    // still: no breathing (the small portraits in the Friends panel).
+    s = compact(s);
+    return o.still ? '<g style="stroke-linecap:round;stroke-linejoin:round">' + s + "</g>" : A("breathe", s, "stroke-linecap:round;stroke-linejoin:round");
+  }
+  // A head-and-shoulders portrait of the same avatar, for the Friends panel. o: avatar options.
+  function portrait(o, label) {
+    const m = metrics(o);
+    const size = m.hd * 1.9, x = -size / 2, y = m.top - m.hd * 0.24;
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + n1(x) + " " + n1(y) + " " + n1(size) + " " + n1(size) + '" class="art portrait"' +
+      (label ? ' role="img" aria-label="' + esc(label) + '"' : ' aria-hidden="true" focusable="false"') + ">" + avatar(Object.assign({ still: true }, o)) + "</svg>";
+  }
+
   // Which body and clothes fit the life stage.
   function figureFor(stage) {
-    // Ages 0–2 and 3–5: a small child, smaller still as a baby.
-    if (stage === "baby") return { age: "child", outfit: "kid", scale: 0.6 };
-    if (stage === "kinder") return { age: "child", outfit: "kid", scale: 0.8 };
+    // Ages 0–2: a toddler in a onesie; 3–5: kindergarten smock and yellow hat.
+    if (stage === "baby") return { age: "toddler", outfit: "onesie", scale: 0.92 };
+    if (stage === "kinder") return { age: "child", outfit: "smock", scale: 0.86 };
     if (stage === "elem" || stage === "birth") return { age: "child", outfit: "kid", backpack: true };
-    if (stage === "mid") return { age: "teen", outfit: "uniform", scale: 0.92 };
+    if (stage === "mid") return { age: "teen", outfit: "uniform", school: "mid", scale: 0.95 };
     if (stage === "high" || stage === "hs3") return { age: "teen", outfit: "uniform" };
-    if (stage === "academy" || stage === "selfstudy") return { age: "adult", outfit: "hoodie" };
+    if (stage === "academy" || stage === "selfstudy") return { age: "adult", outfit: "hoodie", scale: 0.97 };
     if (stage === "dropout") return { age: "teen", outfit: "hoodie" };
     return { age: "adult", outfit: "casual" };
   }
-  // sex "m" draws from the two short styles, "f" from long hair and the bob. A save from before the
-  // player chose (no sex) keeps the look it always had, from all four.
+  // Seeded looks: hair style (eight per sex), colour, skin, clothes, glasses, a double-eyelid crease and,
+  // for some adults, dyed hair. A save from before the player chose a sex (none) draws from both lists.
   function lookFor(seed, sex) {
     const r = rand((seed | 0) ^ 0x5eed);
-    const h = Math.floor(r() * 4);
-    const hair = sex === "m" ? h % 2 : sex === "f" ? 2 + (h % 2) : h;
-    return { hair, skin: r() < 0.35 ? 1 : 0, shirt: Math.floor(r() * 4), sex: sex || null };
+    const h = Math.floor(r() * 16);
+    const hair = sex === "m" ? HAIR_M[h % 8] : sex === "f" ? HAIR_F[h % 8] : (h < 8 ? HAIR_M : HAIR_F)[h % 8];
+    const skin = r() < 0.3 ? 1 : r() < 0.12 ? 2 : 0;
+    const shirt = Math.floor(r() * 6);
+    const hc = r() < 0.55 ? 0 : r() < 0.6 ? 1 : 2;
+    const glasses = r() < 0.22;
+    const lid = r() < 0.5;
+    const dye = r() < 0.35 ? 1 + Math.floor(r() * 3) : 0;
+    return { hair, skin, shirt, sex: sex || null, hc, glasses, lid, dye };
+  }
+  // A newborn swaddled in a blanket, about 46 wide, centred on (0, 0), head to the left, asleep.
+  function bundleBody() {
+    return P("M-15 -9.5 Q4 -12 20 -8 Q26 -5 25 1 Q24 8 14 9.5 Q-2 11 -15 8.5 Z", "chBlanket") +
+      P("M-2 10.4 Q12 10 18 7 Q24 3 25 1 Q24 8 14 9.5 Q4 10.8 -2 10.4 Z M2 -11 Q14 -11 20 -8 Q26 -5 25 1 Q20 -6 2 -7.5 Z", "chCel") +
+      P("M-4 -8 Q6 0 4 10 M6 -9 Q16 -2 14 9", null, "chCel", 0.7) + P("M-6 -10 Q4 -11.5 14 -9.5", null, "chSheen", 1.2) +
+      O(-16, -1, 10, "chBlanket2") + P("M-16 -11 A10 10 0 0 1 -6 -1 Q-10 -5 -16 -5 Z", "chCel") +
+      E(-16.5, -0.5, 6.4, 6.8, "chSkin0") + P("M-12 -5 Q-10 0 -12.5 5 Q-15 6.8 -17 6.2 Q-12.5 4 -12 -5 Z", "chSkinSh") +
+      P("M-20.4 -1.2 q1.2 0.9 2.4 0 M-15.6 -1.2 q1.2 0.9 2.4 0", null, "chLash", 0.55) + P("M-17.6 3.1 q0.8 0.6 1.6 0", null, "chLipSh", 0.55) +
+      O(-16.6, 1, 0.5, "chSkinSh2") + P("M-19 -6 q2 -1.5 4 -0.6", null, "chHair1", 0.6) +
+      E(-9.6, 4.6, 2.6, 2.1, "chSkin0") + P("M-9.6 3 q1.6 0.4 1.8 2", null, "chSkinSh", 0.5);
   }
   // Mood from the condition bars; the thresholds mirror where the engine starts to punish them.
   function moodOf(g) {
@@ -507,11 +1095,11 @@
   // A portrait in the clothes of a life stage (a classmate dressed like you), for the Friends panel.
   function portraitFor(stage, look, mood, label) {
     const f = figureFor(stage);
-    return portrait({ age: f.age, outfit: f.outfit, look, mood: mood || "happy" }, label);
+    return portrait({ age: f.age, outfit: f.outfit, school: f.school, look, mood: mood || "happy" }, label);
   }
   function person(ctx, x, y, s, extra) {
     const f = figureFor(ctx.stage);
-    const o = Object.assign({ age: f.age, outfit: f.outfit, backpack: f.backpack, look: ctx.look, mood: ctx.mood }, extra || {});
+    const o = Object.assign({ age: f.age, outfit: f.outfit, school: f.school, backpack: f.backpack, look: ctx.look, mood: ctx.mood, season: ctx.season }, extra || {});
     return G(x, y, avatar(o), (s || 1) * (f.scale || 1));
   }
 
@@ -560,7 +1148,7 @@
     s += P(d, null, seam, 1, "opacity:0.7");
     // Darker toward the back wall; a soft sheen in the middle of a polished floor.
     s += R(x0 - 400, y1, x1 - x0 + 800, 40, null, 0, null, 0, fill(aoF("u"), "opacity:0.16"));
-    if (kind !== "dark") s += E(vx, y1 + (fh - y1) * 0.55, (x1 - x0) * 0.4, (fh - y1) * 0.35, null, null, 0, fill(def("sheen", (id) => rad(id, [[0, "hiE", 0.22], [1, "hiE", 0]]))));
+    if (kind !== "dark") s += E(vx, y1 + (fh - y1) * 0.55, (x1 - x0) * 0.4, (fh - y1) * 0.35, null, null, 0, fill(def("sheen", (id) => radial(id, [[0, "hiE", 0.22], [1, "hiE", 0]]))));
     return s;
   }
   // Sunlight from a window on the left falling across the floor (x, y: where it lands; w, h: its size).
@@ -776,7 +1364,7 @@
       for (let z = 3; z < Z1; z += 3.5) s += q([[-0.1, ht - 0.02, z], [0.1, ht - 0.02, z], [0.1, ht - 0.02, z + 1.2], [-0.1, ht - 0.02, z + 1.2]], "fluoro");
       // Where the walls meet the floor and ceiling, a little darker.
       s += P(poly([p(-hw, 0, Z0), p(-hw, 0, Z1), p(-hw + 0.25, 0, Z1), p(-hw + 0.25, 0, Z0)]), "aoC", null, 0, "opacity:0.12") + P(poly([p(hw, 0, Z0), p(hw, 0, Z1), p(hw - 0.25, 0, Z1), p(hw - 0.25, 0, Z0)]), "aoC", null, 0, "opacity:0.1");
-      s += E(p(0, 0, 9)[0], p(0, 0, 9)[1], 160, 20, null, null, 0, fill(def("sheen", (id) => rad(id, [[0, "hiE", 0.22], [1, "hiE", 0]]))));
+      s += E(p(0, 0, 9)[0], p(0, 0, 9)[1], 160, 20, null, null, 0, fill(def("sheen", (id) => radial(id, [[0, "hiE", 0.22], [1, "hiE", 0]]))));
       s += G(...p(-hw + 0.1, 0, 2.6), R(-6, -30, 12, 30, "accentRed", 4) + R(-3, -36, 6, 6, "inkE"));
       return s + vignette(W, H);
     },
@@ -868,7 +1456,7 @@
       s += P("M300 260 Q370 210 470 186 L520 186 Q450 214 430 260 Z", "pathE") + P("M300 260 Q370 210 470 186", null, "aoC", 1, "opacity:0.15");
       s += tree(110, 196, ctx.season, 1.2, "cherry") + tree(260, 192, ctx.season, 0.9) + tree(770, 200, ctx.season, 1.2);
       s += particles(ctx.season, 0, 0, W, 200, false, 14, 9);
-      s += G(560, 210, avatar({ age: "adult", outfit: "casual", look: { hair: 2, shirt: 2 }, mood: "happy" }), 0.5) + G(600, 214, avatar({ age: "adult", outfit: "casual", look: { hair: 0, shirt: 3 }, mood: "ok" }), 0.5);
+      s += G(560, 210, avatar({ age: "adult", outfit: "casual", look: { hair: 2, shirt: 2, sex: "f" }, mood: "happy" }), 0.5) + G(600, 214, avatar({ age: "adult", outfit: "casual", look: { hair: 0, shirt: 3 }, mood: "ok" }), 0.5);
       return s;
     },
     // The 수능 hall: a classroom emptied for the exam, desks spaced apart with seat numbers taped on,
@@ -1089,7 +1677,7 @@
       let d = "";
       for (let x = 0; x < W; x += 34) d += "M" + x + " 0 L" + x + " " + H + " ";
       for (let y = 0; y < H; y += 34) d += "M0 " + y + " L" + W + " " + y + " ";
-      s += P(d, null, "bathTile2", 1.2) + R(0, 0, W, H, null, 0, null, 0, fill(def("bth", (id) => rad(id, [[0, "hiE", 0.2], [1, "aoC", 0.35]], 0.35, 0.3, 0.9))));
+      s += P(d, null, "bathTile2", 1.2) + R(0, 0, W, H, null, 0, null, 0, fill(def("bth", (id) => radial(id, [[0, "hiE", 0.2], [1, "aoC", 0.35]], 0.35, 0.3, 0.9))));
       return s;
     },
   });
@@ -1175,7 +1763,7 @@
     bus: () => G(420, 168, shadow(10, 4, 90, 8) + R(-70, -54, 160, 54, "busE", 6) + R(-70, -20, 160, 10, "busE2") + [-62, -30, 2, 34].map((x) => R(x, -48, 28, 20, "winDay", 2)).join("") + R(66, -48, 20, 34, "winDay", 2) +
       O(-40, 2, 11, "inkE") + O(56, 2, 11, "inkE") + O(-40, 2, 4, "steel") + O(56, 2, 4, "steel") + O(88, -10, 3, "lampWarm")),
     finish: () => L(470, 120, 470, 204, "steel2", 3) + L(580, 120, 580, 204, "steel2", 3) + A("sway", P("M470 140 Q525 150 580 140", null, "paperE", 3)) + flags(20, 660, 26, 2) +
-      G(300, EFEET, avatar({ age: "child", outfit: "kid", look: { hair: 3, shirt: 1 }, mood: "happy" }), 0.85),
+      G(300, EFEET, avatar({ age: "child", outfit: "kid", look: { hair: 3, shirt: 1, sex: "f" }, mood: "happy" }), 0.85),
     // The bookworm: a tower of novels, a reading light, the story drifting up as motes.
     dragon: () => stack(470, 176, 9, 1.6, 5) + G(520, 176, R(-16, -20, 32, 20, "fabric2", 2) + R(-14, -18, 28, 2, "paperE")) + motes(360, 30, 220, 110, 10, 4) + pool(470, 120, 140, 80, "lampWarm", 0.45),
     mathsyms: (v) => G(0, 0, R(200, 30, 210, 100, "boardE", 2) + R(200, 30, 210, 100, "hiE", 0, null, 0, "opacity:0.05"), 1) + T(250, 70, "π", "chalkE", 30) + T(300, 104, "√x", "chalkE", 22) + T(360, 72, "∑", "chalkE", 28) + T(340, 116, "x²", "chalkE", 18) +
@@ -1189,8 +1777,7 @@
     looming: () => G(0, 0, gloom(0.5)) + [[380, 1.05], [450, 1.15], [520, 1]].map(([x, sc]) => G(x, EFEET, E(0, 0, 30, 6, "aoC", null, 0, "opacity:0.4") + P("M-24 0 L-22 -70 Q-26 -96 0 -100 Q26 -96 22 -70 L24 0 Z", "silhouette") + O(0, -114, 15, "silhouette"), sc)).join(""),
     podium: (v) => G(440, EFEET, shadow(0, 0, 50, 6) + boxP(-40, 0, 80, 70, 0.1, [300 - 440, -120], "woodDesk", "woodDesk2", "woodDesk2") + R(-30, -60, 60, 3, "brass") + L(10, -70, 20, -96, "inkE", 2) + O(20, -98, 4, "inkE")) +
       G(540, 178, R(-24, -36, 48, 36, "paperE", 2) + R(-12, -38, 24, 4, "inkE") + R(-4, -28, 8, 14, "aoC", 0, null, 0, "opacity:0.4")) + (v === "r0a" ? motes(160, 20, 300, 80, 10, 7) : ""),
-    doctor: () => G(440, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 1, shirt: 3 }, mood: "happy" })) + G(440, EFEET, P("M-22 -104 L22 -104 L24 -56 L-24 -56 Z", "paper", "line", 1) +
-      P("M-8 -100 Q-14 -76 0 -72 Q14 -76 8 -100", null, "dark", 2) + O(0, -70, 3.5, "metal")),
+    doctor: () => G(440, EFEET, avatar({ age: "adult", outfit: "casual", gear: "coat", look: { hair: 1, shirt: 3, sex: "m", glasses: true, lid: true }, mood: "happy" })),
     door: () => shadow(475, 180, 70, 6) + R(414, 30, 122, 150, "doorFrame") + R(420, 34, 110, 146, "doorE2") + R(420, 34, 4, 146, "hiE", 0, null, 0, "opacity:0.15") + R(510, 104, 14, 5, "brass", 2) +
       G(475, 80, O(0, 0, 20, "paperE") + O(0, 0, 20, null, "accentRed", 4) + L(-14, 14, 14, -14, "accentRed", 4)) + A("shake", P("M540 40 q10 10 0 20 M548 34 q16 16 0 32", null, "inkE", 1.4, "opacity:0.4")),
     monitors: () => G(120, 196, shadow(0, 2, 26, 4) + R(-18, -26, 36, 26, "cupNoodle", 3) + R(-18, -26, 36, 8, "accentRed", 2) + E(0, -26, 18, 4, "paperE2") + G(0, -30, A("rise", P("M-6 0 q-4 -6 0 -12 M6 0 q4 -6 0 -12", null, "steamE", 1.6)))) + G(156, 196, R(-6, -30, 12, 30, "neonA", 3, null, 0, "opacity:0.8")),
@@ -1199,7 +1786,7 @@
       G(560, 140, boxP(-18, 40, 36, 40, 0.06, [-260, -50], "woodDesk", "woodDesk2", "woodDesk2") + R(-10, -8, 6, 8, "paperE", 1) + R(0, -10, 8, 10, "accentRed", 2, null, 0, "opacity:0.7") + L(-14, -2, 6, -6, "steel", 1.5)) +
       G(250, 176, R(-12, -30, 24, 30, "paperE", 8) + G(0, -34, A("rise", E(0, 0, 8, 5, "steamE", null, 0, "opacity:0.6")))) + (id === "flu" ? G(330, 118, R(-14, -6, 28, 10, "towel", 4)) : ""),
     laptop: () => pool(450, 120, 130, 80, "monitorGlow", 0.5) + G(450, 176, P("M-70 0 L-58 -86 L58 -86 L70 0 Z", "inkE") + R(-52, -80, 104, 68, "phoneScreen", 2) + G(0, -50, O(0, -6, 10, "fabric2") + R(-14, 4, 28, 18, "uniformE", 6)) + R(-36, -26, 30, 3, "paperE", 0, null, 0, "opacity:0.6") + R(-90, 0, 180, 7, "steel", 2)),
-    mom: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 0 }, mood: "grumpy", pose: "hold" }), 1.05) + G(560, 150, R(-16, -14, 32, 16, "inkE", 3) + L(-10, -14, -14, -28, "inkE", 1.5) + L(10, -14, 14, -28, "inkE", 1.5) + O(8, -6, 1.6, "neonA")),
+    mom: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 0, sex: "f" }, mood: "grumpy", pose: "hold" }), 1.05) + G(560, 150, R(-16, -14, 32, 16, "inkE", 3) + L(-10, -14, -14, -28, "inkE", 1.5) + L(10, -14, 14, -28, "inkE", 1.5) + O(8, -6, 1.6, "neonA")),
     hearts: () => G(450, 120, A("float", R(-24, -16, 48, 32, "paperE", 1) + P("M-24 -16 L0 4 L24 -16", null, "paperE2", 1) + P("M0 6 C-6 1 -4 -5 0 -2 C4 -5 6 1 0 6 Z", "heartE")), 1.4) + G(560, 168, R(-9, -26, 18, 28, "fabric4", 3) + R(-9, -20, 18, 5, "paperE", 0, null, 0, "opacity:0.6")) +
       heart(390, 80, 1.2, 0, -0.5) + heart(530, 64, 1, 0, -2),
     chat: () => G(440, 110, R(-80, -70, 150, 28, "bubbleE", 12) + R(-50, -32, 130, 28, "bubbleMe", 12) + T(30, -12, "100", "inkE", 15) + R(-80, 6, 104, 28, "bubbleE", 12) + L(-70, -56, -10, -56, "inkE", 2, "opacity:0.3") + L(-70, 20, -20, 20, "inkE", 2, "opacity:0.3")),
@@ -1209,7 +1796,7 @@
     notes: () => G(470, 130, A("float", R(-60, -40, 120, 80, "paperE", 2) + L(0, -40, 0, 40, "paperE2", 1.5) + L(-50, -24, -10, -24, "stickyY", 5, "opacity:0.8") + L(-50, -10, -16, -10, "inkE", 1, "opacity:0.4") +
       L(-50, 4, -6, 4, "stickyB", 5, "opacity:0.7") + L(10, -24, 50, -24, "inkE", 1, "opacity:0.4") + L(10, -10, 44, -10, "stickyP", 5, "opacity:0.6") + L(10, 4, 50, 4, "inkE", 1, "opacity:0.4") + L(-50, 18, -20, 18, "inkE", 1, "opacity:0.4"))) + pool(470, 130, 120, 70, "sunLight", 0.3),
     shop: () => G(160, 34, A("drift", T(0, 0, "₩", "brass", 26)), 1) + G(230, 60, A("fall", O(0, 0, 7, "brass") + O(-2, -2, 3, "hiE", null, 0, "opacity:0.4"), "--d:3s;--dx:0px;--fy:120px")) + G(110, 50, A("fall", O(0, 0, 6, "brass") + O(-2, -2, 2.5, "hiE", null, 0, "opacity:0.4"), "--d:3.6s;--del:-1s;--dx:6px;--fy:130px")),
-    grandma: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, grey: true }, mood: "happy", prop: "envelope", pose: "hold" }), 0.95) + pool(470, 100, 110, 90, "lampWarm", 0.4),
+    grandma: () => G(470, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, grey: true, sex: "f" }, mood: "happy", prop: "envelope", pose: "hold" }), 0.95) + pool(470, 100, 110, 90, "lampWarm", 0.4),
     // Insomnia: 3 a.m. on the clock, the phone's light on the ceiling.
     sheep: () => gloom(0.7) + clock(470, 60, 20, 3) + pool(420, 30, 120, 30, "monitorGlow", 0.6) + G(400, 172, R(-10, -3, 20, 4, "inkE", 1) + R(-9, -3, 18, 1.4, "monitorGlow")) + motes(380, 80, 200, 80, 5, 9),
     stall: () => flags(0, 680, 22, 3) + G(460, 176, shadow(0, 2, 100, 6) + R(-90, -56, 180, 56, "stallE", 2) + R(-100, -100, 200, 16, "awning", 2) + [0, 1, 2, 3, 4, 5, 6].map((i) => R(-100 + i * 29, -100, 14, 16, "paperE", 0, null, 0, "opacity:0.7")).join("") + R(-90, -84, 4, 28, "steel2") + R(86, -84, 4, 28, "steel2") +
@@ -1229,7 +1816,7 @@
       G(400, 170, R(-20, -10, 40, 26, "paperE", 1) + R(-16, -6, 10, 12, "fabric2") + L(-2, -2, 14, -2, "inkE", 1, "opacity:0.4") + L(-2, 4, 14, 4, "inkE", 1, "opacity:0.4")) + G(560, 166, O(0, 0, 9, "paperE") + O(0, 0, 9, null, "inkE", 2)),
     lunchbox: () => G(450, 170, shadow(0, 2, 80, 6) + R(-80, -46, 120, 46, "fabric1", 5) + R(-74, -40, 52, 34, "paperE", 3) + R(-16, -40, 50, 16, "kimchi", 2) + R(-16, -20, 24, 14, "matB", 2) + O(20, -12, 7, "stickyY") +
       R(56, -86, 32, 86, "steel", 7) + R(56, -86, 10, 86, "hiE", 5, null, 0, "opacity:0.25") + R(56, -90, 32, 12, "inkE", 5)) + G(520, 70, A("rise", P("M0 0 q-6 -8 0 -16 q6 -8 0 -16", null, "steamE", 1.6))),
-    counsel: () => G(500, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 1, shirt: 3 }, mood: "ok", pose: "hold", prop: "book" }), 0.95),
+    counsel: () => G(500, EFEET, avatar({ age: "adult", outfit: "casual", look: { hair: 1, shirt: 3, sex: "m", glasses: true }, mood: "ok", pose: "hold", prop: "book" }), 0.95),
     // People: a birthday cake, a block tower, a cheering sign at the exam gate.
     cake: () => pool(470, 120, 110, 80, "candle", 0.6) + G(470, 176, shadow(0, 2, 60, 5) + R(-50, -40, 100, 40, "paperE", 5) + R(-50, -40, 100, 8, "blossomE", 3) + R(-40, -64, 80, 24, "paperE", 5) + R(-40, -64, 80, 6, "stickyP", 3) +
       [-24, -8, 8, 24].map((x) => R(x - 1.5, -78, 3, 14, "stickyB", 1) + G(x, -82, A("flicker", P("M0 0 Q-3 -5 0 -10 Q3 -5 0 0 Z", "candle")))).join("")) + flags(20, 660, 24, 4),
@@ -1474,10 +2061,8 @@
       // in a blanket. mom() is the mother, a grandmother or a carer; with only a dad, he holds the baby.
       const j = ctx.jobs || {};
       const dadHolds = ctx.parents === "dad";
-      s += mom(ctx, 340, EFEET, 0.95, { gear: JOB_GEAR[j.mom] || "", mood: "happy", pose: dadHolds ? "stand" : "hold" });
-      s += dad(ctx, 450, EFEET, 0.98, { gear: JOB_GEAR[j.dad] || "", mood: "happy", pose: dadHolds ? "hold" : "wave" });
-      // The bundle sits in the holding arm (feet-relative offsets scaled with the figure).
-      s += dadHolds ? bundle(450 + 8, EFEET - 76, 1.05) : bundle(340 + 8, EFEET - 74, 1.05);
+      s += mom(ctx, 340, EFEET, 0.95, { gear: JOB_GEAR[j.mom] || "", mood: "happy", pose: dadHolds ? "stand" : "hold", prop: dadHolds ? "" : "baby" });
+      s += dad(ctx, 450, EFEET, 0.98, { gear: JOB_GEAR[j.dad] || "", mood: "happy", pose: dadHolds ? "hold" : "wave", prop: dadHolds ? "baby" : "" });
       return s;
     },
     // The track choice: a fork in a snowy road with two road signs, humanities left and sciences right.
@@ -1492,7 +2077,7 @@
     // A mock exam: the OMR card on a desk, a computer-sign pen, an eraser, the classroom soft behind.
     mock(ctx) {
       let s = BACKDROPS.class(ctx) + R(0, 0, EW, EH, "bgVeil", 0, null, 0, "opacity:0.3");
-      s += P("M60 220 L130 140 L470 140 L560 220 Z", "formica") + P("M60 220 L130 140 L134 144 L66 220 Z", "formica2") + R(0, 0, EW, EH, null, 0, null, 0, fill(def("dsk", (id) => rad(id, [[0, "hiE", 0.1], [1, "aoC", 0.2]], 0.4, 0.8, 0.8))));
+      s += P("M60 220 L130 140 L470 140 L560 220 Z", "formica") + P("M60 220 L130 140 L134 144 L66 220 Z", "formica2") + R(0, 0, EW, EH, null, 0, null, 0, fill(def("dsk", (id) => radial(id, [[0, "hiE", 0.1], [1, "aoC", 0.2]], 0.4, 0.8, 0.8))));
       s += G(300, 170, P("M-110 30 L-90 -36 L96 -36 L120 30 Z", "omr") + (function () { let x = ""; for (let i = 0; i < 4; i++) for (let k = 0; k < 10; k++) { const px = -84 + k * 17 + i * -2.5, py = -26 + i * 13; x += E(px, py, 4.5, 3, k === (i * 3 + 2) % 10 ? "inkE" : "omrBubble"); } return x; })() + R(-90, -36, 186, 5, "omrRed"));
       s += G(470, 150, P("M-40 10 L30 -14 L34 -8 L-36 16 Z", "inkE") + P("M30 -14 L42 -18 L34 -8 Z", "paperE")) + G(160, 196, P("M-14 0 L14 -6 L18 6 L-10 12 Z", "paperE") + P("M4 -4 L14 -6 L18 6 L8 8 Z", "accentBlue", null, 0, "opacity:0.7"));
       return s + vignette(EW, EH);
@@ -1610,26 +2195,35 @@
   const walk = (dx0, dx1, at, d, body) => '<g class="c-walk" style="--wx0:' + dx0 + "px;--wx1:" + dx1 + "px;--at:" + at + "s;--d:" + d + 's">' + body + "</g>";
   // A one-shot effect (c-pop, c-fade, c-out, c-stamp, c-ring, c-grow, c-flash, c-thud) at `at` seconds.
   const fx = (cls, at, body) => '<g class="' + cls + '" style="--at:' + at + 's">' + body + "</g>";
-  // Family and classmates. Parents share your skin tone; everyone else gets a seeded look.
-  // Parents who aren't in this life aren't drawn; children raised by grandparents get a grandmother
-  // (grey hair) where the mother would stand, and children in care a carer.
+  // Family and classmates. Parents share your skin tone; their hair, clothes and glasses come from your
+  // looks, so each family looks its own and the same from screen to screen. Parents who aren't in this
+  // life aren't drawn; children raised by grandparents get a grandmother where the mother would stand,
+  // and children in care a carer in an apron.
   const hasMom = (ctx) => !ctx.parents || ctx.parents === "both" || ctx.parents === "mom";
   const hasDad = (ctx) => !ctx.parents || ctx.parents === "both" || ctx.parents === "dad";
-  const grandma = (x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, shirt: 2, sex: "f", grey: true }, mood: "happy" }, extra || {})), s || 1);
-  // In a children's home a carer in a work apron stands where the mother would.
-  const carer = (x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 2, shirt: 4, sex: "f" }, mood: "happy" }, extra || {})) +
-    R(-15, -78, 30, 44, "paper", 4, "line", 1.5), s || 1);
-  const mom = (ctx, x, y, s, extra) => (hasMom(ctx) ? momFig(ctx, x, y, s, extra) : ctx.parents === "grand" ? grandma(x, y, s, extra) : ctx.parents === "care" ? carer(x, y, s, extra) : "");
+  function parentLook(ctx, sex) {
+    const l = ctx.look || {};
+    const k = ((l.shirt || 0) * 7 + (l.hair || 0) * 3 + (l.hc || 0) + (l.glasses ? 5 : 0)) >>> 0;
+    return sex === "f"
+      ? { hair: [3, 13, 11, 14, 10, 12][k % 6], skin: l.skin, shirt: (k + 1) % 6, sex: "f", hc: 1, dye: k % 3 ? 1 + (k % 3) : 0, lid: (k & 1) === 1, glasses: k % 7 === 3 }
+      : { hair: [1, 0, 8, 6, 7][k % 5], skin: l.skin, shirt: (k + 3) % 6, sex: "m", hc: 0, lid: !!l.lid, glasses: k % 3 === 0 };
+  }
+  const fam = (ctx, look, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look, mood: "happy", season: ctx && ctx.season }, extra || {})), s || 1);
+  const grandma = (x, y, s, extra, ctx) => fam(ctx, { hair: 16, shirt: 2, sex: "f", grey: true, skin: ctx && ctx.look ? ctx.look.skin : 0, lid: true }, x, y, s, extra);
+  const carer = (x, y, s, extra, ctx) => fam(ctx, { hair: 10, shirt: 4, sex: "f", hc: 1, lid: true }, x, y, s, Object.assign({ gear: "carer" }, extra || {}));
+  const mom = (ctx, x, y, s, extra) => (hasMom(ctx) ? momFig(ctx, x, y, s, extra) : ctx.parents === "grand" ? grandma(x, y, s, extra, ctx) : ctx.parents === "care" ? carer(x, y, s, extra, ctx) : "");
   const dad = (ctx, x, y, s, extra) => (hasDad(ctx) ? dadFig(ctx, x, y, s, extra) : "");
-  const momFig = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 3, skin: ctx.look.skin, shirt: 0, sex: "f" }, mood: "happy" }, extra || {})), s || 1);
-  const dadFig = (ctx, x, y, s, extra) => G(x, y, avatar(Object.assign({ age: "adult", outfit: "casual", look: { hair: 1, skin: ctx.look.skin, shirt: 2, sex: "m" }, mood: "happy" }, extra || {})), s || 1);
+  const momFig = (ctx, x, y, s, extra) => fam(ctx, parentLook(ctx, "f"), x, y, s, extra);
+  const dadFig = (ctx, x, y, s, extra) => fam(ctx, parentLook(ctx, "m"), x, y, s, extra);
+  // Who carries the baby: the mother (or grandmother, or carer), else the father.
+  const momHolds = (ctx) => ctx.parents !== "dad";
   const me = (ctx, stage, x, y, s, extra) => person(Object.assign({}, ctx, { stage }), x, y, s, extra);
   function other(seed, x, y, s, o) {
     return G(x, y, avatar(Object.assign({ age: "teen", outfit: "uniform", look: lookFor(seed, seed % 2 ? "m" : "f"), mood: "happy" }, o || {})), s || 1);
   }
   const kid = (seed, x, y, s, o) => other(seed, x, y, s, Object.assign({ age: "child", outfit: "kid", backpack: true }, o || {}));
-  // A newborn wrapped in a blanket.
-  const bundle = (x, y, s) => G(x, y, E(0, 0, 26, 15, "c5") + E(-6, -2, 20, 11, "paper", null, 0, "opacity:0.5") + O(20, -8, 11, "skin") + P("M15 -6 q3 2 6 0", null, "ink", 1.2) + O(21, -12, 1.2, "ink"), s || 1);
+  // A newborn wrapped in a blanket (in a bassinet, or anywhere not in someone's arms: arms use prop "baby").
+  const bundle = (x, y, s) => G(x, y, bundleBody(), s || 1);
   function confettiRain(n, seed) {
     const r = rand(seed || 9);
     let s = "";
@@ -1712,7 +2306,7 @@
       b += pool(400, 300, 160, 90, "lampWarm", 0.5) + fx("c-fade", 0.5, G(450, 300, A("pulse", P("M0 0 q10 -10 0 -20 M10 4 q16 -14 0 -30 M20 8 q22 -18 0 -40", null, "paperE", 2.5, "opacity:0.7")))) + heart(380, 260, 1.6, 0, 0.6) + heart(430, 240, 1.2, 0, 1.4);
       // 3. Coming home: the family's home in the spring, your parents walking up with you.
       let c = homeStreet(ctx, "day", "spring") + tree(700, CG + 34, "spring", 1.7, "cherry");
-      c += walk(360, 0, 0.1, 3.0, dad(ctx, 610, CF + 6, 1.5, { pose: "wave" }) + mom(ctx, 490, CF + 10, 1.45, { pose: "hold" }) + bundle(526, CF - 118, 1.1));
+      c += walk(360, 0, 0.1, 3.0, dad(ctx, 610, CF + 6, 1.5, momHolds(ctx) ? { pose: "wave" } : { pose: "hold", prop: "baby" }) + mom(ctx, 490, CF + 10, 1.45, { pose: "hold", prop: "baby" }));
       c += petals(5, 20);
       return [
         cutShot(3.2, a, { s0: 1, s1: 2.1, ox: 431, oy: 186 }),
@@ -1734,14 +2328,14 @@
       ["tteok", "paperE", "tteok2", "blossomE", "tteok", "paperE2"].forEach((col, i) => { a += R(340 + i * 6, 278 - i * 22, 120 - i * 12, 22, col, 4) + R(340 + i * 6, 278 - i * 22, 120 - i * 12, 4, "hiE", 2, null, 0, "opacity:0.2"); });
       a += mom(ctx, 150, CF, 1.35, { pose: "cheer" }) + dad(ctx, 250, CF, 1.4, { pose: "wave" });
       a += G(560, CF, avatar({ age: "adult", outfit: "casual", look: { hair: 2, skin: ctx.look.skin, shirt: 3, sex: "f" }, mood: "happy", pose: "cheer" }), 1.25);
-      a += G(660, CF, avatar({ age: "adult", outfit: "casual", look: { hair: 0, skin: ctx.look.skin, shirt: 1 }, mood: "happy", pose: "wave" }), 1.3);
+      a += G(660, CF, avatar({ age: "adult", outfit: "casual", look: { hair: 0, skin: ctx.look.skin, shirt: 1, sex: "m" }, mood: "happy", pose: "wave" }), 1.3);
       // 2. The table of objects; you toddle up to the one you'll grab.
       let b = hall(10) + dolTable();
       const tx = dolX(items[0]);
       b += walk(-300, 0, 0.3, 2.4, me(ctx, "baby", tx - 18, 446, 1.7, { mood: "happy" }));
       b += fx("c-fade", 2.7, pool(tx, 300, 60, 60, "lampWarm", 0.8) + sparkle(tx, 270, 1.2) + sparkle(tx + 18, 290, 0.7));
       // 3. The grab, up close: the item (or both) held high in a pool of light, confetti.
-      let c = R(0, 0, CW, CH, null, 0, null, 0, fill(def("dolbg", (id) => rad(id, [[0, "banquetWall"], [1, "screenPanel"]], 0.5, 0.5, 0.75)))) + G(400, 225, A("pulse", O(0, 0, 230, null, null, 0, fill(glowF("lampWarm"), "opacity:0.7"))));
+      let c = R(0, 0, CW, CH, null, 0, null, 0, fill(def("dolbg", (id) => radial(id, [[0, "banquetWall"], [1, "screenPanel"]], 0.5, 0.5, 0.75)))) + G(400, 225, A("pulse", O(0, 0, 230, null, null, 0, fill(glowF("lampWarm"), "opacity:0.7"))));
       const one = items.length === 1;
       items.slice(0, 2).forEach((id, i) => {
         const x = one ? 400 : 290 + i * 220, sc = one ? 4.2 : 3.4;
@@ -1808,7 +2402,7 @@
       b += R(0, CG, CW, CH - CG, "asphalt") + L(0, CG + 30, CW, CG + 30, "lane", 3, "stroke-dasharray:30 20");
       // Riders first, sitting down into the bodywork drawn over their legs; the officer wears a helmet.
       let bike = G(-46, -18, avatar({ age: "teen", outfit: "uniform", look: lookFor(88, "f"), mood: "stressed" }), 0.85);
-      bike += G(-6, -22, avatar({ age: "adult", outfit: "casual", look: { hair: 0, skin: 0, shirt: 2 }, mood: "ok" }) + P("M-22 -128 Q-22 -158 0 -158 Q22 -158 22 -128 Z", "paper", "line", 2) + R(-22, -134, 44, 6, "c5", 2), 0.9);
+      bike += G(-6, -22, avatar({ age: "adult", outfit: "casual", gear: "helmet", look: { hair: 0, skin: 0, shirt: 2, sex: "m" }, mood: "ok" }), 0.9);
       bike += O(-56, -22, 24, "inkE") + O(60, -22, 24, "inkE") + O(-56, -22, 9, "steel") + O(60, -22, 9, "steel") + P("M-74 -36 L-60 -64 L-10 -76 L60 -66 L84 -36 Z", "paperE") + R(-50, -60, 100, 10, "accentBlue", 3) + R(-60, -50, 120, 4, "neonC", 1, null, 0, "opacity:0.8");
       bike += R(-78, -110, 4, 50, "steel2") + G(-76, -114, A("pulse", O(0, 0, 9, "accentRed")) + A("pulse", O(12, 0, 9, "accentBlue"), "--del:-1.2s")) + pool(-70, -114, 50, 40, "accentRed", 0.5);
       for (let i = 0; i < 5; i++) bike += L(100 + i * 10, -100 + i * 18, 190 + i * 30, -100 + i * 18, "paperE", 2, "opacity:0.4");
@@ -1863,7 +2457,7 @@
       a += shadow(400, 400, 240, 12) + boxP(180, 370, 440, 70, 0.06, CVP, "sofaE", "sofaE2", "sofaE2") + R(190, 270, 420, 50, "sofaE2", 10);
       a += mom(ctx, 250, CF, 1.4, { pose: "hold", mood: "ok" }) + dad(ctx, 560, CF, 1.45, { pose: "hold", mood: "ok" }) + me(ctx, st, 400, CF + 20, 1.5, { mood: "stressed" });
       a += pool(400, 300, 200, 160, "monitorGlow", 0.8) + G(400, 330, R(-60, -50, 120, 70, "inkE", 5) + R(-52, -44, 104, 58, "phoneScreen", 2) + R(-76, 20, 152, 8, "steel", 3));
-      let b = R(0, 0, CW, CH, "woodDesk2") + R(0, 0, CW, CH, null, 0, null, 0, fill(def("tbl", (id) => rad(id, [[0, "hiE", 0.15], [1, "aoC", 0.4]], 0.5, 0.45, 0.8))));
+      let b = R(0, 0, CW, CH, "woodDesk2") + R(0, 0, CW, CH, null, 0, null, 0, fill(def("tbl", (id) => radial(id, [[0, "hiE", 0.15], [1, "aoC", 0.4]], 0.5, 0.45, 0.8))));
       b += fx("c-thud", 0.95, G(400, 225, R(-166, -196, 340, 400, "aoC", 4, null, 0, "opacity:0.25") + R(-170, -200, 340, 400, "paperE", 2) + O(0, -150, 26, null, "brass", 3) + O(0, -150, 18, "brass", null, 0, "opacity:0.3") + R(-120, -90, 240, 8, "paperE2", 3) + R(-120, -60, 200, 8, "paperE2", 3) + R(-120, -30, 220, 8, "paperE2", 3) + R(-120, 0, 160, 8, "paperE2", 3)));
       b += G(470, 300, fx("c-stamp", 0.8, O(0, 0, 66, null, "stampRed", 8) + O(0, 0, 52, "stampRed", null, 0, "opacity:0.12") + P("M-30 2 L-8 26 L34 -24", null, "stampRed", 10)));
       b += fx("c-flash", 0.95, R(0, 0, CW, CH, "paperE"));
@@ -2161,5 +2755,5 @@
     return '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 ' + Wc + " " + Hc + '" class="share-card" role="img" aria-label="' + esc(o.aria || o.title) + '">' + tidy(defsOut() + s) + "</svg>";
   }
 
-  root.SuneungArt = { portrait, portraitFor, koreaMap, areaBox, scene, sceneName, eventArt, screenArt, shareCard, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
+  root.SuneungArt = { portrait, portraitFor, figureFor, koreaMap, areaBox, scene, sceneName, eventArt, screenArt, shareCard, iconFor, moodOf, seasonOf, lookFor, avatar, cutscene, CUT_NAMES: Object.keys(CUTS) };
 })(typeof window !== "undefined" ? window : globalThis);
