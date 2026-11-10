@@ -740,3 +740,35 @@ body.cutting { overflow: hidden; }
 .kmap .kmap-sch.sel circle { stroke: var(--a-sel); stroke-width: 4px; }
 .kmap .kmap-sch { cursor: pointer; }
 .kmap .kmap-sch text { fill: var(--a-schNum); font-size: 11px; font-weight: 800; pointer-events: none; }
+
+/* ---------- v6.0: report cards, the school record, 수시 ---------- */
+/* 5-grade 내신: 1 best (green) to 5 (red); the A–E level is an outline. */
+.gr5-1, .gr5-2, .gr5-3, .gr5-4, .gr5-5 { display: inline-block; min-width: 1.6rem; padding: 1px 6px; border-radius: 6px; font-weight: 800; text-align: center; color: var(--panel); }
+.gr5-1 { background: var(--g1); } .gr5-2 { background: var(--g2); } .gr5-3 { background: var(--g3); } .gr5-4 { background: var(--g5); } .gr5-5 { background: var(--g6); }
+.ach { display: inline-block; min-width: 1.4rem; padding: 0 5px; border: 2px solid var(--border); border-radius: 6px; font-weight: 700; text-align: center; }
+.ach-A { border-color: var(--g1); color: var(--g1); } .ach-B { border-color: var(--g2); color: var(--g2); } .ach-C { border-color: var(--g3); color: var(--g3); }
+.ach-D { border-color: var(--g5); color: var(--g5); } .ach-E { border-color: var(--g6); color: var(--g6); }
+.reveal .gr5-1, .reveal .gr5-2, .reveal .gr5-3, .reveal .gr5-4, .reveal .gr5-5 { animation: score-pop 0.45s ease-out both; animation-delay: calc(var(--i) * 0.15s + 0.45s); }
+.record.hidden { display: none; }
+.rec-facts { margin: 6px 0 0; font-size: 0.8rem; line-height: 1.45; color: var(--text); overflow-wrap: anywhere; }
+.rec-facts .sems { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 4px; vertical-align: middle; }
+.sem-chip { padding: 0 6px; border-radius: 999px; background: var(--accent-soft); font-size: 0.72rem; white-space: nowrap; }
+.acts .grp-note { grid-column: 1 / -1; margin: 0; font-size: 0.74rem; color: var(--muted); line-height: 1.4; }
+.susi-list { display: flex; flex-direction: column; gap: 8px; margin: 8px 0; }
+.susi-uni { border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px; }
+.susi-uni.off { opacity: 0.5; }
+.susi-uni .nm { font-weight: 700; font-size: 0.9rem; overflow-wrap: anywhere; }
+.susi-uni .nm small { font-weight: 400; color: var(--muted); font-size: 0.72rem; }
+.susi-uni .nm small.why { display: block; color: var(--neg); }
+.sopt { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 5px 2px; border-top: 1px dashed var(--border); font-size: 0.84rem; cursor: pointer; }
+.sopt.off { cursor: not-allowed; opacity: 0.6; }
+.sopt.picked { background: var(--accent-soft); border-radius: 8px; }
+.sopt .st { min-width: 0; }
+.sopt .st small { display: block; color: var(--muted); font-size: 0.72rem; line-height: 1.35; }
+.sopt .st small.why { color: var(--neg); }
+.susi-more summary { cursor: pointer; color: var(--muted); font-size: 0.82rem; padding: 4px 0; }
+.result > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.result .stamp { max-width: 55%; text-align: center; font-size: 0.82rem; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal .gr5-1, .reveal .gr5-2, .reveal .gr5-3, .reveal .gr5-4, .reveal .gr5-5 { animation: none !important; }
+}

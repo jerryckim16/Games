@@ -157,7 +157,7 @@ Retrieved: 2026-10-28
 | GED pass rate, Seoul | 1st 85.6% (3,987 of 4,658); 2nd 90.5% (4,159 of 4,596) | 2025 | as above | SMOE | https://enews.sen.go.kr/news/view.do?bbsSn=188770&step1=3&step2=1 and https://enews.sen.go.kr/news/view.do?bbsSn=189728&step1=3&step2=1 | official (Seoul only) |
 
 ## 8. University admission
-Retrieved: 2026-10-28
+Retrieved: 2026-11-10
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -175,6 +175,22 @@ Retrieved: 2026-10-28
 | Opportunity-balance (기회균형) admission | at least 10% of all places | current law | Floor | Higher Education Act art. 34-8, decree art. 42-6 (via KCUE) | same | official |
 | Tertiary attainment, ages 25–34 | 70.6% (OECD #1) | 2024 | Share | OECD Education at a Glance 2025, via KEDI/MOE | https://www.korea.kr/briefing/pressReleaseView.do?newsId=156723322 | official; EAG 2026 gives 71.1% |
 | PISA 2022 scores | math 527; reading 515; science 528 | 2022 | Score | OECD PISA, via MOE | https://www.korea.kr/briefing/pressReleaseView.do?newsId=156603960 | official; OECD ranks math 1–2, reading 1–7, science 2–5 |
+| 내신 (school grades) relative scale, from 2025 High 1 entrants | 5 grades: 1등급 top 10%; 2등급 >10–34%; 3등급 >34–66%; 4등급 >66–90%; 5등급 the rest (shares 10/24/32/24/10%); absolute A–E level reported alongside; 9 social/science fusion electives absolute only | 2028 entry onward (decided 2023-12-27) | Cumulative share of a school's year in a subject | MOE (2028 대학입시제도 개편 확정안) | https://www.korea.kr/news/policyNewsView.do?newsId=148924193 and https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=97551&lev=0&searchType=null&statusYN=W&page=1&s=moe&m=020402&opType=N | official (excerpt via search; page not opened directly: korea.kr was outside this session's network) |
+| Total places and 수시 share, 2028 entry | 348,789 places (+3,072); 수시 281,895 (80.8%) | 2028 entry (plan published 2026-04-30) | Places, 194 KCUE member universities | KCUE, via news | https://www.heraldk.com/article/2026042919000056717 (KCUE PDF: https://www.kcue.or.kr/_upload/news/2026/04/30/application_3eb96f4ffbc6cf20a16a3396bd07fe8b.pdf, not opened) | unverified |
+| 수시 by type, 2027 entry | 수시 80.3% of 345,717; 학생부종합 81,931 (29.5% of 수시); 논술 12,711 (4.6%); 실기 21,954 (7.9%) | 2027 entry | Places | KCUE plan, via an admissions column | https://sanedu.com/?p=29686 (KCUE PDF: https://www.kcue.or.kr/_upload/news/2025/04/30/application_a31187fc315c1a7e050c363a5cc99410.pdf, not opened) | unverified |
+| 학생부교과 share of 수시, 2027 | about 56% | 2027 entry | 100% − 종합 29.5 − 논술 4.6 − 실기 7.9 − other ≈ 2% | — | — | calc (from the unverified row above) |
+| Seoul's 43 universities, 정시 places 2028 | 30,949 (−1,232, −3.8%) | 2028 entry | Places | Jongro Academy analysis of the KCUE plan, via news | https://www.heraldk.com/article/2026042919000056717 | unverified |
+| Provincial universities' 수시 share | 89.8% of places | 2028 entry | Share | KCUE plan, via news | same | unverified |
+| Capital-region 논술 places | 9,133 (2023) → 10,938 (2026) → 11,443 (2028) | 2023–2028 entry | Places | via news | https://www.heraldk.com/article/2026050622450059103 | unverified |
+| 정시 40% rule | Seoul's 16 universities with 학생부종합 + 논술 ≥ 45% of places asked to fill ≥ 40% through 수능-based admission by 2023 entry: 건국대, 경희대, 고려대, 광운대, 동국대, 서강대, 서울시립대, 서울대, 서울여대, 성균관대, 숙명여대, 숭실대, 연세대, 중앙대, 한국외대, 한양대 | from 2023 entry (announced 2019-11-28) | Recommendation | MOE (대입제도 공정성 강화 방안) | https://www.korea.kr/news/policyNewsView.do?newsId=148866971 | official (excerpt via search) |
+| What the school record sends to universities, from 2024 entry | Awards, individual volunteering records, self-run clubs, reading lists and the personal statement are no longer reflected; regular curricular items (세특, regular clubs, school volunteering) still are | 2024 entry onward | Rule | MOE (same release) | same; and https://www.korea.kr/briefing/actuallyView.do?newsId=148867020 | official (excerpt via search) |
+| 학생부종합 evaluation qualities | 학업역량, 진로역량, 공동체역량 (replacing 학업역량, 전공적합성, 인성, 발전가능성) | for 2024 entry | Common evaluation elements | Joint study of Konkuk, Kyung Hee, Yonsei, Chung-Ang and HUFS (2022) | https://dhnews.co.kr/news/view/179524409453149 | unverified (news report of the study) |
+| 수시 application limit | 6 applications (counted by 전형, not by university) at universities under the Higher Education Act | current | Applications | KCUE (대학입학전형기본사항) | https://kcue.or.kr/_upload/news/2024/08/29/application_50fcf96b5a96612a12a08561e106f8d0.pdf | official (excerpt via search); KAIST, GIST, DGIST and UNIST are institutes under their own acts and outside the count (general knowledge, not checked against a primary page) |
+| 수시 applications per applicant | 4.96 on average; 428 over-limit applications cancelled | 2027 entry | Applications | KCUE, via news | https://www.seoul.co.kr/news/newsView.php?id=20261015500182 | unverified |
+| 수시 offer rules out 정시 | Anyone finally admitted in 수시 (including waitlist admits) may not apply in 정시 that year, registered or not | 2027 entry | Rule | Korea University 2027 정시 모집요강 | https://cdn013.negagea.net/dgsmidc/omr/seoul/web/univ_info2026/고려대학교/고려대학교_2027학년도_정시모집요강.pdf | official (a university's own guide, excerpt via search) |
+| Medical school places by round | 3,123 places at 39 schools: 수시 2,115 (67.7%), 정시 1,008 (32.3%) | 2026 entry | Places | via news | https://www.nocutnews.co.kr/news/6504177 | unverified |
+| Korea University 정시 general admission, 70% cut | 국수탐 percentile average 99 | 2026 entry | Percentile | Korea University results, via news | https://www.veritas-a.com/news/articleView.html?idxno=614086 | unverified |
+| Women's universities' 정시 70% cuts | Ewha and Sookmyung: many units around 89–90 (percentile average) | 2026 entry (year unclear) | Percentile | an admissions academy's blog | https://www.namuacademy.com/bbs/board.php?bo_table=4001&wr_id=564 | unverified, low reliability: the game places these schools by tier (see Game mapping) |
 
 ## 9. Students' lives
 Retrieved: 2026-10-28
@@ -311,6 +327,14 @@ Retrieved: 2026-10-28. The Suneung Simulator's constants (suneung/engine.js at c
 | `RURAL_QUOTA` (농어촌) | 0.8 percentile points off the cut | up to 4% of places, outside the quota | no direct conversion |
 | School types counts | 8 gifted, 20 science, 28 foreign-language, 8 international, 32 autonomous private | (news, 2025–26) | game only uses admission chances; consistent |
 | Kindergarten choice | ordinary kindergarten default | public daycare share 28.3% (2023); preschool private-ed participation 47.6% | no game rate |
+| `NAESIN_CUTS` (내신) | 10 / 34 / 66 / 90% cumulative | MOE 5-grade scale from 2025 High 1 entrants | matches |
+| `UNIVERSITIES[*].susi` (수시 share) | Seoul's top schools 58–62%; mid-tier Seoul 62–70%; regional national 74–80%; provincial private 88–92%; KAIST, POSTECH 100% | 수시 80.3–80.8% nationally (2027–28); the 16 Seoul schools ≥ 40% 정시; provinces 89.8% | matches by design (shares are shown, and set which schools keep 40% for 정시) |
+| `med.susi` | 68% | 67.7% of 2026 medical places in 수시 (unverified) | matches |
+| `SUSI_MAX` | 6 (KAIST outside) | 6 at universities under the Higher Education Act | matches |
+| 수시 offer → no 정시 | enforced (`dismiss` of the 수시 results) | rule in university guides | matches |
+| `UNIVERSITIES[*].gk` (교과 cuts) | 1.03 (med) … 2.0 (Dongduk) … 3.7 (junior college), on the 5-grade scale | ballpark 9-grade 교과 70% cuts (about 1.1 at med to 3.2 at Dongduk), converted by the share of a year above each 9-grade average | calc, estimates; no official per-school cut |
+| Women's universities and other v6.0 additions (`ewha`, `sookmyung`, `sungshin`, `swu`, `duksung`, `dongduk`, `kwangjuWomen`, `seoultech`, `kwangwoon`, `sejong`, `dankook`, `myongji`, `incheon`, `jnu`, `cnu`, `kaist`, `postech`) | 정시 cuts placed by tier between the existing schools | no official per-school figure found (see section 8) | no data; tier placement only |
+| sim.js 수시 applications | bots send 3–5 on a first try | 4.96 per applicant (2027) | close (bots skip schools below their 정시 level) |
 
 ## Gaps (no verifiable figure found yet)
 - Population of each province and of Seoul's districts (Gangnam 3 districts etc.) for 2024–25: the table is in the KOSIS / 등록센서스 xlsx, not in page text.
@@ -325,3 +349,6 @@ Retrieved: 2026-10-28. The Suneung Simulator's constants (suneung/engine.js at c
 - National 검정고시 totals and high-school-level pass rates.
 - Admission rates by family income or region.
 - Graduates' wages by school tier.
+- Per-university 수시 cuts (교과 내신 70% cuts, 종합 results) and 정시 percentile cuts for the women's universities and the other schools added in v6.0: published per department on adiga.kr and in university guides, not reachable from this session.
+- The national 학생부교과 count for 2027–28 (in the KCUE plan PDFs, not opened).
+- How many students qualify for 기회균형 (basic-livelihood and near-poverty households): the game assumes half of the bottom income fifth.

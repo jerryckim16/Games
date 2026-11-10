@@ -836,6 +836,13 @@
     early: { bg: "cubicle", fx: "bulb", mood: "happy", x: 160, icon: "⏩", res: { r1: { mood: "ok" } } },
     lonely: { bg: "room", night: true, fx: "polaroids", mood: "tired", prop: "phone", pose: "hold", x: 200, icon: "📷", res: { r0: { mood: "happy", prop: null, pose: null } } },
     chuseok: { bg: "kitchen", fx: "grandma", mood: "stressed", x: 220, icon: "🌕", res: { r0: { mood: "ok" }, r1: { mood: "happy" } } },
+    // The school record and 수시 (v6.0): the career survey, the club fair, a field that doesn't fit, a
+    // class presentation, the interview.
+    jinro: { bg: "class", fx: "planner", mood: "ok", icon: "🧭", res: { r0: { mood: "happy" } } },
+    "club-pick": { bg: "field", fx: "stall", mood: "happy", pose: "wave", icon: "🎸" },
+    "jinro-change": { bg: "class", fx: "notes", mood: "stressed", icon: "🔀", res: { r1: { mood: "ok" } } },
+    seteuk: { bg: "class", fx: "podium", mood: "stressed", icon: "🎤", res: { r0: { mood: "happy", pose: "cheer" }, r1: { mood: "ok" } } },
+    interview: { bg: "hall", fx: "counsel", mood: "stressed", x: 220, icon: "🤝", res: { r0: { mood: "ok" }, r2: { mood: "happy" } } },
   };
   const KEYWORDS = [
     [/bull|tease|gossip|cyber|threat|victim|gang/, "bully"],
@@ -926,6 +933,41 @@
       return s;
     },
   };
+  // v6.0: the report card, the six 수시 envelopes, the first-round notice board, the results page.
+  // Grade digits are numbers, not words, so the report card can show them.
+  const GRADE_TOK = ["c3", "c5", "c2", "c4", "c1"];
+  Object.assign(SCREENS, {
+    naesin(ctx) {
+      let s = R(0, 0, EW, EH, "wall") + R(0, 178, EW, 42, "floor") + R(120, 150, 360, 30, "wood", 3);
+      const gs = (ctx.grades || [2, 3, 1, 2, 3]).slice(0, 6);
+      let rows = "";
+      gs.forEach((g, i) => {
+        rows += R(-70, -44 + i * 15, 70, 6, "line", 2) + R(14, -48 + i * 15, 22, 13, GRADE_TOK[(g || 3) - 1], 3) + T(25, -38 + i * 15, String(g), "paper", 10);
+      });
+      s += G(300, 110, A("float", R(-90, -70, 180, 150, "paper", 4, "line", 1.5) + R(-90, -70, 180, 18, "c5", 4) + rows + O(60, 54, 14, "c1", null, 0, "opacity:0.85") + O(60, 54, 10, null, "paper", 2)));
+      return s + person(ctx, 500, EFEET, 0.8, { pose: "hold", prop: "book" }) + sparkle(150, 60, 0.8);
+    },
+    susi(ctx) {
+      let s = R(0, 0, EW, EH, "wall") + R(0, 178, EW, 42, "floor");
+      ["c1", "c5", "c3", "c2", "c4", "c5"].forEach((c, i) => {
+        const x = 110 + (i % 3) * 80, y = 70 + Math.floor(i / 3) * 62;
+        s += G(x, y, A("float", R(-30, -20, 60, 40, "paper", 3, c, 2.5) + P("M-30 -20 L0 4 L30 -20", null, c, 2)), 1, "", "--del:-" + i * 0.5 + "s");
+      });
+      return s + person(ctx, 470, EFEET, 0.86, { mood: "stressed", pose: "hold" });
+    },
+    susiStage(ctx) {
+      let s = BACKDROPS.class(ctx) + R(110, 28, 260, 130, "wood2", 6) + R(118, 36, 244, 114, "board", 4);
+      for (let i = 0; i < 6; i++) s += G(150 + (i % 3) * 80, 66 + Math.floor(i / 3) * 52, R(-28, -18, 56, 40, "paper", 2) + R(-20, -10, 40, 4, "line") + R(-20, -2, 30, 4, "line") + O(0, -18, 4, ["c1", "c5", "c3"][i % 3]));
+      return s + person(ctx, 470, EFEET, 0.86, {});
+    },
+    susiResult(ctx) {
+      let s = R(0, 0, EW, EH, "nightwall") + R(0, 178, EW, 42, "nightfloor") + R(130, 150, 300, 30, "wood", 3);
+      s += G(280, 150, P("M-80 0 L-66 -96 L66 -96 L80 0 Z", "dark") + R(-58, -90, 116, 76, "screen", 3) + R(-46, -76, 92, 10, ctx.mood === "happy" ? "c3" : "c1", 3) +
+        R(-46, -58, 60, 6, "line") + R(-46, -46, 76, 6, "line") + R(-100, 0, 200, 8, "metal", 3));
+      if (ctx.mood === "happy") s += sparkle(200, 50) + sparkle(360, 40, 0.8) + sparkle(420, 90, 0.6);
+      return s + person(ctx, 500, EFEET, 0.86, { pose: ctx.mood === "happy" ? "cheer" : null });
+    },
+  });
   const SCENES_EV = {
     exam(ctx) {
       let s = R(0, 0, EW, EF, "wall") + floorPlanks(EF, EW, EH - EF) + R(140, 20, 300, 96, "board", 4, "wood", 6) + clock(500, 50, 22, 8) + windowView(530, 90, 60, 70, { season: "fall", seed: 91, tree: false });

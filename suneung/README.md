@@ -1,6 +1,6 @@
 # Suneung Simulator (수능 시뮬레이터)
 
-A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You're born at random into one of Korea's five household-income fifths, with a temperament your parents notice in your first weeks and a head start from what you grab at your first-birthday 돌잡이. You play the baby and kindergarten years, start elementary school at 6 and grow up through middle school and high school, deciding each turn how to spend your time: which subjects to study, whether your family pays for cram school, when to read, rest, play or see friends. Life happens along the way. At the end of High 1 you choose humanities or sciences. In High 3 you play month by month and sit the real 수능 in November. With your score you apply to universities, then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
+A life-sim about the Korean college entrance exam, 대학수학능력시험 (수능). You're born at random into one of Korea's five household-income fifths, with a temperament your parents notice in your first weeks and a head start from what you grab at your first-birthday 돌잡이. You play the baby and kindergarten years, start elementary school at 6 and grow up through middle school and high school, deciding each turn how to spend your time: which subjects to study, whether your family pays for cram school, when to read, rest, play or see friends. life happens along the way. In high school every midterm and final counts toward your school grades (내신), and what you do goes on your school record (학생부). At the end of High 1 you choose humanities or sciences. In High 3 you play month by month: in September you send up to six early applications (수시) on your grades, your record or an essay exam, and in November you sit the real 수능. Early offers come in December; without one, you apply in regular admission (정시) with your score. Then take an offer or retake the exam the next year (재수, 삼수, N수) as many times as you like.
 
 Open `index.html` in a browser. There's no build step and no dependencies. Progress autosaves in the browser. It's also published as a single-file claude.ai artifact: https://claude.ai/artifact/H8zzP1PqsHVdvEQEARTuFE
 
@@ -38,12 +38,14 @@ School years are counted the Korean way, with each school numbering its own year
    - The elementary-school teacher leaves a note each year.
    - Middle school shows your class rank each semester.
    - High 1 and 2 sit mock exams (학력평가) in June and November.
+   - From High 1 to the first semester of High 3, each semester has a midterm and a final (중간·기말고사) graded against your year at your school: a report card after each (see School grades below).
 6. **Choose a track** at the end of High 1: humanities (확률과 통계 + two social-studies subjects) or sciences (미적분 + two science subjects; the only track that can apply to medical school). While humanities is selected, a red warning says it closes medical school for good and the button reads "Confirm humanities". Your social-studies ability carries into the humanities subjects, your science ability into the science ones.
 7. **Sit the exams.**
    - High 3 has mock exams in March, June and September, with full score reports.
    - In November you make two last choices: how you spend the night before, and what's in your 수능 lunch box. The day itself may deal you some luck, good or bad. Then you sit the 수능 period by period.
    - The score report comes in December.
-8. **Apply and decide.** Apply to up to three universities (정시, one per 가·나·다 group). The real cuts only show when the results come out, and a rejection can still turn into a February waitlist call. Then:
+8. **Early admission (수시).** In September of High 3, after the September mock, send up to six applications by school grades (학생부교과), school record review (학생부종합) or essay exam (논술), each with its chance and any minimum 수능 grades. Record reviews with an interview announce a first round in October and interview after the 수능; final results, after the minimum-grade check, come in December. Any early offer rules out regular admission that year (수시 납치).
+9. **Regular admission (정시) and the decision.** Without an early offer, apply to up to three universities (정시, one per 가·나·다 group). The real cuts only show when the results come out, and a rejection can still turn into a February waitlist call. Then, with early or regular offers:
    - enroll;
    - enroll but secretly retake (반수);
    - retake at a 재수종합학원 or by self-study (독학재수);
@@ -108,6 +110,23 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **Budgets:** follow the 2024 private-education survey (초중고 사교육비조사), which found ₩205,000 a month per student in households under ₩3M and ₩676,000 in households at ₩8M and above. The top fifth's figure is extrapolated above that bracket.
   - **Head start** is in ability units (sd of 수능 takers): books at home and parents' schooling.
   - From the 4th attempt on, parents pay only half.
+- **School grades (내신) in high school.** From High 1 to the first semester of High 3 you sit a midterm and a final each semester (High 1–2: one per season turn; High 3: April and July), ten exams in all. Each is graded against the classmates in your year at your school on the 5-grade relative scale used for everyone entering high school from 2025 (MOE, 2023): grade 1 is the top 10%, 2 to 34%, 3 to 66%, 4 to 90%, 5 the rest. The report card after each exam shows each subject's raw score, its absolute level (A–E) and its grade; after a final it adds the semester grades (35% midterm, 40% final, 25% performance assessment, which follows your motivation) and the running average.
+  - **Where you study changes your grades.** Your classmates' ability centres on the typical line for your year; at a 자사고 it is 0.7 higher, at a science school 0.9 (1.5 in math and science), at a foreign-language school 0.6 (1.3 in English), at an arts school 0.4 lower and at a vocational school 0.9 lower, and ordinary schools in Gangnam (+0.35) and Seoul's academy districts (+0.25) are a little stronger. So the same ability earns a worse grade at a selective school (the real 내신 불리); 학생부종합 readers know this and read those averages 0.35–0.7 of a grade better, while vocational and arts schools' averages read worse (and count 0.5 / 0.3 of a grade worse in 교과, where most places are built for general schools).
+  - **Exam prep (내신 대비)** is a new activity: studying your school's own past papers adds up to +0.22 ability on the day of the next exam, counts as study for stress, and adds only a little to real ability. Every exam is a little stressful (+3), and a better report than last time lifts motivation (a worse one stings).
+  - Korean History is graded in High 1 only, and the subjects follow your track after High 1.
+- **The school record (학생부).** A 🗂️ School record panel under the ability bars shows the three qualities universities assess in 학생부종합 since 2024 (학업역량 academic, 진로역량 career, 공동체역량 community; five-university joint study, 2022), your 내신 average and semester averages, intended field, club, volunteering hours and research reports. It's built from High 1 to the end of August of High 3, then closed (retakers apply with it as it was).
+  - **What builds it:** the career survey in High 1 (medicine, science and engineering, humanities and social sciences, or business and economics; the 진로 event), the club fair (an academic club in your field, a volunteering club, or a band or sports club), and three new activities while it's open: **Club** (community, and career for an academic club), **Volunteering** (community) and **Research project** (career and teachers' comments, with a little study in the field's subjects). Teachers' subject comments (세특) grow every turn with attention in class and the share of your time spent studying; reading still helps there (individual reading lists stopped counting in 2024). A class office and the school festival add community.
+  - **Events:** a class presentation (go deep for a strong comment at the cost of a block), and a nudge when your intended field doesn't fit your track (medicine on the humanities track) to change it.
+  - **Scores:** academic = 70% your 내신 (100 at 1.0, 35 points less per grade) + 30% comments; career and community are saturating curves of what you've done (community starts at 20). The record score universities use is 65% academic, 20% career, 15% community; medical schools read a non-medical field's career at 60%, science institutes a non-science one at 70%.
+- **Early admission (수시).** About 80% of university places are filled in 수시 (80.8% in the 2028 plan; Seoul's top schools keep about 40% for 정시, provincial universities fill about 90% in 수시). In September of every exam year, after the September mock, the 수시 screen lists every university with the types it runs, each with your chance, its minimum 수능 grades (수능 최저) and how likely you are to meet them from your mocks:
+  - **학생부교과 (school grades):** your 내신 average against the school's line, often with a 최저; the top schools take only this year's graduates.
+  - **학생부종합 (record review):** your record score; at SNU, Yonsei, medical schools, KAIST, POSTECH and a few others a document round in October (about three times as many pass as are admitted), then an interview after the 수능 (prepare with teachers, reread your record, or rest).
+  - **논술 (essay exam):** your Korean and your math (sciences) or social studies against a line above the school's 정시 level; never better than 18%, usually with a 최저.
+  - **Quotas:** 지역인재 (regional talent) at medical schools and the regional national university, 농어촌 (rural) and 기회균형 (opportunity balance: children in care and about half of the lowest income fifth) make the 교과 and 종합 lines easier.
+  - **Up to six applications** (KAIST doesn't count, as in reality). Every 수시 application rolls its own hidden swing in the line, and a rejection can still come good off the waitlist.
+  - **수시 납치:** any 수시 offer, even off a waitlist, rules out 정시 that year. You choose among your 수시 offers (or 반수 at one, or retake), so applying to a school below what your 수능 might reach is a real risk. The screen warns in red.
+  - **Retakers** apply with the 내신 and record they left school with (교과 at the top schools is closed to them); students who left school (검정고시) can apply only to essay exams. Saves from before v6.0 that were already in high school have no record and play 정시 only.
+- **More universities.** The list now has 40 schools: Korea's women's universities (Ewha, Sookmyung, Sungshin, Seoul Women's, Duksung, Dongduk, and Kwangju Women's University among the regional ones), which admit women only (a male player sees them closed in both rounds), the next tier of Seoul schools (Seoul National University of Science and Technology, Kwangwoon, Sejong, Myongji, Dankook), Incheon National University, Chonnam and Chungnam National University (now the local-quota schools for Gwangju, Haenam and Daejeon), and KAIST and POSTECH, which admit only in 수시 (sciences only).
 - **Six exam sections, scored the way the real 수능 is** (2022–2027 format):
   - 국어 and 수학: raw /100, 표준점수 (mean 100, sd 20), 백분위, and 등급 1–9 by the 4/11/23/40/60/77/89/96% cut-offs;
   - 탐구 ×2: raw /50, 표준점수 (mean 50, sd 10), 백분위, 등급;
@@ -128,6 +147,10 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   | Hang out with friends 친구 | always | Big −Stress, +Motivation; sometimes leads to a PC방 invitation (from Elementary 5) |
   | Games & YouTube 게임 | always | −Stress, −Motivation |
   | Part-time job 알바 | High 1 on | +₩250,000 a month, +Stress, −Health |
+  | Exam prep 내신 대비 | High 1 to July of High 3, at school | Better midterm or final this turn (up to +0.22 ability on the day); counts as study for stress; a little real study |
+  | Club 동아리 | High 1 to August of High 3, at school | School record: community, and career for an academic club in your field. −Stress, +Motivation |
+  | Volunteering 봉사 | same | School record: community (about 8 hours a block a month). −Stress, +Motivation |
+  | Research project 진로 탐구 | same | School record: career (more when your field fits your track) and teachers' comments; a little study in the field's subjects |
 
 - **Regions.** You're born in one of seventeen real places, and you can move:
 
@@ -167,7 +190,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - **Your family is dealt next, from that place's mix of incomes.** The region-by-income table is balanced (iterative proportional fitting) so every place keeps exactly its population share and every income fifth stays exactly 20% overall, while a child born in Gangnam is in the top fifth half the time (3% in the bottom fifth), and a rural child is in the bottom fifth 36% of the time (8% in the top).
   - **Cram school and tutor** multipliers apply to the method's study speed and price. A retake academy's speed follows its region too.
   - **Quotas** (real 정시 practice, simplified as points off a university's cut; both need middle and high school in the region, so you must arrive by Middle 1):
-    - 지역인재 (local quota): 0.6 points at medical school, and at the local national university (Pusan National for Busan, Kyungpook National for Daegu and Pohang), for students outside the capital region;
+    - 지역인재 (local quota): 0.6 points at medical school, and at the local national university (Pusan National for Busan, Kyungpook National for Daegu and Pohang, Chonnam National for Gwangju and Haenam, Chungnam National for Daejeon), for students outside the capital region;
     - 농어촌 전형 (rural quota): 0.8 points at most universities for rural students.
   - **Moving** is the family's decision: a block of packing next turn, +8 stress, −3 motivation, and the new-kid risk of bullying (moving can also end bullying at the old school, 70%). You can move once every 12 months; Seoul takes a middle-income family or above, Gangnam an upper-middle one.
   - **Region events:** typhoons closing school on Jeju, the Pohang earthquake, beach days on the coast, harvest weekends in the countryside, Gangnam's race to study years ahead, the long bus ride to a rural cram school, news of the medical-school local quota, and capital-region parents moving to Daegu for that quota (의대 지방 유학). The Daechi-dong event now really moves you to Gangnam.
@@ -349,7 +372,7 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
   - subject rates are 국어 0.8, 수학 1.0, 영어 0.95, 한국사 1.6, 탐구 1.3;
   - **early childhood:** each block of play adds 0.1 × its share of a subject × aptitude × condition × headroom(θ) (picture books: Korean 0.6, history 0.3, social studies 0.45; blocks: math 0.7, science 0.5; songs: English 0.8, Korean 0.15; worksheets: Korean and math 0.5), and kindergarten lessons add 0.12 a year × subject rate × aptitude × the kindergarten's multiplier × condition × headroom(θ).
 
-### University admission (rough)
+### University admission: 정시 (rough)
 
 - **Admission score** = average 백분위 of 국어, 수학 and the two 탐구 (counted as one), minus:
   - an English deduction by grade: 0, 0, 0.8, 2, 3.5, 5.5, 8, 11, 14 for grades 1–9;
@@ -359,23 +382,65 @@ The **Hall of fame** keeps your 10 best lives on this device, ranked by 국수�
 - **Each school has a cut** where an application is a coin flip. The chance of admission follows a logistic curve with a 0.7-point slope, narrowed near the top to a third of the room left above the cut (0.4 points for 의대), so a perfect exam is a near-certain admit everywhere.
 - **The top end:** with every bar at 100 (θ = 3, the top 0.13% of test takers) and a good exam day, you are a likely SNU admit (about 70–80%) and roughly a coin flip for 의대 (about 45–65%, depending on how strong your inquiry subjects' pools are). A flawless exam gets you into 의대 85–90% of the time.
 - **Labels:** 안정 (safe, 85%+), 적정 (match, 55%+), 소신 (reach, 25%+), 상향 (long shot).
+- **Closed schools:** medical school, KAIST and POSTECH to the humanities track; the women's universities to men (saves from before the boy/girl choice count as allowed). KAIST and POSTECH admit only in 수시, so they aren't on the 정시 list.
 
-The cuts are ballpark figures from recent 정시 years, simplified to one per school. They are not an admissions predictor.
+The cuts are ballpark figures from recent 정시 years, simplified to one per school; the 교과 lines are recent 9-grade 교과 cuts converted to the 5-grade scale (by the share of a year above each average); the 종합 lines are set on the game's record score. None of them is an admissions predictor. "수시" is the school's share of places filled in 수시, the rest being 정시.
 
-| School | Cut | School | Cut |
-|---|---|---|---|
-| 의대 (Medical school, 이과 only) | 98.8 | 중앙대 | 94.2 |
-| 서울대 | 98.0 | 서울시립대 | 93.8 |
-| 연세대 | 97.6 | 경희대 | 93.6 |
-| 고려대 | 97.4 | 한국외대 | 93.3 |
-| 성균관대 | 96.1 | 건국대 | 91.0 |
-| 서강대 | 95.8 | 동국대 | 90.6 |
-| 한양대 | 95.6 | 홍익대 | 90.0 |
-| 부산대 | 88.5 | 경북대 | 87.5 |
-| 국민대 | 86.8 | 숭실대 | 86.5 |
-| 아주대 | 85.8 | 인하대 | 85.0 |
-| 가천대 | 80.0 | 지방 사립대 | 60.0 |
-| 전문대 | 25.0 | | |
+| School | 정시 cut | 수시 | 교과 line | 종합 line | 논술 | 최저 (교과 / 종합 / 논술) |
+|---|---|---|---|---|---|---|
+| 의대 (medical school, sciences only) | 98.8 | 68% | 1.03 | 92 + interview | yes | 3 for 4 / 3 for 5 / 3 for 4 |
+| KAIST (sciences only, 수시 only, outside the six) | — | 100% | — | 88 + interview | — | — |
+| 서울대 | 98.0 | 62% | — | 91 + interview | — | — |
+| POSTECH (sciences only, 수시 only) | — | 100% | — | 87 + interview | — | — |
+| 연세대 | 97.6 | 60% | 1.08 (this year's graduates) | 86 + interview | yes | — |
+| 고려대 | 97.4 | 62% | 1.12 (this year's graduates) | 85 | yes | 3 for 7 / 4 for 8 / 4 for 8 |
+| 성균관대 | 96.1 | 60% | 1.12 | 83 | yes | 3 for 7 / — / 3 for 6 |
+| 서강대 | 95.8 | 60% | 1.18 | 82 | yes | 3 for 7 / — / 3 for 7 |
+| 한양대 | 95.6 | 60% | 1.08 | 83 | yes | 3 for 7 / — / — |
+| 중앙대 | 94.2 | 60% | 1.18 | 79 | yes | 3 for 7 / — / 3 for 6 |
+| 서울시립대 | 93.8 | 58% | 1.27 | 77 + interview | — | 3 for 7 |
+| 경희대 | 93.6 | 62% | 1.32 | 78 | yes | 2 for 5 / — / 2 for 5 |
+| 한국외대 | 93.3 | 61% | 1.32 | 77 | yes | 2 for 4 / — / 2 for 4 |
+| 이화여대 (women only) | 93.0 | 70% | 1.22 (this year's graduates) | 78 | yes | — / — / 3 for 6 |
+| 건국대 | 91.0 | 62% | 1.38 | 74 | yes | — / — / 2 for 5 |
+| 동국대 | 90.6 | 62% | 1.38 | 73 | yes | 2 for 5 / — / 2 for 5 |
+| 홍익대 | 90.0 | 63% | 1.52 | 72 | yes | 3 for 8 / — / 3 for 8 |
+| 숙명여대 (women only) | 89.5 | 66% | 1.42 | 72 | yes | 2 for 5 / — / 2 for 5 |
+| 서울과기대 | 89.0 | 63% | 1.57 | 71 | yes | — |
+| 부산대 | 88.5 | 76% | 1.42 | 70 | yes | 2 for 5 / — / 2 for 5 |
+| 경북대 | 87.5 | 74% | 1.62 | 69 | yes | 2 for 5 / — / 2 for 5 |
+| 국민대 | 86.8 | 63% | 1.62 | 68 | — | 2 for 6 |
+| 숭실대 | 86.5 | 62% | 1.57 | 68 | — | — |
+| 광운대 | 86.3 | 62% | 1.72 | 67 | yes | — |
+| 세종대 | 86.0 | 62% | 1.77 | 66 | — | — |
+| 전남대 | 86.0 | 80% | 1.72 | 66 | — | 2 for 6 |
+| 아주대 | 85.8 | 68% | 1.57 | 67 | yes | — |
+| 인하대 | 85.0 | 70% | 1.57 | 66 | yes | — |
+| 충남대 | 85.0 | 78% | 1.87 | 64 | — | 2 for 6 |
+| 성신여대 (women only) | 85.0 | 66% | 1.82 | 64 | — | — |
+| 단국대 | 84.8 | 66% | 1.72 | 64 | yes | — |
+| 서울여대 (women only) | 84.0 | 67% | 1.92 | 62 | — | — |
+| 명지대 | 83.8 | 68% | 1.92 | 62 | — | — |
+| 인천대 | 83.5 | 70% | 1.87 | 60 | — | — |
+| 덕성여대 (women only) | 83.2 | 68% | 1.97 | 60 | — | — |
+| 동덕여대 (women only) | 82.8 | 72% | 2.02 | 59 | — | — |
+| 가천대 | 80.0 | 75% | 1.77 | 56 | yes | — |
+| 지방 사립대 (regional private) | 60.0 | 88% | 2.9 | 40 | — | — |
+| 광주여대 (women only) | 50.0 | 92% | 3.2 | 34 | — | — |
+| 전문대 (junior college) | 25.0 | 92% | 3.7 | 25 | — | — |
+
+"3 for 7" means your best three of Korean, Math, English and your better inquiry subject must add up to 7 grades or less.
+
+### Early admission: 수시 (the model)
+
+- **School grades (내신):** in each graded subject your ability on the day is θ + prep (up to +0.22) − a stress hit above 70 + noise (sd 0.22). Your classmates' ability is normal around the typical line for your grade + 0.25 + your school's shift (see School grades above), sd 0.85 (0.5–0.9 at special schools). The share of classmates above you sets the grade by the 10/34/66/90% cuts; the raw score is 100 / (1 + e^(−1.3·(θ − classmates' mean + 0.5))). The semester grade combines 35% midterm, 40% final and 25% performance assessment; the 내신 average is every semester grade of every subject, equally weighted (real schools weight by credit hours). Every exam uses its own seeded stream, so it never moves the main RNG.
+- **The record score:** 65% academic + 20% career + 15% community. Academic = 0.7 × (100 − 35 × (내신 average − 1 − the school's reading)) + 0.3 × comments, where comments = 100 × (1 − e^(−points/18)) and points come from attention × (0.35 + 0.65 × your study share) each month, research projects and reading; career = 100 × (1 − e^(−points/14)) from research projects and an academic club (× 1 if your field fits your track, 0.4 if not, 0.9 before the track choice) plus 4 for having a field; community = 20 + 80 × (1 − e^(−points/12)) from clubs, volunteering, a class office, the festival and time with friends.
+- **교과:** chance = logistic((line − your average) / (0.05 + 0.05 × (line − 1))), so a tenth of a grade matters most at the top. Vocational and arts-school averages count 0.5 and 0.3 of a grade worse.
+- **종합:** chance = logistic((record score − line) / 5). With an interview, the document round passes you at logistic((score − line + 7) / 5) (October), and the final odds, given that, use your score plus the interview prep (+3 mock interviews, +1.5 rereading, 0 resting) and a day's swing (sd 3).
+- **논술:** chance = 0.18 × logistic((0.6 × Korean + 0.4 × (Math on sciences, social studies on humanities) − (the θ at the school's 정시 percentile + 0.6)) / 0.3).
+- **Quotas:** 지역인재 makes the 교과 line 0.25 easier and the 종합 line 6 points easier; 농어촌 and 기회균형 0.3 and 8.
+- **On the screen** each option shows its chance after the 최저: the record/grades/essay part times the chance of meeting the 최저, estimated from this year's latest mock (each grade ± about one on the day; 400 draws from a fixed stream). Labels as in 정시.
+- **Results:** each application rolls its own stream; the line moves by a hidden sd of 0.06 grades (교과) or 2 points (종합); a missed 최저 is a rejection; a rejection can still come good off the waitlist at 25% of the real chance. Any 수시 offer skips the 정시 screen.
 
 ## Calibration and balance
 
@@ -420,24 +485,52 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 - "Best affordable" means the most expensive study method the family's budget covers that turn.
 - In early childhood the bots play their own way: balanced mixes picture books, blocks, songs, playdates and the playground; the slacker watches cartoons and plays; the grinder and smart bots stick to picture books, blocks and songs. All of them go to an ordinary kindergarten.
 - "smart" looks after stress and health, reads in elementary school, adds a timed practice exam in October of High 3, and studies the subject with the most room to grow. It skips English past about the 90-point level and History once it is safe.
-- The bots apply to one reach, one match and one safe school.
+- In 정시 the bots apply to one reach, one match and one safe school.
+- In 수시 (from v6.0) they send up to six applications, but only to schools whose 정시 cut is at least 0.5 above what their September mock would score (an offer below that would take a better 정시 result away), and while retakes remain, only to schools at or above their goal: two reaches, two matches and two safer picks among those with at least a 4% chance. They build no record unless the row says so ("builds record": one block a turn, in rotation, on exam prep, a research project, the club and volunteering, taken from the most-studied subject). All bots are boys except the "girls" row (the same lives as girls, so the women's universities are open).
+- SKY+ is medical school, SNU, Yonsei, Korea, KAIST or POSTECH. In-Seoul+ is any school with a 정시 cut of about 85 or more (the same line as before v6.0: the in-Seoul universities down to the Kookmin–Soongsil–Dankook tier, the big regional national universities, Inha and Ajou).
 - "Start" is the average ability (0–100) entering High 3.
 
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
-| balanced, self-study, 1 try | 62 | 2.6 · 2.1 · 2.4 | 367 | 367 | 1.00 | 1% | 0% | 44% |
-| slacker (half games & friends), 1 try | 56 | 3.2 · 2.6 · 5.9 | 352 | 352 | 1.00 | 0% | 0% | 14% |
-| grinder (no rest), self-study, 1 try | 66 | 3.1 · 2.6 · 2.8 | 368 | 368 | 1.00 | 3% | 0% | 45% |
-| smart, online lectures, 1 try | 66 | 2.4 · 2.1 · 2.5 | 378 | 378 | 1.00 | 3% | 0% | 63% |
-| smart, best affordable method, 1 try | 69 | 2.1 · 1.9 · 2.3 | 385 | 385 | 1.00 | 14% | 3% | 70% |
-| smart, best affordable, retakes up to 3 tries | 69 | 2.1 · 1.9 · 2.3 | 385 | 411 | 2.50 | 69% | 25% | 99% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 385 | 420 | 3.71 | 91% | 86% | 98% |
-| smart, best affordable, tries for selective schools, 1 try | 68 | 2.0 · 1.9 · 2.2 | 385 | 385 | 1.00 | 6% | 1% | 79% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 2.0 · 1.9 · 2.3 | 384 | 420 | 3.80 | 90% | 85% | 96% |
-| balanced, self-study, vocational high school, 1 try | 59 | 2.8 · 2.4 · 2.6 | 355 | 355 | 1.00 | 1% | 0% | 19% |
-| balanced, self-study, leaves school at High 1, 1 try | 62 | 2.9 · 2.4 · 2.6 | 364 | 364 | 1.00 | 0% | 0% | 31% |
-| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.2 · 1.9 · 2.4 | 383 | 383 | 1.00 | 6% | 1% | 64% |
-| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.2 · 2.1 · 2.4 | 378 | 378 | 1.00 | 6% | 1% | 61% |
+| balanced, self-study, 1 try | 62 | 2.7 · 2.2 · 2.5 | 367 | 367 | 1.00 | 1% | 0% | 49% |
+| slacker (half games & friends), 1 try | 56 | 3.2 · 2.5 · 5.7 | 352 | 352 | 1.00 | 0% | 0% | 13% |
+| grinder (no rest), self-study, 1 try | 66 | 2.9 · 2.4 · 2.5 | 372 | 372 | 1.00 | 3% | 0% | 58% |
+| smart, online lectures, 1 try | 66 | 2.3 · 1.9 · 2.6 | 380 | 380 | 1.00 | 5% | 1% | 70% |
+| smart, best affordable method, 1 try | 68 | 1.9 · 1.9 · 2.3 | 388 | 388 | 1.00 | 8% | 3% | 83% |
+| smart, best affordable, retakes up to 3 tries | 68 | 1.9 · 1.9 · 2.3 | 388 | 410 | 2.52 | 70% | 28% | 99% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 68 | 1.9 · 1.9 · 2.3 | 386 | 419 | 3.54 | 95% | 89% | 99% |
+| smart, best affordable, tries for selective schools, 1 try | 68 | 2.2 · 1.9 · 2.4 | 384 | 384 | 1.00 | 4% | 0% | 78% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 68 | 1.9 · 1.9 · 2.3 | 385 | 419 | 3.56 | 94% | 89% | 99% |
+| balanced, self-study, vocational high school, 1 try | 59 | 2.8 · 2.5 · 2.6 | 355 | 355 | 1.00 | 1% | 0% | 31% |
+| balanced, self-study, leaves school at High 1, 1 try | 62 | 2.9 · 2.4 · 2.6 | 364 | 364 | 1.00 | 0% | 0% | 36% |
+| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.2 · 1.9 · 2.4 | 383 | 383 | 1.00 | 4% | 1% | 69% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.2 · 2.1 · 2.4 | 378 | 378 | 1.00 | 6% | 1% | 64% |
+| balanced, self-study, 1 try, 정시 only (no 수시) | 62 | 2.7 · 2.2 · 2.5 | 367 | 367 | 1.00 | 4% | 0% | 39% |
+| smart, best affordable, 1 try, 정시 only (no 수시) | 68 | 1.9 · 1.9 · 2.3 | 388 | 388 | 1.00 | 10% | 4% | 81% |
+| smart, best affordable, builds the school record, 1 try | 68 | 2.1 · 1.9 · 2.4 | 382 | 382 | 1.00 | 16% | 3% | 81% |
+| smart, best affordable, 1 try, the same lives as girls | 68 | 1.9 · 1.9 · 2.3 | 388 | 388 | 1.00 | 8% | 3% | 83% |
+
+Admissions in the same lives (v6.0): the 내신 average at the end of High 3's first semester, the record score (as an ordinary university reads it), how many 수시 applications the bot sent on its first try, how often it got a 수시 offer on its first try, how often the school it finally enrolled at came through 수시 (on any try), and how often that school was a women's university:
+
+| Strategy | 내신 average | Record score | 수시 applications | 수시 offer | Enrolled via 수시 | Women's university |
+|---|---|---|---|---|---|---|
+| balanced, self-study, 1 try | 2.93 | 41 | 2.6 | 21% | 21% | 0% |
+| slacker (half games & friends), 1 try | 3.51 | 32 | 2.1 | 14% | 14% | 0% |
+| grinder (no rest), self-study, 1 try | 2.61 | 42 | 3.1 | 18% | 18% | 0% |
+| smart, online lectures, 1 try | 2.60 | 44 | 1.9 | 14% | 14% | 0% |
+| smart, best affordable method, 1 try | 2.40 | 48 | 2.2 | 19% | 19% | 0% |
+| smart, best affordable, retakes up to 3 tries | 2.40 | 48 | 0.1 | 1% | 14% | 0% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.40 | 49 | 0.0 | 0% | 19% | 0% |
+| smart, best affordable, tries for selective schools, 1 try | 2.61 | 46 | 2.1 | 13% | 13% | 0% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 2.56 | 48 | 0.0 | 0% | 18% | 0% |
+| balanced, self-study, vocational high school, 1 try | 1.97 | 47 | 3.9 | 31% | 31% | 0% |
+| balanced, self-study, leaves school at High 1, 1 try | - | 26 | 1.5 | 11% | 11% | 0% |
+| smart, best affordable, leaves school at High 1, 1 try | - | 26 | 1.8 | 14% | 14% | 0% |
+| smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | - | - | 1.0 | 9% | 9% | 0% |
+| balanced, self-study, 1 try, 정시 only (no 수시) | 2.93 | 41 | 0.0 | 0% | 0% | 0% |
+| smart, best affordable, 1 try, 정시 only (no 수시) | 2.40 | 48 | 0.0 | 0% | 0% | 0% |
+| smart, best affordable, builds the school record, 1 try | 2.39 | 65 | 4.5 | 54% | 54% | 0% |
+| smart, best affordable, 1 try, the same lives as girls | 2.40 | 48 | 2.3 | 19% | 19% | 5% |
 
 How much luck spreads lives that follow the same strategy, before (v4.1) and after the luck changes (v4.2). "Skill r²" is how much of the spread in first totals is explained by ability entering High 3; the rest is luck (the exam day, the paper, an accident in High 3, a family that can suddenly afford tutors, or can't):
 
@@ -450,54 +543,54 @@ The smart bot with the best affordable method, first try only, by the family it 
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 18 | 66 | 379 | 6% | 44% |
-| Lower-middle income | 23 | 67 | 383 | 4% | 83% |
-| Middle income | 10 | 71 | 398 | 20% | 90% |
-| Upper-middle income | 18 | 70 | 387 | 17% | 67% |
-| High income | 11 | 71 | 387 | 36% | 73% |
+| Low income | 23 | 67 | 384 | 0% | 74% |
+| Lower-middle income | 16 | 67 | 388 | 0% | 88% |
+| Middle income | 17 | 69 | 384 | 6% | 82% |
+| Upper-middle income | 13 | 71 | 395 | 15% | 85% |
+| High income | 11 | 71 | 392 | 27% | 91% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 13 | 70 | 396 | 31% | 92% | 77% |
-| Seoul academy district | 4 | 73 | 393 | 50% | 50% | 100% |
-| Seoul | 5 | 71 | 387 | 0% | 60% | 100% |
-| Capital-region city | 23 | 67 | 387 | 13% | 57% | 78% |
-| Big city | 15 | 70 | 389 | 13% | 87% | 100% |
-| Mid-sized city | 11 | 66 | 371 | 0% | 64% | 82% |
-| Rural county | 9 | 66 | 374 | 0% | 67% | 89% |
+| Gangnam | 13 | 70 | 397 | 23% | 100% | 100% |
+| Seoul academy district | 4 | 72 | 399 | 0% | 100% | 100% |
+| Seoul | 5 | 71 | 389 | 20% | 100% | 60% |
+| Capital-region city | 23 | 67 | 383 | 4% | 65% | 87% |
+| Big city | 15 | 70 | 392 | 7% | 93% | 100% |
+| Mid-sized city | 11 | 66 | 383 | 0% | 91% | 91% |
+| Rural county | 9 | 66 | 378 | 0% | 56% | 67% |
 
-What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 73% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
+What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 78% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.3 | +0.1 | 71% |
-| Easygoing (순한 아기) | +0.1 | -0.2 | 71% |
-| Curious (호기심 많은 아기) | +0.5 | +1.1 | 75% |
-| Good sleeper (잘 자는 아기) | +0.0 | -0.8 | 70% |
-| Unflappable (겁 없는 아기) | +0.0 | -0.1 | 70% |
-| All smiles (잘 웃는 아기) | -0.0 | +1.2 | 75% |
-| Pencil (연필) | +1.7 | +6.4 | 88% |
-| Book (책) | +1.0 | +0.7 | 70% |
-| Computer mouse (마우스) | +1.1 | +2.3 | 76% |
-| Stethoscope (청진기) | +0.9 | -0.3 | 69% |
-| Microphone (마이크) | +1.0 | +3.0 | 79% |
-| Judge's gavel (판사봉) | +1.1 | +3.4 | 81% |
-| Ball (공) | +0.3 | +0.2 | 73% |
-| Thread (실) | +0.7 | +0.5 | 69% |
-| Money (돈) | +0.2 | +0.6 | 71% |
-| Paintbrush (붓) | +0.0 | +1.1 | 76% |
+| Sturdy (튼튼한 아기) | +0.3 | +0.0 | 79% |
+| Easygoing (순한 아기) | -0.0 | +1.4 | 76% |
+| Curious (호기심 많은 아기) | +0.5 | +1.9 | 83% |
+| Good sleeper (잘 자는 아기) | -0.1 | +0.8 | 76% |
+| Unflappable (겁 없는 아기) | +0.0 | +0.4 | 80% |
+| All smiles (잘 웃는 아기) | +0.1 | -0.1 | 71% |
+| Pencil (연필) | +1.8 | +3.7 | 84% |
+| Book (책) | +1.0 | +0.9 | 79% |
+| Computer mouse (마우스) | +1.1 | +2.1 | 81% |
+| Stethoscope (청진기) | +0.9 | +3.5 | 78% |
+| Microphone (마이크) | +1.0 | +2.7 | 83% |
+| Judge's gavel (판사봉) | +1.1 | +1.9 | 80% |
+| Ball (공) | +0.4 | +0.5 | 74% |
+| Thread (실) | +0.6 | -0.1 | 79% |
+| Money (돈) | +0.2 | -0.3 | 78% |
+| Paintbrush (붓) | -0.0 | +0.4 | 75% |
 
 Who raises you, on the same 80 lives (smart bot, best affordable method, first try) with the family setup forced at birth. Lives that start with both parents can still lose one later:
 
 | Setup at birth | Start | First total | In-Seoul+ |
 |---|---|---|---|
-| Both parents | 69 | 385 | 68% |
-| Single mom | 67 | 382 | 68% |
-| Single dad | 67 | 382 | 65% |
-| Grandparents | 67 | 380 | 64% |
-| Children's home | 66 | 377 | 59% |
+| Both parents | 69 | 388 | 81% |
+| Single mom | 67 | 382 | 79% |
+| Single dad | 67 | 380 | 71% |
+| Grandparents | 67 | 381 | 66% |
+| Children's home | 66 | 379 | 73% |
 
 What the tables show:
 
@@ -506,9 +599,13 @@ What the tables show:
 - **Luck now decides a lot:** two lives with the same habits and similar ability can end 60 points apart. For the balanced bot, ability entering High 3 explains only about a third of its first total. The smart bot is squeezed by the top of the scale, so its spread widens less, but strong play still wins on average (about 20 points over the balanced bot).
 - **Family income matters, but it moves:** families change fifths two or three times a life, so where you're born matters less than it did, and a promotion or a layoff in High school can matter more. Retakes close much of the gap either way.
 - **Where you live matters too:** Gangnam's academies give the strongest start, while local and rural quotas help students outside the capital (the region groups above are small, so treat them as a direction, not exact rates).
-- **School choice nudges rather than decides:** the bot that tries for selective schools mostly lands in private ones by lottery (a few get into 자사고 or an international middle school) and does slightly better; the smart bot rarely studies far enough ahead in math and science for a science school; a vocational school costs a 수능 candidate about 9 points of total and a block a turn.
-- **A children's home is the hardest start, not a closed door:** the same lives start 3 points lower and score 8 lower on a first try, and 59% reach an in-Seoul university against 73% with both parents; the leaving-care money then makes self-study retakes affordable.
+- **School choice nudges rather than decides:** the bot that tries for selective schools mostly lands in private ones by lottery (a few get into 자사고 or an international middle school) and does slightly better; the smart bot rarely studies far enough ahead in math and science for a science school; a vocational school costs a 수능 candidate about 12 points of total and a block a turn, though its easier 내신 opens 수시 doors (see below).
+- **A children's home is the hardest start, not a closed door:** the same lives start 3 points lower and score 9 lower on a first try, and 73% reach an in-Seoul+ university against 81% with both parents (기회균형 helps in 수시); the leaving-care money then makes self-study retakes affordable.
 - **Leaving school is a trade, not a shortcut:** the extra hours almost make up for the lost lessons, motivation and the GED, but not quite, and you lose the quotas; what you gain is freedom from school (and bullying) and a spare year if you sit early.
+- **수시 adds chances, but they cost something:** with the same lives, the balanced bot reaches in-Seoul+ 49% of the time against 39% with 정시 only, mostly through essay exams and record reviews at schools above its 정시 level. The smart bot gains little (83% against 81%) and loses a few SKY+ places (8% against 10%): an early offer from a school the September mock made look ambitious can turn out below what the 수능 would have reached, and it rules out 정시 (수시 납치).
+- **The record is what 수시 rewards:** the bot that spends one block a turn on exam prep, research projects, its club and volunteering scores 6 points less on the 수능 but doubles its SKY+ share (16%) and gets an early offer 54% of the time, through record reviews. Bots that build no record sit at a record score of 40–50, below the lines of most Seoul schools' record reviews, so for them 수시 is mostly a lottery of essay exams.
+- **Plausibility:** in reality about 80% of places go to 수시 and the average applicant sends 4.96 applications; the bots send 2–5 and only above their 정시 level, so their 20–55% "enrolled via 수시" is lower than the national share, which is dominated by students applying to schools at or below their level and by provincial universities that fill about 90% in 수시. A vocational school's weaker classmates give an easy 내신 (2.0), which counts 0.5 of a grade worse in 교과 but still opens record reviews and the 기회균형 and 농어촌 quotas, so 31% of those lives reach in-Seoul+ against 18% with 정시 only (the same lives, measured separately).
+- **Women's universities** open about one more option in the 85–93 band to girls; with the same lives, 5% of girls enroll at one, and the overall numbers barely move.
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
 - **Medical school** takes talent, a sciences track and usually several years: the bot chasing it rarely gets in on the first try, but a near-optimal player who keeps retaking usually makes it within five.
 
@@ -516,14 +613,17 @@ What the tables show:
 
 - `places.js`: generated by `tools/build_places.py` (don't edit by hand): province and municipality outlines, each game place's real districts and schools, and the special schools nationwide. The engine reads it for real school names and runs the same without it.
 - `engine.js`: the game, with no DOM, so it runs in Node. It holds no display text: log entries, events and outcomes are message keys with values.
-  - `Game` holds the state and the screen queue: `advance(plan, method)`, `choose(i)`, `dismiss()`, `chooseTrack(track, inq)`, `apply(ids)`, `decide(d)`.
+  - `Game` holds the state and the screen queue: `advance(plan, method)`, `choose(i)`, `dismiss()`, `chooseTrack(track, inq)`, `applySusi(picks)`, `apply(ids)`, `decide(d)`.
+  - High school adds `g.naesin` (every exam and semester grade), `g.record` (the school record's running totals) and `g.susi` (this year's 수시 applications); `susiOptions()`, `recordScores(u)` and `naesinAvg()` read them.
   - It also holds the life stages, families, the exam simulation (`gradeSubject`), events, universities and constants.
 - `strings.js`: every piece of text, as an English and a Korean dictionary with the same keys. `make(lang, ctx)` returns the translator, including Korean money (만/억) and particle (이/가) handling.
-- `art.js`: the artwork, as SVG strings built in code (no DOM, no image files; the only words drawn are names app.js passes in, in the current language). `scene(ctx)` draws the life-stage scene with the avatar, `eventArt(ctx)` an event's illustration (data-driven through `EVENT_ART`, with fallbacks for unknown event ids), `screenArt(name, ctx)` the birth, track, mock, exam, report, application, offers and ending pictures, `cutscene(name, ctx)` a cutscene's shots (each an SVG plus its length; the motion is CSS keyframes in `styles.css`), and `moodOf(game)` / `lookFor(seed)` the avatar's mood and looks. Colours are `--a-*` tokens in `styles.css`.
+- `art.js`: the artwork, as SVG strings built in code (no DOM, no image files; the only words drawn are names app.js passes in, in the current language). `scene(ctx)` draws the life-stage scene with the avatar, `eventArt(ctx)` an event's illustration (data-driven through `EVENT_ART`, with fallbacks for unknown event ids), `screenArt(name, ctx)` the birth, track, mock, exam, report, report-card, 수시, first-round, 수시-results, application, offers and ending pictures, `cutscene(name, ctx)` a cutscene's shots (each an SVG plus its length; the motion is CSS keyframes in `styles.css`), and `moodOf(game)` / `lookFor(seed)` the avatar's mood and looks. Colours are `--a-*` tokens in `styles.css`.
 - `app.js`: UI only. It renders the state and whatever screen is first in `game.queue`, and plays a milestone's cutscene first (`pendingCut` / `playCut`).
-- `sim.js`: the headless calibration and strategy-bot script.
+- `sim.js`: the headless calibration and strategy-bot script, including how the bots apply in 수시 (`susiPicks`) and the admissions table.
 
 ## Changelog
+
+- **v6.0 (admissions):** real Korean university admissions. High school now has school grades (내신): a midterm and a final each semester from High 1 to the first semester of High 3, graded against your year at your school on the 5-grade scale for students entering high school from 2025 (top 10/34/66/90%), with a report card after each and the semester grades and running average on the game. Selective schools have much stronger classmates, so the same ability earns a worse grade there. A school record (학생부) builds from High 1 to August of High 3 (a career survey, a club, and new Exam prep, Club, Volunteering and Research project activities, teachers' comments, a class presentation event) and is shown as the three qualities universities assess (academic, career, community) on a new School record panel. In September of every exam year an early-admission (수시) screen takes up to six applications by school grades, record review (with document rounds in October and interviews after the 수능) or essay exam, with minimum 수능 grades, regional, rural and opportunity quotas and real 수시 shares; results come in December, and any early offer rules out regular admission (수시 납치). Retakers apply with the record they left with; students who left school can take essay exams only. The university list grows from 23 to 40: the women's universities (closed to men in both rounds), more Seoul schools, Incheon, Chonnam and Chungnam National (now the local-quota schools for Gwangju, Haenam and Daejeon), and KAIST and POSTECH (수시 only). New screens, art, strings and events; `sim.js` bots apply in 수시 above their 정시 level, with new rows (정시 only, building the record, girls) and an admissions table. In-Seoul+ keeps its old line (a 정시 cut of about 85). Calibration and the top end are unchanged; balance tables regenerated. New figures in `data/korea-stats.md` section 8. Saves from before v6.0 load: lives already in high school play 정시 only, younger ones get a record at High 1.
 
 - **v5.2:** parents' jobs. Each parent is dealt a real job at birth (16 jobs, plus staying at home), drawn from official 2025 occupation shares for working mothers and for men aged 30–49 and fitted to the family's income fifth by real pay. Jobs change with layoffs (often into a fried-chicken shop), divorce and bereavement, and mothers go back to work at the real rate as children grow. Jobs have small effects, seven new events, work clothes on the birth screen and a line on the Family strip. New Jobs section in `data/korea-stats.md`. Balance tables regenerated.
 
