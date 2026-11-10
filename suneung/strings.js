@@ -2069,6 +2069,229 @@
     },
   };
 
+  // ---------- v6.0: 내신, the school record and 수시 ----------
+  // English names the Korean terms the way the rest of the game does: in plain words, with the
+  // romanized term where a player will meet it (school grades, naesin; early admission, susi).
+  Object.assign(DATA.en.uni, {
+    kaist: "KAIST", postech: "POSTECH", ewha: "Ewha Womans University", sookmyung: "Sookmyung Women's University", seoultech: "Seoul Nat'l Univ. of Science & Technology",
+    kwangwoon: "Kwangwoon University", sejong: "Sejong University", jnu: "Chonnam National University", cnu: "Chungnam National University",
+    sungshin: "Sungshin Women's University", dankook: "Dankook University", swu: "Seoul Women's University", myongji: "Myongji University",
+    incheon: "Incheon National University", duksung: "Duksung Women's University", dongduk: "Dongduk Women's University", kwangjuWomen: "Kwangju Women's University",
+  });
+  Object.assign(DATA.ko.uni, {
+    kaist: "카이스트", postech: "포스텍", ewha: "이화여대", sookmyung: "숙명여대", seoultech: "서울과기대", kwangwoon: "광운대", sejong: "세종대", jnu: "전남대", cnu: "충남대",
+    sungshin: "성신여대", dankook: "단국대", swu: "서울여대", myongji: "명지대", incheon: "인천대", duksung: "덕성여대", dongduk: "동덕여대", kwangjuWomen: "광주여대",
+  });
+  Object.assign(DATA.en.act, { prep: "Exam prep", club: "Club", volunteer: "Volunteering", project: "Research project" });
+  Object.assign(DATA.ko.act, { prep: "내신 대비", club: "동아리", volunteer: "봉사", project: "진로 탐구" });
+  Object.assign(DATA.en.actLong, { prep: "Prep for school exams", club: "Club activities", volunteer: "School volunteering", project: "Research project in your field" });
+  Object.assign(DATA.ko.actLong, { prep: "내신 시험 대비", club: "동아리 활동", volunteer: "봉사활동", project: "진로 탐구 보고서" });
+  Object.assign(DATA.en.actHint, {
+    prep: "Your school's past papers: a better midterm or final this turn. Counts as study (stress).",
+    club: "School record: community, and career if it's an academic club in your field. −Stress",
+    volunteer: "School record: community. −Stress",
+    project: "School record: career and teachers' comments, more if it fits your track. A little study.",
+  });
+  Object.assign(DATA.ko.actHint, {
+    prep: "학교 기출 풀이: 이번 중간·기말 성적이 오른다. 공부로 친다(스트레스).",
+    club: "학생부: 공동체역량, 진로 관련 학술 동아리면 진로역량도. 스트레스 −",
+    volunteer: "학생부: 공동체역량. 스트레스 −",
+    project: "학생부: 진로역량과 세특, 계열과 맞으면 더. 공부도 조금.",
+  });
+  DATA.en.field = { med: "medicine", sci: "science and engineering", hum: "humanities and social sciences", biz: "business and economics" };
+  DATA.ko.field = { med: "의약 계열", sci: "자연·공학 계열", hum: "인문·사회 계열", biz: "상경 계열" };
+  DATA.en.club = { acad: "an academic club in your field", vol: "a volunteering club", fun: "a band or sports club" };
+  DATA.ko.club = { acad: "진로 관련 학술 동아리", vol: "봉사 동아리", fun: "밴드·스포츠 동아리" };
+  DATA.en.susiType = { gk: "School grades (gyogwa)", jh: "School record review (jonghap)", ns: "Essay exam (nonsul)" };
+  DATA.ko.susiType = { gk: "학생부교과", jh: "학생부종합", ns: "논술" };
+  DATA.en.susiShort = { gk: "Grades", jh: "Record", ns: "Essay" };
+  DATA.ko.susiShort = { gk: "교과", jh: "종합", ns: "논술" };
+  const termEn = (p) => "High " + (p.gr - 9) + ", semester " + p.sem + " " + (p.kind === "mid" ? "midterms" : "finals");
+  const termKo = (p) => "고" + (p.gr - 9) + " " + p.sem + "학기 " + (p.kind === "mid" ? "중간고사" : "기말고사");
+  const minEn = (m) => (m ? "best " + m[0] + " Suneung grades add up to " + m[1] + " or less" : "no minimum Suneung grades");
+  const minKo = (m) => (m ? "수능최저 " + m[0] + "개 합 " + m[1] : "수능최저 없음");
+  Object.assign(MSG.en, {
+    // The plan panel.
+    "plan.record": "School record",
+    "plan.recordNote": "High school counts twice: midterms and finals set your school grades (naesin), and what you do goes on your school record. Both decide early admission (susi) in September of High 3.",
+    // Report cards.
+    "naesin.title": (p) => termEn(p) + ": report card",
+    "naesin.h": ["Subject", "Raw", "Level", "Grade"],
+    "naesin.hSem": "Semester",
+    "naesin.text": "Graded against your year at your school: grade 1 is the top 10%, then 34%, 66%, 90% and the rest (the 5-grade scale for students entering high school from 2025). The level A–E is absolute.",
+    "naesin.avg": "This exam's average grade",
+    "naesin.semAvg": "Semester average",
+    "naesin.run": "Overall average (school grades)",
+    "naesin.prep": (p) => "Exam prep paid off: about +" + Math.round(p.b * 16.67) + " points of ability on the day.",
+    "naesin.strong": "Everyone here was top of their middle school: the same ability earns a better grade at an ordinary school, but universities reading your record know that.",
+    "naesin.back": "Back to studying",
+    "log.naesin": (p) => termEn(p) + ": average grade " + p.avg.toFixed(2) + (p.sa != null ? " · semester " + p.sa.toFixed(2) : "") + (p.run != null ? " · overall " + p.run.toFixed(2) : ""),
+    // The school record panel.
+    "rec.title": "School record",
+    "rec.sub": "what universities read in early admission",
+    "rec.acad": "Academic", "rec.career": "Career", "rec.comm": "Community",
+    "rec.acad.tip": "Your school grades and the teachers' subject comments (seteuk): attention in class, study, research projects, books that come up.",
+    "rec.career.tip": "Career exploration consistent with what you want to study: research projects, an academic club in your field, a field that fits your track.",
+    "rec.comm.tip": "Community: club life, school volunteering, class office, working with others.",
+    "rec.naesin": (p) => "School grades: " + (p.a != null ? p.a.toFixed(2) + " average" : "no semester finished yet"),
+    "rec.field": (p, h) => "Wants to study " + (p.f ? h.field(p.f) : "(not chosen yet)") + (p.fit === false ? ", which doesn't fit your track" : ""),
+    "rec.club": (p, h) => (p.c ? "Club: " + h.club(p.c) : "No club yet"),
+    "rec.counts": (p) => "Volunteering " + Math.round(p.v) + " hours · " + Math.round(p.r) + " research reports",
+    "rec.closed": "The record closed at the end of August of High 3. It's what you apply with, this year and in any retake.",
+    "rec.none": "This life started before school records existed in the game: early admission isn't open to it.",
+    // The 진로 survey and the club fair (High 1).
+    "ev.jinro.text": "The career survey asks what you want to study at university. It goes on your school record, and universities will read everything else against it.",
+    "ev.jinro.c": ["Medicine", "Science and engineering", "Humanities and social sciences", "Business and economics"],
+    "ev.jinro.r0": "Medicine. Your homeroom teacher nods slowly and writes it down.",
+    "ev.jinro.r1": "Science and engineering. A safe choice with a lot of doors.",
+    "ev.jinro.r2": "Humanities and social sciences. You write about wanting to understand people.",
+    "ev.jinro.r3": "Business and economics. You've watched enough documentaries about markets.",
+    "ev.club-pick.text": "It's the club fair. Seniors shout from every desk in the hallway.",
+    "ev.club-pick.c": ["An academic club in your field", "The volunteering club", "The band or a sports club"],
+    "ev.club-pick.r0": "You join a research club. The first meeting assigns a reading list.",
+    "ev.club-pick.r1": "You join the volunteering club. Saturday mornings at the welfare center.",
+    "ev.club-pick.r2": "You join for fun. It's the best two hours of the week.",
+    "ev.jinro-change.text": "Your homeroom teacher frowns at your record: the field you want to study doesn't fit the track you're on.",
+    "ev.jinro-change.c": ["Change it to fit your track", "Keep it"],
+    "ev.jinro-change.r0": (p, h) => "You change it to " + h.field(p.f) + ". Some of what you did still counts.",
+    "ev.jinro-change.r1": "You keep it. A reader may wonder why.",
+    "ev.seteuk.text": "Your teacher assigns a presentation on a topic of your choice. Whatever you do will end up in the comments on your record.",
+    "ev.seteuk.c": ["Go deep (a lost block)", "Do the minimum"],
+    "ev.seteuk.r0": "You read three papers and answer every question. The teacher writes a long paragraph about you.",
+    "ev.seteuk.r1": "Five slides, done. The comment will be one line.",
+    "ev.interview.text": "You're through to the interviews. They're in late November, right after the exam.",
+    "ev.interview.c": ["Mock interviews with your teachers", "Reread your record", "Rest after the exam"],
+    "ev.interview.r0": "Three teachers grill you after school for a week. By the end your answers come out whole.",
+    "ev.interview.r1": "You reread your record until you can explain every line of it.",
+    "ev.interview.r2": "You sleep for two days. You'll wing it.",
+    "log.field": (p, h) => (p.change ? "You change your intended field to " : "Intended field on your school record: ") + h.field(p.f) + ".",
+    // The 수시 application screen.
+    "susi.title": "Early admission (susi)",
+    "susi.text": (p) => "September: applications open for early admission, which fills about 80% of university places (around 60% at the top Seoul schools, which keep 40% for regular admission). You can send up to six" +
+      (p.free ? " (KAIST doesn't count)" : "") + ". Your school grades average " + (p.a != null ? p.a.toFixed(2) : "—") + "; your school record scores " + p.r + " out of 100." + (p.est != null ? " Your September mock would give a regular-admission score of " + p.est.toFixed(1) + "." : ""),
+    "susi.warn": "⚠ Any early-admission offer, even off a waitlist, rules out regular admission (jeongsi) this year: you take an early place or none. Don't apply to a school you'd be unhappy at.",
+    "susi.retake": "As a retaker you apply with the school grades and record you left school with. Some school-grades routes take only this year's graduates.",
+    "susi.ged": "Without a school record (you left school), only essay exams are open.",
+    "susi.types": "School grades: your average decides, often with minimum Suneung grades. Record review: the whole record, sometimes with an interview. Essay: an exam on campus, a long shot, usually with minimum Suneung grades.",
+    "susi.chance": "{p}%",
+    "susi.min": (p) => minEn(p.m) + (p.m ? " (" + Math.round(p.q * 100) + "% likely from your mocks)" : ""),
+    "susi.iv": "interview",
+    "susi.share": (p) => "early " + p.s + "% · regular " + (100 - p.s) + "%",
+    "susi.more": "Long shots and closed ({n})",
+    "susi.free": "doesn't count toward the six",
+    "susi.no.sci": "Sciences track only",
+    "susi.no.women": "Women only",
+    "susi.no.ged": "Needs a school record",
+    "susi.no.grad": "This year's graduates only",
+    "susi.submit": (p) => "Apply (" + p.n + " of 6)",
+    "susi.skip": "Skip early admission",
+    "apply.quota.balance": "opportunity quota",
+    "log.susiApply": (p, h) => "Early admission: " + p.r.map((r) => h.uni(r[0]) + " (" + h.susiShort(r[1]) + ")").join(", ") + ".",
+    "log.susiSkip": "You skip early admission and wait for regular admission.",
+    // First-round results.
+    "susiStage.title": "Record review: first round",
+    "susiStage.text": "October: the document round is in for the record reviews with interviews.",
+    "susiStage.pass": "Through to the interview", "susiStage.fail": "Not through",
+    "log.susiStage": (p, h) => "First round: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "through ✓" : "out ✗")).join(", ") + ".",
+    // Final results.
+    "susiResult.title": "Early admission results",
+    "susiResult.text": "December, a week before regular admission opens: the early results are in, after the minimum-grade check.",
+    "susiResult.yes": "Admitted", "susiResult.wait": "Admitted off the waitlist", "susiResult.no": "Rejected", "susiResult.min": "Missed the minimum grades", "susiResult.stage1": "Out in the first round",
+    "susiResult.go": "See your options →",
+    "susiResult.jeongsi": "On to regular admission →",
+    "susiResult.lock": "An early offer means no regular admission this year.",
+    "log.susiResult": (p, h) => "Early results: " + p.r.map((r) => h.uni(r[0]) + " (" + h.susiShort(r[1]) + ") " + (r[2] ? "admitted ✓" : r[3] ? "missed the minimum ✗" : "rejected ✗")).join(", "),
+    "offers.susiIntro": (p) => "December " + p.y + ". You have an early offer, so regular admission is closed to you this year. Take a place, or give them up and retake.",
+    "apply.no.women": "Women only",
+  });
+  Object.assign(MSG.ko, {
+    "plan.record": "학생부",
+    "plan.recordNote": "고등학교는 두 번 센다. 중간·기말고사가 내신이 되고, 하는 일이 학생부에 남는다. 둘 다 고3 9월 수시에서 쓰인다.",
+    "naesin.title": (p) => termKo(p) + " 성적표",
+    "naesin.h": ["과목", "원점수", "성취도", "석차등급"],
+    "naesin.hSem": "학기 등급",
+    "naesin.text": "우리 학교 같은 학년 안에서의 상대평가: 1등급 상위 10%, 2등급 34%, 3등급 66%, 4등급 90%까지, 나머지 5등급(2025년 고교 입학생부터의 5등급제). 성취도 A–E는 절대평가.",
+    "naesin.avg": "이번 시험 평균 등급",
+    "naesin.semAvg": "학기 평균",
+    "naesin.run": "전체 내신 평균",
+    "naesin.prep": (p) => "내신 대비가 통했다: 시험 날 실력이 " + Math.round(p.b * 16.67) + "점쯤 올랐다.",
+    "naesin.strong": "여기 친구들은 다 중학교 전교권이었다. 같은 실력이면 일반고에서 등급이 더 잘 나오지만, 학생부를 읽는 대학도 그걸 안다.",
+    "naesin.back": "다시 공부하러",
+    "log.naesin": (p) => termKo(p) + ": 평균 " + p.avg.toFixed(2) + "등급" + (p.sa != null ? " · 학기 " + p.sa.toFixed(2) : "") + (p.run != null ? " · 전체 " + p.run.toFixed(2) : ""),
+    "rec.title": "학생부",
+    "rec.sub": "수시에서 대학이 읽는 기록",
+    "rec.acad": "학업역량", "rec.career": "진로역량", "rec.comm": "공동체역량",
+    "rec.acad.tip": "내신과 세특(과목별 세부능력 및 특기사항): 수업 태도, 공부, 탐구 보고서, 수업에서 다룬 책.",
+    "rec.career.tip": "희망 진로와 맞는 탐구: 진로 탐구 보고서, 관련 학술 동아리, 계열과 맞는 진로 희망.",
+    "rec.comm.tip": "공동체: 동아리, 학교 봉사, 학급 임원, 협업.",
+    "rec.naesin": (p) => "내신: " + (p.a != null ? "평균 " + p.a.toFixed(2) + "등급" : "아직 끝난 학기 없음"),
+    "rec.field": (p, h) => "희망 진로: " + (p.f ? h.field(p.f) : "(아직 안 정함)") + (p.fit === false ? " (계열과 안 맞음)" : ""),
+    "rec.club": (p, h) => (p.c ? "동아리: " + h.club(p.c) : "동아리 아직 없음"),
+    "rec.counts": (p) => "봉사 " + Math.round(p.v) + "시간 · 탐구 보고서 " + Math.round(p.r) + "편",
+    "rec.closed": "학생부는 고3 8월 말에 마감됐다. 올해도, 재수를 해도 이 기록으로 지원한다.",
+    "rec.none": "학생부가 게임에 생기기 전에 시작한 삶이라 수시는 열리지 않는다.",
+    "ev.jinro.text": "진로 희망 조사서가 나왔다. 대학에서 무엇을 공부하고 싶은지. 학생부에 남고, 대학은 다른 모든 기록을 이것과 견주어 읽는다.",
+    "ev.jinro.c": ["의약 계열", "자연·공학 계열", "인문·사회 계열", "상경 계열"],
+    "ev.jinro.r0": "의약 계열. 담임 선생님이 천천히 고개를 끄덕이며 적는다.",
+    "ev.jinro.r1": "자연·공학 계열. 문이 많은 무난한 선택이다.",
+    "ev.jinro.r2": "인문·사회 계열. 사람을 이해하고 싶다고 적었다.",
+    "ev.jinro.r3": "상경 계열. 시장 다큐멘터리를 너무 많이 봤다.",
+    "ev.club-pick.text": "동아리 박람회 날. 복도 책상마다 선배들이 소리친다.",
+    "ev.club-pick.c": ["진로 관련 학술 동아리", "봉사 동아리", "밴드나 스포츠 동아리"],
+    "ev.club-pick.r0": "탐구 동아리에 들어갔다. 첫 모임에서 읽을 목록이 나왔다.",
+    "ev.club-pick.r1": "봉사 동아리에 들어갔다. 토요일 아침마다 복지관에 간다.",
+    "ev.club-pick.r2": "재미로 들어갔다. 일주일 중 제일 좋은 두 시간이다.",
+    "ev.jinro-change.text": "담임 선생님이 학생부를 보고 얼굴을 찌푸린다. 희망 진로가 지금 계열과 맞지 않는다.",
+    "ev.jinro-change.c": ["계열에 맞게 바꾼다", "그대로 둔다"],
+    "ev.jinro-change.r0": (p, h) => h.field(p.f) + "로 바꿨다. 해 온 활동 일부는 그대로 인정된다.",
+    "ev.jinro-change.r1": "그대로 둔다. 읽는 사람이 고개를 갸웃할지도.",
+    "ev.seteuk.text": "선생님이 자유 주제 발표를 내셨다. 뭘 하든 세특에 남는다.",
+    "ev.seteuk.c": ["제대로 파고든다(한 칸 잃음)", "최소한만 한다"],
+    "ev.seteuk.r0": "논문 세 편을 읽고 질문에 다 답했다. 선생님이 세특을 길게 써 주셨다.",
+    "ev.seteuk.r1": "슬라이드 다섯 장으로 끝. 세특은 한 줄이겠지.",
+    "ev.interview.text": "1단계를 통과했다. 면접은 수능 직후, 11월 말이다.",
+    "ev.interview.c": ["선생님들과 모의 면접", "학생부를 다시 읽는다", "수능 끝났으니 쉰다"],
+    "ev.interview.r0": "일주일 내내 방과 후에 선생님 세 분께 질문 공세를 받았다. 이제 대답이 술술 나온다.",
+    "ev.interview.r1": "학생부의 모든 줄을 설명할 수 있을 때까지 다시 읽었다.",
+    "ev.interview.r2": "이틀을 내리 잤다. 가서 부딪쳐 보자.",
+    "log.field": (p, h) => (p.change ? "희망 진로를 바꿨다: " : "학생부 희망 진로: ") + h.field(p.f) + ".",
+    "susi.title": "수시 원서 접수",
+    "susi.text": (p) => "9월, 수시 원서 접수가 시작됐다. 대학 정원의 약 80%가 수시로 뽑힌다(정시 40%를 지키는 서울 상위권은 약 60%). 최대 6장" +
+      (p.free ? "(카이스트는 횟수에 안 들어감)" : "") + "까지 쓸 수 있다. 내신 평균 " + (p.a != null ? p.a.toFixed(2) : "—") + "등급, 학생부 평가 " + p.r + "점." + (p.est != null ? " 9월 모평 기준 정시 환산 점수는 " + p.est.toFixed(1) + "점." : ""),
+    "susi.warn": "⚠ 수시에 한 곳이라도 합격하면(추가합격 포함) 올해 정시는 지원할 수 없다(수시 납치). 가고 싶지 않은 학교에는 쓰지 말 것.",
+    "susi.retake": "재수생은 졸업할 때의 내신과 학생부로 지원한다. 일부 교과전형은 졸업예정자만 받는다.",
+    "susi.ged": "학생부가 없어서(자퇴) 논술만 지원할 수 있다.",
+    "susi.types": "학생부교과: 내신 평균이 좌우, 수능최저가 붙는 곳이 많다. 학생부종합: 학생부 전체, 면접이 있는 곳도. 논술: 대학에서 치르는 시험, 바늘구멍이고 대개 수능최저가 있다.",
+    "susi.chance": "{p}%",
+    "susi.min": (p) => minKo(p.m) + (p.m ? " (모평 기준 충족 가능성 " + Math.round(p.q * 100) + "%)" : ""),
+    "susi.iv": "면접",
+    "susi.share": (p) => "수시 " + p.s + "% · 정시 " + (100 - p.s) + "%",
+    "susi.more": "가능성 낮음·지원 불가 ({n}곳)",
+    "susi.free": "6회 제한 제외",
+    "susi.no.sci": "이과만 지원 가능",
+    "susi.no.women": "여학생만 지원 가능",
+    "susi.no.ged": "학생부 필요",
+    "susi.no.grad": "졸업예정자만",
+    "susi.submit": (p) => "원서 제출 (" + p.n + "/6)",
+    "susi.skip": "수시 안 쓰기",
+    "apply.quota.balance": "기회균형",
+    "log.susiApply": (p, h) => "수시 지원: " + p.r.map((r) => h.uni(r[0]) + "(" + h.susiShort(r[1]) + ")").join(", ") + ".",
+    "log.susiSkip": "수시를 쓰지 않고 정시를 기다린다.",
+    "susiStage.title": "학생부종합 1단계 발표",
+    "susiStage.text": "10월, 면접이 있는 학생부종합의 서류 결과가 나왔다.",
+    "susiStage.pass": "1단계 합격, 면접으로", "susiStage.fail": "1단계 불합격",
+    "log.susiStage": (p, h) => "수시 1단계: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "통과 ✓" : "탈락 ✗")).join(", ") + ".",
+    "susiResult.title": "수시 합격자 발표",
+    "susiResult.text": "12월, 정시 원서 접수 일주일 전. 수능최저 확인을 마친 수시 결과가 나왔다.",
+    "susiResult.yes": "합격", "susiResult.wait": "추가합격", "susiResult.no": "불합격", "susiResult.min": "최저 미충족", "susiResult.stage1": "1단계 탈락",
+    "susiResult.go": "선택하러 가기 →",
+    "susiResult.jeongsi": "정시로 →",
+    "susiResult.lock": "수시에 합격했으니 올해 정시는 지원할 수 없다.",
+    "log.susiResult": (p, h) => "수시 결과: " + p.r.map((r) => h.uni(r[0]) + "(" + h.susiShort(r[1]) + ") " + (r[2] ? "합격 ✓" : r[3] ? "최저 미충족 ✗" : "불합격 ✗")).join(", "),
+    "offers.susiIntro": (p) => p.y + "년 12월. 수시에 합격해서 올해 정시는 쓸 수 없다. 합격한 곳에 가거나, 포기하고 다시 도전한다.",
+    "apply.no.women": "여학생만 지원 가능",
+  });
+
   // ---------- translator ----------
   // ctx() returns { inq: [id, id], track } for the game being shown, so subject names follow it.
   // Who raises you changes the words: with one parent or grandparents, "your parents" becomes "your
@@ -2302,6 +2525,10 @@
       uniA: (id) => (en && (id === "college" || id === "regional") ? "a " + D.uni[id].toLowerCase() : D.uni[id] || id),
       // "a" or "an" before an English word ("an upper-middle-income family"); Korean has no articles.
       an: (w) => (en ? (/^[aeiou]/i.test(w) ? "an " : "a ") + w : w),
+      field: (id) => D.field[id] || id,
+      club: (id) => D.club[id] || id,
+      susiType: (id) => D.susiType[id] || id,
+      susiShort: (id) => D.susiShort[id] || id,
       region: (id) => D.region[id] || id,
       regionShort: (id) => D.regionShort[id] || id,
       regionKind: (k) => D.regionKind[k] || k,
@@ -2332,7 +2559,7 @@
           " · " + (pre ? s("inq1") + " " + g.inq1 + " · " + s("inq2") + " " + g.inq2 : (en ? "Inq" : "탐") + " " + g.inq1 + "/" + g.inq2);
       },
       planList(plan) {
-        const order = ["kor", "math", "eng", "hist", "inq1", "inq2", "reading", "arts", "mock", "rest", "exercise", "friends", "games", "job"];
+        const order = ["kor", "math", "eng", "hist", "inq1", "inq2", "reading", "arts", "mock", "prep", "project", "club", "volunteer", "rest", "exercise", "friends", "games", "job"];
         return order.filter((id) => plan[id]).map((id) => {
           const name = D.act[id] || h.sub(id);
           return name + (plan[id] > 1 ? (en ? " ×" : "×") + plan[id] : "");

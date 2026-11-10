@@ -134,8 +134,50 @@ function pickTrack(g, opts) {
   return [track, inq];
 }
 
+// The school record (opts.record): one block a turn, while the record is open, goes to it in turn:
+// exam prep, a 진로 project, the club, volunteering. It comes out of the most-studied subject.
+function recordBlock(g, plan) {
+  if (!g.recordOpen() || g.blocks() < 4) return plan;
+  const ok = offered(g);
+  const order = ["prep", "project", "club", "volunteer"].filter((id) => ok.has(id));
+  if (!order.length) return plan;
+  const id = order[Math.floor(g.clock / 3) % order.length];
+  let big = null;
+  for (const s of S.SUBJECTS) if (plan[s] && (!big || plan[s] > plan[big])) big = s;
+  if (!big) return plan;
+  plan[big]--; if (!plan[big]) delete plan[big];
+  plan[id] = (plan[id] || 0) + 1;
+  return plan;
+}
+const UIDX = (id) => S.UNIVERSITIES.findIndex((u) => u.id === id);
+// SKY+ (med, SNU, Yonsei, Korea, KAIST, POSTECH) and in-Seoul+ (the in-Seoul tier and up, with the big
+// regional national universities, Inha and Ajou), from the flags in engine.js.
+const tierOf = (uni) => { const u = S.UNIVERSITIES[UIDX(uni)]; return { sky: !!(u && u.sky), seoul: !!(u && u.seoul) }; };
+// 수시: up to six applications, never to a school below what the September mock says 정시 would get
+// (an offer there would take 정시 away), and while retakes remain, nothing below the goal. Two reaches,
+// two matches, two safer ones, best schools first.
+function susiPicks(g, opts) {
+  if (opts.noSusi) return [];
+  const mock = g.mocks.filter((x) => x.year === g.year && x.attempt === g.attempt && !x.pre).pop();
+  const est = mock ? S.admissionScore(mock) : null;
+  const goalIdx = UIDX(opts.goal);
+  const pool = g.susiOptions().filter((o) => {
+    if (o.blocked || o.all < 0.04) return false;
+    const u = S.UNIVERSITIES[UIDX(o.uni)];
+    if (g.attempt < opts.maxAttempts && UIDX(o.uni) > goalIdx) return false;
+    return est == null || u.cut >= est + (opts.susiFloor != null ? opts.susiFloor : 0.5);
+  }).sort((a, b) => UIDX(a.uni) - UIDX(b.uni) || b.all - a.all);
+  const picks = [];
+  const take = (f, n) => { for (const o of pool) { if (n <= 0) break; if (!picks.includes(o) && f(o) && picks.filter((x) => !x.free).length < S.SUSI_MAX) { picks.push(o); n--; } } };
+  take((o) => o.all < 0.35, 2);
+  take((o) => o.all >= 0.35 && o.all < 0.7, 2);
+  take((o) => o.all >= 0.7, 2);
+  take(() => true, 6);
+  return picks.map((o) => ({ uni: o.uni, type: o.type }));
+}
+
 function playCareer(seed, bot, opts) {
-  const g = new S.Game({ seed, family: opts.family, parents: opts.parents });
+  const g = new S.Game({ seed, family: opts.family, parents: opts.parents, sex: opts.sex });
   // opts.trait: a paired test. The life gets only that trait (or none, for null) instead of what its
   // newborn and 돌잡이 reveals would have dealt.
   if (opts.trait !== undefined) {
@@ -152,7 +194,8 @@ function playCareer(seed, bot, opts) {
       if (g.grade === 12 && g.month === 3 && g.attempt === 1 && !at12) at12 = Object.assign({}, g.skills);
       // Dropout bots leave school at the start of their grade.
       if (opts.quitAt && g.grade >= opts.quitAt && !g.quitBlock()) g.quitSchool();
-      const plan = BOTS[bot](g);
+      let plan = BOTS[bot](g);
+      if (opts.record) plan = recordBlock(g, plan);
       const method = pickMethod(g, plan, opts.method || "self");
       const err = g.validate(plan, method);
       if (err) throw new Error(err + " " + JSON.stringify(plan));
@@ -170,6 +213,12 @@ function playCareer(seed, bot, opts) {
       continue;
     }
     if (top.type === "track") { const [t, inq] = pickTrack(g, opts); g.chooseTrack(t, inq); continue; }
+    if (top.type === "naesin" || top.type === "susiStage" || top.type === "susiResult") {
+      if (top.type === "naesin" && top.sem && top.sem.sem === 1 && top.sem.gr === 12) g.simNaesin = top.run;
+      g.dismiss();
+      continue;
+    }
+    if (top.type === "susi") { const p = susiPicks(g, opts); g.applySusi(p); if (g.attempt === 1) g.simApps = p.length; continue; }
     if (top.type === "mock" || top.type === "exam") {
       if (top.type === "exam") results.push(top.result);
       g.dismiss();
@@ -185,9 +234,10 @@ function playCareer(seed, bot, opts) {
       continue;
     }
     if (top.type === "offers") {
+      if (top.susi && g.attempt === 1) g.simSusiOffer = true;
       const best = top.offers.map((id) => S.UNIVERSITIES.findIndex((u) => u.id === id)).sort((a, b) => a - b)[0];
       const goalIdx = S.UNIVERSITIES.findIndex((u) => u.id === opts.goal);
-      if (best != null && (best <= goalIdx || g.attempt >= opts.maxAttempts)) g.decide({ action: "enroll", uni: S.UNIVERSITIES[best].id });
+      if (best != null && (best <= goalIdx || g.attempt >= opts.maxAttempts)) { g.simVia = top.susi ? "susi" : "jeongsi"; g.decide({ action: "enroll", uni: S.UNIVERSITIES[best].id }); }
       else if (g.attempt >= opts.maxAttempts) g.decide({ action: "quit" });
       else {
         const ro = g.retakeOptions(top.score).find((o) => o.id === (opts.retake || "academy"));
@@ -217,10 +267,16 @@ function strategies() {
     { label: "balanced, self-study, quits at 10, 1 try", bot: "balanced", method: "self", maxAttempts: 1, goal: "college", quitAt: 10 },
     { label: "smart, best affordable, quits at 10, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", quitAt: 10 },
     { label: "smart, best affordable, quits at 7, early", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", quitAt: 7, early: true },
+    // 수시 (v6.0): the same lives with 정시 only, and a bot that spends a block a turn on the record.
+    { label: "balanced, self-study, 1 try, 정시 only", bot: "balanced", method: "self", maxAttempts: 1, goal: "college", noSusi: true },
+    { label: "smart, best affordable, 1 try, 정시 only", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", noSusi: true },
+    { label: "smart, best affordable, builds record, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", record: true },
+    // The same lives as girls: the women's universities open (the bots play boys otherwise).
+    { label: "smart, best affordable, 1 try, girls", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", sex: "f" },
   ];
   console.log("Strategy bots (" + seeds + " lives each, families dealt from the real quintiles). 'start' = average ability (0–100) entering grade 12.");
   console.log("strategy".padEnd(42) + "start | 1st: kor math eng  std | last std | tries | SKY+  | med  | in-Seoul+");
-  const acc = configs.map(() => ({ start: 0, kor: 0, math: 0, eng: 0, std: 0, lastStd: 0, tries: 0, sky: 0, med: 0, seoul: 0 }));
+  const acc = configs.map(() => ({ start: 0, kor: 0, math: 0, eng: 0, std: 0, lastStd: 0, tries: 0, sky: 0, med: 0, seoul: 0, nae: 0, naeN: 0, rec: 0, recN: 0, apps: 0, susiOffer: 0, viaSusi: 0, women: 0 }));
   const byFam = {};
   for (const f of S.FAMILY_IDS) byFam[f] = { n: 0, start: 0, std: 0, sky: 0, seoul: 0 };
   // By region kind: the smart bot's first try, and how often the 의대 chaser gets in (local quotas).
@@ -242,18 +298,25 @@ function strategies() {
       starts[ci].push(avg);
       a.tries += g.attempt;
       const uni = g.ending && g.ending.uni;
-      const idx = S.UNIVERSITIES.findIndex((u) => u.id === uni);
+      const tr = tierOf(uni);
       if (uni === "med") a.med++;
-      if (idx >= 0 && idx <= 3) a.sky++;
-      if (idx >= 0 && idx <= 19) a.seoul++;
+      if (tr.sky) a.sky++;
+      if (tr.seoul) a.seoul++;
+      // 내신 at the end of High 3's first semester, the record score as SNU would read it, 수시 use.
+      if (g.simNaesin != null) { a.nae += g.simNaesin; a.naeN++; }
+      if (g.record) { a.rec += g.recordScore(); a.recN++; }
+      a.apps += g.simApps || 0;
+      if (g.simSusiOffer) a.susiOffer++;
+      if (g.simVia === "susi") a.viaSusi++;
+      if (uni && S.UNIVERSITIES[UIDX(uni)].women) a.women++;
       const rk = byKind[g.regionInfo().kind];
-      if (ci === 4) { rk.n++; rk.start += avg; rk.std += results[0].total; if (idx >= 0 && idx <= 3) rk.sky++; if (idx >= 0 && idx <= 19) rk.seoul++; }
+      if (ci === 4) { rk.n++; rk.start += avg; rk.std += results[0].total; if (tr.sky) rk.sky++; if (tr.seoul) rk.seoul++; }
       if (ci === 6) { rk.mn++; if (uni === "med") rk.med++; }
       if (ci === 4) {
         const b = byFam[g.family];
         b.n++; b.start += avg; b.std += results[0].total;
-        if (idx >= 0 && idx <= 3) b.sky++;
-        if (idx >= 0 && idx <= 19) b.seoul++;
+        if (tr.sky) b.sky++;
+        if (tr.seoul) b.seoul++;
       }
     });
   }
@@ -266,6 +329,16 @@ function strategies() {
       (a.std / seeds).toFixed(0).padStart(5), "|", (a.lastStd / seeds).toFixed(0).padStart(8), "|", (a.tries / seeds).toFixed(2).padStart(5),
       "|", p(a.sky), "|", p(a.med), "|", p(a.seoul)
     );
+  });
+  // 수시 (v6.0): 내신 average at the end of High 3's first semester, the record score, how many 수시
+  // applications the bot sent on its first try, how often it got a 수시 offer (which takes 정시 away),
+  // and how often the school it enrolled at came through 수시.
+  console.log("\nAdmissions (first try for 내신, record and applications):");
+  console.log("strategy".padEnd(42) + "내신 | record | apps | 수시 offer | via 수시 | women's univ");
+  configs.forEach((c, ci) => {
+    const a = acc[ci];
+    console.log(c.label.padEnd(42), (a.naeN ? (a.nae / a.naeN).toFixed(2) : "-").padStart(4), "|", (a.recN ? (a.rec / a.recN).toFixed(0) : "-").padStart(6), "|",
+      (a.apps / seeds).toFixed(1).padStart(4), "|", p(a.susiOffer).padStart(10), "|", p(a.viaSusi).padStart(8), "|", p(a.women).padStart(12));
   });
   // How far luck spreads lives that follow the same strategy: their ability entering High 3 and their
   // first 수능 totals, from the unluckiest tenth to the luckiest.
@@ -311,8 +384,7 @@ function traits() {
       const { g, results, at12 } = playCareer(1000 + i, "smart", Object.assign({ trait: t }, cfg));
       start += S.SUBJECTS.reduce((a, s) => a + S.skillScore(at12[s]), 0) / S.SUBJECTS.length;
       std += results[0].total;
-      const idx = S.UNIVERSITIES.findIndex((u) => u.id === (g.ending && g.ending.uni));
-      if (idx >= 0 && idx <= 19) seoul++;
+      if (tierOf(g.ending && g.ending.uni).seoul) seoul++;
     }
     return { start: start / seeds, std: std / seeds, seoul: (100 * seoul) / seeds };
   };
@@ -339,8 +411,7 @@ function parents() {
       const { g, results, at12 } = playCareer(1000 + i, "smart", Object.assign({ parents: par }, cfg));
       start += S.SUBJECTS.reduce((a, s) => a + S.skillScore(at12[s]), 0) / S.SUBJECTS.length;
       std += results[0].total;
-      const idx = S.UNIVERSITIES.findIndex((u) => u.id === (g.ending && g.ending.uni));
-      if (idx >= 0 && idx <= 19) seoul++;
+      if (tierOf(g.ending && g.ending.uni).seoul) seoul++;
     }
     console.log(par.padEnd(8), (start / seeds).toFixed(0).padStart(6), "|", (std / seeds).toFixed(0).padStart(7), "|", (((100 * seoul) / seeds).toFixed(0) + "%").padStart(9));
   }
