@@ -1087,6 +1087,7 @@ table.naesin .ach-D { border-color: var(--g5); color: var(--g5); } table.naesin 
 .susi-uni .nm { font-weight: 700; font-size: 0.9rem; overflow-wrap: anywhere; }
 .susi-uni .nm small { font-weight: 400; color: var(--muted); font-size: 0.72rem; }
 .susi-uni .nm small.why { display: block; color: var(--neg); }
+.susi-uni .nm small.below { display: block; color: var(--warn); }
 .sopt { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 5px 2px; border-top: 1px dashed var(--border); font-size: 0.84rem; cursor: pointer; }
 .sopt.off { cursor: not-allowed; opacity: 0.6; }
 .sopt.picked { background: var(--accent-soft); border-radius: 8px; }
@@ -1231,6 +1232,7 @@ details > summary { cursor: pointer; }
 .picks { position: sticky; top: -22px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px -4px; padding: 8px 10px;
   border-radius: 10px; background: var(--bg); border: 1px dashed var(--border); }
 .picks-k { color: var(--muted); font-size: 0.78rem; font-weight: 700; margin-right: 2px; }
+.picks .picks-warn { flex-basis: 100%; margin: 2px 0 0; font-size: 0.8rem; }
 button.chip.pick { min-height: 32px; padding: 4px 10px; font-size: 0.8rem; font-weight: 600; border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
 .decide button, .choices button { min-height: 44px; }
 .modal-card .story { line-height: 1.55; }

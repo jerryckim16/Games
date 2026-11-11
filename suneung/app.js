@@ -1328,7 +1328,12 @@
 
   function showMock(top) {
     const r = top.result;
+    // v6.7: an unusually hard or easy paper gets a headline, against your previous mock (found by its
+    // sitting, since a reloaded save holds copies, not the same objects).
+    const at = game.mocks.findIndex((x) => x.year === r.year && x.month === r.month && x.attempt === r.attempt);
+    const head = S.mockHeadline(r, at > 0 ? game.mocks[at - 1] : null);
     openModal(T("mock.title", { name: L.mock(r.month, r.school) }),
+      (head ? '<p class="headline news"><span aria-hidden="true">📰 </span>' + esc(T("mock.head." + head.key, head)) + (head.a != null ? " " + esc(T("mock.head.you", head)) : "") + "</p>" : "") +
       "<p>" + esc(T("mock.text")) + "</p>" + reportTable(r) +
       '<p class="muted" style="margin-top:10px">' + esc(T("mock.total", { n: r.total })) + "</p>",
       [{ label: T("mock.back"), primary: true, run: () => { game.dismiss(); after(); } }],
@@ -1465,8 +1470,10 @@
           '<span class="st"><b>' + esc(L.susiType(o.type)) + "</b>" + (o.blocked ? (allOff ? "" : '<small class="why">' + esc(T("susi.no." + o.blocked)) + "</small>") : "<small>" + esc(notes) + "</small>") + "</span>" +
           (o.blocked ? "" : '<span class="chance ' + chanceClass(o.all) + '">' + esc(T("susi.chance", { p: Math.round(o.all * 100) })) + "</span>") + "</label>";
       }).join("");
+      // v6.7: a school your mock already clears in 정시, well below the best one it makes a fair chance.
+      const trap = !allOff && g.susiTrap([{ uni: u.id }], est);
       return '<div class="susi-uni' + (allOff ? " off" : "") + '"><div class="nm">' + esc(L.uni(u.id)) + " <small>" + esc(T("susi.share", { s: meta.susi })) + "</small>" +
-        (why ? '<small class="why">' + esc(why) + "</small>" : "") + "</div>" + items + "</div>";
+        (why ? '<small class="why">' + esc(why) + "</small>" : "") + (trap ? '<small class="below">' + esc(T("susi.below")) + "</small>" : "") + "</div>" + items + "</div>";
     };
     // Best chance first, like the regular-admission list.
     const best = (u) => Math.max(0, ...u.opts.filter((o) => !o.blocked).map((o) => o.all));
@@ -1506,6 +1513,10 @@
         '<button type="button" class="chip pick" data-unpick="' + esc(k) + '" aria-label="' + esc(T("apply.remove", { uni: L.uni(x.uni) + " " + L.susiShort(x.type) })) + '">' + esc(L.uni(x.uni)) + " · " + esc(L.susiShort(x.type)) + ' <span aria-hidden="true">×</span></button>').join("") : "");
       submit.textContent = T("susi.submit", { n: counted() });
       submit.disabled = !picked.size;
+      // The 수시 납치 trap: a pick far below where the September mock puts you in 정시. It sits in the
+      // sticky picks bar, so it shows wherever the list is scrolled when you tick the box.
+      const trap = g.susiTrap(Array.from(picked.values()), est);
+      if (trap) picksBox.insertAdjacentHTML("beforeend", '<p class="note warn picks-warn" role="note">' + esc(T("susi.trap", { pick: trap.pick, best: trap.best, p: Math.min(99, Math.round(trap.p * 100)) })) + "</p>");
     };
     for (const b of boxes) b.addEventListener("change", () => {
       const k = b.dataset.u + ":" + b.dataset.t;
