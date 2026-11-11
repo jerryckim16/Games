@@ -664,7 +664,9 @@
       "log.born": (p, h) => "Born " + (p.sex ? (p.sex === "f" ? "a girl " : "a boy ") : "") + "into " + h.an(h.familyAdj(p.fam)) + " family" + (p.reg ? " in " + h.regionShort(p.reg) : "") + " (household income about " + h.wonShort(p.inc * 10000) + " a month). " + (p.early ? "March " + p.y + "." : "March " + p.y + ": you start elementary school."),
       "log.grade": (p, h) => "March " + p.y + ": " + (p.out ? "your age group moves up to " : "you start ") + h.schoolYear(p.g) + ".",
       "log.stage": (p) => "March " + p.y + ": " + (p.out ? { mid: "your age group starts middle school.", high: "your age group starts high school.", hs3: "your age group's Suneung year. You'll sit it in November." } : { elem: "you start elementary school.", mid: "you start middle school.", high: "you start high school.", hs3: "your final year of high school. The Suneung is in November." })[p.st],
-      "log.teacher": (p) => "Teacher's note: " + ["", "\"Needs more support at home.\"", "\"Steady, careful work.\"", "\"Outstanding. One of the best in the class.\""][p.lvl],
+      "log.teacher": (p, h) => (!p.hab ? "Teacher's note: " + ["", "\"Needs more support at home.\"", "\"Steady, careful work.\"", "\"Outstanding. One of the best in the class.\""][p.lvl] : noteText(p, h, NOTE.en, false)),
+      // v6.6: the same comment in a life in care, where "at home" means the children's home.
+      "log.teacher.care": (p, h) => (!p.hab ? MSG.en["log.teacher"](p, h) : noteText(p, h, NOTE.en, true)),
       "log.report": (p) => "Semester " + p.sem + " exams: ranked " + p.rank + " of " + p.of + " in your class.",
       "log.sebae": (p, h) => "New Year's money from relatives: +" + h.won(p.a) + ".",
       "log.track": (p, h) => "You choose the " + h.track(p.track).toLowerCase() + " track: " + h.inq(p.inq[0]) + " and " + h.inq(p.inq[1]) + ".",
@@ -732,7 +734,7 @@
       "ev.med-move.c": ["Move to Daegu", "Stay where we are"],
       "ev.med-move.r0": "Boxes, a new apartment, a new school. Your parents say it's for your future.",
       "ev.med-move.r1": "You stay. Your parents still mention it at dinner.",
-      "ev.rival.r": "Your rival posted their exam scores in the class group chat: perfect marks. You're fired up.",
+      "ev.rival.r": "Your rival posted a photo of their study planner in the class group chat: fourteen hours yesterday, every box ticked. You're fired up.",
       "ev.sportsday.r": "Sports day: you run the last leg of the class relay and win. Your mom films the whole thing.",
       "ev.bookworm.r": "You discover a fantasy series and read all seven books in a month.",
       "ev.olympiad.text": "Your teacher suggests entering the regional math olympiad.",
@@ -1327,7 +1329,7 @@
       "log.birthday": "{y}년 3월, 만 {a}세가 되었다.",
       "ev.newborn.text": "집에서 보내는 첫 몇 주. 부모님은 아기가 자고 먹고 우는 모습을 지켜보며 어떤 아이인지 알아 가기 시작한다.",
       "ev.newborn.c": ["부모님이 알아챈 것 보기"],
-      "ev.newborn.r.sturdy": "크고 튼튼해서 거의 아프지 않는 아기다. (튼튼한 아기: 체력이 높게 유지되고 감기에 절반만 걸림)",
+      "ev.newborn.r.sturdy": "크고 튼튼해서 거의 아프지 않은 아기다. (튼튼한 아기: 체력이 높게 유지되고 감기에 절반만 걸림)",
       "ev.newborn.r.calm": "동네에서 제일 순한 아기다. 좀처럼 보채지 않는다. (순한 아기: 스트레스가 낮게 유지됨)",
       "ev.newborn.r.curious": "눈이 모든 것을 따라가고, 움직이는 건 다 잡으려 한다. (호기심 많은 아기: 의지가 높게 유지됨)",
       "ev.newborn.r.sleeper": "생후 6주 만에 통잠을 잔다. 다른 부모들이 부러워한다. (잘 자는 아기: 휴식 효과 증가, 불면증 없음)",
@@ -1496,7 +1498,7 @@
       "ev.doljabi.r.money.care": "돈을 잡자 자원봉사자들이 웃음을 터뜨린다. 후원자 한 분이 작은 한복 주머니에 봉투를 넣어 준다. (지금 30만원, 세뱃돈 증가)",
       "log.sebae.care": (p, h) => "설날, 선생님들과 후원자에게 받은 세뱃돈: +" + h.won(p.a) + ".",
       "move.care": "보육원에서 지내는 동안에는 사는 곳을 보육원이 정합니다.",
-      "ev.care-tutor.text": "토요일마다 대학생들이 보육원에 교육봉사를 온다. 수학과 다니는 형(누나) 한 명이 너를 맡기로 했다.",
+      "ev.care-tutor.text": "토요일마다 대학생들이 보육원에 교육봉사를 온다. 그중 수학과에 다니는 대학생 한 명이 나를 맡기로 했다.",
       "ev.care-tutor.r": "1년 동안 토요일마다: 수학 학습지, 영어 단어, 그리고 이번 주 어땠냐고 물어 주는 사람. (수학·영어 실력 상승, 의지 상승)",
       "ev.care-sponsor.text": "한 번도 본 적 없는 후원자에게서 편지가 왔다. 카드 한 장과 책 사라는 용돈이 들어 있다.",
       "ev.care-sponsor.r": "카드는 책상 서랍에 넣어 둔다. (+10만원)",
@@ -1559,7 +1561,8 @@
       "log.born": (p, h) => (p.reg ? h.regionShort(p.reg) + "의 " : "") + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + (p.early ? p.y + "년 3월." : p.y + "년 3월, 초등학교에 입학했다."),
       "log.grade": (p, h) => p.y + "년 3월, " + (p.out ? "또래들이 " : "") + josa(h.schoolGrade(p.g), "이", "가") + " 되었다.",
       "log.stage": (p) => p.y + "년 3월, " + (p.out ? { mid: "또래들이 중학교에 입학했다.", high: "또래들이 고등학교에 입학했다.", hs3: "또래들이 고3이 되었다. 나도 11월에 수능을 본다." } : { elem: "초등학교에 입학했다.", mid: "중학교에 입학했다.", high: "고등학교에 입학했다.", hs3: "고3이 되었다. 수능은 11월이다." })[p.st],
-      "log.teacher": (p) => "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl],
+      "log.teacher": (p, h) => (!p.hab ? "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl] : noteText(p, h, NOTE.ko, false)),
+      "log.teacher.care": (p, h) => (!p.hab ? MSG.ko["log.teacher"](p, h) : noteText(p, h, NOTE.ko, true)),
       "log.report": (p) => p.sem + "학기 시험: 반 " + p.of + "명 중 " + p.rank + "등.",
       "log.sebae": (p, h) => "설날 세뱃돈: +" + h.won(p.a) + ".",
       "log.track": (p, h) => h.track(p.track) + "를 선택했다. 탐구 과목은 " + h.inq(p.inq[0]) + ", " + h.inq(p.inq[1]) + ".",
@@ -1626,7 +1629,7 @@
       "ev.med-move.c": ["대구로 이사한다", "지금 사는 곳에 남는다"],
       "ev.med-move.r0": "이삿짐, 새 아파트, 새 학교. 부모님은 다 네 미래를 위해서라고 하신다.",
       "ev.med-move.r1": "남기로 했다. 부모님은 아직도 저녁마다 그 얘기를 하신다.",
-      "ev.rival.r": "라이벌이 반 단톡방에 시험 점수를 올렸다. 전 과목 만점. 승부욕이 불탄다.",
+      "ev.rival.r": "라이벌이 반 단톡방에 스터디 플래너 사진을 올렸다. 어제 순공 14시간, 칸마다 빼곡하다. 승부욕이 불탄다.",
       "ev.sportsday.r": "운동회 날, 반 대표 계주 마지막 주자로 뛰어 1등을 했다. 엄마가 처음부터 끝까지 영상으로 찍었다.",
       "ev.bookworm.r": "판타지 시리즈에 빠져 한 달 만에 일곱 권을 다 읽었다.",
       "ev.olympiad.text": "담임 선생님이 수학 경시대회에 나가 보라고 권하신다.",
@@ -2321,6 +2324,57 @@
     if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + "ies";
     return w + "s";
   }
+  // v6.6: the elementary report card's comment (행동특성 및 종합의견) from engine.teacherNote():
+  // the level, what the year's free time went to (hab), the strongest subject, and the teacher's
+  // style: a passionate teacher adds a line, a tired one writes only the first. Korean is in the
+  // report card's own clipped style (…함, …보임).
+  const NOTE = {
+    en: {
+      head: (who) => "Report card, " + who + ": ",
+      lvl: ["", "Needs more support at home with the basics.", "Works steadily and carefully.", "Outstanding: one of the best in the class."],
+      lvlCare: "Needs more help with the basics.",
+      hab: {
+        study: "Pays attention in class and always hands in homework.",
+        reading: "Always has a book open, even at break time.",
+        friends: "Gets along with everyone and is a favourite with classmates.",
+        games: "Talks about games a lot and could use help managing screen time.",
+        exercise: "Full of energy, and shines in PE.",
+        arts: "Has a real gift for art and music.",
+        rest: "Calm and unhurried, though a little more initiative would help.",
+        quiet: "Has seemed quieter lately; I am keeping an eye on things.",
+      },
+      best: (sub) => "Especially strong in " + sub + ".",
+      more: "I look forward to seeing more next year!",
+    },
+    ko: {
+      head: (who) => "통지표 · " + who + ": ",
+      lvl: ["", "기초 학습에 가정의 관심과 지도가 필요함.", "맡은 일을 성실히 해내며 학습 태도가 바름.", "학업 성취도가 매우 우수하여 학급의 모범이 됨."],
+      lvlCare: "기초 학습에 좀 더 관심과 지도가 필요함.",
+      hab: {
+        study: "수업 시간에 집중력이 좋고 과제를 빠짐없이 해 옴.",
+        reading: "책 읽기를 좋아하여 쉬는 시간에도 독서하는 모습이 자주 보임.",
+        friends: "교우 관계가 원만하고 친구들에게 인기가 많음.",
+        games: "게임 이야기를 자주 하며, 스마트폰과 게임 시간 조절이 필요함.",
+        exercise: "활발하고 체육 활동에 적극적으로 참여함.",
+        arts: "미술과 음악에 남다른 소질을 보임.",
+        rest: "차분한 성격이나 좀 더 적극적인 학습 태도가 필요함.",
+        quiet: "학기 초보다 말수가 줄어 관심 있게 지켜보고 있음.",
+      },
+      best: (sub) => sub + " 과목에서 특히 뛰어난 이해력을 보임.",
+      more: "앞으로의 성장이 더욱 기대됨.",
+    },
+  };
+  function noteText(p, h, N, care) {
+    const who = p.by ? h.tch(p.by) : h.lang === "en" ? "your teacher" : "담임 선생님";
+    const out = [care && p.lvl === 1 ? N.lvlCare : N.lvl[p.lvl] || N.lvl[2]];
+    // A tired teacher writes one line, and doesn't notice anything else.
+    if (p.sty !== "tired") {
+      if (N.hab[p.hab]) out.push(N.hab[p.hab]);
+      if (p.lvl >= 2 && p.hab !== "quiet" && p.best) out.push(N.best(h.sub(p.best)));
+      if (p.sty === "passion" && p.hab !== "quiet") out.push(N.more);
+    }
+    return N.head(who) + "\"" + out.join(" ") + "\"";
+  }
   function familyWords(s, par, en) {
     if (!par || par === "both") return s;
     if (Array.isArray(s)) return s.map((x) => familyWords(x, par, en));
@@ -2891,8 +2945,8 @@
   named("ko", "ev.bully-on.r2", (p, h, old) => (p.fr && p.f ? "쉬는 시간과 점심시간마다 " + h.nm(p.fr) + "가 함께 다녀 준다" + (p.by ? ". " + h.nm(p.by) + "한테 그만하라고 맞서 주기도 한다" : "") + ". 친구가 옆에 있으면 함부로 건드리지 못한다. " + h.t("bully.res." + p.x) : old()));
   named("en", "ev.pcbang.text", (p, h, old) => (p.a ? cap(h.nm(p.a)) + " and the others are heading to the PC café after class. \"Just one game,\" " + h.he(p.a) + " says." : old()));
   named("ko", "ev.pcbang.text", (p, h, old) => (p.a ? h.nm(p.a) + "와 친구들이 수업 끝나고 PC방에 가자고 한다. \"딱 한 판만.\"" : old()));
-  named("en", "ev.rival.r", (p, h, old) => (p.a ? "Your rival " + h.nm(p.a) + " posted " + h.his(p.a) + " exam scores in the class group chat: perfect marks. You're fired up." : old()));
-  named("ko", "ev.rival.r", (p, h, old) => (p.a ? "라이벌 " + h.nm(p.a) + "가 반 단톡방에 시험 점수를 올렸다. 전 과목 만점. 승부욕이 불탄다." : old()));
+  named("en", "ev.rival.r", (p, h, old) => (p.a ? "Your rival " + h.nm(p.a) + " posted a photo of " + h.his(p.a) + " study planner in the class group chat: fourteen hours yesterday, every box ticked. You're fired up." : old()));
+  named("ko", "ev.rival.r", (p, h, old) => (p.a ? "라이벌 " + h.nm(p.a) + "가 반 단톡방에 스터디 플래너 사진을 올렸다. 어제 순공 14시간, 칸마다 빼곡하다. 승부욕이 불탄다." : old()));
   named("en", "ev.lonely.text", (p, h, old) => (p.a ? cap(h.nm(p.a)) + " and your old classmates post photos from a school trip. You've talked to nobody but family all week." : old()));
   named("ko", "ev.lonely.text", (p, h, old) => (p.a ? h.nm(p.a) + "와 예전 반 친구들이 수학여행 사진을 올렸다. 이번 주에 가족 말고는 아무하고도 말을 안 했다." : old()));
   // Log lines: an event's question names its people (q), and a turn says who you spent it with.
