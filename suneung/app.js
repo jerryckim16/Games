@@ -287,6 +287,9 @@
     });
     // At the university gate you're cheering, whatever the bars say.
     if (c.ending && c.label) c.mood = "happy";
+    // v6.5: the picture's light follows what just happened (see Game.recentTone); the end of the road
+    // without a university is grey, the gate is warm.
+    c.tone = c.ending ? (c.label ? 1 : -1) : g.recentTone ? g.recentTone() : 0;
     c.aria = T("art.place." + Art.sceneName(c.stage, c));
     // Rebuilding the SVG restarts its animations, so only redraw when something visible changed.
     const key = JSON.stringify(c) + lang;
@@ -834,7 +837,7 @@
       '</div><div class="cons"><h3>' + esc(T("quit.cons")) + "</h3>" + list("quit.con") + "</div></div>", [
       { label: T("quit.go"), danger: true, run: () => { dlg = null; g.quitSchool(); save(); render(); } },
       { label: T("quit.stay"), primary: true, cancel: true, run: closeDialog },
-    ], Art.eventArt(artCtx({ id: "dropout", stage: "dropout" })), { optional: true });
+    ], Art.eventArt(artCtx({ id: "dropout", stage: "dropout", tone: S.promptTone("dropout") })), { optional: true });
   }
   els.quitBtn.addEventListener("click", () => { closeMenu(); openQuit(); });
 
@@ -1124,7 +1127,8 @@
     }
     if (outcome) {
       // The outcome keeps the event's picture, redrawn with how things turned out.
-      const art = outcome.id ? Art.eventArt(artCtx({ id: outcome.id, variant: outcome.variant, people: outcome.people })) : outcome.art ? Art.screenArt(outcome.art, artCtx({ stage: "uni" })) : "";
+      // v6.5: tone (from the engine's outcome) sets the picture's light and faces; undefined (an old save) lets the art decide.
+      const art = outcome.id ? Art.eventArt(artCtx({ id: outcome.id, variant: outcome.variant, people: outcome.people, tone: outcome.tone })) : outcome.art ? Art.screenArt(outcome.art, artCtx({ stage: "uni" })) : "";
       openModal(outcome.title, '<div class="outcome">' + esc(T(outcome.msg.key, outcome.msg.p)) + "</div>",
         [{ label: T("continue"), primary: true, run: () => { outcome = null; after(); } }], art);
       return;
@@ -1179,7 +1183,7 @@
       "<h3>" + esc(T("map.born")) + '</h3><div class="map-wrap">' + Art.koreaMap({ states: bornStates(g), static: true, home: g.region, labels: mapLabels(), aria: T("map.aria", { reg: g.region }), px: modalMapPx() }) + "</div>" +
       "<h3>" + esc(T("birth.talent")) + "</h3>" + talentBars(g) + '<p class="muted">' + esc(T("birth.note")) + "</p>",
       [{ label: T("birth.go"), primary: true, run: () => { game.dismiss(); after(); } }],
-      Art.screenArt("birth", artCtx({ stage: "baby" })));
+      Art.screenArt("birth", artCtx({ stage: "baby", tone: 1 })));
   }
   // The width a map in the modal will get (the card is at most 620px wide, 22px padding a side).
   function modalMapPx() {
@@ -1216,7 +1220,8 @@
     openModal(t[top.stage], "<p>" + esc(x[top.stage]) + "</p>" + map + '<div class="unis">' + rows + "</div>", [
       { label: T("school.go"), primary: true, run: () => {
         const msg = game.pickSchool(pick.id);
-        outcome = { title: t[top.stage], msg, id: "school", variant: msg.key.split(".").pop() };
+        const v = msg.key.split(".").pop();
+        outcome = { title: t[top.stage], msg, id: "school", variant: v, tone: v === "in" ? 1 : v === "out" ? -1 : 0 };
         after();
       } },
     ], Art.eventArt(artCtx({ id: "school", stage: top.stage })));
@@ -1289,10 +1294,10 @@
     const people = peopleArt(ev.p);
     if (!ev.choices) {
       openModal(title, '<p class="story">' + esc(T(ev.result.key, ev.result.p)) + "</p>", [{ label: T("ok"), primary: true, run: () => { game.dismiss(); after(); } }],
-        Art.eventArt(artCtx({ id: ev.id, variant: variantOf(ev.result), people })));
+        Art.eventArt(artCtx({ id: ev.id, variant: variantOf(ev.result), people, tone: ev.result.tone })));
       return;
     }
-    openModal(title, '<p class="story">' + esc(T("ev." + ev.id + ".text", ev.p)) + '</p><div class="choices"></div>', [], Art.eventArt(artCtx({ id: ev.id, people })));
+    openModal(title, '<p class="story">' + esc(T("ev." + ev.id + ".text", ev.p)) + '</p><div class="choices"></div>', [], Art.eventArt(artCtx({ id: ev.id, people, tone: S.promptTone(ev.id) })));
     const box = els.modalBody.querySelector(".choices");
     T("ev." + ev.id + ".c", ev.p).forEach((label, i) => {
       const b = document.createElement("button");
@@ -1300,7 +1305,7 @@
       b.innerHTML = '<span class="cn" aria-hidden="true">' + (i + 1) + "</span>" + esc(label);
       b.addEventListener("click", () => {
         const msg = game.choose(i);
-        outcome = { title, msg, id: ev.id, variant: variantOf(msg), people };
+        outcome = { title, msg, id: ev.id, variant: variantOf(msg), people, tone: msg.tone };
         after();
       });
       box.appendChild(b);
@@ -1327,7 +1332,7 @@
       "<p>" + esc(T("mock.text")) + "</p>" + reportTable(r) +
       '<p class="muted" style="margin-top:10px">' + esc(T("mock.total", { n: r.total })) + "</p>",
       [{ label: T("mock.back"), primary: true, run: () => { game.dismiss(); after(); } }],
-      Art.screenArt("mock", artCtx()));
+      Art.screenArt("mock", artCtx({ tone: game.screenTone(top) })));
   }
 
   const PERIODS = [
@@ -1353,7 +1358,7 @@
       "<p>" + esc(T("exam.intro", { y: r.year })) + "</p>" +
       '<ul class="periods">' + items + '</ul><p class="muted exam-outro">' + esc(T("exam.outro")) + "</p>",
       [{ label: T("exam.next"), primary: true, run: () => { examStep = 1; render(); } }],
-      Art.screenArt("exam", artCtx({ stage: game.status })));
+      Art.screenArt("exam", artCtx({ stage: game.status, tone: game.screenTone(top) })));
   }
   // Counts a number up from zero, for the score report's big totals.
   function countUp(el, to, decimals) {
@@ -1383,7 +1388,7 @@
       '</span></div><div><span class="k">' + esc(T("report.attempt")) + '</span><span class="v">' + esc(L.att(r.attempt)) + "</span></div></div></div>" +
       '<p class="muted">' + esc(T("report.explain")) + "</p>",
       [{ label: T("report.apply"), primary: true, run: () => { examStep = 0; game.dismiss(); after(); } }],
-      Art.screenArt("report", artCtx()));
+      Art.screenArt("report", artCtx({ tone: game.screenTone(top) })));
     countUp($("cTotal"), r.total, 0);
     countUp($("cScore"), score, 1);
   }
@@ -1408,7 +1413,7 @@
       '<div class="summary">' + tile("naesin.avg", r.avg.toFixed(2)) + (top.sem ? tile("naesin.semAvg", top.sem.avg.toFixed(2)) : "") + tile("naesin.run", top.run != null ? top.run.toFixed(2) : "—") + "</div></div>" +
       (r.prep >= 0.02 ? '<p class="muted">' + esc(T("naesin.prep", { b: r.prep })) + "</p>" : "") + (strong ? '<p class="muted">' + esc(T("naesin.strong")) + "</p>" : ""),
       [{ label: T("naesin.back"), primary: true, run: () => { game.dismiss(); after(); } }],
-      Art.screenArt("naesin", artCtx({ grades: subs.map((s) => r.s[s].g) })));
+      Art.screenArt("naesin", artCtx({ grades: subs.map((s) => r.s[s].g), tone: game.screenTone(top) })));
   }
   // The school record, under the ability and condition bars from High 1 on.
   function renderRecord(g) {
@@ -1521,7 +1526,7 @@
       '<span class="stamp ' + (x.pass ? "ok" : "no") + '">' + esc(T(x.pass ? "susiStage.pass" : "susiStage.fail")) + "</span></div>").join("");
     openModal(T("susiStage.title"), "<p>" + esc(T("susiStage.text")) + '</p><div class="results">' + rows + "</div>",
       [{ label: T("continue"), primary: true, run: () => { game.dismiss(); after(); } }],
-      Art.screenArt("susiStage", artCtx({ mood: top.r.some((x) => x.pass) ? "happy" : "tired" })));
+      Art.screenArt("susiStage", artCtx({ mood: top.r.some((x) => x.pass) ? "happy" : "tired", tone: game.screenTone(top) })));
   }
   function showSusiResult(top) {
     const res = top.results || [];
@@ -1533,7 +1538,7 @@
     }).join("");
     openModal(T("susiResult.title"), "<p>" + esc(T("susiResult.text")) + '</p><div class="results">' + rows + "</div>" + (any ? '<p class="cond-note">' + esc(T("susiResult.lock")) + "</p>" : ""),
       [{ label: T(any ? "susiResult.go" : "susiResult.jeongsi"), primary: true, run: () => { game.dismiss(); after(); } }],
-      Art.screenArt("susiResult", artCtx({ mood: any ? "happy" : "tired" })));
+      Art.screenArt("susiResult", artCtx({ mood: any ? "happy" : "tired", tone: game.screenTone(top) })));
     if (any && !calm()) setTimeout(() => confetti(50), 700);
   }
 
@@ -1650,7 +1655,7 @@
     // The art's banner names the best new offer (the same order as the buttons), not the engine's first.
     const bestNew = top.offers.slice().sort((a, b) => UNIVERSITIES.findIndex((u) => u.id === a) - UNIVERSITIES.findIndex((u) => u.id === b))[0];
     openModal(T(offerIds.length ? "offers.title" : "offers.none"), html, [],
-      Art.screenArt("offers", artCtx({ label: bestNew ? L.uni(bestNew) : "", mood: bestNew ? "happy" : "tired" })));
+      Art.screenArt("offers", artCtx({ label: bestNew ? L.uni(bestNew) : "", mood: bestNew ? "happy" : "tired", tone: game.screenTone(top) })));
     if (top.offers.length && !showOffers.cheered) { showOffers.cheered = true; setTimeout(() => confetti(70), 900); }
     for (const b of els.modalBody.querySelectorAll(".decide button")) {
       const act = b.dataset.act;
@@ -1701,7 +1706,7 @@
         { label: T("end.png"), run: downloadCard },
         g.epi ? { label: T("newLife"), primary: true, run: startOver } : { label: T("newLife"), run: startOver },
       ].concat(g.epi ? [] : [{ label: T("end.epi"), primary: true, run: () => { g.startEpilogue(); after(); } }]),
-      Art.screenArt("ending", artCtx({ stage: "uni", label: u ? L.uni(u.id) : "", mood: u ? "happy" : "ok" })));
+      Art.screenArt("ending", artCtx({ stage: "uni", label: u ? L.uni(u.id) : "", mood: u ? "happy" : "ok", tone: u ? 2 : -1 })));
   }
 
   // Where the closest friends ended up (the engine's friendOutcomes), drawn as university students.
@@ -1915,7 +1920,7 @@
     const g = game, st = top.step;
     if (st === "at30") {
       openModal(T("epi.title.at30", { name: g.name }), at30Html(g), [{ label: T("epi.at30.ok"), primary: true, run: () => { g.epiChoose("ok"); g.endingSeen = false; after(); } }],
-        Art.screenArt("at30", artCtx({ stage: "uni", mood: g.epi.at30.fifth >= g.epi.at30.born ? "happy" : "ok" })));
+        Art.screenArt("at30", artCtx({ stage: "uni", mood: g.epi.at30.fifth >= g.epi.at30.born ? "happy" : "ok", tone: Math.sign(g.epi.at30.fifth - g.epi.at30.born) })));
       return;
     }
     const title = T("epi.title." + st + (st === "college" && top.tier === 6 ? ".med" : ""));
@@ -2047,20 +2052,23 @@
       if (examStep === 0) return film("exam-" + r.year, "exam", { label: T("cut.site", { n: 3 + (Math.abs(g.seed + r.year) % 27) }) }, { y: r.year });
       const gr = [r.subjects.kor.grade, r.subjects.math.grade, r.subjects.inq1.grade, r.subjects.inq2.grade];
       const avg = gr.reduce((a, b) => a + b, 0) / 4;
-      return film("results-" + r.year, "results", { grades: gr, react: avg <= 2.5 ? "happy" : avg <= 4.5 ? "ok" : "tired" }, { t: r.total });
+      // v6.5: the film's light and the family's reaction follow how it went (Game.screenTone).
+      return film("results-" + r.year, "results", { grades: gr, react: avg <= 2.5 ? "happy" : avg <= 4.5 ? "ok" : "tired", tone: g.screenTone(top) }, { t: r.total });
     }
     if (top && top.type === "offers" && top.offers.length) {
       const best = top.offers.slice().sort((a, b) => UNIVERSITIES.findIndex((u) => u.id === a) - UNIVERSITIES.findIndex((u) => u.id === b))[0];
-      return film("offers-" + g.year + "-" + g.attempt, "offers", {}, { uni: L.uni(best) });
+      return film("offers-" + g.year + "-" + g.attempt, "offers", { tone: g.screenTone(top) }, { uni: L.uni(best) });
     }
+    // No offer anywhere (정시, not 수시, which moves on to 정시): the rejection film, in the dark.
+    if (top && top.type === "offers" && !top.susi) return film("rejected-" + g.year + "-" + g.attempt, "offers", { rejected: true, tone: -2 }, {}, "rejected");
     if (top) return null;
     if (g.ending) {
       if (g.endingSeen) return null;
       const uni = g.ending.uni ? L.uni(g.ending.uni) : "";
-      return film("end", "end", { stage: "uni", label: uni }, { uni, name: g.name, age: L.age(g.ending.age) }, uni ? "end" : "endroad");
+      return film("end", "end", { stage: "uni", label: uni, tone: uni ? 2 : -1 }, { uni, name: g.name, age: L.age(g.ending.age) }, uni ? "end" : "endroad");
     }
     // Moving house (by choice or by an event) this turn.
-    if (g.flags.lastMove != null && g.flags.lastMove === g.clock) return film("move-" + g.clock, "move", {}, { region: L.region(g.region) });
+    if (g.flags.lastMove != null && g.flags.lastMove === g.clock) return film("move-" + g.clock, "move", { tone: g.recentTone ? g.recentTone() : 0 }, { region: L.region(g.region) });
     // The first plan screen of each school stage.
     const school = g.inClass() ? L.school(g.schoolInfo().id) : "";
     if (g.status === "elem" && g.grade === 1) return film("elem", "elem", { label: school }, { school });

@@ -94,23 +94,73 @@
   // A soft shadow on the ground under something (cx, cy: its centre).
   const shadow = (cx, cy, rx, ry, op) => E(cx, cy, rx, ry, null, null, 0, fill(shadowF(), op != null ? "opacity:" + op : ""));
   // A pool of light (lamps, screens, street lights); stronger at night (--a-glowOp).
-  const pool = (cx, cy, rx, ry, tok, op) => E(cx, cy, rx, ry, null, null, 0, fill(glowF(tok || "lampWarm"), "opacity:" + (op != null ? op : "var(--a-glowOp)")));
+  // v6.5: in a bad moment warm lights burn low, and at the worst they go cold.
+  function pool(cx, cy, rx, ry, tok, op) {
+    let t = tok || "lampWarm", o = op != null ? op : "var(--a-glowOp)";
+    if (MOOD <= -1 && WARM_LIGHTS[t]) { if (MOOD <= -2) t = "lampCold"; o = typeof o === "number" ? n2(o * 0.55) : "calc(" + o + " * 0.55)"; }
+    return E(cx, cy, rx, ry, null, null, 0, fill(glowF(t), "opacity:" + o));
+  }
+  const n2 = (v) => Math.round(v * 100) / 100;
   // Ambient occlusion: a band darkening toward one edge of the box (dir: d down, u up, l left, r right).
   const ao = (x, y, w, h, dir, op) => R(x, y, w, h, null, 0, null, 0, fill(aoF(dir), "opacity:" + (op || 0.22)));
   // The whole frame darkens a little toward its corners, like a lens.
   const vignette = (w, h, op) => R(0, 0, w, h, null, 0, null, 0, fill(def("vig", (id) => radial(id, [[0.5, "aoC", 0], [1, "aoC", 0.6]], 0.5, 0.42, 0.78)), "opacity:" + (op || "var(--a-vigOp)")));
+  // v6.5: the grade a mood lays over a picture (w × h). "back" goes over the set, under the people, at
+  // full strength; "front" over everything (a heavier vignette, a cold rim of light at the worst, warm
+  // haze when it's great); "all" is both for drawings that don't separate the two (screens, films).
+  // Plain translucent shapes and gradients, no filters, so a phone redraws them cheaply.
+  function grade(w, h, layer) {
+    const t = MOOD;
+    if (!t) return "";
+    // Screens and films take it all in one go, a little lighter so the people still read.
+    const k = layer === "all" ? 0.8 : 1;
+    const box = (tok, op, f) => R(-60, -60, w + 120, h + 120, f ? null : tok, 0, null, 0, (f ? fill(f) + ";" : "") + "opacity:" + (k === 1 ? op : typeof op === "number" ? n2(op * k) : "calc(" + op + " * " + k + ")"));
+    let s = "";
+    if (layer !== "front") {
+      if (t <= -2) s += box("mdDark", "var(--a-mdDarkOp)") + box(null, "var(--a-mdNightOp)", def("mdNight", (id) => lin(id, [[0, "mdDark", 0.85], [0.55, "mdDark", 0.25], [1, "mdDark", 0.6]])));
+      else if (t === -1) s += box("mdCool", "var(--a-mdCoolOp)") + box(null, 0.8, def("mdOver", (id) => lin(id, [[0, "mdDark", 0.45], [0.6, "mdDark", 0], [1, "mdDark", 0.2]])));
+      else if (t === 1) s += box(null, "var(--a-mdWarmOp)", def("mdWarm", (id) => radial(id, [[0, "mdWarm", 1], [0.7, "mdWarm", 0.35], [1, "mdWarm", 0]], 0.25, 0.15, 0.9)));
+      else s += box(null, "var(--a-mdGoldOp)", def("mdGold", (id) => lin(id, [[0, "mdGold", 1], [0.6, "mdWarm", 0.5], [1, "mdGold", 0.2]], [0, 0, 1, 1])));
+    }
+    if (layer !== "back") {
+      if (t <= -1) s += R(0, 0, w, h, null, 0, null, 0, fill(def("mdVig", (id) => radial(id, [[0.35, "mdDark", 0], [1, "mdDark", 0.85]], 0.5, 0.45, 0.75)), "opacity:" + n2((t <= -2 ? 0.95 : 0.6) * k)));
+      if (t >= 2) s += R(0, 0, w, h, null, 0, null, 0, fill(def("mdHalo", (id) => radial(id, [[0, "mdGold", 0.5], [1, "mdGold", 0]], 0.3, 0.2, 0.7)), "opacity:var(--a-mdGoldOp)"));
+    }
+    return s;
+  }
   // Where the art is set (see viewKind). Set per drawing.
   let REGION = "";
   // How bright the lit windows of other buildings are: by theme (--a-litOp), or fully lit at night.
   let LIT = "var(--a-litOp)";
   function withLit(v, f) { const p = LIT; LIT = v; try { return f(); } finally { LIT = p; } }
 
+  // ---------- mood (v6.5): the picture's light follows what just happened ----------
+  // Every drawing can carry a tone (ctx.tone, from the engine: -2 severe … 0 neutral … +2 great). It is
+  // set for the whole drawing by withMood and read by the pieces that make the light: the sky turns
+  // overcast and wet at -1 and to night at -2, warm at +2 (golden hour); warm lamps dim and, at -2, go
+  // cold; sunlight on the floor goes; rain streaks the windows; grade() lays cool, dark or warm veils
+  // over the set (tokens in the "mood (v6.5)" block of styles.css). Faces never smile when the tone is
+  // -1 or worse: avatar() turns happy and ok into sad and drops cheering and waving. Without a tone the
+  // drawing is as before; withMood restores the previous state, so small portraits drawn later (the
+  // Friends panel) are never caught in a sad picture's mood.
+  let MOOD = 0;
+  const toneN = (t) => (t == null || t === "" || isNaN(t) ? 0 : Math.max(-2, Math.min(2, Math.round(+t))));
+  function withMood(tone, f) { const p = MOOD; MOOD = toneN(tone); try { return f(); } finally { MOOD = p; } }
+  // The sky a mood asks for: wet and grey when it's bad, night when it's the worst, gold when it's great.
+  function moodTod(tod) {
+    if (MOOD <= -2) return "night";
+    if (MOOD === -1) return tod === "night" ? "night" : "rain";
+    if (MOOD >= 2 && (tod === "day" || tod === "rain")) return "gold";
+    return tod;
+  }
+  const WARM_LIGHTS = { lampWarm: 1, candle: 1, sodium: 1, storeGlow: 1, sunLight: 1, goldSun: 1 };
+
   // Skies by time of day: day (which dark mode's tokens turn into night), dawn, gold (golden hour),
   // night, and rain (the flat grey of the monsoon, 장마).
   const SKY = { day: ["skyTop", "skyMid", "skyLow"], dawn: ["dawnTop", "dawnMid", "dawnLow"], gold: ["goldTop", "goldMid", "goldLow"], night: ["nightTop", "nightMid", "nightLow"], rain: ["rainTop", "rainMid", "rainLow"] };
   const skyF = (tod) => def("sky" + tod, (id) => lin(id, [[0, SKY[tod][0]], [0.6, SKY[tod][1]], [1, SKY[tod][2]]]));
   function sky(x, y, w, h, o) {
-    const tod = SKY[o.tod] ? o.tod : "day", r = rand(o.seed || 5);
+    const tod = moodTod(SKY[o.tod] ? o.tod : "day"), r = rand(o.seed || 5);
     let s = R(x, y, w, h, null, 0, null, 0, fill(skyF(tod)));
     // Stars at night, and in dark mode, where the day sky is a night sky.
     if (tod !== "rain" && tod !== "gold") {
@@ -291,7 +341,7 @@
   let VIEW = "city";
   function windowView(x, y, w, h, o) {
     const id = nid("win"), season = o.season;
-    const tod = o.tod || (o.night ? "night" : season === "summer" ? "rain" : "day");
+    const tod = moodTod(o.tod || (o.night ? "night" : season === "summer" ? "rain" : "day"));
     let inner = sky(x, y, w, h, { tod, seed: o.seed, sunX: 0.8, sunY: 0.2 }) + withLit(tod === "night" ? 0.95 : LIT, () => landscape(x, y + h * 0.1, w, h * 0.9, { season, seed: o.seed, view: o.view, region: o.region, trees: o.tree !== false, horizon: 0.55 }));
     if (season === "winter") inner += R(x, y + h - 4, w, 4, "snowE");
     // At night the land outside falls into shadow (dark mode's tokens are already night).
@@ -299,7 +349,7 @@
     inner += particles(season, x, y, w, h, o.night, Math.round(w / 22), o.seed);
     // The glass: a cool sheen with one diagonal reflection.
     inner += R(x, y, w, h, "glassTint", 0, null, 0, "opacity:0.12") + P(poly([[x + w * 0.1, y], [x + w * 0.32, y], [x + w * 0.02, y + h], [x - w * 0.2, y + h]]), "hiE", null, 0, "opacity:0.1");
-    if (season === "summer") { const r = rand(o.seed || 4); for (let i = 0; i < Math.round(w / 14); i++) { const rx = x + r() * w, ry = y + r() * h * 0.7; inner += L(rx.toFixed(0), ry.toFixed(0), rx.toFixed(0), (ry + 4 + r() * 10).toFixed(0), "hiE", 1, "opacity:0.35"); } }
+    if (season === "summer" || MOOD <= -1) { const r = rand(o.seed || 4); for (let i = 0; i < Math.round(w / 14); i++) { const rx = x + r() * w, ry = y + r() * h * 0.7; inner += L(rx.toFixed(0), ry.toFixed(0), rx.toFixed(0), (ry + 4 + r() * 10).toFixed(0), "hiE", 1, "opacity:0.35"); } }
     let s = '<clipPath id="' + id + '"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '"/></clipPath><g clip-path="url(#' + id + ')">' + inner + "</g>";
     // Frame: two sliding sashes overlapping in the middle, a sill, a soft inner shadow.
     const fw = Math.max(3, w * 0.03);
@@ -399,15 +449,18 @@
   // The skeleton every part of the drawing hangs off. Exposed through avatar.metrics for portraits.
   function metrics(o) {
     const look = o.look || {}, age = ageOf(o), b = BODY[age], fem = look.sex === "f", k = fem ? 1 : 0;
-    const pose = o.pose || "stand", seated = pose === "sit" || pose === "study";
+    const pose = o.pose || "stand", seated = pose === "sit" || pose === "study" || pose === "hunch";
     const H = b.H, hd = b.hd, legL = H * b.leg;
     const drop = seated ? legL * 0.45 : 0;
-    const top = -H + drop + (b.old ? 3 : 0);
+    // v6.5: a slump lowers the head and lets the shoulders fall; a hunch bows the head further.
+    const bow = hd * (pose === "slump" ? 0.2 : pose === "hunch" ? 0.3 : 0) * (b.kid ? 0.6 : 1);
+    const sag = hd * (pose === "slump" ? 0.08 : pose === "hunch" ? 0.12 : 0);
+    const top0 = -H + drop + (b.old ? 3 : 0), top = top0 + bow;
     const hh = hd / 2, hw = hh * b.ar * (fem && !b.kid ? 0.96 : 1), cy = top + hh, chin = top + hd;
-    const shY = chin + hd * b.neck + (b.old ? -1.5 : 0);
+    const shY = top0 + hd + hd * b.neck + (b.old ? -1.5 : 0) + sag;
     const hipY = -legL + drop;
     return { age, b, fem, k, pose, seated, H, hd, hh, hw, cy, chin, top, shY, hipY, legL, drop,
-      waistY: shY + (hipY - shY) * 0.62, SW: b.sh[k], HW: b.hip[k], arm: H * b.arm };
+      waistY: shY + (hipY - shY) * 0.62, SW: b.sh[k] * (sag ? 0.95 : 1), HW: b.hip[k], arm: H * b.arm };
   }
 
   // ---------- hair ----------
@@ -605,7 +658,16 @@
     stressed: { lid: 0.0, low: 0.05, bi: 0.32, bo: -0.08, curve: -0.35, mw: 0.85, open: 0, knit: 1, sweat: 1 },
     sick: { lid: 0.42, low: 0.1, bi: 0.18, bo: -0.12, curve: -0.25, mw: 0.85, open: 0.25, bags: 1, flush: 1, pale: 1 },
     grumpy: { lid: 0.3, low: 0.3, bi: -0.3, bo: 0.08, curve: -0.6, mw: 0.9, open: 0, knit: 1 },
+    // v6.5, for the bad moments. down: the gaze drops; blank: no light in the eyes; small: pupils shrink;
+    // dark: an open mouth shows its dark inside instead of teeth; tears: 1 one tear, 2 both cheeks wet;
+    // squeeze: eyes screwed shut, creased at the corners; tremble: the mouth shakes (off with reduced motion).
+    sad: { lid: 0.44, low: 0, bi: 0.95, bo: -0.45, curve: -0.65, mw: 0.8, open: 0, down: 1 },
+    crying: { lid: 0.86, low: 0.55, bi: 1.0, bo: -0.45, curve: -1.0, mw: 0.98, open: 0.6, dark: 1, tears: 2, squeeze: 1, tremble: 1 },
+    shocked: { lid: -0.08, low: 0, bi: 0.7, bo: 0.6, curve: -0.2, mw: 0.62, open: 1.5, dark: 1, small: 1, pale: 1 },
+    numb: { lid: 0.34, low: 0, bi: 0.1, bo: -0.06, curve: -0.12, mw: 0.78, open: 0, blank: 1, pale: 1, bags: 1 },
   };
+  // Moods that never smile (v6.5): in a picture with tone -1 or worse everyone is drawn with one of these.
+  const SAD_MOODS = { sad: 1, crying: 1, shocked: 1, numb: 1, tired: 1, stressed: 1, sick: 1, grumpy: 1 };
   function head(m, look, mood, skin, col, o) {
     const { hw, hh, hd, cy, age, fem } = m;
     const kid = m.b.kid, old = m.b.old;
@@ -633,21 +695,32 @@
     // Eyes: almond shapes under a lid; children's larger and set lower.
     const ey = cy + hh * (kid === 2 ? 0.2 : kid ? 0.14 : 0.04), ex0 = hw * (kid ? 0.42 : 0.43), ew = hw * (kid === 2 ? 0.22 : kid ? 0.24 : fem ? 0.23 : 0.22), eh = hd * (kid === 2 ? 0.085 : kid ? 0.072 : 0.06);
     const look_ = look;
-    const studying = m.pose === "study";
-    const lid = Math.min(0.85, ex.lid + (studying ? 0.25 : 0) + (old ? 0.08 : 0)), low = ex.low;
+    const studying = m.pose === "study", bowed = m.pose === "slump" || m.pose === "hunch";
+    const down = studying || ex.down || bowed;
+    const lid = Math.min(ex.squeeze ? 0.92 : 0.85, ex.lid + (studying ? 0.25 : 0) + (bowed && !ex.squeeze ? 0.18 : 0) + (old ? 0.08 : 0)), low = ex.low;
     // The eyeballs are clipped to the two almonds, so the lid can close over the iris. The lash line is a
     // filled crescent along the lid, thickest toward the outer corner.
     const Hh = ew * (kid === 2 ? 0.66 : kid ? 0.55 : 0.42);
-    const L = { white: "", iris: "", pupil: "", glint: "", lidSkin: "", lidSh: "", lash: "", low: "", crease: "", bags: "" };
+    const L = { white: "", iris: "", pupil: "", glint: "", lidSkin: "", lidSh: "", lash: "", low: "", crease: "", bags: "", wet: "", tear: "", drop: "" };
     for (const sd of [-1, 1]) {
       const x = sd * ex0, ix = x - sd * ew, ox = x + sd * ew; // inner and outer corners
       const iy = ey + Hh * 0.2, oy = ey - Hh * (kid ? 0.05 : 0.25);
       const cU = ey - Hh * 2.0, cL = ey + Hh * (1.6 - low * 1.1);
       L.white += D("M", ix, iy, "Q", x - sd * ew * 0.12, cU, ox, oy, "Q", x + sd * ew * 0.12, cL, ix, iy, "Z");
-      const irisX = x + sd * ew * 0.03, irisY = ey + Hh * (studying ? 0.55 : 0.1), ir = Hh * 1.12;
+      const irisX = x + sd * ew * 0.03, irisY = ey + Hh * (down ? 0.6 : 0.1), ir = Hh * (ex.small ? 0.82 : 1.12);
       const cLid = cU + lid * (cL - cU) * 1.05;
       const lidC = D("M", ix, iy, "Q", x - sd * ew * 0.12, cLid, ox, oy);
-      L.iris += ring(irisX, irisY, ir); L.pupil += ring(irisX, irisY, ir * 0.48); L.glint += ring(irisX - ir * 0.35, irisY - ir * 0.35, ir * 0.16);
+      L.iris += ring(irisX, irisY, ir); L.pupil += ring(irisX, irisY, ir * (ex.small ? 0.3 : ex.blank ? 0.56 : 0.48)); if (!ex.blank) L.glint += ring(irisX - ir * 0.35, irisY - ir * 0.35, ir * 0.16);
+      // Wet eyes: a bead of light along the lower lid; tears down the cheek (one, on the left, for a single tear).
+      if (ex.tears || o.tear) {
+        L.wet += D("M", ix + sd * ew * 0.2, iy + Hh * 0.35, "Q", x + sd * ew * 0.1, cL - Hh * 0.05, ox - sd * ew * 0.15, oy + Hh * 0.6);
+        if (ex.tears === 2 || sd < 0) {
+          const tx = x + sd * ew * 0.3, ty = cL + Hh * 0.6, tl = hd * (ex.tears === 2 ? 0.2 : 0.16);
+          L.tear += D("M", tx, ty, "Q", tx + sd * hd * 0.02, ty + tl * 0.5, tx - sd * hd * 0.01, ty + tl);
+          L.drop += D("M", tx - sd * hd * 0.01, ty + tl - hd * 0.02, "Q", tx + hd * 0.035, ty + tl + hd * 0.04, tx - sd * hd * 0.01, ty + tl + hd * 0.06, "Q", tx - hd * 0.035, ty + tl + hd * 0.04, tx - sd * hd * 0.01, ty + tl - hd * 0.02, "Z");
+        }
+      }
+      if (ex.squeeze) L.crease += D("M", ox + sd * ew * 0.05, oy - Hh * 0.2, "l", sd * ew * 0.35, -Hh * 0.6, "M", ox + sd * ew * 0.08, oy + Hh * 0.4, "l", sd * ew * 0.35, Hh * 0.35);
       L.lidSkin += lidC + D("L", ox + sd * 2, oy, "L", ox + sd * 2, ey - Hh * 6, "L", ix - sd * 2, ey - Hh * 6, "Z");
       L.lidSh += lidC + D("Q", x - sd * ew * 0.12, cLid + Hh * 1.1, ix, iy, "Z");
       // Lash line along the lid; a faint lower lid; a crease above for some looks.
@@ -661,10 +734,12 @@
     // filled crescent along the lid, thickest toward the outer corner.
     const cid = nid("eye");
     let eyes = '<clipPath id="' + cid + '"><path d="' + L.white + '"/></clipPath><g clip-path="url(#' + cid + ')">' +
-      P(L.white, "chWhite") + P(L.iris, "chIris") + P(L.pupil, "chLash") + P(L.glint, "chSheen") + P(L.lidSkin, skin) + P(L.lidSh, "chCel") + "</g>" +
+      P(L.white, ex.blank ? "chWhite2" : "chWhite") + P(L.iris, ex.blank ? "chIrisDull" : "chIris") + P(L.pupil, "chLash") + (L.glint ? P(L.glint, "chSheen") : "") + P(L.lidSkin, skin) + P(L.lidSh, "chCel") + "</g>" +
       P(L.lash, "chLash") + P(L.low, null, "chSkinSh2", hd * 0.018) + (L.crease ? P(L.crease, null, "chSkinSh2", hd * 0.016) : "") +
-      (L.bags ? P(L.bags, null, ex.bags ? "chBags" : "chSkinSh", hd * (ex.bags ? 0.05 : 0.022)) : "");
-    s += o.still ? eyes : A("blink", eyes);
+      (L.bags ? P(L.bags, null, ex.bags ? "chBags" : "chSkinSh", hd * (ex.bags ? 0.05 : 0.022)) : "") +
+      (L.wet ? P(L.wet, null, "chTear", hd * 0.03) : "");
+    // Eyes screwed shut don't blink.
+    s += o.still || ex.squeeze ? eyes : A("blink", eyes);
     // Brows: tapered, thicker at the inner end; women's straighter and finer.
     const by = ey - eh * (kid ? 3.2 : 3.6);
     for (const sd of [-1, 1]) {
@@ -686,14 +761,16 @@
     // Mouth: lips with the corners set by the expression; a hint of teeth on a real smile.
     const my = cy + hh * (kid ? 0.66 : 0.64), mw = hw * (kid ? 0.26 : fem ? 0.3 : 0.32) * ex.mw, cv = ex.curve * hd * 0.035;
     const lipA = fem && !kid ? 1 : 0.55;
-    const opn = ex.open * hd * 0.04;
+    const opn = ex.open * hd * 0.04, m0 = s.length;
     s += P(D("M", -mw, my - cv, "Q", -mw * 0.4, my - hd * 0.035, 0, my - hd * 0.022, "Q", mw * 0.4, my - hd * 0.035, mw, my - cv, "Q", 0, my + cv * 0.3 + opn * 0.4, -mw, my - cv, "Z"), "chLipSh", null, 0, "opacity:" + lipA);
-    if (opn) s += P(D("M", -mw * 0.8, my - cv * 0.8, "Q", 0, my + opn * 1.6 + cv * 0.2, mw * 0.8, my - cv * 0.8, "Q", 0, my + cv * 0.1, -mw * 0.8, my - cv * 0.8, "Z"), "chWhite");
+    if (opn) s += P(D("M", -mw * 0.8, my - cv * 0.8, "Q", 0, my + opn * 1.6 + cv * 0.2, mw * 0.8, my - cv * 0.8, "Q", 0, my + cv * 0.1, -mw * 0.8, my - cv * 0.8, "Z"), ex.dark ? "chMouthIn" : "chWhite");
     s += P(D("M", -mw * 0.85, my - cv * 0.7 + opn, "Q", 0, my + hd * 0.06 + opn, mw * 0.85, my - cv * 0.7 + opn, "Q", 0, my + opn * 0.6 + cv * 0.2, -mw * 0.85, my - cv * 0.7 + opn, "Z"), "chLip", null, 0, "opacity:" + lipA);
     s += P(D("M", -mw - 0.2, my - cv * 1.05, "Q", 0, my + cv * 0.35 + opn * 0.3, mw + 0.2, my - cv * 1.05), null, "chLipSh", hd * 0.03);
+    if (ex.tremble && !o.still) s = s.slice(0, m0) + A("tremble", s.slice(m0));
     if (!kid) s += P(D("M", -mw * 0.45, my + hd * 0.1 + opn, "Q", 0, my + hd * 0.12 + opn, mw * 0.45, my + hd * 0.1 + opn), null, "chSkinSh", hd * 0.025, "opacity:0.6");
     if (old) s += P(D("M", -mw - hw * 0.12, my - hd * 0.06, "Q", -mw - hw * 0.18, my + hd * 0.02, -mw - hw * 0.08, my + hd * 0.08, "M", mw + hw * 0.12, my - hd * 0.06, "Q", mw + hw * 0.18, my + hd * 0.02, mw + hw * 0.08, my + hd * 0.08), null, "chSkinSh", hd * 0.022);
     if (ex.knit && mood === "stressed" && !kid) s += P(D("M", jx - hw * 0.05, jy - hh * 0.05, "q", -hw * 0.06, hh * 0.1, -hw * 0.02, hh * 0.18), null, "chSkinSh", hd * 0.025);
+    if (L.tear) s += P(L.tear, null, "chTear", hd * 0.028) + P(L.drop, "chTear");
     if (ex.sweat) s += G(hw * 0.86, cy - hh * 0.3, A("drip", P(D("M", 0, -hd * 0.08, "Q", hd * 0.05, 0, 0, hd * 0.04, "Q", -hd * 0.05, 0, 0, -hd * 0.08, "Z"), "chLens", "chSheen", 0.3)));
     // Glasses: thin frames over the eyes.
     if (look.glasses && age !== "toddler" && o.outfit !== "smock") {
@@ -714,6 +791,9 @@
     const hot = season === "summer", cold = season === "winter";
     const sh = (look.shirt || 0) | 0;
     const d = { top: "tee", topC: "chDusty", sleeve: "long", bottom: "pants", botC: "chSlacks", legs: "skin", shoes: "chShoe", neck: "", layer: "", hat: "", trim: "" };
+    // v6.5: mourning black at a funeral (gear "mourn"): a black suit, a black tie or a white blouse.
+    if (gear === "mourn" && m.age !== "toddler") return Object.assign(d, m.b.kid ? { top: "tee", topC: "chMourn", bottom: "pants", botC: "chMourn", shoes: "chShoe" }
+      : { top: "suit", topC: "chMourn", neck: fem ? "blouse" : "tie", tieC: "chMourn", bottom: fem ? "pencil" : "pants", botC: "chMourn", legs: fem ? "tights" : "skin", shoes: "chShoe" });
     // Adults: grandparents, carers and work clothes first, then everyday casual wear.
     if (m.age === "elder") return Object.assign(d, fem ? { top: "blouse", topC: "chFloral", layer: "cardigan", layerC: "chCardi", bottom: "pants", botC: "chSlate", shoes: "chShoe" }
       : { top: "shirt", topC: "chOat", layer: "jvest", layerC: "chOlive", bottom: "pants", botC: "chSlacks", shoes: "chShoe" });
@@ -785,17 +865,37 @@
     stand: { l: [7, 3], r: [7, 3] }, cheer: { l: [138, 160], r: [138, 160] }, wave: { l: [7, 3], r: [128, 172] },
     hold: { l: [7, 3], r: [10, -138] }, clasp: { l: [12, -52], r: [12, -58] }, baby: { l: [22, -78], r: [12, -96] },
     sit: { l: [6, -28], r: [6, -28] }, study: { l: [16, -78], r: [16, -84] }, run: { l: [26, -150], r: [18, -55] },
+    // v6.5: arms hanging limp; seated with the face in both hands; an arm round the person beside you
+    // (o.reachX: how far their shoulder is, negative for someone on your left; the other arm hangs). A
+    // function gives the point the hand reaches for and the arm is solved to it (reach), elbow down; null
+    // lets the arm hang.
+    slump: { l: [2, 0], r: [2, 0] },
+    hunch: { l: (m, sd) => [sd * m.hw * 0.55, m.cy + m.hh * 0.5], r: (m, sd) => [sd * m.hw * 0.55, m.cy + m.hh * 0.5] },
+    comfort: { l: (m, sd, o) => (o.reachX < 0 ? [o.reachX, o.reachY != null ? o.reachY : m.shY + 1] : null), r: (m, sd, o) => (o.reachX < 0 ? null : [o.reachX != null ? o.reachX : m.SW * 2.5, o.reachY != null ? o.reachY : m.shY + 1]) },
   };
+  // Two-bone reach: the arm's angles (as POSES gives them) for a hand at (tx, ty) from a shoulder at
+  // (sx, sy), with the elbow on the lower, outer of the two ways the arm can bend.
+  function reach(sx, sy, tx, ty, ua, fa, sd) {
+    const dx = tx - sx, dy = ty - sy, d = Math.max(Math.abs(ua - fa) + 0.5, Math.min(ua + fa - 0.5, Math.hypot(dx, dy)));
+    const base = Math.atan2(dx, dy), al = Math.acos(Math.max(-1, Math.min(1, (ua * ua + d * d - fa * fa) / (2 * ua * d))));
+    const pick = [base + al, base - al].map((e) => ({ e, x: sx + Math.sin(e) * ua, y: sy + Math.cos(e) * ua })).sort((a, b) => b.y + sd * b.x * 0.3 - (a.y + sd * a.x * 0.3))[0];
+    const f = Math.atan2(tx - pick.x, ty - pick.y);
+    const deg = (a) => (a * 180) / Math.PI;
+    return [deg(Math.atan2(sd * Math.sin(pick.e), Math.cos(pick.e))), deg(Math.atan2(sd * Math.sin(f), Math.cos(f)))];
+  }
   function avatar(o) {
     const look = o.look || { hair: 0, skin: 0, shirt: 0 };
+    if (MOOD <= -1 && (o.pose === "cheer" || o.pose === "wave")) o = Object.assign({}, o, { pose: "stand" });
     const m = metrics(o);
     const { hd, hw, cy, shY, hipY, SW, HW, fem, legL, age } = m;
     const kid = m.b.kid;
     const skin = SKINS[(look.skin || 0) % SKINS.length];
     const col = hairColour(look, age);
-    const mood = o.mood || "ok";
+    // v6.5: nobody smiles, cheers or waves in a picture of something bad.
+    const mood = MOOD <= -1 && !SAD_MOODS[o.mood || "ok"] ? "sad" : o.mood || "ok";
     const prop = o.prop || "";
     let pose = o.pose || "stand";
+
     const armPose = pose === "hold" ? (prop === "baby" ? "baby" : prop && prop !== "medal" && prop !== "mask" && prop !== "headphones" ? "hold" : "clasp") : POSES[pose] ? pose : "stand";
     const d = dressFor(o, m, look);
     const sc = m.H / 154;
@@ -871,7 +971,7 @@
     if (d.top === "blazer" || d.top === "suit") {
       const vd = hd * (d.top === "suit" ? 1.25 : 1.15);
       s += P(V(vd, 0.62), d.neck === "blouse" ? "chOat" : "chShirt");
-      if (d.neck === "tie") s += P(D("M", -hw * 0.12, shY - 1.6, "L", hw * 0.12, shY - 1.6, "L", hw * 0.16, shY + vd * 0.85, "L", 0, shY + vd + 1, "L", -hw * 0.16, shY + vd * 0.85, "Z"), d.top === "suit" ? "chWine" : "chTie") + P(D("M", -hw * 0.14, shY - 2.4, "L", hw * 0.14, shY - 2.4, "L", hw * 0.1, shY, "L", -hw * 0.1, shY, "Z"), "chTie");
+      if (d.neck === "tie") s += P(D("M", -hw * 0.12, shY - 1.6, "L", hw * 0.12, shY - 1.6, "L", hw * 0.16, shY + vd * 0.85, "L", 0, shY + vd + 1, "L", -hw * 0.16, shY + vd * 0.85, "Z"), d.tieC || (d.top === "suit" ? "chWine" : "chTie")) + P(D("M", -hw * 0.14, shY - 2.4, "L", hw * 0.14, shY - 2.4, "L", hw * 0.1, shY, "L", -hw * 0.1, shY, "Z"), d.tieC || "chTie");
       if (d.neck === "ribbon") s += P(D("M", 0, shY + 0.4, "L", -hw * 0.5, shY - 1.6, "L", -hw * 0.45, shY + hd * 0.2, "Z M", 0, shY + 0.4, "L", hw * 0.5, shY - 1.6, "L", hw * 0.45, shY + hd * 0.2, "Z"), "chTie") + O(0, shY + 0.4, hd * 0.06, "chTie") +
         P(D("M", -hw * 0.08, shY + 0.6, "L", -hw * 0.25, shY + hd * 0.42, "M", hw * 0.08, shY + 0.6, "L", hw * 0.25, shY + hd * 0.4), null, "chTie", hd * 0.06);
       // Lapels, buttons, a breast pocket with the school badge, and the opening down the front.
@@ -949,15 +1049,18 @@
 
     // Arms: upper arm and forearm under the sleeve, then the hand.
     const P0 = POSES[armPose];
-    const ua = m.arm * 0.5, fa = m.arm * 0.44, handL = hd * (kid ? 0.42 : 0.5);
+    // A hunch leans forward, so its arms are foreshortened.
+    const fk = pose === "hunch" ? 0.5 : 1, ua = m.arm * 0.5 * fk, fa = m.arm * 0.44 * fk, handL = hd * (kid ? 0.42 : 0.5);
     const aw = SW * (fem ? 0.19 : 0.21) * (kid ? 1.12 : 1);
     const puff = d.layer === "longpad" || d.layer === "puffer" ? 1.5 : d.layer === "coat" || d.layer === "whitecoat" || d.top === "hoodie" ? 0.6 : 0.3;
     const sleeveC = d.layer === "longpad" ? "chPad" : d.layer === "puffer" ? ((look.shirt || 0) % 2 ? "chWine" : "chOlive") : d.layer === "coat" ? d.layerC : d.layer === "whitecoat" ? "chCoat" : d.layer === "cardigan" ? d.layerC : d.top === "smock" ? "chSmock" : d.topC;
     const short = !d.layer && (d.sleeve === "short") ;
     const hands = {};
     const armSVG = (sd) => {
-      const [a1, a2] = P0[sd < 0 ? "l" : "r"];
       const sx = sd * (SW - aw * 0.9), sy = shY + 2.2;
+      const pa = P0[sd < 0 ? "l" : "r"];
+      const tgt = typeof pa === "function" ? pa(m, sd, o) : null;
+      const [a1, a2] = tgt ? reach(sx, sy, tgt[0], tgt[1], ua, fa, sd) : typeof pa === "function" ? [5, 2] : pa;
       const ex = sx + sd * Math.sin(rad(a1)) * ua, ey2 = sy + Math.cos(rad(a1)) * ua;
       const wx = ex + sd * Math.sin(rad(a2)) * fa, wy = ey2 + Math.cos(rad(a2)) * fa;
       hands[sd] = { x: wx, y: wy, a: a2 };
@@ -993,7 +1096,8 @@
     if (babyAt) arms += G(n1(hw * 0.15), n1(shY + hd * 1.62), bundleBody(), n1(0.86 * (fem ? 0.95 : 1)));
     const right = armSVG(1);
     arms += pose === "wave" ? '<g class="wave" style="transform-origin:' + n1(SW - aw * 0.9) + "px " + n1(shY + 2.2) + 'px">' + right + "</g>" : right;
-    s += arms;
+    // Face in the hands (hunch): the arms go over the head, so they're added after it.
+    if (pose !== "hunch") s += arms;
 
     // Neck, head, hair.
     const nw = hw * (fem ? 0.44 : kid ? 0.46 : 0.54);
@@ -1003,6 +1107,7 @@
     if (neckC && d.layer !== "longpad") s += P(D("M", -nw - 1, shY - 2.5, "L", -nw * 0.1, shY + 1.2, "L", -nw * 0.4, shY - 3.6, "Z M", nw + 1, shY - 2.5, "L", nw * 0.1, shY + 1.2, "L", nw * 0.4, shY - 3.6, "Z"), d.top === "scrubs" ? "chScrub" : d.neck === "blouse" ? "chOat" : "chShirt");
     s += head(m, look, mood, skin, col, o);
     s += hair.front + hair.over;
+    if (pose === "hunch") s += arms;
     // Hats and things on the head.
     const T = m.top - hd * 0.05;
     if (d.hat === "kinder") s += P(D("M", -hw - 1.2, cy - hd * 0.22, "Q", -hw - 0.8, T - hd * 0.08, 0, T - hd * 0.1, "Q", hw + 0.8, T - hd * 0.08, hw + 1.2, cy - hd * 0.22, "Z"), "chMustard") +
@@ -1084,10 +1189,15 @@
       O(-16.6, 1, 0.5, "chSkinSh2") + P("M-19 -6 q2 -1.5 4 -0.6", null, "chHair1", 0.6) +
       E(-9.6, 4.6, 2.6, 2.1, "chSkin0") + P("M-9.6 3 q1.6 0.4 1.8 2", null, "chSkinSh", 0.5);
   }
-  // Mood from the condition bars; the thresholds mirror where the engine starts to punish them.
+  // Mood from the condition bars; the thresholds mirror where the engine starts to punish them. v6.5:
+  // and from what just happened (the engine's recentTone): numb right after the worst, sad for a while
+  // after a bad turn.
   function moodOf(g) {
+    const rt = g && typeof g.recentTone === "function" ? g.recentTone() : 0;
     if (g.health < 40) return "sick";
+    if (rt <= -2) return "numb";
     if (g.stress >= 75) return "stressed";
+    if (rt <= -1) return "sad";
     if (g.motivation < 35) return "tired";
     if (g.stress < 45 && g.motivation >= 60 && g.health >= 55) return "happy";
     return "ok";
@@ -1152,10 +1262,12 @@
     return s;
   }
   // Sunlight from a window on the left falling across the floor (x, y: where it lands; w, h: its size).
-  const sunPatch = (x, y, w, h, skew) => P(poly([[x, y], [x + w, y], [x + w + skew, y + h], [x + skew, y + h]]), null, null, 0,
-    fill(def("sunp", (id) => lin(id, [[0, "sunLight", 0.9], [1, "sunLight", 0.25]])), "opacity:var(--a-sunOp)"));
+  // No sun on the floor on a bad day (v6.5).
+  const sunPatch = (x, y, w, h, skew) => (MOOD <= -1 ? "" : P(poly([[x, y], [x + w, y], [x + w + skew, y + h], [x + skew, y + h]]), null, null, 0,
+    fill(def("sunp", (id) => lin(id, [[0, "sunLight", 0.9], [1, "sunLight", 0.25]])), "opacity:var(--a-sunOp)")));
   // A shaft of light through the air from a window (a soft quad with dust drifting in it).
   function shaft(pts, seed) {
+    if (MOOD <= -1) return "";
     const r = rand(seed || 3);
     let s = P(poly(pts), null, null, 0, fill(def("shf", (id) => lin(id, [[0, "sunLight", 0.5], [1, "sunLight", 0]], [0, 0, 0.6, 1])), "opacity:var(--a-sunOp)"));
     let m = "";
@@ -1546,8 +1658,9 @@
   const season2 = (season, kind) => (kind === "lawn" ? { spring: "lawnSp", summer: "lawnSu", fall: "lawnFa", winter: "snowE" } : { spring: "lawnSp", summer: "vegSu", fall: "vegFa2", winter: "snowE" })[season] || "lawnSu";
   // You in the place: where you stand in each set, and what you hold.
   const SCENES = {};
-  for (const n in SETS) SCENES[n] = (ctx) => SETS[n](ctx) + (n === "start" ? "" : person(ctx, n === "kinder" ? 380 : n === "hallway" ? 330 : n === "cubicle" ? 330 : 350, FEET, n === "cubicle" ? 1.02 : 1.05,
-    n === "gate" ? { pose: "cheer", mood: "happy" } : n === "cubicle" || n === "campus" ? { prop: "book" } : null));
+  // v6.5: the mood's grade goes over the set and under you, and lightly over everything.
+  for (const n in SETS) SCENES[n] = (ctx) => SETS[n](ctx) + grade(W, H, "back") + (n === "start" ? "" : person(ctx, n === "kinder" ? 380 : n === "hallway" ? 330 : n === "cubicle" ? 330 : 350, FEET, n === "cubicle" ? 1.02 : 1.05,
+    n === "gate" ? { pose: "cheer", mood: "happy" } : n === "cubicle" || n === "campus" ? { prop: "book" } : MOOD <= -2 ? { pose: "slump" } : null)) + grade(W, H, "front");
   function sceneName(stage, ctx) {
     if (ctx.ending) return ctx.label ? "gate" : "road";
     if (ctx.examMonth) return "examhall";
@@ -1562,7 +1675,7 @@
     REGION = (ctx && ctx.region) || "";
     begin();
     const name = ctx.scene || sceneName(ctx.stage, ctx);
-    const body = (SCENES[name] || SCENES.desk)(ctx);
+    const body = withMood(ctx.tone, () => (SCENES[name] || SCENES.desk)(ctx));
     return svg("0 0 " + W + " " + H, tidy(defsOut() + body), "scene scene-" + name, ctx.aria);
   }
 
@@ -1682,6 +1795,86 @@
     },
   });
 
+  // v6.5: sets for the worst moments, where the everyday ones don't fit.
+  // White chrysanthemums: a <pattern> of staggered blooms over their leaves, so a bank of them (any
+  // shape filled with it) stays a few hundred bytes.
+  const chrysF = () => def("chrys", (id) => {
+    const bloom = (x, y, r) => O(x, y, r, "chrysE") + O(x, y, r, null, "aoC", 0.5, "opacity:0.25") + O(x, y, r * 0.3, "chrysC");
+    return '<pattern id="' + id + '" width="22" height="20" patternUnits="userSpaceOnUse">' + R(0, 0, 22, 20, "chrysLeaf", 0, null, 0, "opacity:0.55") + bloom(5.5, 5, 7.6) + bloom(16.5, 15, 7.6) + bloom(16.5, -5, 7.6) + bloom(-5.5, 15, 7.6) + bloom(27.5, 15, 7.6) + bloom(5.5, 25, 7.6) + "</pattern>";
+  });
+  const chrysBank = (d) => P(d, null, null, 0, fill(chrysF())) + P(d, null, "aoC", 1, "opacity:0.2");
+  Object.assign(SETS, {
+    // A funeral hall's 빈소: the altar draped in white, banked with white chrysanthemums around the
+    // mourning portrait (a black frame with black ribbons across its top corners), candles and incense,
+    // standing wreaths at the sides, and mourners in black seen from behind.
+    funeral() {
+      let s = room(W, H, BACK, VP, { wall: "hospWall", floor: "tile", lower: [44, "wardWall2"] });
+      s += chrysBank("M164 168 Q164 96 236 70 Q284 46 330 44 Q376 46 424 70 Q496 96 496 168 Z");
+      // The portrait: a framed photograph (a bust in grey, no face), black ribbons across the corners.
+      s += shadow(330, 152, 46, 4) + R(296, 60, 68, 90, "mournFrame", 2) + R(302, 66, 56, 78, "paperE2") + O(330, 96, 13, "steel2") + P("M306 144 Q308 116 330 114 Q352 116 354 144 Z", "steel2") +
+        P("M296 60 L318 60 L296 82 Z M364 60 L342 60 L364 82 Z", "mournRibbon");
+      // The altar under a white cloth; candles at either end, the incense burner in front of the photograph.
+      s += shadow(330, 236, 190, 8) + boxP(160, 236, 340, 70, 0.06, VP, "altarE", "paperE", "paperE2") + R(160, 166, 340, 6, "hiE", 0, null, 0, "opacity:0.3") + L(160, 200, 500, 200, "paperE2", 1);
+      for (const x of [196, 464]) s += R(x - 4, 130, 8, 36, "paperE", 1) + G(x, 126, A("flicker", P("M0 4 Q-4 -3 0 -12 Q4 -3 0 4 Z", "candle"))) + pool(x, 120, 30, 30, "candle", 0.7);
+      s += G(330, 166, R(-14, -10, 28, 10, "brass2", 2) + L(-4, -10, -6, -34, "incense", 1) + L(3, -10, 5, -36, "incense", 1) + G(0, -40, A("rise", P("M-2 0 q-6 -10 0 -20 q6 -10 0 -20", null, "steamE", 1.2))));
+      // Standing wreaths (근조화환) at the sides: a ring of white flowers on a stand and a plain white sash.
+      for (const x of [104, 700]) {
+        s += L(x - 20, 236, x, 130, "woodDark", 3) + L(x + 20, 236, x, 130, "woodDark", 3) + P(ring(x, 96, 44) + ring(x, 96, 24), null, null, 0, fill(chrysF(), "fill-rule:evenodd")) + R(x - 7, 104, 14, 96, "paperE", 1) + R(x - 7, 104, 14, 4, "mournRibbon");
+      }
+      s += pool(330, 40, 240, 90, "lampCold", 0.5);
+      // Relatives in black by the wreath, heads bowed.
+      s += shadow(150, 240, 60, 5) + G(128, 240, avatar({ age: "adult", outfit: "casual", gear: "mourn", look: { hair: 1, skin: 0, shirt: 2, sex: "m", lid: true, grey: true }, mood: "sad", pose: "slump" }), 0.9) +
+        G(176, 242, avatar({ age: "adult", outfit: "casual", gear: "mourn", look: { hair: 11, skin: 0, shirt: 4, sex: "f", hc: 1 }, mood: "crying", pose: "slump" }), 0.88);
+      return s + vignette(W, H, 0.7);
+    },
+    // A hospital corridor at night: a long tiled hall, most ceiling lights off, the green exit sign, a
+    // row of waiting chairs, doors along the right wall and a dark window at the end.
+    corridor(ctx) {
+      const vp = [400, 118], bk = [306, 74, 494, 166];
+      let s = room(W, H, bk, vp, { wall: "wardWall", floor: "tile", lower: [26, "wardWall2"] });
+      s += windowView(352, 86, 96, 50, { season: ctx.season, night: true, seed: 81, tree: false });
+      s += R(370, 62, 60, 11, "exitE", 2) + pool(400, 66, 60, 22, "exitE", 0.6) + R(384, 65, 10, 5, "paperE", 0, null, 0, "opacity:0.8");
+      // Ceiling lights toward the vanishing point: only one still on.
+      [[0.18, 1], [0.42, 0], [0.7, 0], [1.05, 0]].forEach(([k, on]) => {
+        const y = vp[1] + (bk[1] - vp[1]) * (1 + k * 3.2), w = 30 + k * 150;
+        s += R(400 - w / 2, y - 2, w, 3 + k * 3, on ? "fluoro" : "screenOff", 1) + (on ? pool(400, y + 30, w * 1.6, 60, "lampCold", 0.6) : "");
+      });
+      // Doors on the right wall, in perspective, one with a lit window.
+      const rw = (k, y) => [vp[0] + (bk[2] - vp[0]) * (1 + k * 8), vp[1] + (y - vp[1]) * (1 + k * 8)];
+      for (const [k0, k1, lit] of [[0.05, 0.1, 0], [0.18, 0.28, 1]]) {
+        s += P(poly([rw(k0, 96), rw(k1, 96), rw(k1, 166), rw(k0, 166)]), "doorE2") + P(poly([rw(k0 + 0.012, 104), rw(k0 + 0.03, 104), rw(k0 + 0.03, 124), rw(k0 + 0.012, 124)]), lit ? "lampCold" : "nightWin");
+      }
+      // The waiting chairs: a bench of joined plastic seats along the front.
+      s += shadow(320, 240, 120, 6) + R(200, 172, 240, 26, "chairBlack", 4) + R(200, 200, 240, 8, "chairBlack", 3) + R(210, 208, 6, 32, "steel2") + R(424, 208, 6, 32, "steel2") +
+        [280, 360].map((x) => L(x, 174, x, 198, "aoC", 1, "opacity:0.4")).join("");
+      return s + vignette(W, H, 0.8);
+    },
+    // A home emptied by a move or a split: bare walls with paler squares where pictures hung, boxes, one
+    // chair, a bare bulb.
+    emptyhouse(ctx) {
+      let s = room(W, H, BACK, VP, { wall: "wallpaper2", floor: "wood" });
+      s += windowView(480, 40, 170, 110, { season: ctx.season, seed: 72 });
+      s += [[110, 52, 74, 54], [212, 62, 40, 40], [290, 48, 60, 80]].map(([x, y, w, h]) => R(x, y, w, h, "hiE", 1, null, 0, "opacity:0.22") + O(x + w / 2, y - 3, 1.4, "steel2")).join("") + L(100, 140, 360, 140, "aoC", 2, "opacity:0.12");
+      s += L(400, 0, 400, 44, "inkE", 1) + O(400, 48, 5, "lampCold") + pool(400, 70, 170, 110, "lampCold", 0.55);
+      s += shadow(640, 238, 110, 7) + boxP(570, 238, 90, 54, 0.06, VP, "cardboard", "cardboard2", "cardboard2") + boxP(600, 184, 70, 40, 0.06, VP, "cardboard", "cardboard2", "cardboard2") + boxP(670, 236, 70, 44, 0.06, VP, "cardboard", "cardboard2", "cardboard2") +
+        L(570, 210, 660, 210, "tape", 3) + L(600, 166, 670, 166, "tape", 3);
+      s += G(190, 238, shadow(0, 0, 30, 4) + R(-18, -40, 36, 5, "chairW", 1) + R(-18, -74, 5, 34, "chairW", 1) + R(-16, -35, 4, 35, "woodDesk2") + R(12, -35, 4, 35, "woodDesk2"));
+      return s + vignette(W, H, 0.7);
+    },
+    // A bus stop in the rain: the shelter's roof and glass, a lit advertising box, the bench, a street
+    // light and its reflection in the wet road.
+    busstop(ctx) {
+      let s = sky(0, 0, W, H, { tod: "day", seed: 33 }) + ridge(0, W, 150, 40, 3, "mtnFar", ctx.season);
+      for (let i = 0; i < 9; i++) s += block(i * 92 - 10, 200, 84, 70 + ((i * 37) % 60), i % 2 ? "bldFar" : "bldMid", i + 40, 10);
+      s += R(0, 200, W, 60, "asphalt") + R(0, 196, W, 6, "curb") + [120, 420, 680].map((x) => E(x, 236, 60, 4, "sodium", null, 0, "opacity:0.18")).join("");
+      s += R(230, 70, 340, 12, "steel2", 2) + R(236, 82, 300, 110, "glassTint", 0, null, 0, "opacity:0.35") + L(236, 82, 236, 238, "steel", 4) + L(536, 82, 536, 238, "steel", 4) +
+        R(470, 92, 60, 98, "storeGlow", 2, null, 0, "opacity:0.8") + R(476, 98, 48, 86, "neonA", 1, null, 0, "opacity:0.25") + pool(500, 140, 90, 70, "storeGlow", 0.4);
+      s += R(290, 200, 160, 7, "steel", 2) + R(300, 207, 5, 30, "steel2") + R(436, 207, 5, 30, "steel2");
+      s += L(680, 240, 680, 34, "steel2", 4) + L(680, 36, 708, 36, "steel2", 3) + O(708, 40, 4, "sodium") + pool(700, 60, 70, 60, "sodium", 0.7) + pool(690, 236, 90, 12, "sodium", 0.5);
+      return s;
+    },
+  });
+
   // ---------- event illustrations (600 × 220, floor at 178) ----------
   // The backdrops are the sets, scaled to this frame (the floor lands at 178 and feet at 204), with a
   // light veil over them so the people and props in front stand out.
@@ -1703,6 +1896,12 @@
     farm: (ctx) => fit(SETS.farm(ctx)),
     bath: (ctx) => fit(SETS.bath(ctx)),
     campus: (ctx) => fit(SETS.campus(ctx)),
+    // v6.5
+    funeral: (ctx) => fit(SETS.funeral(ctx)),
+    corridor: (ctx) => fit(SETS.corridor(ctx)),
+    emptyhouse: (ctx) => fit(SETS.emptyhouse(ctx)),
+    busstop: (ctx) => fit(SETS.busstop(ctx)),
+    kitchenNight: (ctx) => fit(SETS.kitchen(ctx, true)),
   };
 
   // 돌잡이 items, drawn standing on a table top at y ≈ 170 around x (shared by the event art and the
@@ -1824,6 +2023,13 @@
     cheer: () => G(470, 112, A("sway", R(-50, -30, 100, 56, "paperE", 2) + R(-50, -30, 100, 10, "accentRed", 1, null, 0, "opacity:0.8") + L(-30, 0, 30, 0, "inkE", 3, "opacity:0.7") + L(-24, 12, 24, 12, "inkE", 3, "opacity:0.5") + L(-44, 26, -44, 70, "woodLight2", 3) + L(44, 26, 44, 70, "woodLight2", 3))) +
       G(400, 140, A("bounce", R(-12, -16, 24, 30, "thermos", 4))) + G(560, 140, A("bounce", R(-10, -12, 20, 24, "paperE", 3) + R(-10, -12, 20, 6, "accentRed"), "--del:-0.4s")),
     sparkles: () => motes(330, 30, 260, 130, 12, 5),
+    // v6.5: nothing in front (the worst moments' own sets carry the picture), and a parent at the
+    // kitchen table at night with their face in their hands (a job lost).
+    none: () => "",
+    parentSlump: (v, id, tone, c) => {
+      const ctx = c || {}, who = hasDad(ctx) ? dadFig : momFig;
+      return shadow(200, EFEET, 30, 5, 0.7) + who(ctx, 200, EFEET, 0.86, { pose: "hunch", mood: "numb", gear: "" }) + pool(200, 120, 80, 50, "lampWarm", 0.5);
+    },
   };
   // Toy blocks (wooden, muted), and a string of the little flags of every nation at a sports day.
   function toyBlocks(x, y) {
@@ -1848,7 +2054,7 @@
     olympiad: { bg: "class", fx: "mathsyms", icon: "🏅", res: { r0a: { prop: "medal", mood: "happy", pose: "cheer" }, r0b: { mood: "tired" } } },
     smartphone: { bg: "room", fx: "bigphone", mood: "happy", icon: "📱" },
     daechi: { bg: "city", fx: "sparkles", icon: "🏙️" },
-    bully: { bg: "hall", fx: "looming", mood: "stressed", x: 220, icon: "😣", res: { r0: { mood: "ok" }, r1a: { mood: "happy" }, r1b: { mood: "sick" } } },
+    bully: { bg: "hall", fx: "looming", mood: "stressed", x: 220, low: "numb", icon: "😣", res: { r0: { mood: "ok" }, r1a: { mood: "happy" }, r1b: { mood: "sick" } } },
     president: { bg: "class", fx: "podium", pose: "wave", icon: "🗳️", res: { r0a: { pose: "cheer", mood: "happy" }, r0b: { mood: "tired", pose: "stand" } } },
     career: { bg: "hospital", fx: "doctor", mood: "happy", icon: "🩺" },
     jung2: { bg: "room", fx: "door", mood: "grumpy", prop: "headphones", icon: "🎧", res: { r1: { mood: "ok", prop: null } } },
@@ -1909,18 +2115,21 @@
     saju: { bg: "room", night: true, fx: "candle", mood: "ok", icon: "🔮", res: { great: { mood: "happy" }, good: { mood: "happy" }, mixed: { mood: "tired" }, rough: { mood: "stressed" } } },
     promotion: { bg: "kitchen", fx: "sparkles", mood: "happy", icon: "📈" },
     jackpot: { bg: "street", fx: "shop", mood: "happy", pose: "cheer", x: 420, icon: "🎰" },
-    layoff: { bg: "kitchen", fx: "raincloud", mood: "stressed", icon: "📉" },
-    jeonse: { bg: "city", fx: "raincloud", mood: "stressed", icon: "🏚️" },
-    parentill: { bg: "hospital", fx: "bed", mood: "tired", icon: "🏥" },
-    accident: { bg: "street", fx: "cracks", mood: "sick", x: 420, icon: "🚑" },
-    hospital: { bg: "hospital", fx: "bed", mood: "sick", prop: "mask", icon: "🏥" },
+    // v6.5: the bad turns have their own staging. low*: how the picture changes at tone -2 (lowBg and
+    // lowFx the set and foreground, low the face, lowPose, lowGear, lowX where you stand, lowPeople
+    // "comfort" for a friend's arm round you); sad*: the same at tone -1.
+    layoff: { bg: "kitchenNight", fx: "parentSlump", mood: "stressed", x: 430, icon: "📉" },
+    jeonse: { bg: "city", fx: "raincloud", mood: "stressed", sadBg: "emptyhouse", sadFx: "none", x: 300, icon: "🏚️" },
+    parentill: { bg: "hospital", fx: "bed", mood: "tired", lowBg: "corridor", lowFx: "none", low: "numb", lowPose: "hunch", lowX: 230, icon: "🏥" },
+    accident: { bg: "street", fx: "cracks", mood: "sick", x: 420, lowBg: "corridor", lowFx: "none", low: "shocked", lowPose: "sit", lowX: 230, icon: "🚑" },
+    hospital: { bg: "hospital", fx: "bed", mood: "sick", prop: "mask", low: "sick", lowPose: "stand", lowProp: "mask", icon: "🏥" },
     greatteacher: { bg: "class", fx: "counsel", mood: "happy", icon: "🍎" },
     spark: { bg: "room", fx: "bulb", mood: "happy", icon: "✨" },
     bloom: { bg: "room", fx: "sparkles", mood: "ok", icon: "🌱", res: { up: { mood: "happy" }, down: { mood: "tired" } } },
-    examluck: { bg: "class", fx: "notes", mood: "ok", icon: "🍀", res: { sniffler: { mood: "stressed" }, guess: { mood: "happy" }, drilled: { mood: "happy", pose: "cheer" }, omr: { mood: "stressed" }, calm: { mood: "happy" } } },
+    examluck: { bg: "class", fx: "notes", mood: "ok", icon: "🍀", res: { sniffler: { mood: "stressed" }, guess: { mood: "happy" }, drilled: { mood: "happy", pose: "cheer" }, omr: { mood: "shocked" }, calm: { mood: "happy" } } },
     // Family: a divorce, and losing a parent.
-    divorce: { bg: "kitchen", fx: "raincloud", mood: "stressed", x: 200, icon: "💔" },
-    bereaved: { bg: "room", night: true, fx: "candle", mood: "tired", icon: "🕯️" },
+    divorce: { bg: "kitchen", fx: "raincloud", mood: "stressed", x: 200, lowBg: "emptyhouse", lowFx: "none", low: "numb", lowX: 300, icon: "💔" },
+    bereaved: { bg: "room", night: true, fx: "candle", mood: "tired", lowBg: "funeral", lowFx: "none", low: "crying", lowGear: "mourn", lowX: 470, icon: "🕯️" },
     // Early childhood. The two trait reveals, then the early-years events.
     newborn: { bg: "nursery", fx: "mobile", mood: "happy", x: 200, icon: "👶" },
     doljabi: { bg: "nursery", fx: "doljabi", mood: "happy", pose: "cheer", x: 200, icon: "🎂" },
@@ -1953,8 +2162,8 @@
     "soc-crush": { bg: "class", fx: "hearts", mood: "happy", pmood: "ok", icon: "💓", res: { r0a: { pmood: "happy", pose: "cheer" }, r0b: { mood: "tired" } } },
     "soc-confessed": { bg: "hall", fx: "hearts", mood: "ok", pmood: "happy", icon: "💌", res: { r0: { mood: "happy" }, r1: { pmood: "tired" } } },
     "soc-date": { bg: "beach", fx: "hearts", mood: "happy", pmood: "happy", icon: "🎬" },
-    "soc-breakup": { bg: "room", night: true, fx: "raincloud", mood: "tired", pmood: "tired", icon: "💔", res: { r1: { mood: "ok", pmood: "happy" } } },
-    "soc-dumped": { bg: "room", night: true, fx: "raincloud", mood: "tired", prop: "phone", pose: "hold", alone: true, icon: "💔" },
+    "soc-breakup": { bg: "room", night: true, fx: "raincloud", mood: "tired", pmood: "tired", sadBg: "busstop", sadFx: "none", x: 300, icon: "💔", res: { r1: { mood: "ok", pmood: "ok" } } },
+    "soc-dumped": { bg: "room", night: true, fx: "raincloud", mood: "tired", prop: "phone", pose: "hold", alone: true, sadBg: "busstop", sadFx: "none", low: "crying", x: 330, icon: "💔" },
     "soc-reunion": { bg: "street", fx: "polaroids", mood: "happy", pmood: "happy", pose: "wave", icon: "🎉", res: { r1: { mood: "ok", pose: "stand" } } },
     "soc-afterschool": { bg: "street", fx: "sparkles", mood: "happy", pmood: "happy", icon: "🍜", res: { r1: { mood: "tired", pmood: "ok" } } },
     "soc-rivalrank": { bg: "class", fx: "chat", mood: "ok", pmood: "ok", icon: "📊", res: { rw: { mood: "happy", pose: "cheer", pmood: "grumpy" }, rl: { mood: "grumpy", pmood: "happy" } } },
@@ -1984,27 +2193,64 @@
     for (const [re, key] of KEYWORDS) if (re.test(id)) return EVENT_ART[key];
     return { bg: STAGE_BG[stage] || "room", night: stage === "high" || stage === "hs3", fx: "sparkles", icon: "✨" };
   }
-  // ctx: { id, variant, stage, look, mood, season, view, region }
+  // The tone a picture has when app.js passes none (old saves): what the result's art says about it.
+  const NEG_ART = { sick: 1, stressed: 1, tired: 1, grumpy: 1, sad: 1, crying: 1, numb: 1, shocked: 1 };
+  function artTone(spec, res, variant) {
+    const m = variant ? res.mood : spec.mood;
+    return m && NEG_ART[m] ? -1 : m === "happy" && variant ? 1 : 0;
+  }
+  const GLOOMY_FX = { raincloud: 1, looming: 1, candle: 1, cracks: 1, sheep: 1 };
+  // Backdrops out of doors, where a bad moment brings rain across the whole frame.
+  const OUTDOORS = { field: 1, city: 1, street: 1, beach: 1, farm: 1, campus: 1, busstop: 1 };
+  // ctx: { id, variant, stage, look, mood, season, view, region, people, tone }
+  //   tone (v6.5): -2…+2 from the engine (the outcome's tone, or promptTone for a question). It sets the
+  //   light (withMood), and with it how you look: at -2 the spec's low mood and pose (default crying,
+  //   slumped), at -1 a sad face unless the spec already has a bad one, at +1/+2 happy; a result's own
+  //   mood (res) still wins. The people beside you share the mood instead of smiling, and at -2 the
+  //   spec can give them a part (lowPeople: "comfort" puts an arm round you).
   function eventArt(ctx) {
     VIEW = (ctx && ctx.view) || "city";
     REGION = (ctx && ctx.region) || "";
     begin();
     const spec = specFor(ctx.id, ctx.stage);
     const res = (spec.res && ctx.variant && (spec.res[ctx.variant] || spec.res[ctx.variant.slice(0, 2)])) || {};
-    const c = Object.assign({}, ctx);
-    let s = BACKDROPS[spec.bg](c, !!spec.night);
-    // Foregrounds are drawn for the full 600-wide frame; nudging them left keeps them inside the
-    // narrower crop a phone shows.
-    s += G(-40, 0, FX[spec.fx](ctx.variant, ctx.id));
-    const extra = { pose: res.pose || spec.pose, prop: res.prop !== undefined ? res.prop : spec.prop, mood: res.mood || (ctx.variant ? ctx.mood : spec.mood || ctx.mood) };
-    // The people the event names ({ lk, x } from the engine) stand beside you, in your stage's clothes.
-    const px = spec.x || 200;
-    if (!spec.alone) (ctx.people || []).slice(0, 2).forEach((q, k) => {
-      const x = px <= 300 ? px + 92 + k * 74 : px - 92 - k * 74;
-      s += shadow(x, EFEET, 30, 5, 0.7) + person(Object.assign({}, c, { look: lookFor(q.lk, q.x), mood: res.pmood || spec.pmood || "happy" }), x, EFEET, 0.86 * (k ? 0.94 : 1));
+    const tone = ctx.tone != null ? toneN(ctx.tone) : artTone(spec, res, ctx.variant);
+    return withMood(tone, () => {
+      const c = Object.assign({}, ctx, { tone });
+      // The worst moments have sets of their own (lowBg), and so can the bad ones (sadBg).
+      const bg = (tone <= -2 && spec.lowBg) || (tone <= -1 && spec.sadBg) || spec.bg;
+      let s = BACKDROPS[bg](c, !!spec.night || tone <= -2);
+      s += grade(EW, EH, "back");
+      if (tone <= -1 && OUTDOORS[bg]) s += rain(EW, EH, tone <= -2 ? 40 : 26, 7);
+      // Foregrounds are drawn for the full 600-wide frame; nudging them left keeps them inside the
+      // narrower crop a phone shows.
+      // A happy ending to a gloomy event (the bullying stops, the slump lifts) loses the gloom.
+      const fx = (tone <= -2 && spec.lowFx) || (tone <= -1 && spec.sadFx) || (tone >= 1 && ctx.variant && GLOOMY_FX[spec.fx] ? "sparkles" : spec.fx);
+      s += G(-40, 0, FX[fx](ctx.variant, ctx.id, tone, c));
+      let mood = res.mood || (ctx.variant ? null : spec.mood);
+      if (!mood || (tone <= -2 && !res.mood)) mood = tone <= -2 ? spec.low || "crying" : tone <= -1 ? (NEG_ART[spec.mood] ? spec.mood : "sad") : tone >= 1 ? "happy" : spec.mood || ctx.mood;
+      if (tone >= 1 && ctx.variant && !res.mood && NEG_ART[mood]) mood = "happy";
+      let pose = res.pose || spec.pose, prop = res.prop !== undefined ? res.prop : spec.prop;
+      if (tone <= -2) { pose = res.pose || spec.lowPose || (prop === "phone" ? pose : "slump"); if (!spec.lowPose && prop !== "phone") prop = spec.lowProp || ""; }
+      else if (tone === -1 && !pose && !prop) pose = "slump";
+      if (tone >= 2 && !pose && ctx.variant) pose = "cheer";
+      const extra = { pose, prop, mood, gear: tone <= -2 && spec.lowGear ? spec.lowGear : undefined };
+      // The people the event names ({ lk, x } from the engine) stand beside you, in your stage's clothes.
+      const px = (tone <= -2 && spec.lowX) || spec.x || 200;
+      const pm = tone <= -1 ? (res.pmood && SAD_MOODS[res.pmood] ? res.pmood : "sad") : res.pmood || spec.pmood || "happy";
+      const people = spec.alone ? [] : (ctx.people || []).slice(0, 2);
+      const comfort = tone <= -2 && people.length && spec.lowPeople === "comfort";
+      let after = "";
+      people.forEach((q, k) => {
+        const x = comfort && !k ? px + 50 : px <= 300 ? px + 92 + k * 74 : px - 92 - k * 74;
+        const fig = shadow(x, EFEET, 30, 5, 0.7) + person(Object.assign({}, c, { look: lookFor(q.lk, q.x), mood: comfort && !k ? "sad" : pm }), x, EFEET, 0.86 * (k ? 0.94 : 1),
+          comfort && !k ? { pose: "comfort", reachX: -44 } : tone <= -2 ? { pose: "slump" } : null);
+        // Whoever comforts you is drawn after you, so the hand lands on your shoulder.
+        if (comfort && !k) after = fig; else s += fig;
+      });
+      s += shadow(px, EFEET, 32, 5, 0.8) + person(c, px, EFEET, 0.86, extra) + after;
+      return svg("0 0 " + EW + " " + EH, tidy(defsOut() + s + grade(EW, EH, "front") + vignette(EW, EH)), "event-art");
     });
-    s += shadow(px, EFEET, 32, 5, 0.8) + person(c, px, EFEET, 0.86, extra);
-    return svg("0 0 " + EW + " " + EH, tidy(defsOut() + s + vignette(EW, EH)), "event-art");
   }
   function iconFor(id) { return specFor(id, "").icon || "✨"; }
 
@@ -2157,6 +2403,15 @@
       for (let i = 0; i < 6; i++) s += G(150 + (i % 3) * 80, 66 + Math.floor(i / 3) * 52, R(-27, -17, 56, 40, "aoC", 0, null, 0, "opacity:0.2") + R(-28, -18, 56, 40, "paperE") + R(-20, -10, 40, 3, "inkE", 0, null, 0, "opacity:0.35") + R(-20, -2, 30, 3, "inkE", 0, null, 0, "opacity:0.35") + O(0, -16, 2.5, ["accentRed", "accentBlue", "neonC"][i % 3]));
       return s + shadow(470, EFEET, 28, 5, 0.8) + person(ctx, 470, EFEET, 0.86, {}) + vignette(EW, EH);
     },
+    // v6.5: no offer anywhere: the letter on the desk at night under a cold lamp, rain on the window, and
+    // you with your face in your hands.
+    rejected(ctx) {
+      let s = fit(SETS.desk(Object.assign({}, ctx, { dday: null })));
+      let lines = "";
+      for (let i = 0; i < 4; i++) lines += L(-50 + i * 5, 2 + i * 4, 30 + i * 5, -14 + i * 4, "inkE", 1, "opacity:0.3");
+      s += G(214, 176, P("M-74 6 L52 -14 L96 4 L-30 26 Z", "aoC", null, 0, "opacity:0.25") + P("M-78 0 L48 -20 L92 -2 L-34 20 Z", "letterE") + P("M-78 0 L48 -20 L54 -17 L-72 3 Z", "accentRed", null, 0, "opacity:0.7") + lines);
+      return s + shadow(420, EFEET, 30, 5, 0.8) + person(ctx, 420, EFEET, 0.86, { pose: "hunch", mood: MOOD <= -2 ? "crying" : "sad" }) + vignette(EW, EH, 0.8);
+    },
     susiResult(ctx) {
       const ok = ctx.mood === "happy";
       let s = fit(SETS.bedroom(ctx, true)) + R(0, 0, EW, EH, "aoC", 0, null, 0, "opacity:0.3") + pool(280, 110, 180, 100, "monitorGlow", 0.6) + R(130, 150, 300, 30, "woodDesk", 2);
@@ -2166,13 +2421,17 @@
       return s + shadow(500, EFEET, 28, 5, 0.8) + person(ctx, 500, EFEET, 0.86, { pose: ok ? "cheer" : null }) + vignette(EW, EH);
     },
   });
+  // ctx.tone (v6.5) grades the whole picture; a rejection (offers with no label and a bad tone) is the
+  // letter on the desk at night rather than the house.
   function screenArt(name, ctx) {
     VIEW = (ctx && ctx.view) || "city";
     REGION = (ctx && ctx.region) || "";
     begin();
-    if (name === "offers" || name === "ending") { const b = SCENES[ctx.label ? "gate" : name === "ending" ? "road" : "home"](ctx); return svg("0 0 " + W + " " + H, tidy(defsOut() + b), "event-art wide"); }
-    const b = SCREENS[name](ctx);
-    return svg("0 0 " + EW + " " + EH, tidy(defsOut() + b), "event-art");
+    return withMood(ctx.tone, () => {
+      if ((name === "offers" || name === "ending") && !(name === "offers" && !ctx.label && MOOD <= -1)) { const b = SCENES[ctx.label ? "gate" : name === "ending" ? "road" : "home"](ctx); return svg("0 0 " + W + " " + H, tidy(defsOut() + b), "event-art wide"); }
+      const b = SCREENS[name === "offers" ? "rejected" : name](ctx) + grade(EW, EH, "all");
+      return svg("0 0 " + EW + " " + EH, tidy(defsOut() + b), "event-art");
+    });
   }
 
 
@@ -2185,6 +2444,7 @@
   const CW = 800, CH = 450, CG = 370, CF = 418; // stage, ground line, feet line
   // cam: { s0, s1 } scale, { ox, oy } the point it zooms on, { x0, x1, y0, y1 } a pan, over t seconds.
   function cutShot(t, body, cam) {
+    body += grade(CW, CH, "all");
     const c = cam || {};
     const v = (k, d) => (c[k] != null ? c[k] : d);
     const style = "--t:" + t + "s;--s0:" + v("s0", 1) + ";--s1:" + v("s1", 1.06) + ";--ox:" + v("ox", 400) + "px;--oy:" + v("oy", 260) + "px;--x0:" + v("x0", 0) + "px;--x1:" + v("x1", 0) +
@@ -2441,9 +2701,18 @@
         b += fx("c-pop", 0.9 + i * 0.4, O(x + 20, 370 - h - 16, 11, gr <= 1 ? "brass" : gr <= 3 ? "fabric3" : "steel"));
       });
       let c = living(ctx);
-      const yay = mood === "happy";
-      c += mom(ctx, 190, CF, 1.6, { pose: yay ? "cheer" : "hold" }) + dad(ctx, 620, CF, 1.65, { pose: yay ? "cheer" : "hold" });
-      c += me(ctx, st, 400, CF + 160, 2.5, { mood, pose: yay ? "cheer" : "stand" }) + (yay ? confetti(30, 7) : "");
+      const yay = mood === "happy" && MOOD >= 0;
+      if (MOOD <= -1) {
+        // v6.5: a bad result. The room stays dark, rain runs down the window behind; you look down, one
+        // parent's hand on your shoulder, the other turned away (or, at the worst, both of them by you).
+        const fig = hasMom(ctx) || ctx.parents === "grand" || ctx.parents === "care" ? mom : dad;
+        c += (fig === mom ? dad(ctx, 640, CF, 1.65, { pose: "slump", mood: "sad" }) : "");
+        c += me(ctx, st, 400, CF + 160, 2.5, { mood: MOOD <= -2 ? "crying" : "sad", pose: "slump" });
+        c += fig(ctx, 285, CF, 1.6, { pose: "comfort", mood: "sad", reachX: 46, reachY: -76 });
+      } else {
+        c += mom(ctx, 190, CF, 1.6, { pose: yay ? "cheer" : "hold" }) + dad(ctx, 620, CF, 1.65, { pose: yay ? "cheer" : "hold" });
+        c += me(ctx, st, 400, CF + 160, 2.5, { mood, pose: yay ? "cheer" : "stand" }) + (yay ? confetti(30, 7) : "");
+      }
       return [
         cutShot(2.8, a + vignette(CW, CH, 0.8), { s0: 1, s1: 1.3, ox: 600, oy: 290 }),
         cutShot(3.4, b + vignette(CW, CH, 0.8), { s0: 0.96, s1: 1.06 }),
@@ -2453,6 +2722,7 @@
     // Admission: the family at the laptop in the dark living room, the stamp, the cheer.
     offers(ctx) {
       const st = ctx.stage;
+      if (ctx.rejected) return rejectedFilm(ctx);
       let a = stage({ night: true, floor: "wood" }) + windowView(90, 70, 160, 140, { night: true, season: "winter", seed: 35, curtain: true });
       a += shadow(400, 400, 240, 12) + boxP(180, 370, 440, 70, 0.06, CVP, "sofaE", "sofaE2", "sofaE2") + R(190, 270, 420, 50, "sofaE2", 10);
       a += mom(ctx, 250, CF, 1.4, { pose: "hold", mood: "ok" }) + dad(ctx, 560, CF, 1.45, { pose: "hold", mood: "ok" }) + me(ctx, st, 400, CF + 20, 1.5, { mood: "stressed" });
@@ -2513,13 +2783,37 @@
       return [cutShot(3.2, a, { s0: 1.0, s1: 1.08, x0: 0, x1: -30 }), cutShot(3.2, b + vignette(CW, CH), { s0: 1.2, s1: 1.0, ox: 400, oy: 200 })];
     },
   };
+  // v6.5: no offer at all. The same wait at the laptop, a page with no stamp on it, then your room at night
+  // with rain on the window, you on the edge of the bed with your face in your hands and someone in the
+  // doorway. Played under tone -2 (app.js), so the light is cold and dark throughout.
+  function rejectedFilm(ctx) {
+    const st = ctx.stage;
+    let a = stage({ night: true, floor: "wood" }) + windowView(90, 70, 160, 140, { night: true, season: "winter", seed: 35, curtain: true });
+    a += shadow(400, 400, 240, 12) + boxP(180, 370, 440, 70, 0.06, CVP, "sofaE", "sofaE2", "sofaE2") + R(190, 270, 420, 50, "sofaE2", 10);
+    a += mom(ctx, 250, CF, 1.4, { pose: "hold", mood: "stressed" }) + dad(ctx, 560, CF, 1.45, { pose: "hold", mood: "stressed" }) + me(ctx, st, 400, CF + 20, 1.5, { mood: "stressed" });
+    a += pool(400, 300, 200, 160, "monitorGlow", 0.8) + G(400, 330, R(-60, -50, 120, 70, "inkE", 5) + R(-52, -44, 104, 58, "phoneScreen", 2) + R(-76, 20, 152, 8, "steel", 3));
+    let b = R(0, 0, CW, CH, "woodDesk2") + R(0, 0, CW, CH, null, 0, null, 0, fill(def("tbl", (id) => radial(id, [[0, "hiE", 0.15], [1, "aoC", 0.4]], 0.5, 0.45, 0.8))));
+    b += fx("c-thud", 0.6, G(400, 225, R(-166, -196, 340, 400, "aoC", 4, null, 0, "opacity:0.25") + R(-170, -200, 340, 400, "letterE", 2) + R(-170, -200, 340, 34, "steel2", 2) +
+      R(-120, -110, 240, 8, "paperE2", 3) + R(-120, -80, 200, 8, "paperE2", 3) + R(-120, -50, 220, 8, "paperE2", 3) + R(-120, -20, 160, 8, "paperE2", 3) + R(-120, 40, 240, 14, "accentRed", 3, null, 0, "opacity:0.5")));
+    let c = stage({ night: true, floor: "wood" }) + windowView(470, 60, 220, 180, { night: true, season: "winter", seed: 36, curtain: true });
+    c += shadow(330, 414, 170, 10) + boxP(150, 412, 320, 60, 0.1, CVP, "beddingE2", "beddingE", "beddingE2") + R(150, 330, 70, 26, "paperE", 8);
+    c += me(ctx, st, 330, CF + 4, 1.5, { mood: "crying", pose: "hunch" });
+    // The doorway on the left, light from the hall falling in, whoever raised you standing there.
+    c += R(40, 120, 90, 250, "doorFrame") + R(46, 126, 78, 244, "lampCold", 0, null, 0, "opacity:0.35") + P("M46 370 L124 370 L260 418 L60 418 Z", "lampCold", null, 0, "opacity:0.12");
+    c += (hasMom(ctx) || ctx.parents === "grand" || ctx.parents === "care" ? mom : dad)(ctx, 88, CF - 44, 1.25, { pose: "slump", mood: "sad" });
+    return [
+      cutShot(3.0, a + vignette(CW, CH, 0.8), { s0: 1, s1: 1.45, ox: 400, oy: 320 }),
+      cutShot(2.6, b + vignette(CW, CH, 0.8), { s0: 1.06, s1: 1.0 }),
+      cutShot(3.4, c + vignette(CW, CH, 0.9), { s0: 1.0, s1: 1.12, ox: 330, oy: 300 }),
+    ];
+  }
   // The shots for one cutscene: [{ t: seconds, svg }]. ctx is app.js's art context plus what the film
   // needs (items, label, grades, react). VIEW and REGION follow the region, as everywhere else.
   function cutscene(name, ctx) {
     VIEW = (ctx && ctx.view) || "city";
     REGION = (ctx && ctx.region) || "";
     begin();
-    return CUTS[name] ? CUTS[name](ctx).map((c) => ({ t: c.t, svg: tidy(c.svg) })) : [];
+    return withMood(ctx.tone, () => (CUTS[name] ? CUTS[name](ctx).map((c) => ({ t: c.t, svg: tidy(c.svg) })) : []));
   }
 
   // ---------- the map ----------
