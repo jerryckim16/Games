@@ -721,6 +721,8 @@ What the tables show:
 
 ## Changelog
 
+- **v6.5.2:** fix: a girl's ponytail was drawn across the right side of her face (its inner edge curved inside the head's width, where the jaw narrows). The tail now hangs behind the ear and over the shoulder.
+
 - **v6.5.1:** fix: with a weak 수능 score every university is a long shot, and the application screen folded them all away, so it opened with nothing to pick and a disabled Submit. The long shots now start open whenever fewer than three realistic options remain (and on the 수시 screen when none do).
 
 - **v6.5 (mood):** the pictures now match what just happened. Feedback was that the character smiled through everything; now a bad turn is dark and sad and a good one is warm (see Pictures that feel what happened above). A long illness (the common hospital event) counts as bad, not severe.

@@ -575,8 +575,13 @@
       case 10: case 11: { // ponytail or bun: pulled back from a soft hairline, a few loose wisps
         if (style === 10) {
           const tx = kid ? 0 : hw * 0.35;
-          back = P(D("M", tx - hd * 0.12, T + hd * 0.05, "Q", hw + hd * 0.25, T, hw + hd * 0.12, shY - hd * 0.1, "Q", hw + hd * 0.08, shY + hd * (kid ? 0.6 : 0.9), hw - hd * 0.05, shY + hd * (kid ? 0.7 : 1.05), "Q", hw - hd * 0.12, shY, tx + hd * 0.05, T + hd * 0.15, "Z"), col) +
-            P(D("M", hw + hd * 0.05, cy, "Q", hw + hd * 0.12, shY + hd * 0.6, hw - hd * 0.05, shY + hd * (kid ? 0.7 : 1.05), "Q", hw + hd * 0.02, shY, hw - hd * 0.02, cy, "Z"), "chCel") + O(tx, T + hd * 0.06, hd * 0.07, "chCel2");
+          // Seen from the front the tail hangs behind the right ear and over the shoulder. Its inner edge
+          // stays outside the face until it is above the ear: the jaw narrows below the eyes, so a tail
+          // that curved inside the head's width showed through as a dark band across the cheek.
+          const out = hw + hd * 0.03, tip = shY + hd * (kid ? 0.6 : 0.95);
+          back = P(D("M", tx - hd * 0.12, T + hd * 0.05, "Q", hw + hd * 0.22, T, hw + hd * 0.16, cy, "Q", hw + hd * 0.2, shY, hw + hd * 0.1, tip,
+            "Q", out, shY + hd * 0.2, out, cy - hh * 0.25, "Q", hw * 0.7, T + hd * 0.08, tx + hd * 0.05, T + hd * 0.15, "Z"), col) +
+            P(D("M", hw + hd * 0.1, cy, "Q", hw + hd * 0.17, shY, hw + hd * 0.1, tip, "Q", out, shY + hd * 0.2, out, cy, "Z"), "chCel") + O(tx, T + hd * 0.06, hd * 0.07, "chCel2");
         } else back = O(0, T - hd * 0.08, hd * 0.22, col) + P(D("M", hd * 0.02, T - hd * 0.28, "A", hd * 0.22, hd * 0.22, 0, 0, 1, hd * 0.12, T + hd * 0.1, "Q", hd * 0.1, T - hd * 0.1, hd * 0.02, T - hd * 0.28, "Z"), "chCel") + P(D("M", -hd * 0.14, T - hd * 0.15, "Q", -hd * 0.05, T - hd * 0.24, hd * 0.06, T - hd * 0.2), null, "chSheen", hd * 0.04);
         front = P(cap(hd * 0.05, 0.8, fr(-0.05), D("Q", hw * 0.8, fr(0.45), hw * 0.4, fr(0.55), "Q", 0, fr(0.68), -hw * 0.4, fr(0.55), "Q", -hw * 0.8, fr(0.45), -hw - 0.8, fr(-0.05))), col) +
           shade(hd * 0.05, 0.8, fr(-0.05)) + strands([D("M", -hw * 0.5, fr(0.5), "Q", -hw * 0.2, T, hw * 0.3, T - hd * 0.02), D("M", hw * 0.45, fr(0.5), "Q", hw * 0.3, T + hd * 0.05, -hw * 0.05, T - hd * 0.04)]) +
