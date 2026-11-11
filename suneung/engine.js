@@ -1751,6 +1751,12 @@
     // Good and bad events lean with your fortune (forced events, weight 100+, are never tagged).
     return e.luck ? w * Math.max(0.2, 1 + LUCK_BIAS * (g.luck || 0) * e.luck) : w;
   };
+  // Something that has already happened to you is less likely to happen again: the chance of a random
+  // event halves each time it fires (v6.6). Without this one life saw the same PC방 invitation seven
+  // times and the same cold eight, while most of the other events never came up. The count is
+  // flags["n-" + id] (fireEvent); saves from before it count from zero.
+  const REPEAT_FADE = 0.5;
+  const fadeOf = (id, g) => Math.pow(REPEAT_FADE, g.flags["n-" + id] || 0);
 
   function inquiryInfo(id) {
     return INQUIRY.soc.concat(INQUIRY.sci).find((x) => x.id === id);
@@ -1831,8 +1837,8 @@
     relaxed: { w: 2, lessons: 0.96, stress: -1, mot: -1 },
     tired: { w: 1, lessons: 0.92, stress: 1, mot: -1.5 },
   };
-  // Share of homeroom teachers who are women, by school level (an estimate).
-  const TEACHER_F = { elem: 0.75, mid: 0.68, high: 0.55, hs3: 0.55 };
+  // Share of teachers who are women, by school level (KEDI 교육기본통계, April 2026; data/korea-stats.md).
+  const TEACHER_F = { elem: 0.766, mid: 0.727, high: 0.603, hs3: 0.603 };
   // Where you meet someone when your school is boys' or girls' only.
   const OUTSIDE = ["hagwon", "church", "friend"];
   function pickW(r, list) {
@@ -2645,7 +2651,7 @@
         if (Math.abs(dd) >= 0.004) deltas[s] = Math.round(dd * 16.67 * 10) / 10;
       }
       this.addLog("log.month", Object.assign({ m: this.month, plan: Object.assign({}, plan), cost, d: deltas, cls: Math.round(lessons * 16.67 * 10) / 10 }, st.fr ? { fr: st.fr, sg: st.sg } : {}), "month");
-      if (this.status === "elem") this.addLog("log.teacher", { lvl: this.classLevel() }, "");
+      if (this.status === "elem") this.addLog("log.teacher", this.teacherNote(plan), "");
       if (this.status === "mid" && !drop) this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
       if (school && (this.month === 3 && months === 12 || this.month + months > 12)) {
@@ -2663,7 +2669,7 @@
       // does the bullying follow-up while it lasts.
       for (const e of EVENTS) if (!e.social && weightOf(e, this) >= 100 && this.stageFits(e) && e.when(this)) { seen.add(e.id); this.fireEvent(e); }
       for (let i = 0; i < n; i++) this.rollEvent(seen);
-      if ((plan.friends || 0) > 0 && rng() < 0.35 && !seen.has("pcbang") && this.grade >= 7 && this.clock - (this.flags["ev-pcbang"] || -99) >= 4) {
+      if ((plan.friends || 0) > 0 && rng() < 0.35 * fadeOf("pcbang", this) && !seen.has("pcbang") && this.grade >= 7 && this.clock - (this.flags["ev-pcbang"] || -99) >= 4) {
         this.fireEvent(EVENTS.find((e) => e.id === "pcbang"));
       }
       // The people in your life: at most one social event, from its own stream (after the main events,
@@ -2712,18 +2718,41 @@
     atKinder() { return this.isEarly() && this.age >= 3; }
     classRank() { return clamp(Math.round((1 - this.standing()) * 30) + 1, 1, 30); }
     classLevel() { const s = this.standing(); return s > 0.8 ? 3 : s > 0.4 ? 2 : 1; }
+    // The elementary report card's comment (행동특성 및 종합의견), written by this year's teacher about
+    // the year you had: your level, what your free time went to (hab), your strongest subject (best),
+    // and the teacher's style (sty: a tired teacher writes one line). A bullied child just seems
+    // quieter. Read-only: no rolls. Old log entries carry only lvl and keep the old one-liner.
+    teacherNote(plan) {
+      const p = { lvl: this.classLevel() };
+      const t = this.social && this.social.teacher;
+      if (t) { p.by = { s: t.s, x: t.x }; p.sty = t.sty; }
+      let study = 0, top = null;
+      for (const a of ACTIVITIES) {
+        const n = plan[a.id] || 0;
+        if (a.kind === "study") study += n;
+        else if (n > 0 && ["reading", "friends", "games", "exercise", "arts", "rest"].indexOf(a.id) >= 0 && (!top || n > plan[top])) top = a.id;
+      }
+      p.hab = this.bully ? "quiet" : top && plan[top] >= 2 ? top : study >= 3 || !top ? "study" : top;
+      let best = "kor";
+      for (const s of ["math", "eng", "inq1", "inq2"]) if (this.skills[s] > this.skills[best]) best = s;
+      p.best = best;
+      return p;
+    }
 
     rollEvent(seen) {
       // An event that just happened waits at least four months before it can happen again.
       const pool = EVENTS.filter((e) => !e.social && !seen.has(e.id) && weightOf(e, this) < 100 && this.stageFits(e) && e.when(this) && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
+      // Weights faded by how often each has already happened (REPEAT_FADE).
+      const w = pool.map((e) => weightOf(e, this) * fadeOf(e.id, this));
       let total = 0;
-      for (const e of pool) total += weightOf(e, this);
+      for (const x of w) total += x;
       let r = this.rng() * total;
       // Nothing that can happen: no event (otherwise the first weight-0 event would fire).
       if (!(total > 0)) return;
-      for (const e of pool) {
-        if (!(weightOf(e, this) > 0)) continue;
-        r -= weightOf(e, this);
+      for (let i = 0; i < pool.length; i++) {
+        const e = pool[i];
+        if (!(w[i] > 0)) continue;
+        r -= w[i];
         if (r <= 0) { seen.add(e.id); this.fireEvent(e); return; }
       }
     }
@@ -2733,6 +2762,7 @@
     // params(); the queue item keeps it as p so the text can name them, and the outcome carries it too.
     fireEvent(e, q) {
       this.flags["ev-" + e.id] = this.clock;
+      this.flags["n-" + e.id] = (this.flags["n-" + e.id] || 0) + 1;
       if (q === undefined) q = e.params ? e.params(this) : null;
       if (e.choices) this.queue.push(q ? { type: "event", id: e.id, choices: e.choices, p: q } : { type: "event", id: e.id, choices: e.choices });
       else {
@@ -3673,7 +3703,7 @@
       if (r() >= SOCIAL_RATE * Math.sqrt(this.turnMonths())) return;
       const pool = EVENTS.filter((e) => e.social && !e.forced && !seen.has(e.id) && this.stageFits(e) && e.when(this) && weightOf(e, this) > 0 && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
       if (!pool.length) return;
-      const e = pickW(r, pool.map((x) => [x, weightOf(x, this)]));
+      const e = pickW(r, pool.map((x) => [x, weightOf(x, this) * fadeOf(x.id, this)]));
       const q = e.who ? e.who(this, r) : {};
       if (q) { seen.add(e.id); this.fireEvent(e, q); }
     }
