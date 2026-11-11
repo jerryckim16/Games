@@ -3,7 +3,7 @@
 Reference data for the games. `korea-stats.md` collects statistics about Korean life from government and other verifiable public sources, so that features and weights in the Suneung Simulator (and later Korea-based games) can be checked against reality.
 
 - `korea-stats.md`: statistics by topic, with a Game mapping table and a Gaps list.
-- `korea-life/`: adult life past school, in five files (work and money; housing and places; family and relationships; health and later life; society and daily life), about 490 sourced figures with game ideas; see `korea-life/README.md`.
+- `korea-life/`: adult life past school, in five files (work and money; housing and places; family and relationships; health and later life; society and daily life), about 500 sourced figures with game ideas; see `korea-life/README.md`.
 - `schools.md`: counts of schools by level and type, and named lists of special schools (영재학교, 과학고, 외고, 국제고, 자사고, 국제중, 마이스터고) and medical schools. The full national school list (every operating elementary, middle and high school, from data.go.kr) is `schools/korea-schools-2026-09.csv`; see `schools/README.md`.
 
 ## Format

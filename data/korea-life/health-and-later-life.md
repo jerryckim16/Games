@@ -209,7 +209,7 @@ Retrieved: 2026-11-10
 - **Lifetime medical spending by age:** the NHIS lifetime-medical-cost analysis (share of lifetime spending after 65) was not reached. nhis.or.kr and hira.or.kr were unreachable.
 - **Long-term care grade distribution:** the split of grades 1–5 and the cognitive-support grade, from NHIS 노인장기요양보험통계, was not reached.
 - **Chronic disease count by age band:** only the 65+ average (2.2) was found.
-- **2027 health insurance premium rate:** not found in the MOHW press list as of retrieval.
+- **2027 health insurance premium rate:** not found in the MOHW press list as of retrieval (checked again 2026-11-11: the latest rate releases are for 2026, 7.19% and long-term care 0.9448%).
 - **NHIS check-up participation (75.6%) and crime victimisation (6,439 per 100,000):** both seen only in news. The primary sources, nhis.or.kr and index.go.kr / KICJ, were unreachable.
 - **Super-aged society date:** the MOIS release was not read directly.
 - **Official 과로사 count:** none exists. The occupational 뇌심질환 deaths row is a proxy.

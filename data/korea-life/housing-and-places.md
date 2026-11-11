@@ -103,7 +103,7 @@ Retrieved: 2026-11-10
 | What unmarried households want at marriage | 41.7% picture a 전세 apartment; most-wanted help: purchase loans 55.3%, 전세 loans 30.2%, public rental 10.8% | 2024 | Share of unmarried households | MOLIT 주거실태조사 | https://www.newsis.com/view/NISX20251116_0003404516 | unverified; newlyweds live in apartments 73.4% vs 53.1% of all households |
 
 ## 6. Moving between homes and regions
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -120,9 +120,10 @@ Retrieved: 2026-11-10
 | Districts gaining and losing most | highest net inflow rate: Sinan-gun (Jeonnam) 10.8%, Goesan-gun (Chungbuk) 6.7%; highest outflow: Gwacheon (Gyeonggi), Ulleung-gun, Mokpo; 96 of 228 districts gained | 2025 | Net migration rate | 국가데이터처, 2025년 국내인구이동통계 | https://mods.go.kr/boardDownload.es?bid=205&list_no=443278&seq=1 | official |
 | Why households moved into their current home | better facilities 47.2%; near work 30.6%; transport 25.5%; forced moves: lease ended 18.1%, too expensive 8.3%, redevelopment 3.7% | 2024 | Share of households (multiple answers) | MOLIT 주거실태조사 | https://www.newsis.com/view/NISX20251116_0003404516 | unverified |
 | Capital region population share, projected | 50.2% (2020) → 51.6% (2030) → 53.4% (2052) | 2020–2052 | Share of national population | 국가데이터처, 2022-based provincial projections, quoted in 「최근 20년간 수도권 인구이동」 | https://mods.go.kr/boardDownload.es?bid=205&list_no=438645&seq=5 | official |
+| People who moved, latest quarter | 2026 Q3: 1.383M movers (−10.2% on 2025 Q3), rate 10.8 per 100 a year (−1.2pp); within a province 65.7%; September 2026 alone 444k (−10.1%); net: Gyeonggi +10,062, Incheon +6,773, Chungnam +2,176; Seoul −11,368, Gyeongnam −2,442, 전남광주 −2,056 (Gwangju −1,723, Jeonnam −333) | 2026 Q3 | Movers; monthly and quarterly rates annualised | 국가데이터처, 2026년 9월 국내인구이동통계 (with 3/4분기) | https://mods.go.kr/boardDownload.es?bid=205&list_no=447667&seq=1 | official (attached pdf); newer than the 2025 annual rows above; moving keeps falling from the 2025 low |
 
 ## 7. Regions: decline, income, services and commuting
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -135,6 +136,7 @@ Retrieved: 2026-11-10
 | Commuting time | 30.8 minutes on average (28.4 in 2000, 31.2 in 2015); 15.3% commute an hour or more | 2020 | Minutes one way, commuters 12+ | Statistics Korea (2020 census) via 국민 삶의 질 지표 | https://www.index.go.kr/unify/idx-info.do?idxCd=8094 | official; longest in the OECD; 2025 census figures due end-Nov 2026 |
 | Road share of domestic passenger trips | 86.6% (car, bus, taxi); rail and subway back to 94% of pre-COVID volume | 2023 | Share of passenger transport | MOLIT via e-나라지표 (수송량 및 수송분담률) | https://www.index.go.kr/unity/potal/main/EachDtlPageDetail.do?idx_cd=1245 | official |
 | Capital region's overcrowding zone | 17.0% of the capital region's land holds 72.2% of its people (82.7% in 2002) | 2021 | Share in 과밀억제권역 | MOLIT via e-나라지표 (수도권과 지방현황) | https://www.index.go.kr/unity/potal/main/EachDtlPageDetail.do?idx_cd=2729 | official |
+| Gwangju–South Jeolla merger (전남광주통합특별시) | launched 2026-07-01; statistics report 전남광주 from July 2026 data, with the old 광주광역시 and 전라남도 kept as sub-items for comparison | 2026-07-01 | Administrative change | 국가데이터처 (2026년 9월 국내인구이동통계, 이용상 주의사항; 2026년 10월 고용동향, 일러두기); MOE (2026년 교육기본통계: April 2026 data use the pre-merger areas) | https://mods.go.kr/boardDownload.es?bid=205&list_no=447667&seq=1 | official (attached pdfs and hwpx); confirms the open question in Gaps; Gwangju and Jeonnam together had 3,210,448 residents (6.20%) at the 2025 census (calc from korea-stats §1: 1,431,903 + 1,778,545) |
 
 ## Game ideas
 
@@ -158,5 +160,5 @@ Retrieved: 2026-11-10
 - 반지하, 옥탑방 and 고시원 counts from the 2025 census 20% sample (due end-Nov 2026); the 2020 basement figure is news-only. Commuting time by province is in the same sample release.
 - Doctors per 1,000 by province (e-지방지표 values are script-loaded on KOSIS); confirm the 2024 province list from the KOSIS table.
 - Public transit mode share and car ownership by province; a 2020+ national household travel survey (KOTI) figure.
-- The REB file shows a new "전남광주" region from mid-2026 and drops the 5대광역시 and 8개도 groupings after 2026-06 (it now reports 4대광역시 and 7개도), and the MOIS page calls Yeonggwang "전남광주 영광군". This looks like a Gwangju–Jeonnam merger in 2026; confirm before modelling Gwangju and Jeonnam as separate regions.
+- The Gwangju–Jeonnam merger is now confirmed (전남광주통합특별시, launched 2026-07-01; section 7). Still open: whether a single 전남광주 region should replace the two in a region model, since most releases keep Gwangju and Jeonnam as sub-items and data before July 2026 are separate. (REB data for October 2026 were not out on 2026-11-11; the e-나라지표 file still ends at 2026-09.)
 - OECD housing comparisons (oecd.org returned 403).

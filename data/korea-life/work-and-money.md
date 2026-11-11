@@ -2,18 +2,19 @@
 
 Scope: official Korean statistics on jobs, pay, careers, retirement, household money, prices, taxes, pensions and poverty from the twenties to old age, for an adult-life extension of the Suneung Simulator. It extends `data/korea-stats.md` sections 2 (household income and wealth), 12 (economy shocks), 13 (after school), 14 (jobs) and 15 (after university) and does not repeat their rows; where a row here updates one there (a newer year, or an official source for a row marked unverified there), the Notes say so. Format and status tags follow `data/README.md`. Currency: 만원 = ₩10,000, 억 = ₩100,000,000.
 
-Sources read: attachments downloaded from mods.go.kr (국가데이터처) boards and read in full: the 2025 annual 고용동향 (`ssec2512.hwpx` and its 통계표 xlsx, bid 210 list 443017), the September 2026 고용동향 통계표 xlsx (list 447479), the May 2026 고령층 and 청년층 부가조사 PDFs (lists 446335, 446080), the August 2026 근로형태별 부가조사 PDF (list 447508), the 2024 임금근로일자리 소득 PDF (bid 11113 list 443648), the 2024 일자리이동통계 PDF (list 445347), the 2025 기업생멸행정통계 PDF (bid 11469 list 447531), the 2025 가계금융복지조사 hwpx and 통계표 xlsx (bid 215 list 439535), the 2025 annual and 2026 Q2 가계동향조사 releases (bid 214 lists 443727, 446633), the 2025 annual and October 2026 소비자물가동향 PDFs (bid 213 lists 442792, 447801), and `2025 통계로 보는 1인가구` hwpx and `2026 고령자 통계` PDF (bid 10820 lists 442130, 447294). From MOEL: the `2025년 6월 고용형태별근로실태조사` PDF (laborstat.moel.go.kr), the `2026년 10월 고용행정 통계로 본 노동시장 동향` PDF and the `2025년 12월 사업체노동력조사` PDF (moel.go.kr). MOHW press-release pages were read as page text. The Minimum Wage Commission's decision table was read as page text. OECD data came from the OECD SDMX API (sdmx.oecd.org) as CSV. Unreachable from this session: kosis.kr tables, nts.go.kr, law.go.kr, korea.kr (connection resets), nps.or.kr statistics (script-only pages); rows that depend on them are marked.
+Sources read: attachments downloaded from mods.go.kr (국가데이터처) boards and read in full: the 2025 annual 고용동향 (`ssec2512.hwpx` and its 통계표 xlsx, bid 210 list 443017), the September and October 2026 고용동향 통계표 xlsx (lists 447479, 447893) and the October PDF, the May 2026 고령층 and 청년층 부가조사 PDFs (lists 446335, 446080), the August 2026 근로형태별 부가조사 PDF (list 447508) and 비임금근로 부가조사 PDF (list 447820), the 2024 임금근로일자리 소득 PDF (bid 11113 list 443648), the 2024 일자리이동통계 PDF (list 445347), the 2025 기업생멸행정통계 PDF (bid 11469 list 447531), the 2025 가계금융복지조사 hwpx and 통계표 xlsx (bid 215 list 439535), the 2025 annual and 2026 Q2 가계동향조사 releases (bid 214 lists 443727, 446633), the 2025 annual and October 2026 소비자물가동향 PDFs (bid 213 lists 442792, 447801), and `2025 통계로 보는 1인가구` hwpx and `2026 고령자 통계` PDF (bid 10820 lists 442130, 447294). From MOEL: the `2025년 6월 고용형태별근로실태조사` PDF (laborstat.moel.go.kr), the `2026년 10월 고용행정 통계로 본 노동시장 동향` PDF and the `2025년 12월 사업체노동력조사` PDF (moel.go.kr). MOHW press-release pages were read as page text. The Minimum Wage Commission's decision table was read as page text. OECD data came from the OECD SDMX API (sdmx.oecd.org) as CSV. Bank of Korea figures (2026-11-11) came from the ECOS open API with its public sample key (ecos.bok.or.kr/api, StatisticSearch and KeyStatisticList). Unreachable from this session: kosis.kr tables, nts.go.kr, law.go.kr, korea.kr (connection resets), nps.or.kr statistics (script-only pages); rows that depend on them are marked.
 
 ---
 
 ## 1. Employment and labour-force participation by age and sex
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
 | Employment rate by age band | 15–19 6.1; 20–29 60.2; 30–39 80.8; 40–49 79.9; 50–59 77.5; 60+ 46.7 (65+ 39.5; 70+ 31.7); all 15+ 62.9; 15–64 69.8 | 2025 | % of population in the band employed (annual average) | 국가데이터처, 경제활동인구조사 (2025 연간 고용동향, 통계표 sheet 7) | https://mods.go.kr/boardDownload.es?bid=210&list_no=443017&seq=4 | official (xlsx); extends section 12 (2024 totals) |
 | Employment rate by age band, trend | 30–39: 75.3 (2021) → 80.8 (2025); 40–49: 77.3 → 79.9; 60+: 42.9 → 46.7; 20–29: 57.4 → 60.2 | 2021–2025 | % | same | same | official (xlsx) |
 | Employment rate by age band, latest month | 20–29 59.7; 30–39 81.6; 40–49 80.9; 50–59 79.2; 60+ 47.9; 15–64 70.6 | 2026-09 | % (not seasonally adjusted) | 국가데이터처, 2026년 9월 고용동향 (통계표 sheet 7) | https://mods.go.kr/boardDownload.es?bid=210&list_no=447479&seq=4 | official (xlsx) |
+| Employment rate by age band, October 2026 | 15–19 5.8; 20–29 58.5; 30–39 81.7; 40–49 81.0; 50–59 79.1; 60+ 47.8 (65+ 41.5; 70+ 33.9); 15–29 42.9 (−1.7pp); 15–34 55.4; 15–64 70.4 (+0.3pp); all 15+ 63.3 | 2026-10 | % (not seasonally adjusted) | 국가데이터처, 2026년 10월 고용동향 (통계표 sheet 7) | https://mods.go.kr/boardDownload.es?bid=210&list_no=447893&seq=4 | official (xlsx); newer month than the September row above (kept); employed 29,179k (+139k); youth 15–29 employment fell 196k on the year; health and social work +249k, accommodation and food −137k, farming −101k |
 | Labour-force participation by age band | 20–29 64.2; 30–39 83.0; 40–49 81.5; 50–59 78.9; 60+ 48.0; all 15+ 64.7 | 2025 | % of population in the labour force | 국가데이터처, 경제활동인구조사 (age sheets 2029…60) | https://mods.go.kr/boardDownload.es?bid=210&list_no=443017&seq=4 | official (xlsx) |
 | Employment and participation by sex | men: employment 70.6, participation 72.7, unemployment 2.8; women: 55.3, 56.9, 2.8 | 2025 | % of population 15+ | same (sheets 1.남자, 1.여자) | same | official (xlsx) |
 | Employment rate by sex and five-year age | men: 25–29 70.0; 30–34 86.0; 35–39 89.4; 40–44 91.3; 45–49 90.3; 50–54 88.8; 55–59 85.2; 60–64 73.1; 65–69 63.0; 70–74 49.5; 75+ 31.1. women: 25–29 73.6; 30–34 75.1; 35–39 71.0; 40–44 67.2; 45–49 69.9; 50–54 69.3; 55–59 66.4; 60–64 57.0; 65–69 45.2; 70–74 35.1; 75+ 22.2 | 2025 | % of population in the group | OECD, Employment and unemployment by five-year age group and sex (DF_LFS_INDIC), from Korea's LFS | https://sdmx.oecd.org/public/rest/data/OECD.ELS.SAE,DSD_LFS@DF_LFS_INDIC,1.1/all?startPeriod=2024 | official (API CSV); women's dip at 35–44 is the career-break "M curve"; totals match 국가데이터처 (15–64 69.8, 15–29 45.0) |
@@ -23,12 +24,13 @@ Retrieved: 2026-11-10
 | Wage workers by status | 22,318k wage workers: regular (상용) 16,636k (57.8% of all employed), temporary 4,817k (16.7%), daily 865k (3.0%) | 2025 | Thousand persons (annual average) | same (sheet 5) | same | official (xlsx); shares calc ÷ 28,769k; non-wage shares are in korea-stats section 14 |
 
 ## 2. Youth, NEET and "just resting" (쉬었음)
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
 | "Just resting" (쉬었음) by age | 15–29 428k (20–29 408k); 30–39 309k; 40–49 270k; 50–59 404k; 60+ 1,144k (70+ 213k); total 2,555k | 2025 | Thousand people outside the labour force who were "just resting" | 국가데이터처, 2025 연간 고용동향 (hwpx, 연령계층별 쉬었음) | https://mods.go.kr/boardDownload.es?bid=210&list_no=443017&seq=2 | official (hwpx); total = 15.8% of the economically inactive; makes the 30s figure in section 15 official |
 | "Just resting", trend | 2,351k (2023) → 2,467k (2024) → 2,555k (2025); 20–29: 371k → 389k → 408k | 2023–2025 | Thousand | same | same | official (hwpx) |
+| "Just resting" by age, October 2026 | total 2,511k (−69k, −2.7%; 15.4% of the inactive); 15–19 18k; 20–29 353k (−49k, −12.1%); 30–39 315k; 40–49 247k; 50–59 362k; 60+ 1,217k (70+ 279k, +28.1%); 15–29 371k; 15–34 548k | 2026-10 | Thousand | 국가데이터처, 2026년 10월 고용동향 (본문 4-다, pdf) | https://mods.go.kr/boardDownload.es?bid=210&list_no=447893&seq=1 | official (pdf); latest month; job-exam / job-search preparers 619k (+21k); discouraged job-seekers 340k (−27k) |
 | Job-exam / job-search preparers (취업준비자) | 632k (3.9% of the inactive) | 2025 | Thousand | same | same | official (hwpx) |
 | Youth (15–29) labour market | participation 47.2%; employment 43.8% (−2.4pp); unemployment 7.2% | 2026-05 | % | 국가데이터처, 2026년 5월 청년층 부가조사 | https://mods.go.kr/boardDownload.es?bid=210&list_no=446080&seq=3 | official (pdf) |
 | Time to first wage job; its tenure | 11.2 months (−0.1); first job lasted 1 year 6.8 months on average | 2026-05 | Mean, youth whose first job after leaving school was a wage job | same | same | official (pdf); supersedes the unverified 2025 rows in section 15 (11.3 months, 1y6.4m) |
@@ -86,7 +88,7 @@ Retrieved: 2026-11-10
 | Minimum wage history | 2017 ₩6,470 → 2018 7,530 (+16.4%) → 2019 8,350 (+10.9%) → 2020 8,590 → 2021 8,720 → 2022 9,160 → 2023 9,620 | 2017–2023 | Won/hour | same | same | official (page text) |
 
 ## 6. Job mobility, tenure, separations and unemployment
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -98,11 +100,12 @@ Retrieved: 2026-11-10
 | Moves between firm sizes | from a large firm: 37.0% to another large firm, 56.6% to an SME; from an SME: 11.8% to a large firm, 81.4% to an SME | 2023→2024 | % of movers | same | same | official (pdf) |
 | Separations, voluntary vs involuntary | 969k separations in the month: voluntary 272k; involuntary 631k (contract end, restructuring, dismissal); other 67k | 2025-12 | Persons in the month | MOEL, 2025년 12월 사업체노동력조사 | https://www.moel.go.kr/common/downloadFile.do?file_seq=20260101827&bbs_seq=18906&bbs_id=12&file_ext=pdf | official (pdf); one month only; involuntary is mostly temporary and daily jobs ending |
 | How long unemployment lasts | 1–2 months 58.5%; 3–5 months 29.8%; 6–11 months 10.7%; a year or more 1.0% | 2025 | % of unemployed by duration so far | OECD, Incidence of unemployment by duration (DF_DUR_I), from Korea's LFS | https://sdmx.oecd.org/public/rest/data/OECD.ELS.SAE,DSD_DUR@DF_DUR_I,1.0/all?startPeriod=2023 | official (API CSV); the four bands sum to 100, so Korea reports no band under 1 month; OECD-wide average duration 6.3 months (Korea not given) |
+| Unemployment rate by age, October 2026 | all 2.0% (−0.2pp; 602k unemployed); 15–19 3.7; 20–29 5.2; 30–39 2.3; 40–49 1.6; 50–59 1.2; 60+ 1.5; 15–29 5.2 (25–29 5.5); extended (고용보조지표3) 7.3% | 2026-10 | % (not seasonally adjusted) | 국가데이터처, 2026년 10월 고용동향 (통계표 sheets 9 and 12) | https://mods.go.kr/boardDownload.es?bid=210&list_no=447893&seq=4 | official (xlsx); youth 15–29 unemployment was 7.4% in Q1 2026 and 6.8% in July (seasonal: graduates enter in winter); extended rate 7.8% a year earlier |
 | Unemployment benefit (구직급여) recipients and pay | 629k recipients a month on average; ₩1,626k per recipient per month; ₩1.02 trillion a month | 2025 | Monthly averages | MOEL, 2026년 10월 고용행정 통계로 본 노동시장 동향 (table 3-1) | https://www.moel.go.kr/common/downloadFile.do?file_seq=20261100432&bbs_seq=20216&bbs_id=12&file_ext=pdf | official (pdf); October 2026: 571k recipients, ₩1,754k each |
 | Unemployment benefit rules | 60% of average daily wage; daily cap ₩68,100 from 2026-01-01 (was ₩66,000 since 2019); floor 80% of minimum wage (₩66,048 for an 8-hour day in 2026) | 2026 | Won/day | MOEL (고용보험법 시행령 제68조) via news | https://biz.sbs.co.kr/amp/article/20000263717 | unverified (news and search summaries); the law page could not be reached; floor calc = 10,320 × 8 × 0.8 |
 
 ## 7. Self-employment and business survival
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -112,9 +115,13 @@ Retrieved: 2026-11-10
 | Birth and death rates by industry | births highest in farming 17.4%, IT 17.2%, education 16.4%; deaths highest in restaurants & bars 14.1%, retail 12.7% | 2025 / 2024 | % of active firms | same | same | official (pdf) |
 | Firm owners by age | owners in their 50s 2,273k, 60s 1,877k, 40s 1,666k firms | 2025 | Active firms by representative's age | same | same | official (pdf) |
 | Self-employed households' finances | assets 7억 194만 (regular-employee households 6억 1,918만); financial debt to savings 92.1% (all households 68.2%) | 2025-03 | Per household, head self-employed | 국가데이터처, 2025 가계금융복지조사 | https://mods.go.kr/boardDownload.es?bid=215&list_no=439535&seq=8 | official (xlsx/hwpx); their income (8,000만/yr) is in korea-stats section 14 |
+| Non-wage workers (self-employed and unpaid family) | 6,625k (+71k), 22.7% of the employed: employers 1,481k (22.4%), own-account 4,303k (64.9%), unpaid family 841k (12.7%); men 62.9%, women 37.1% (women are 83.5% of unpaid family workers) | 2026-08 | Thousand | 국가데이터처, 2026년 8월 비임금근로 부가조사 | https://mods.go.kr/boardDownload.es?bid=210&list_no=447820&seq=2 | official (pdf); newer than the 2025 annual shares in korea-stats §14 (self-employed 19.5%, non-wage 22.4%) |
+| Non-wage workers by age and education | 15–29 205k; 30s 759k (+55k); 40s 1,214k (−35k); 50s 1,728k; 60+ 2,719k (41.0%; 70+ 965k); college graduates 41.6%, high school 41.2%, middle school or less 17.2% | 2026-08 | Thousand / % | same (1-나, 1-다) | same | official (pdf) |
+| How long businesses have run; plans | average 15 years 2 months (employers 12y 9m; own-account 15y 1m; 12y 2m outside farming); 86.6% plan to carry on, 2.5% to expand within a year, 5.0% to quit (reasons: personal 41.4%, poor prospects or slow trade 35.8%) | 2026-08 | Mean; % of non-wage workers (quit reasons: % of self-employed planning to quit) | same (2-가, 2-마) | same | official (pdf); 29.6% have run 20+ years, 5.1% under a year |
+| Starting a business: new self-employed | 305k started within the year (employers 17.8%); why: to run their own business 70.8%, could not find a wage job 21.7%; prepared 1–3 months 47.0%, under a year 86.5%; start-up money under ₩5M 35.2% (incl. none needed 18.5%), ₩5–20M 19.8%, ₩50–100M 17.3%; funded by own or family money 70.3%, banks 18.9%; hardest part: know-how 28.4%, raising money 24.1%, finding customers 23.6% | 2026-08 | % of those who started in the last 12 months | same (2-아) | same | official (pdf); the self-employed's national-pension coverage (incl. pensioners) is 83.3%, employers' industrial-accident insurance 65.5% |
 
 ## 8. Household finances by age of head (가계금융복지조사)
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -128,6 +135,8 @@ Retrieved: 2026-11-10
 | Financial debt to disposable income | 112.6% (financial debt 6,795만 ÷ disposable income 6,032만) | 2025-03 / 2024 income | Ratio, all households | same (hwpx table 3-16) | https://mods.go.kr/boardDownload.es?bid=215&list_no=439535&seq=6 | calc: 6,795 ÷ 6,032 |
 | Debt-service ratio | 22.0% of disposable income | 2024 | Repayments ÷ disposable income | same | same | calc: 1,328 ÷ 6,032 |
 | Debt to assets; financial debt to savings | 16.8%; 68.2% (under 40: 30.3% and 131.1%) | 2025-03-31 | Ratios | same | same | official (hwpx) |
+| Household credit (가계신용), national | ₩2,019.8 trillion (2026 Q2), of which household loans ₩1,891.3 trillion; ₩1,979.1 trillion at end-2025 (+3.0% on 2024); ₩1,342.5 trillion at end-2016 | 2016–2026 Q2 | ₩ trillion outstanding, loans plus card and instalment credit | Bank of Korea, ECOS 151Y001 (가계신용) | https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/151Y001/Q/2024Q3/2026Q2/1000000 | official (ECOS API); first figure above ₩2,000 trillion; the household-loan delinquency rate was 0.45% in 2026-08 (ECOS key statistics) |
+| Household credit to household disposable income | 131.2% (2025); 132.5% (2024); 151.3% (2021); 132.2% (2016) | 2016–2025 | Year-end 가계신용 ÷ 가계총처분가능소득 (national accounts) | — | https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/200Y101/A/2016/2025/101051 | calc: 1,979.1 ÷ 1,508.0 trillion (2025); 1,922.4 ÷ 1,450.6 (2024); 1,861.3 ÷ 1,230.1 (2021); 1,342.5 ÷ 1,015.4 (2016); not the BOK's own flow-of-funds ratio; household disposable income per person ₩29.18M (2025, ECOS 200Y101) |
 | Mean net worth by net-worth quintile | Q1 1,132만; Q2 1억 462만; Q3 2억 4,105만; Q4 4억 7,853만; Q5 15억 2,085만 | 2025-03-31 | Mean per household | same (xlsx, 순자산 5분위) | https://mods.go.kr/boardDownload.es?bid=215&list_no=439535&seq=8 | official (xlsx) |
 | Mean income by income quintile | Q1 1,552만; Q2 3,586만; Q3 5,805만; Q4 8,847만; Q5 1억 7,338만 | 2024 income | Mean annual household income | same (xlsx, 소득 5분위) | same | official (xlsx); Q1 and Q5 are in korea-stats section 2 |
 | Single-person households | income 3,423만/yr (46.1% of all households); assets 2억 2,302만; debt 4,019만 | 2024 income; 2025-03 assets | Per household | 국가데이터처, 2025 통계로 보는 1인가구 | https://mods.go.kr/boardDownload.es?bid=10820&list_no=442130&seq=8 | official (hwpx); 1-person households are 36.1% of households (2024) |
@@ -143,7 +152,7 @@ Retrieved: 2026-11-10
 | Net worth Gini | 0.625 (0.612 a year earlier) | 2025-03-31 | Gini of household net worth | same | same | official (hwpx) |
 
 ## 10. Spending and saving (가계동향조사)
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -152,9 +161,10 @@ Retrieved: 2026-11-10
 | Non-consumption spending | 107.6만/month (taxes, social insurance, interest, transfers) | 2025 | Won/month | same (xlsx 1.1) | https://mods.go.kr/boardDownload.es?bid=214&list_no=443727&seq=4 | official (xlsx) |
 | Income, disposable income, saving | income 529.5만/month (+4.5%); disposable 423.5만; consumption 293.2만; surplus ratio (saving) 30.8%; average propensity to consume 69.2% | 2026 Q2 | Won/month per household | 국가데이터처, 2026년 2/4분기 가계동향조사 | https://mods.go.kr/boardDownload.es?bid=214&list_no=446633&seq=1 | official (pdf) |
 | Single-person household spending | 168.9만/month (58.4% of all households' 289만); housing & utilities 18.4%, eating out 18.2% | 2024 | Won/month | 국가데이터처, 2025 통계로 보는 1인가구 | https://mods.go.kr/boardDownload.es?bid=10820&list_no=442130&seq=8 | official (hwpx) |
+| Household net saving rate (national accounts) | 8.6% (2025); 8.5 (2024); 7.0 (2023); 7.1 (2022); 9.5 (2021); 11.9 (2020, pandemic); 6.2 (2019); 4.8 (2018); 5.0 (2017); 6.5 (2016) | 2016–2025 | % of household net disposable income (가계순저축률) | Bank of Korea, ECOS 200Y101 (국민계정 주요지표) | https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/200Y101/A/2016/2025/8010400 | official (ECOS API); the survey surplus ratio above (30.8% of disposable income left after consumption) is a different, household-survey measure |
 
 ## 11. Prices and inflation
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -163,6 +173,8 @@ Retrieved: 2026-11-10
 | Food and living-cost prices | food items in the living-cost index 2021 4.7; 2022 6.9; 2023 5.6; 2024 3.6; 2025 3.2; fresh food 2024 +9.8, 2025 −0.6; fresh fruit 2024 +17.1 | 2021–2025 | % a year | same | same | official (pdf) |
 | Price rise by category | food & drink +3.2; eating out & lodging +3.1; housing & utilities +1.6; education +2.3; transport +1.3; health +1.1; communication −1.0 | 2025 | % on 2024 | same | same | official (pdf) |
 | Latest inflation | 2.8% (core ex food & energy 2.8%; industrial goods 4.4%; fresh food −6.2%); July–Sept: 2.8, 3.1, 2.9 | 2026-10 | % on the same month a year before | 국가데이터처, 2026년 10월 소비자물가동향 | https://mods.go.kr/boardDownload.es?bid=213&list_no=447801&seq=2 | official (pdf) |
+| Bank of Korea base rate | 3.00% since 2026-08-27; 2.75% from 2026-07-16; 2.50% before (unchanged from at least 2025-06 to 2026-07-15); 3.00% at the start of 2025 | 2025-01 → 2026-11-08 | % a year | Bank of Korea, ECOS 722Y001 (기준금리, daily) | https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/722Y001/D/20260826/20260831/0101000 | official (ECOS API; dates found by querying single days, so the 2025 cuts' exact dates were not read) |
+| Bank lending rates, new loans | household loans 4.96% (2026-09; 4.50% in 2026-01); mortgages 4.88% (4.29% in 2026-01); all loans 4.57%; deposits 3.45% | 2026-01 → 2026-09 | % a year, weighted average, new business at deposit banks | Bank of Korea, ECOS 121Y006 (예금은행 대출금리, 신규취급액) | https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/121Y006/M/202601/202609/BECBLA0302 | official (ECOS API); rates climbed from July with the base-rate rises |
 
 ## 12. Taxes and social insurance
 Retrieved: 2026-11-10
@@ -225,8 +237,8 @@ Retrieved: 2026-11-10
 - National pension average old-age pension: only news citing NPS 공표통계.
 - Income-tax table read only through search-result text of the NTS page; earned-income deduction and tax credits not collected, so no "take-home pay" table yet.
 - Employment-insurance rules (benefit rate, cap, duration by age and insured period) are unverified; the duration table (120–270 days) is missing.
-- Household debt relative to disposable income from the Bank of Korea (national-accounts basis) and the household saving rate (national accounts) were not read; only the survey-based ratios here.
+- The Bank of Korea's own household-debt-to-disposable-income ratio (flow-of-funds basis); section 8 has a calc from 가계신용 and national-accounts income instead.
 - Wages by occupation and named jobs over a career (e.g. a teacher's or civil servant's pay scale by step) are not here.
 - 2025 연금통계 median pension and pension by household; 2024 소득이동통계 primary release (section 15 is still news-based).
 - Wealth quintile cut-off values (only quintile means and within-quintile medians are published in the xlsx read).
-- Youth NEET in the OECD definition (15–29 not in employment, education or training).
+- Youth NEET in the OECD definition (15–29 not in employment, education or training): Korea is not in the OECD Education at a Glance transition dataset (DF_LSO_TRANS_ALL, checked 2026-11-11).

@@ -12,7 +12,7 @@ Currency: 만원 = ₩10,000, 억 = ₩100,000,000. Statistics Korea renamed its
 ---
 
 ## 1. Population and regions
-Retrieved: 2026-11-04 (2025 census rows read from the attached 통계표 xls itself)
+Retrieved: 2026-11-11 (2025 census rows read from the attached 통계표 xls itself; migration-background row from the attached pdf)
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -42,6 +42,7 @@ Retrieved: 2026-11-04 (2025 census rows read from the attached 통계표 xls its
 | Gangnam 3 districts (강남·서초·송파) share | 2.97% (1,537,489) | 2025-11-01 | (524,601 + 391,203 + 621,685) / 51,817,499 | — | — | calc |
 | Gyeonggi + Incheon share, 2025 | 32.93% | 2025-11-01 | (13,967,870 + 3,093,590) / 51,817,499 | — | — | calc |
 | Urban / rural split | 동부 81.1%; 읍부 10.1%; 면부 8.7% | 2025-11-01 | Share of population by area type | same (sheet 1) | same | official |
+| Children and young people with a migration background (이주배경 아동·청소년) | 787,134 aged 0–24 (+6.6%): 0–4 98,520; 5–9 121,086; 10–14 124,492; 15–19 154,087; 20–24 288,949; Korean nationals 376,347 (born to an immigrant parent 339,928), foreign nationals 410,787; by (parent's) nationality Vietnam 28.0%, China 15.7%, ethnic-Korean Chinese 11.4% | 2025-11-01 | Persons with a migration background (themselves or a parent), register census | 국가데이터처, 2025년 이주배경인구 통계 (등록센서스 방식, 표 12–14) | https://mods.go.kr/boardDownload.es?bid=203&list_no=447620&seq=7 | official (attached pdf); 2.81M people of all ages (5.4% of the population); foreigners among 15–19s are 44% of that age's migration-background group |
 
 ## 2. Household income and wealth
 Retrieved: 2026-10-28
@@ -111,7 +112,7 @@ Retrieved: 2026-11-04
 | English academies for preschoolers | 615 (2019) → 814 (2025); Seoul 229 | 2019 / 2025 | Academies | MOE | same | official; half-day (4h+) ones: 453 in 2017 |
 
 ## 5. Schools
-Retrieved: 2026-11-04
+Retrieved: 2026-11-11 (2026 rows read from the attached 교육기본통계 hwpx itself; the 2025 rows are kept for the trend)
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -127,10 +128,17 @@ Retrieved: 2026-11-04
 | Share of high schools by type | ~70% general (일반고), ~20% vocational (특성화고), ~10% autonomous + special-purpose | 2011–2021 | Share of schools | KEDI (월간 교육정책포럼) | http://edpolicy.kedi.re.kr/edpolicy/webzine/42/832662 | official (research institute); stable over the decade |
 | High school students, long run | ~2.0 million (2011) → 1.3 million (2021) | 2011 / 2021 | Students | KEDI | same | official |
 | Gifted schools (영재학교) | 8 schools, 789 places (in-quota) | 2025 entry | Schools; admissions | — | https://www.veritas-a.com/news/articleView.html?idxno=503012 | unverified (education news) |
-| International high schools / foreign language high schools / autonomous private high schools | 8 / 28 / 32 (15 of them in Seoul) | 2026-03-01 | Schools | MOE designation list, via news | https://edujb.com/news/articleView.html?idxno=8139 | unverified; MOE's own list (2024-03-01) is at https://www.moe.go.kr/boardCnts/view.do?boardID=316&boardSeq=98347&lev=0&s=moe&m=0302 |
+| International high schools / foreign language high schools / autonomous private high schools | 8 / 28 / 32 (15 of them in Seoul) | 2026-03-01 | Schools | MOE designation list, via news | https://edujb.com/news/articleView.html?idxno=8139 | unverified for the Seoul split; the counts 8 / 28 / 32 are confirmed official for 2026-04-01 by the 2026 교육기본통계 (표 1 note 3; row "High school students by type, 2026" below); MOE's own list (2024-03-01) is at https://www.moe.go.kr/boardCnts/view.do?boardID=316&boardSeq=98347&lev=0&s=moe&m=0302 |
 | Science high schools | 20 | recent | Schools | — | https://naeiledu.co.kr/31772 | unverified; confirmed by the 2025 official row below |
 | High schools by type | 2,387: general (일반고) 1,609; specialized (특성화고) 484 (vocational 458, alternative 26); special-purpose (특목고) 162 (science 20, gifted 8, arts 25, foreign language 28, sports 17, international 8, industry-demand/meister 56); autonomous (자율고) 132 (autonomous public 99, autonomous private 자사고 33) | 2025-04-01 | Schools (gifted schools counted as 특목고; the Air Force aviation high school excluded) | MOE / KEDI, 2025 교육기본통계 (별첨 주요 내용, 표 1 and its notes) | https://www.korea.kr/common/download.do?fileId=198230613&tblKey=GMN | official (attached hwpx); 2024: 1,642 / 487 / 160 / 91 |
 | High school students by type | 1,299,466: general 981,354 (75.5%); specialized 168,465 (13.0%); special-purpose 60,701 (4.7%); autonomous 88,946 (6.8%) | 2025-04-01 | Students | same (표 2) | same | official; shares calc; 2024: 1,010,078 / 171,378 / 59,535 / 63,334 (autonomous rose with new autonomous public schools) |
+| Students by level, 2026 | 5,362,281 (−3.4%): kindergarten 469,304 (−2.5%); elementary 2,219,370 (−5.4%); middle 1,338,750 (−2.3%); high 1,279,392 (−1.5%); other 55,465 | 2026-04-01 | Students | MOE / KEDI, 2026년 교육기본통계 (별첨 주요 내용, 표 2) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); newer-year row for the 2025 rows above; release page https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=107034&lev=0&m=020402&opType=N (2026-08-26) |
+| Students by province, 2026 | Seoul 781,809; Busan 312,033; Daegu 256,493; Incheon 331,528; Gwangju 170,867; Daejeon 159,091; Ulsan 131,257; Sejong 66,221; Gyeonggi 1,538,815; Gangwon 144,628; Chungbuk 168,082; Chungnam 241,447; Jeonbuk 181,026; Jeonnam 178,171; Gyeongbuk 254,778; Gyeongnam 366,928; Jeju 79,107 | 2026-04-01 | Kindergarten to high school students (incl. other schools) | same (표 3) | same | official (attached hwpx); every province fell, most in Jeonbuk and Gyeongnam (−4.5%), least in Incheon (−2.1%); Gwangju and Jeonnam still separate (counted before the 2026-07-01 merger); kindergarten children: Seoul 58,791, Gyeonggi 134,240, Busan 30,743, Jeju 4,747 |
+| Class size and students per teacher, 2026 | class size: kindergarten 15.6, elementary 18.6, middle 24.5, high 23.1 (general 24.5, specialized 17.5, special-purpose 20.8, autonomous 25.0); students per teacher: 8.5 / 11.6 / 11.5 / 10.0 | 2026-04-01 | Students per class; students ÷ teachers | same (표 11, 12) | same | official (attached hwpx); newer-year row; 2025: class size 15.6 / 19.3 / 24.9 / 23.4 |
+| Teachers by level and women's share, 2026 | 505,545 (−0.1%): kindergarten 55,320; elementary 191,472; middle 116,242; high 128,550; women 73.7% (kindergarten 98.3%, elementary 76.6%, middle 72.7%, high 60.3%) | 2026-04-01 | Regular and fixed-term teachers (incl. on leave) | same (표 6, 8) | same | official (attached hwpx); women at high schools rose from 54.8% in 2020 (72,386 of 132,104, calc) |
+| Principals and vice-principals who are women; teachers' average age | women 54.3% of 교감 and up: kindergarten 96.5%, elementary 49.4%, middle 47.3%, high 27.4% (high 15.8% in 2020); average age 41.8 (kindergarten 37.2, elementary 42.3, middle 42.3, high 42.5) | 2026-04-01 | % of 교장 + 교감; years | same (표 7, 9) | same | official (attached hwpx) |
+| Students with a migration background (이주배경학생) | 210,838 (+4.3%), 4.3% of students: elementary 118,655 (5.3%); middle 53,501 (4.0%); high 37,660 (2.9%); international-marriage families born in Korea 65.8%, foreign families 27.8%, arrived mid-childhood 6.4%; parents from Vietnam 30.9%, China (non-Korean) 26.7%, Philippines 8.1% | 2026-04-01 | Elementary to high school (incl. 각종학교) | same (표 4, 5) | same | official (attached hwpx); 'multicultural students' renamed 이주배경학생 in law; 82,536 in 2015; high schools +12.0% in a year |
+| High school students by type, 2026 | 1,279,392: general 951,695 (74.4%); specialized 165,606 (12.9%); special-purpose 61,066 (4.8%); autonomous 101,025 (7.9%) | 2026-04-01 | Students | same (표 2) | same | official (attached hwpx); shares calc; schools: 2,398 = general 1,594, specialized 485, special-purpose 163, autonomous 156 (자율형 공립 124, 자사고 32), see `schools.md` §2 |
 | International middle school applicants | 대원국제중 3,768 for 160 places (23.55 : 1); 영훈국제중 1,706 for 160 (≈10.7 : 1, calc); 청심 + 부산 8,260 together (8,597 a year earlier); 2025 entry: 대원 23.77, 청심 18.39, 영훈 10.23 : 1 | 2026 entry (applied Oct–Nov 2025) | Applicants per place | 종로학원 analysis of school announcements, via news | https://www.nocutnews.co.kr/news/6423767 | unverified (seen in search excerpts; the page returned 403 here) |
 
 ## 6. Private education (사교육)
@@ -186,13 +194,15 @@ Retrieved: 2026-11-04 (2025 and 2026 grade tables read from the attached KICE hw
 | GED pass rate, Seoul | 1st 85.6% (3,987 of 4,658); 2nd 90.5% (4,159 of 4,596) | 2025 | as above | SMOE | https://enews.sen.go.kr/news/view.do?bbsSn=188770&step1=3&step2=1 and https://enews.sen.go.kr/news/view.do?bbsSn=189728&step1=3&step2=1 | official (Seoul only) |
 
 ## 8. University admission
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
 | Total university places (195 KCUE member universities) | 345,179 (+4,245) | 2026 entry | Places | KCUE (대교협) | https://www.korea.kr/news/policyNewsView.do?newsId=148928790 | official |
 | Early (수시) vs regular (정시) admission | 수시 275,848 (79.9%); 정시 69,331 (20.1%) | 2026 entry | Places | KCUE | same | official; 정시 −122 |
 | How each round selects | 수시: 85.9% by school record (학생부); 정시: 92.2% by 수능 | 2026 entry | Share of the round's places | KCUE | same | official |
+| Freshman fill rate (신입생 충원율) | all higher education 88.2%; four-year universities 99.2% (309,146 of 311,487 places); universities of education 99.7%; junior colleges 97.5% (+5.5pp); other 49.6%; graduate schools 82.7% | 2026-04-01 | Entrants ÷ places | MOE / KEDI, 2026년 교육기본통계 (별첨 주요 내용, 표 31) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); 2024: 86.2 / 98.0 / 90.1%; entrants to four-year universities 357,188 (+2.9%) |
+| Students on leave, students deferring graduation, dropouts | on leave: 20.3% of enrolled (four-year universities 22.5%, junior colleges 21.6%); deferring the degree (학사학위취득유예): 25,130 (+21.0%), 1.3% of four-year enrolment; dropout rate 2025 school year: four-year 5.1%, junior college 9.0%, all 7.2% (192,492) | 2026-04-01 (dropouts: 2025 school year) | % | same (표 18, 19, 33) | same | official (attached hwpx); higher-education institutions: 416 (four-year 188, education 10, junior colleges 126) |
 | Capital-region share of 정시 places | 46,325 of 69,331 (66.8%) | 2026 entry | Places | KCUE (2027 plan release, 2026 column) | https://www.kcue.or.kr/_upload/news/2025/04/30/application_a31187fc315c1a7e050c363a5cc99410.pdf | calc from official figures |
 | Total places, 2027 entry | 345,717; 정시 68,134 (−1,197) | 2027 entry | Places | KCUE | same | official |
 | Medical school places (의대) | 4,610 (+1,497); capital region 1,326, elsewhere 3,284 | 2025 entry | Places (4,695 incl. one medical graduate school) | MOE | https://www.korea.kr/news/customizedNewsView.do?newsId=148929744 | official |
@@ -244,7 +254,7 @@ Retrieved: 2026-11-04
 | Suicide, 2025 | 14,144 deaths (−4.9%); 27.8 per 100,000; teens 8.6 (+7.5%, the only age group to rise) | 2025 | Deaths | Statistics Korea | https://www.korea.kr/briefing/policyBriefingView.do?newsId=156782877 | official |
 
 ## 10. School problems
-Retrieved: 2026-11-04
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -256,6 +266,7 @@ Retrieved: 2026-11-04
 | Dropout (학업중단) rate, K-12 | 1.1% (1.0% a year earlier) | 2024 school year | Share of students | MOE / KEDI (2025 교육기본통계) | https://www.kedi.re.kr/khome/main/announce/selectBroadAnnounceForm.do?selectTp=0&board_sq_no=3&article_sq_no=36108 | official |
 | Dropouts, K-12 | 54,516 (54,615 a year earlier) | 2024 school year | Students | MOE / KEDI | same | official; elementary/middle = deferral/exemption; high = 자퇴, expulsion, deferral, exemption |
 | Dropout rate by level | elementary 0.7% (17,235); middle 0.8% (10,216); high 2.1% (27,065 of 1,304,325) | 2024 school year | Dropouts / students | MOE / KEDI, 2025 교육기본통계 (별첨 주요 내용, 표 13) | https://www.korea.kr/common/download.do?fileId=198230613&tblKey=GMN | official (attached hwpx); 2023: 0.7 / 0.7 / 2.0%; 2022: 0.7 / 0.7 / 1.9% |
+| Dropout rate by level, 2025 school year | all 1.1% (53,617 of 5,015,310); elementary 0.7% (16,713); middle 0.7% (10,063); high 2.1% (26,841 of 1,299,466) | 2025 school year | Dropouts / students | MOE / KEDI, 2026년 교육기본통계 (별첨 주요 내용, 표 13) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); newer-year row; high school 1.4% in 2014, 1.7% in 2019 |
 
 ## 11. Health and accidents
 Retrieved: 2026-10-28
@@ -364,7 +375,7 @@ Retrieved: 2026-11-10
 ---
 
 ## Game mapping
-Retrieved: 2026-11-04 (real-figure and verdict columns; game values unchanged). The Suneung Simulator's constants (suneung/engine.js at commit 7846047) next to the closest real figure. "Life" means one simulated childhood from birth to High 3 unless noted.
+Retrieved: 2026-11-11 (real-figure and verdict columns; game values unchanged; this week: `TEACHER_F`, `CLASS_SIZE`, dropout from the 2026 교육기본통계). The Suneung Simulator's constants (suneung/engine.js at commit 7846047) next to the closest real figure. "Life" means one simulated childhood from birth to High 3 unless noted.
 
 | Game constant | Game value | Real figure | Verdict |
 |---|---|---|---|
@@ -390,7 +401,7 @@ Retrieved: 2026-11-04 (real-figure and verdict columns; game values unchanged). 
 | `jackpot` event (inheritance/lottery) | chance 0.37 per life | Lotto 1st prize 1 in 8,145,060 per ticket | lottery part far too frequent; inheritance has no data here |
 | `layoff` / `promotion` events | 0.8 each per life | unemployment 2.8%; 925,000 sole-proprietor closures a year (2024) | plausible; no per-family lifetime figure |
 | Bullying (`bullyWeight`) | ~3 in 10 lives; peaks in middle school | annual victimization 2.1–2.5%; highest in elementary (4.2–5.0%), then middle (1.6–2.1%), high (0.5–0.7%) | off: the real survey peaks in elementary school, not middle school |
-| Dropping out (`quitSchool`) | player's choice | K-12 dropout rate 1.1% a year (54,516 students, 2024); high school 2.1%, middle 0.8% | no game rate; use for NPCs/events |
+| Dropping out (`quitSchool`) | player's choice | K-12 dropout rate 1.1% a year (53,617 students, 2025 school year; 54,516 in 2024); high school 2.1%, middle 0.7% | no game rate; use for NPCs/events |
 | GED pass chance (`ged` event) | 78% + 15% × standing, +10% per retry (v4.9) | Seoul pass rates 85–90% per sitting (2024–25); GED holders sitting the 수능 19,255 (2026), double 2017; they score close to in-school takers (Korean grade 1 3.9% vs 3.3%) | matches (about 85% for an average student on the first try) |
 | English kindergarten (`engKinder` fee) | 154.5만/month, paid from household income (v4.9) | half-day English academy 154.5만/month (2024) | matches |
 | Private elementary (`privElem` fee) | 80만/month | no official figure found | no data |
@@ -406,8 +417,8 @@ Retrieved: 2026-11-04 (real-figure and verdict columns; game values unchanged). 
 | Kindergarten choice | ordinary kindergarten default | ages 3/4/5 in 2025: kindergarten 50.3 / 59.7 / 64.5%, daycare 42.5 / 32.4 / 29.1%, neither 7.2 / 7.9 / 6.4% (calc); preschool private-ed participation 47.6% | no game rate; `homeCare` (and English academies) fall in the ~7% in neither |
 | `SURNAMES` (classmates, teachers) | 김 21.5, 이 14.7, 박 8.4, 최 4.7, 정 4.3 ... 홍 1.1 (20 surnames, weights) | 2015 census shares (top four confirmed, top ten 63.9%) | matches the confirmed shares; the 20 cover about 77% of the population, the rest of Korea's surnames are left out |
 | `GIVEN` (classmates) | 20 boys' and 20 girls' names, weight 1/(rank + 4) | 2023–24 top five per sex (Supreme Court statistics, unverified) | top five match the reported order; the tail and the weights are estimates |
-| `CLASS_SIZE` (named classmates) | 6 per new elementary, middle and high school class | class sizes 19.3 / 24.9 / 23.4 (2025) | only the classmates who matter are named, not the whole class |
-| `TEACHER_F` (homeroom teacher is a woman) | elementary 75%, middle 68%, high 55% | no figure checked | estimate (see Gaps) |
+| `CLASS_SIZE` (named classmates) | 6 per new elementary, middle and high school class | class sizes 18.6 / 24.5 / 23.1 (2026; 19.3 / 24.9 / 23.4 in 2025) | only the classmates who matter are named, not the whole class |
+| `TEACHER_F` (homeroom teacher is a woman) | elementary 75%, middle 68%, high 55% | women among all teachers: elementary 76.6%, middle 72.7%, high 60.3% (2026-04-01, §5); homeroom teachers by sex not published | elementary matches; middle 4.7 and high 5.3 points low if homeroom teachers mirror all teachers |
 | `ARMY` (epilogue service lengths) | army 18, navy 20, air force 21, marines 18, social service 21, alternative 36, military doctor 38 months | 18 / 20 / 21 / 18; social service 21 (or 20 from 2026, disputed); alternative 36; 군의관 36 + training (section 15) | matches; 군의관 training length is an estimate |
 | `FIELD_EMP` (epilogue, job-hunt nudge by major) | the MOE rates by field, as logit offsets from 69.5% | graduate employment by field (section 13) | matches (used directly) |
 | `HUNT` rows (epilogue job-hunt chances) | per year of trying; big firm about 50% from SKY, 35% top Seoul, 20% mid, 10% other four-year (sensible GPA) | no official hiring rate by school tier; 9급 28.6 applicants a place; bar 51% per sitting; first job takes 11.3 months; 46.6–48.6% of the not-yet-employed have looked a year or more | tier rows are game estimates; the exam rows follow the official odds loosely (many applicants never sit) |
@@ -424,7 +435,7 @@ Retrieved: 2026-11-04 (real-figure and verdict columns; game values unchanged). 
 | sim.js 수시 applications | bots send 3–5 on a first try | 4.96 per applicant (2027) | close (bots skip schools below their 정시 level) |
 
 ## Gaps (no verifiable figure found yet)
-Retrieved: 2026-11-04. Filled this week and removed: province and district populations (2025 census), new care cases 2023–25, kindergarten vs daycare by age, high schools and students by type, 2024 time-use sleep by age, 2025–26 수능 grade cuts and 한국사 grade-1 shares.
+Retrieved: 2026-11-11. Filled this week and removed: women's share of teachers by level and the 2026 교육기본통계 attachments (read from moe.go.kr), and the single-sex share of schools (filled 2026-11-10 in `schools/README.md`); four stale duplicates of items filled on 2026-11-04 (kindergarten vs daycare, students by high-school type, 2024 sleep, graduates' wages by tier) were dropped. Filled 2026-11-04: province and district populations (2025 census), new care cases 2023–25, kindergarten vs daycare by age, high schools and students by type, 2024 time-use sleep by age, 2025–26 수능 grade cuts and 한국사 grade-1 shares.
 - Share of children (not households) in single-parent or grandparent households, and grandparent households since 2015 (expected in the 2025 census 20% sample results, due end-Nov 2026); children who lose a parent before 18.
 - Mean monthly pay by occupation (the 고용형태별근로실태조사 occupation tables are only on KOSIS, which blocks automated requests); occupation mix within each household-income fifth; single mothers' employment rate.
 - What a children's home spends on each child's education (tutoring, cram school) a month; how many care leavers choose to stay on to 24; why new cases and placements stopped adding up from 2022 (e-나라지표 1421).
@@ -434,15 +445,11 @@ Retrieved: 2026-11-04. Filled this week and removed: province and district popul
 - 수능 grade cuts and 한국사 grade-1 share before 2025 (same KICE attachments, older releases).
 - National 검정고시 totals and high-school-level pass rates: no national release found; each provincial office publishes its own (Seoul rows in §7; Gyeonggi's notices give no rates). GED holders sitting the 수능 are now in §7.
 - Admission rates by family income or region: only news citing Korea Student Aid Foundation data obtained by lawmakers (scholarship applicants only). Scores by region and school type are now in §7 (KICE 2026 analysis), but not admissions.
-- Kindergartens by province (in the 교육기본통계 tables on kess.kedi.re.kr; the 2025 summary has only kindergarten children by province); the 2026 교육기본통계 attachments (eiec.kdi.re.kr refused automated requests).
-- Women's share of teachers by school level (KEDI 교육기본통계 tables); share of middle and high schools that are boys' or girls' only.
+- Kindergartens (institutions) by province: the 2026 교육기본통계 summary has kindergarten children by province (§5) but not kindergartens; the full tables are on kess.kedi.re.kr, and the KEDI datasets on data.go.kr only link there.
+- Homeroom teachers by sex (only all teachers by sex are published, §5).
 - Year-by-year 2020–2022 name rankings (the Supreme Court statistics site); how many teenagers date, and how many keep a best friend from elementary school.
 - Graduates' wages and big-firm hiring rates by school tier (GOMS stopped after its 2019 wave); employment rate at 30–34; share of 30-year-olds living with their parents; 대졸자직업이동경로조사 tables themselves.
 - Primary pages for section 15 (mma.go.kr, korea.kr, mods.go.kr were unreachable from the session that added it).
-- Kindergarten vs daycare vs home-care shares by age.
-- Students by high-school type nationally (자사고, 외고, 과학고, 특성화고, 마이스터고) and their tuition; 국제중 competition ratios.
-- 2024 KYRBS sleep minutes and obesity rate; 2024 time-use sleep minutes by age.
-- Graduates' wages by school tier.
 - Per-university 수시 cuts (교과 내신 70% cuts, 종합 results) and 정시 percentile cuts for the women's universities and the other schools added in v6.0: published per department on adiga.kr and in university guides, not reachable from this session.
 - The national 학생부교과 count for 2027–28 (in the KCUE plan PDFs, not opened).
 - How many students qualify for 기회균형 (basic-livelihood and near-poverty households): the game assumes half of the bottom income fifth.

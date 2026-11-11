@@ -148,7 +148,7 @@ Students' smartphone overdependence is in `korea-stats.md` §9.
 ---
 
 ## 8. Migration and diversity
-Retrieved: 2026-11-10
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -158,6 +158,9 @@ Retrieved: 2026-11-10
 | Marriage migrants | 181,436 (women 145,731, men 35,705); China 60,681, Vietnam 41,779, Japan 16,214, Philippines 12,794 | 2024 | Persons | Ministry of Justice via e-나라지표 2819 | https://www.index.go.kr/unity/potal/main/EachDtlPageDetail.do?idx_cd=2819 | official |
 | Multicultural births and marriages | 13,416 births (+10.4%, first rise in 12 years), 5.6% of all births; 21,450 multicultural marriages (+5.0%); 7,992 divorces (8.8% of all) | 2024 | Per year | 국가데이터처, 2024 다문화 인구동태 통계 (2025-11-06) | https://www.newsis.com/view/NISX20251106_0003392639 | unverified (news citing the release) |
 | Emigration | 3,450 people reported emigrating (US 1,609, Canada 598, Australia 239, NZ 166); 4,393 in 2019 | 2025 | Persons per year (해외이주신고) | Ministry of Foreign Affairs via e-나라지표 1684 | https://www.index.go.kr/unity/potal/main/EachDtlPageDetail.do?idx_cd=1684 | official |
+| Population with a migration background (이주배경인구) | 2.81M (+95k, +3.5%), 5.4% of the population: foreign nationals 2,109k (75.1%); Koreans born to an immigrant parent 397k (14.1%); naturalised 256k (9.1%); other 47k; men 52.5% (foreigners' sex ratio 132.5); aged 15–64 81.9%, 65+ 5.8%; 30s 667k, 20s 607k; 10.0% of people in their 20s and 9.5% in their 30s have a migration background | 2025-11-01 | Persons, register census (themselves or a parent with a migration background) | 국가데이터처, 2025년 이주배경인구 통계 (등록센서스 방식) | https://mods.go.kr/boardDownload.es?bid=203&list_no=447620&seq=7 | official (attached pdf); 56.0% live in the capital region (Gyeonggi 32.3%, Seoul 17.1%, Incheon 6.7%), then Chungnam 6.6%, Gyeongnam 6.3% |
+| Children and young people with a migration background | 787k aged 0–24 (+6.6%), 28.0% of the migration-background population; by (parent's) nationality Vietnam 28.0%, China 15.7%, ethnic-Korean Chinese 11.4%; foreign nationals among them: Vietnam 25.3%, China 16.3%, ethnic-Korean Chinese 8.2%, Uzbekistan 7.8% | 2025-11-01 | Persons | same (표 12–14) | same | official (attached pdf); by age in korea-stats §1; at school: 210,838 migration-background students in 2026 (4.3%, korea-stats §5) |
+| Foreign students at Korean universities | 307,464 (+21.3%): degree courses 223,191 (7.3% of all enrolled students), language and other courses 84,273; from Vietnam 31.5%, China 25.7%, Uzbekistan 6.8%, Nepal 6.5%, Mongolia 5.6% (degree students: China 31.7%, Vietnam 26.0%) | 2026-04-01 | Students | MOE / KEDI, 2026년 교육기본통계 (별첨 주요 내용, 표 22–24) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); 208,962 in 2024; foreign full-time faculty 4,374 (5.0%) |
 
 ---
 
@@ -175,7 +178,7 @@ Retrieved: 2026-11-10
 
 ## Gaps
 
-- Primary 2025 figures for foreign residents by nationality (immigration.go.kr and moj.go.kr refused connections; only a secondary site was read).
+- Primary 2025 figures for foreign residents by nationality (immigration.go.kr and moj.go.kr refused connections; only a secondary site was read). The 2025 register census now gives the official foreign-national total (2,109k, section 8) and nationalities for under-25s only.
 - Military: official 2026 soldiers' pay table, women's share of officers and NCOs (국방백서), the active-duty headcount (상비병력), and reserve-forces numbers (only the mobilisation pool was found). mma.go.kr and mnd.go.kr pages could not be read.
 - Religion after 2015: the 2025 census sample asks about religion, but results were not found.
 - Perceived discrimination (no official survey row found; 사회통합실태조사 and the National Human Rights Commission are candidates).
@@ -183,5 +186,5 @@ Retrieved: 2026-11-10
 - Voice-phishing, drink-driving, digital-sex-crime and gaming figures are from news; replace them with KNPA, KoROAD, MOGEF and KOCCA primary files.
 - Pet ownership from an official publication (MAFRA did not publish the share; the 2025 survey was not found).
 - SNS use rates by age, and online gambling or gaming-disorder prevalence (the 2025 internet-use survey release had no SNS-by-age table).
-- Multicultural children (school-age count) and multicultural households (MOGEF 다문화가족 실태조사 2024 not read).
+- Multicultural households (MOGEF 다문화가족 실태조사 2024 not read). The school-age count is now in section 8 and korea-stats §5.
 - OECD Better Life Index for Korea (oecd.org returned 403).

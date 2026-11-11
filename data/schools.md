@@ -36,7 +36,7 @@ Retrieved: 2026-10-29. calc: counted from `data/schools/korea-schools-2026-09.cs
 | High | 19 | 1433 | 950 | 2 |
 
 ## 1. Counts by level
-Retrieved: 2026-11-04
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -47,28 +47,32 @@ Retrieved: 2026-11-04
 | Kindergartens, elementary, middle and high schools | about 20,374 | 2025-04-01 | Schools | MOE / KEDI (2025 교육기본통계), via news | https://www.hangyo.com/mobile/article.html?no=105223 | calc: 20,480 (2024) − 106 (reported 2025 decline); confirmed by the official row above |
 | Kindergartens, elementary, middle and high schools | 20,233 (−140) | 2026-04-01 | Schools | MOE / KEDI (2026 교육기본통계) | https://eiec.kdi.re.kr/policy/materialView.do?num=285801 | official (excerpt) |
 | Students, kindergarten to high school | 5,362,281 (−189,007, −3.4%) | 2026-04-01 | Students | MOE / KEDI (2026 교육기본통계) | https://eiec.kdi.re.kr/policy/materialView.do?num=285801 | official (excerpt) |
-| Class size | kindergarten 15.6; elementary 18.6; middle 24.5; high 23.1 | 2026-04-01 | Students per class | MOE / KEDI, via news | https://hangyo.com/mobile/article.html?no=109001 | unverified (news) |
+| Schools by level, 2026 | 20,233: kindergartens 7,973 (−167); elementary 6,191 (−1); middle 3,301 (+9); high 2,398 (+11); other (special schools, 고등공민·고등기술·각종학교, broadcast schools) 370 (+8) | 2026-04-01 | Schools (incl. new and closed-for-now schools; excl. branch campuses and closed schools) | MOE / KEDI, 2026년 교육기본통계 (별첨 주요 내용, 표 1) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); makes the 2026 excerpt row above complete; release page https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=107034&lev=0&m=020402&opType=N; kindergartens were 8,930 in 2015 |
+| Higher-education institutions, 2026 | 416 (−5): four-year universities 188, universities of education 10, junior colleges 126, other 47 (industrial, broadcast, cyber, technical, 각종학교, 전공대학, in-company and polytechnic colleges), graduate-only 45; plus 1,263 graduate schools attached to universities | 2026-04-01 | Institutions | same (표 14, 15) | same | official (attached hwpx); closures are mergers: 강릉원주대 into 강원대; 거창·남해 도립대 into 국립창원대; 전남도립대 into 국립목포대; 원광보건대 into 원광대 |
+| Class size | kindergarten 15.6; elementary 18.6; middle 24.5; high 23.1 | 2026-04-01 | Students per class | MOE / KEDI, 2026년 교육기본통계 (별첨 주요 내용, 표 12) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); replaces the unverified news row (hangyo.com, same figures) |
 | 4-year universities and universities of education in the disclosure analysis | 193 | 2025-04 disclosure | Institutions (excl. cyber, polytechnic, graduate-only) | 한국대학교육협의회 (KCUE) / 대학알리미 analysis, via news | https://www.hangyo.com/news/article.html?no=104290 | unverified (news) |
 | Junior colleges in the disclosure analysis | 129 | 2025-04 disclosure | Institutions | KCUE / 대학알리미 analysis, via news | https://www.hangyo.com/news/article.html?no=104290 | unverified (news) |
 | 4-year universities and universities of education; junior colleges | 192; 125 (317 in all) | 2026-08 disclosure | Institutions in the analysis | KCUE | https://www.kcue.or.kr/_upload/news/2026/08/27/application_0638689fbb6c4a66776835c71c28b547.pdf | official (excerpt) |
 
-Counts by level and by province (elementary, middle, high) are now in section 0, from the national list. Kindergartens in total: 8,141 (2025, above). Still not found: kindergartens by province (in the 교육기본통계 tables on kess.kedi.re.kr).
+Counts by level and by province (elementary, middle, high) are now in section 0, from the national list. Kindergartens in total: 7,973 (2026-04-01) and 8,141 (2025), above. Still not found: kindergartens by province (in the 교육기본통계 tables on kess.kedi.re.kr).
 
 ## 2. High schools by type (counts)
-Retrieved: 2026-11-04
+Retrieved: 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
 | High schools by type (official) | 2,387: 일반고 1,609; 특성화고 484 (vocational 458, alternative 26); 특목고 162 (과학고 20, 영재학교 8, 예술고 25, 외국어고 28, 체육고 17, 국제고 8, 산업수요맞춤형고 = 마이스터고 56); 자율고 132 (자율형 공립고 99, 자율형 사립고 33) | 2025-04-01 | Schools (gifted schools counted as 특목고; 공군항공과학고 excluded) | MOE / KEDI (2025 교육기본통계, 별첨 주요 내용 표 1 notes) | https://www.korea.kr/common/download.do?fileId=198230613&tblKey=GMN | official (attached hwpx); confirms the news counts below for 2025 (자사고 33 in 2025 vs 32 reported for 2026) |
 | High school students by type | 일반고 981,354; 특성화고 168,465; 특목고 60,701; 자율고 88,946 (1,299,466 in all) | 2025-04-01 | Students | same (표 2) | same | official |
+| High schools by type, 2026 (official) | 2,398: 일반고 1,594; 특성화고 485 (vocational 458, alternative 27); 특목고 163 (과학고 20, 영재학교 8, 예술고 25, 외국어고 28, 체육고 17, 국제고 8, 산업수요맞춤형고 = 마이스터고 57); 자율고 156 (자율형 공립고 124, 자율형 사립고 = 자사고 32) | 2026-04-01 | Schools (공군항공과학고 excluded for security) | MOE / KEDI, 2026년 교육기본통계 (별첨 주요 내용, 표 1 and note 3) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); newer-year row; 일반고 −15 and 자율형 공립고 +25 in a year |
+| High school students by type, 2026 | 일반고 951,695; 특성화고 165,606; 특목고 61,066; 자율고 101,025 (1,279,392 in all) | 2026-04-01 | Students | same (표 2) | same | official (attached hwpx) |
 | Share of high schools by type | ~70% general (일반고), ~20% vocational (특성화고), ~10% autonomous and special-purpose | 2011–2021 | Share of schools | KEDI (월간 교육정책포럼) | http://edpolicy.kedi.re.kr/edpolicy/webzine/42/832 | official (also in korea-stats.md §5) |
 | Gifted schools (영재학교) | 8 | 2021 entry onward | Schools | Education news | https://www.localnaeil.com/News/View/642605 | unverified (news) |
 | Gifted schools, in-quota places | 789 | 2021 entry | Places | Education news | https://www.localnaeil.com/News/View/642605 | unverified (news) |
-| Science high schools (과학고) | 20 | 2016–2026 entries | Schools | Education news | https://www.ajunews.com/view/20150727092807703 | unverified (news) |
+| Science high schools (과학고) | 20 | 2016–2026 entries | Schools | Education news | https://www.ajunews.com/view/20150727092807703 | unverified (news) for the run of years; 20 is official on 2025-04-01 and 2026-04-01 (rows above) |
 | Science high schools | 22 (부천고 and 분당중앙고 added as 경기형 과학고) | 2027 entry | Schools | Education news | https://www.localnaeil.com/News/View/654855 | unverified (news) |
-| Foreign language high schools (외고) | 28 | 2026-03-01 | Schools | MOE designation list, via news | https://edujb.com/news/articleView.html?idxno=8139 | unverified (news) |
-| International high schools (국제고) | 8 | 2026-03-01 | Schools | MOE designation list, via news | https://edujb.com/news/articleView.html?idxno=8139 | unverified (news) |
-| Autonomous private high schools (자사고) | 32 (15 in Seoul) | 2026-03-01 | Schools | MOE designation list, via news | https://edujb.com/news/articleView.html?idxno=8139 | unverified (news) |
+| Foreign language high schools (외고) | 28 | 2026-04-01 | Schools | MOE / KEDI, 2026년 교육기본통계 (별첨 표 1 note 3) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); replaces the news row (MOE designation list via edujb.com/news/articleView.html?idxno=8139, 2026-03-01, also 28) |
+| International high schools (국제고) | 8 | 2026-04-01 | Schools | MOE / KEDI, 2026년 교육기본통계 (별첨 표 1 note 3) | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx); replaces the news row (edujb.com, 2026-03-01, also 8) |
+| Autonomous private high schools (자사고) | 32 (15 in Seoul) | 2026-04-01 (Seoul split 2026-03-01) | Schools | MOE / KEDI, 2026년 교육기본통계 (별첨 표 1 note 3); Seoul split: MOE designation list via news | https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55 | official (attached hwpx) for 32; the Seoul split (15) is still unverified (edujb.com/news/articleView.html?idxno=8139) |
 | Nationwide-admission 자사고 (전국단위) | 10 | 2023 | Schools | Education news (종로학원 analysis) | https://dhnews.co.kr/news/view/179520660371195 | unverified (news) |
 | Meister high schools (마이스터고) operating | 54, in 15 provinces | 2023–2026 | Schools | Education news | https://www.metroseoul.co.kr/article/20230704500290 | unverified (news) |
 | Meister high schools after the 2026 designations | 65 (6 new in June 2026, 3 of them conditional) | 2026-06 | Schools designated | MOE announcement, via news | https://www.hangyo.com/news/article.html?no=101428 | unverified (news) |
@@ -77,7 +81,7 @@ Retrieved: 2026-11-04
 Counts of 일반고, 특성화고, 자율형 공립고, 예술고 and 체육고 are now in the official row at the top. Not found: any count by province.
 
 ## 3. Named lists
-Retrieved: 2026-11-04. Each list says how complete it is. The Korean names are as NEIS gives them (고등학교 shortened to 고); no English names are given now, to avoid unchecked translations.
+Retrieved: 2026-11-11 (3.5, 3.7 and 3.9 updated with the 2026 교육기본통계 counts; the lists themselves are from 2026-11-04). Each list says how complete it is. The Korean names are as NEIS gives them (고등학교 shortened to 고); no English names are given now, to avoid unchecked translations.
 
 Source for every list in 3.1–3.5 and 3.7 (unless noted): each high school in `data/schools/korea-schools-2026-09.csv` was looked up by exact name (and office of education) in the NEIS school-information API (`https://open.neis.go.kr/hub/schoolInfo`, no key; fields `HS_SC_NM` school type and `SPCLY_PURPS_HS_ORD_NM` special-purpose track; NEIS load date 2026-04-23) on 2026-11-04. official (calc: classified and counted by us). All 2,402 schools were looked up; 2,396 matched (the 6 unmatched are four Jeju international schools, a farm-campus annex and a broadcast high school). NEIS types: 일반고 1,637; 특성화고 487; 특목고 159; 자율고 113 (public 74, private 39). Place is the first two parts of the road address.
 
@@ -175,7 +179,7 @@ Matches the official count of 8.
 
 ### 3.5 Autonomous private high schools (자사고): 39 private 자율고 in NEIS
 
-NEIS has one type, 자율고, for both 자율형 사립고 and 자율형 공립고; the 39 below are the private ones. The official count of 자율형 사립고 was 33 on 2025-04-01 (32 reported for 2026), so about six of these are private schools in another autonomous scheme or not yet updated in NEIS; which ones was not checked. Nationwide-admission (전국단위) marks are from news (https://dhnews.co.kr/news/view/179520660371195, unverified); the 7 of them outside the capital region filled 21.7% of 1,816 places with local students (2023, 종로학원 analysis). Seoul has 20 private 자율고 in NEIS (15 자사고 reported for 2026).
+NEIS has one type, 자율고, for both 자율형 사립고 and 자율형 공립고; the 39 below are the private ones. The official count of 자율형 사립고 was 33 on 2025-04-01 (32 on 2026-04-01, official: 2026 교육기본통계), so about six of these are private schools in another autonomous scheme or not yet updated in NEIS; which ones was not checked. Nationwide-admission (전국단위) marks are from news (https://dhnews.co.kr/news/view/179520660371195, unverified); the 7 of them outside the capital region filled 21.7% of 1,816 places with local students (2023, 종로학원 analysis). Seoul has 20 private 자율고 in NEIS (15 자사고 reported for 2026).
 
 | School | Place | Founding | NEIS track (계열) | Notes |
 |---|---|---|---|---|
@@ -235,7 +239,7 @@ Source: https://www.hankyung.com/amp/2020060985421. A 2025 article reports recor
 
 ### 3.7 Meister and industry-demand high schools (마이스터고 / 산업수요 맞춤형고): 53 in NEIS
 
-The official 2025 count is 56 산업수요맞춤형고, and news reports 65 after the June 2026 designations (some open from 2027; https://www.hangyo.com/news/article.html?no=101428, unverified). NEIS gives the track 산업수요 맞춤형 for most; 군산기계공업고 and 합덕제철고 have no track in NEIS and are included by their known status. 대구전자공고, 예산전자공고 and 경북소프트웨어고 convert from 2027 (news) and are not yet in this list.
+The official count is 57 산업수요맞춤형고 on 2026-04-01 (56 in 2025; 2026 교육기본통계, see §2), and news reports 65 after the June 2026 designations (some open from 2027; https://www.hangyo.com/news/article.html?no=101428, unverified). NEIS gives the track 산업수요 맞춤형 for most; 군산기계공업고 and 합덕제철고 have no track in NEIS and are included by their known status. 대구전자공고, 예산전자공고 and 경북소프트웨어고 convert from 2027 (news) and are not yet in this list.
 
 한국에너지마이스터고 (강원특별자치도 삼척시); 한국소방마이스터고 (강원특별자치도 영월군); 한국의료마이스터고 (강원특별자치도 원주시); 수원하이텍고 (경기도 수원시); 경기게임마이스터고 (경기도 안양시); 평택마이스터고 (경기도 평택시); 거제공업고 (경상남도 거제시); 한국나노마이스터고 (경상남도 밀양시); 삼천포공업고 (경상남도 사천시); 한국국제통상마이스터고 (경상북도 경주시); 한국반도체마이스터고 (경상북도 경주시); 금오공업고 (경상북도 구미시); 구미전자공업고 (경상북도 구미시); 경북바이오마이스터고 (경상북도 영천시); 한국원자력마이스터고 (경상북도 울진군); 포항제철공업고 (경상북도 포항시); 경북기계공업고 (대구광역시 달서구); 대구소프트웨어마이스터고 (대구광역시 달성군); 대구일마이스터고 (대구광역시 동구); 대구농업마이스터고 (대구광역시 수성구); 동아마이스터고 (대전광역시 동구); 대덕소프트웨어마이스터고 (대전광역시 유성구); 부산소프트웨어마이스터고 (부산광역시 강서구); 부산자동차마이스터고 (부산광역시 사하구); 부산해사고 (부산광역시 영도구); 부산기계공업고 (부산광역시 해운대구); 수도전기공업고 (서울특별시 강남구); 서울로봇고 (서울특별시 강남구); 미림마이스터고 (서울특별시 관악구); 서울도시과학기술고 (서울특별시 성북구); 현대공업고 (울산광역시 동구); 울산마이스터고 (울산광역시 북구); 울산에너지고 (울산광역시 북구); 인천전자마이스터고 (인천광역시 미추홀구); 인천해사고 (인천광역시 중구); 전남생명과학고 (전남광주통합특별시 강진군); 광주자동화설비마이스터고 (전남광주통합특별시 광산구); 광주소프트웨어마이스터고 (전남광주통합특별시 광산구); 한국항만물류고 (전남광주통합특별시 광양시); 여수석유화학고 (전남광주통합특별시 여수시); 완도수산고 (전남광주통합특별시 완도군); 군산기계공업고 (전북특별자치도 군산시); 김제농생명마이스터고 (전북특별자치도 김제시); 한국경마축산고 (전북특별자치도 남원시); 전북기계공업고 (전북특별자치도 익산시); 공주마이스터고 (충청남도 공주시); 연무마이스터고 (충청남도 논산시); 합덕제철고 (충청남도 당진시); 한국식품마이스터고 (충청남도 부여군); 아산스마트팩토리마이스터고 (충청남도 아산시); 충북반도체고 (충청북도 음성군); 한국바이오마이스터고 (충청북도 진천군); 충북에너지고 (충청북도 청주시).
 
@@ -303,10 +307,17 @@ Not found: each school's 2025 places (the +1,509 year) and the 수시/정시 spl
 
 ### 3.9 Universities
 
-Not listed yet. 대학알리미 (academyinfo.go.kr) has the official list of about 190 four-year universities with founding type and region; it was unreachable.
+The full list is not here yet: 대학알리미 (academyinfo.go.kr) has the official list of about 190 four-year universities with founding type and region, but it reset connections again on 2026-11-11, and the KEDI university datasets on data.go.kr (15050052, 15050056) only link to kess.kedi.re.kr.
+
+Official totals on 2026-04-01 (MOE / KEDI, 2026년 교육기본통계, 별첨 표 14–15, https://www.moe.go.kr/boardCnts/fileDown.do?m=020402&s=moe&fileSeq=aa48e83de6c2fd96bb7c3519dcdc3a55; official, attached hwpx): 188 four-year universities (182 under the Higher Education Act, plus 6 under their own laws), 2 industrial universities, 10 universities of education, 126 junior colleges, 41 graduate-only universities (+3 under their own laws), 18 cyber universities (+2 at junior-college level); the 126 junior colleges include 한국농수산대. The table names these groups in full:
+
+- Universities of education (교육대학, 10): 공주교육대, 광주교육대, 대구교육대, 부산교육대, 서울교육대, 경인교육대, 전주교육대, 진주교육대, 청주교육대, 춘천교육대.
+- Universities under their own laws (6): 한국과학기술원 (KAIST), 광주과학기술원, 대구경북과학기술원, 울산과학기술원, 한국전통문화대, 한국에너지공과대.
+- Industrial universities (산업대학, 2): 청운대, 호원대. Broadcast university: 한국방송통신대.
+- Mergers in the year to 2026-04-01: 국립강릉원주대 into 강원대 (four-year); 경남도립거창대 and 경남도립남해대 into 국립창원대, 전남도립대 into 국립목포대, 원광보건대 into 원광대 (junior colleges).
 
 ## 4. Notes and open questions
 
 - 국제중: in 2020 Seoul moved to end 대원 and 영훈's designation; one later article says the two now run as specialized curricula under their original school names. Their current status needs a primary source.
-- 자사고: a 2019–2021 policy planned to turn every 자사고 into a general school in 2025; the 2026 count of 32 suggests that was reversed, but the legal history was not checked.
+- 자사고: a 2019–2021 policy planned to turn every 자사고 into a general school in 2025; the official 2026-04-01 count of 32 자율형 사립고 (2026 교육기본통계) suggests that was reversed, but the legal history was not checked.
 - Counts in news articles depend on the date (designated vs operating, entry year vs school year). Each row gives the year the number describes.
