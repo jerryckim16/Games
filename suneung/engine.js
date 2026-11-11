@@ -1604,6 +1604,77 @@
     return Array.isArray(r) ? { key: "ev." + id + "." + r[0], p: r[1] } : { key: "ev." + id + "." + r, p: null };
   }
 
+  // ---------- tone (v6.5): how a result felt, for the pictures only ----------
+  // Every outcome carries tone: -2 (a parent dies, a divorce, a serious accident or illness, being dumped
+  // just before the exam), -1 (bad), 0 (neutral or mixed), +1 (good), +2 (great). It is worked out from
+  // what the event actually did: a snapshot before run() and another after. Nothing here reads the RNG
+  // or changes the game, so a life plays exactly as before; the art reads tone to set its light and the
+  // faces (see art.js, "mood (v6.5)"). Old saves have outcomes without tone; the art treats that as 0.
+  function toneSnap(g) {
+    const s = g.social;
+    return { stress: g.stress, motivation: g.motivation, health: g.health, money: g.money, fam: FAMILY_IDS.indexOf(g.family), parents: g.parents || "both",
+      bully: g.bully ? g.bully.lv : 0, school: g.school || "", lost: g.lostBlocks, partner: s ? s.partner : null };
+  }
+  // Overrides where the deltas mislead: by event id, or by id and result ("id.r0a"). Grief outweighs the
+  // insurance money; exam-night and exam-day results change no bars (they move examMods), so they are
+  // scored here; a few social results are mostly about a person, which the bars barely show.
+  const TONE_FIX = {
+    bereaved: -2, divorce: -2, parentill: -2, accident: -2, hospital: -2, layoff: -1, jeonse: -1, "care-found": -1,
+    jackpot: 2, promotion: 1, "care-sponsor": 1, greatteacher: 1, spark: 2, insight: 1,
+    "eve.r0a": -1, "eve.r0b": 1, "eve.r1a": 1, "eve.r1b": -1, "eve.r2": -1, "lunch.r0": 1, "lunch.r1a": -1, "lunch.r1b": 1, "lunch.r2": -1,
+    "examluck.sniffler": -1, "examluck.omr": -2, "examluck.guess": 1, "examluck.drilled": 2, "examluck.calm": 1,
+    "saju.r.great": 2, "saju.r.good": 1, "saju.r.even": 0, "saju.r.mixed": -1, "saju.r.rough": -1,
+    "bloom.up": 1, "bloom.down": -1, "bloom.mixed": 0,
+    "soc-birthday.r0": 1, "soc-moveaway": -1, "soc-breakup.r0": -1, "soc-breakup.r1": 0, "soc-reunion.r0": 1, "soc-date": 1, "soc-makeup": 1, "soc-playdate": 1,
+    "soc-gate": 1, "soc-rivalrank.rw": 1, "soc-rivalrank.rl": -1, "soc-rivalmock.rw": 1, "soc-rivalmock.rl": -1,
+    "ged.pass0": 2, "ged.pass1": 2, "ged.fail0": -1, "ged.fail1": -1, "olympiad.r0a": 2, "olympiad.r0b": -1, "prodigy.r0a": 2, "prodigy.r0b": -1,
+    "president.r0a": 2, "president.r0b": -1, "seteuk.r0": 1, sibling: 0, "firstword": 1, "firststeps": 1, "kinderplay": 1, "sportsday": 1, "festival": 1, "beach": 1,
+  };
+  // Choice events before you answer: how the question itself feels. Known hardships lean dark, the
+  // bad-luck events (luck: -1) too; anything else is neutral unless it's plainly a happy occasion.
+  const PROMPT_TONE = {
+    "bully-start": -1, "bully-on": -1, "bully-bad": -2, bully: -1, slump: -1, burnout: -1, insomnia: -1, "soc-fight": -1, "soc-breakup": -1,
+    rankshock: -1, "retaker-doubt": -1, lonely: -1, nag: -1, "phone-broke": -1, eve: 0, careleave: 0, dropout: -1,
+    "soc-birthday": 1, "soc-crush": 1, "soc-confessed": 1, "soc-date": 1, "soc-group": 1, newborn: 1, doljabi: 1, festival: 1, sportsday: 1,
+  };
+  // Small knocks: they darken their own picture but don't hang over the main scene afterwards.
+  const TONE_MINOR = new Set(["cold", "flu", "daycarecold", "bump", "nag", "soc-rivalmock", "soc-rivalrank", "eve", "lunch", "examluck", "family-money", "jung2", "insomnia", "phone-broke"]);
+  function promptTone(id) {
+    if (PROMPT_TONE[id] != null) return PROMPT_TONE[id];
+    const e = EVENTS.find((x) => x.id === id);
+    return e && e.luck ? Math.sign(e.luck) : 0;
+  }
+  // a: the snapshot before run(); the game is now the state after it.
+  function toneOf(g, a, id, res) {
+    const rest = res && res.key ? res.key.slice(("ev." + id + ".").length) : "";
+    const fix = TONE_FIX[id + "." + rest] != null ? TONE_FIX[id + "." + rest] : TONE_FIX[id];
+    if (fix != null) return fix;
+    const b = toneSnap(g);
+    // Losing whoever raised you: always the worst. Into care: the same.
+    if (b.parents !== a.parents) return -2;
+    let s = (a.stress - b.stress) / 8 + (b.motivation - a.motivation) / 8 + (b.health - a.health) / 10 + (b.fam - a.fam) * 1.5 - (b.lost - a.lost) * 0.6;
+    const dm = b.money - a.money;
+    if (dm) s += Math.sign(dm) * Math.min(1, Math.abs(dm) / 300000) * 0.5;
+    // Bullying: starting or getting worse is bad, still going is bad, ending is a relief.
+    if (a.bully && !b.bully) s += 2.5;
+    else if (b.bully) s -= 1 + (a.bully ? Math.max(0, b.bully - a.bully) * 1.5 : b.bully * 0.5);
+    // A fee the family can no longer pay sends you back to the public school.
+    if (a.school && b.school !== a.school) s -= 1;
+    // Love: a partner gained, or lost (in the exam year, the worst time for it).
+    if (!a.partner && b.partner != null) s += 2;
+    if (a.partner != null && b.partner == null) {
+      if (id === "soc-dumped" && (g.status === "hs3" || g.attempt > 1)) return -2;
+      s -= 2;
+    }
+    let t = s <= -4.5 ? -2 : s <= -0.8 ? -1 : s < 0.8 ? 0 : s < 3 ? 1 : 2;
+    const e = EVENTS.find((x) => x.id === id);
+    if (e && e.luck < 0) t = Math.min(t, -1);
+    if (e && e.luck > 0) t = Math.max(t, 1);
+    return t;
+  }
+  // The mean grade of the four relative subjects of a result (1 best, 9 worst).
+  const gradeAvg = (r) => (r.subjects.kor.grade + r.subjects.math.grade + r.subjects.inq1.grade + r.subjects.inq2.grade) / 4;
+
   function bump(g, d) {
     for (const k in d) g[k] = clamp(g[k] + d[k], 0, 100);
   }
@@ -2665,8 +2736,10 @@
       if (q === undefined) q = e.params ? e.params(this) : null;
       if (e.choices) this.queue.push(q ? { type: "event", id: e.id, choices: e.choices, p: q } : { type: "event", id: e.id, choices: e.choices });
       else {
+        const before = toneSnap(this);
         const res = outcome(e.id, e.run(this, null, q));
         if (q) res.p = Object.assign({}, q, res.p);
+        res.tone = toneOf(this, before, e.id, res);
         this.queue.push(q ? { type: "event", id: e.id, choices: 0, result: res, p: q } : { type: "event", id: e.id, choices: 0, result: res });
       }
     }
@@ -2692,11 +2765,66 @@
           else if (id === "guess") m.subj[s] = (m.subj[s] || 0) + 0.3;
           else if (id === "drilled") m.subj[s] = (m.subj[s] || 0) + 0.4;
           else m.subj[s] = (m.subj[s] || 0) - 0.6;
-          return { type: "event", id: "examluck", choices: 0, result: { key: "ev.examluck." + id, p: { s } } };
+          return { type: "event", id: "examluck", choices: 0, result: { key: "ev.examluck." + id, p: { s }, tone: TONE_FIX["examluck." + id] } };
         }
         x -= w;
       }
       return null;
+    }
+    // v6.5: the tone (-2…+2, see toneOf) of a results screen, for its picture: a mock or the 수능 against
+    // your recent sittings, a report card against your running average, 수시 and admission by whether you
+    // got in. Read-only; a screen it doesn't know is 0.
+    screenTone(top) {
+      top = top || this.queue[0];
+      if (!top) return 0;
+      const step = (d) => (d >= 1.5 ? 2 : d >= 0.5 ? 1 : d <= -1.5 ? -2 : d <= -0.5 ? -1 : 0);
+      if ((top.type === "mock" || top.type === "exam" || top.type === "report") && top.result && top.result.subjects) {
+        const r = top.result, now = gradeAvg(r);
+        const past = (this.mocks || []).filter((m) => m !== r && m.subjects).slice(-3).concat((this.history || []).filter((h) => h !== r && h.subjects).slice(-1));
+        let t;
+        if (past.length) t = step(past.reduce((a, m) => a + gradeAvg(m), 0) / past.length - now);
+        else t = now <= 2 ? 1 : now >= 6 ? -1 : 0;
+        // A first-class or a ruined 수능 says so whatever came before.
+        if (top.type !== "mock") t = now <= 1.5 ? Math.max(t, 2) : now >= 6.5 ? Math.min(t, -2) : t;
+        return Math.max(-2, Math.min(2, t));
+      }
+      if (top.type === "naesin" && top.result) {
+        const avg = top.result.avg, run = top.run != null ? top.run : avg;
+        return Math.max(-2, Math.min(2, step(run - avg) + (avg <= 1.6 ? 1 : avg >= 4 ? -1 : 0)));
+      }
+      if (top.type === "susiStage") return top.r && top.r.some((x) => x.pass) ? 1 : -1;
+      if (top.type === "susiResult") return top.results && top.results.some((r) => r.admitted) ? 2 : -1;
+      if (top.type === "offers") {
+        if (!top.offers || !top.offers.length) return -2;
+        // Into the most selective school you tried for: great; a fallback: still good.
+        const rank = (id) => UNIVERSITIES.findIndex((u) => u.id === id);
+        const best = Math.min.apply(null, top.offers.map(rank)), tried = Math.min.apply(null, (top.results || []).map((r) => rank(r.id)));
+        return best <= tried ? 2 : 1;
+      }
+      if (top.type === "birth") return 1;
+      return 0;
+    }
+    // v6.5: what still shows on your face after a bad turn, for the main scene: -2 (numb) right after a
+    // tone -2 result, -1 (sad) for the two turns after that, and right after a tone -1 result (small knocks,
+    // TONE_MINOR, aside) and the turn after it; else 0. Read from the log (old entries without tone count
+    // as 0), so old saves need nothing.
+    recentTone() {
+      const now = this.year * 12 + this.month, len = Math.max(1, this.turnMonths ? this.turnMonths() : 1);
+      const log = this.log || [];
+      let worst = 0;
+      for (let i = log.length - 1; i >= 0 && i >= log.length - 80; i--) {
+        const l = log[i];
+        if (!l || !l.t) continue;
+        const [y, m] = String(l.t).split("-").map(Number), ago = now - (y * 12 + m);
+        if (ago > len * 4) break;
+        const t = l.key === "log.event" && l.p && l.p.r ? l.p.r.tone : null;
+        if (t == null || t > -1 || (t > -2 && TONE_MINOR.has(l.p.id))) continue;
+        // Events are answered at the end of a turn and the clock then rolls on, so 1 is "just now".
+        const turns = Math.ceil(ago / len);
+        if (t <= -2 && turns <= 1) return -2;
+        if ((t <= -2 && turns <= 3) || turns <= 2) worst = -1;
+      }
+      return worst;
     }
     examEveEvent() { return { type: "event", id: "eve", choices: 3 }; }
     lunchEvent() { return { type: "event", id: "lunch", choices: 3 }; }
@@ -2709,10 +2837,12 @@
       let res;
       if (top.choices) {
         i = clamp(i | 0, 0, top.choices - 1);
+        const before = toneSnap(this);
         if (top.id === "eve") res = outcome("eve", this.resolveEve(i));
         else if (top.id === "lunch") res = outcome("lunch", this.resolveLunch(i));
         else res = outcome(top.id, EVENTS.find((e) => e.id === top.id).run(this, i, top.p || null));
         if (top.p) res.p = Object.assign({}, top.p, res.p);
+        res.tone = toneOf(this, before, top.id, res);
         this.addLog("log.event", top.p ? { id: top.id, c: i, r: res, q: top.p } : { id: top.id, c: i, r: res }, "event");
       } else {
         res = top.result;
@@ -3968,6 +4098,7 @@
     UNI_TIER, TIER_IDS, IN_SEOUL, FIELDS_FOR, COLLEGE_PLANS, ARMY, HUNT, JOB30, PAY_FIFTHS, ACHIEVEMENTS, EPI_ACH, EPILOGUE_HOOKS,
     skillScore: (theta) => clamp(Math.round(50 + theta * 16.67), 0, 100),
     NAESIN_CUTS, FIELDS, SUSI_MAX, meetsMin, minGrades,
+    promptTone, TONE_FIX,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Suneung = api;

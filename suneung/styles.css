@@ -88,6 +88,15 @@
   /* the share card */
   --a-cardBg: #f5f2eb; --a-cardPanel: #e7e1d4; --a-cardInk2: #1e2024; --a-cardMute: #78736a; --a-cardRule: #d6cfc0; --a-cardAccent: #9a4a3c;
   /* end of environments (v6.4) */
+  /* mood (v6.5): the grade a picture takes from what just happened (art.js grade(), moodTod, pool): cool and
+     grey when it's bad, near-dark at the worst, warm and golden when it's good; tears, a crying mouth, a blank
+     stare; mourning black and the funeral's white chrysanthemums. */
+  --a-mdCool: #4f5d70; --a-mdCoolOp: 0.4; --a-mdDark: #0c111c; --a-mdDarkOp: 0.62; --a-mdNightOp: 0.9; --a-mdWarm: #ffcf94; --a-mdWarmOp: 0.22;
+  --a-mdGold: #ffb46a; --a-mdGoldOp: 0.24; --a-lampCold: #cfdcec;
+  --a-chTear: rgba(214, 234, 250, 0.85); --a-chMouthIn: #4a2629; --a-chWhite2: #dcd8d2; --a-chIrisDull: #5a504a; --a-chMourn: #1f2024;
+  --a-chrysE: #f3f1e8; --a-chrysC: #d8cd8e; --a-chrysLeaf: #6d7f5f; --a-mournFrame: #1c1b1d; --a-mournRibbon: #111114; --a-altarE: #eceae2;
+  --a-exitE: #3fa36b; --a-incense: #b9a27a; --a-letterE: #f7f5ef;
+  /* end of mood (v6.5) */
   /* Artwork (art.js): scenes, the avatar and event illustrations. Dark mode turns day to dusk. */
   --a-sky: #a9dcff; --a-sky2: #e8f6ff; --a-night: #16224a; --a-night2: #34457e; --a-moon: #fff3c4;
   --a-star: #fff7d6; --a-sun: #ffcf4a; --a-cloud: #ffffff; --a-dusk: #ff9e7a; --a-dusk2: #ffd9a0;
@@ -220,6 +229,15 @@
     /* the share card */
     --a-cardBg: #16181d; --a-cardPanel: #262930; --a-cardInk2: #ecebe6; --a-cardMute: #8f8b84; --a-cardRule: #34373e; --a-cardAccent: #d98a6c;
     /* end of environments (v6.4) */
+    /* mood (v6.5): the grade a picture takes from what just happened (art.js grade(), moodTod, pool): cool and
+       grey when it's bad, near-dark at the worst, warm and golden when it's good; tears, a crying mouth, a blank
+       stare; mourning black and the funeral's white chrysanthemums. */
+    --a-mdCool: #0d1726; --a-mdCoolOp: 0.36; --a-mdDark: #000000; --a-mdDarkOp: 0.36; --a-mdNightOp: 0.5; --a-mdWarm: #ffb066; --a-mdWarmOp: 0.14;
+    --a-mdGold: #ff9f4d; --a-mdGoldOp: 0.16; --a-lampCold: #9db3cf;
+    --a-chTear: rgba(190, 215, 240, 0.8); --a-chMouthIn: #2a1416; --a-chWhite2: #bdb8b2; --a-chIrisDull: #4a423d; --a-chMourn: #141518;
+    --a-chrysE: #d9d7cf; --a-chrysC: #b6ab6e; --a-chrysLeaf: #4d5c44; --a-mournFrame: #0c0c0e; --a-mournRibbon: #050506; --a-altarE: #b9b7b0;
+    --a-exitE: #4fc282; --a-incense: #8f7d5c; --a-letterE: #d8d6cf;
+    /* end of mood (v6.5) */
     --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
     --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
     --a-homeLand: #7a6a2e; --a-muniLine: #4f6a52; --a-school: #ff7a63; --a-schNum: #1b1b1b;
@@ -351,6 +369,15 @@
   /* the share card */
   --a-cardBg: #16181d; --a-cardPanel: #262930; --a-cardInk2: #ecebe6; --a-cardMute: #8f8b84; --a-cardRule: #34373e; --a-cardAccent: #d98a6c;
   /* end of environments (v6.4) */
+  /* mood (v6.5): the grade a picture takes from what just happened (art.js grade(), moodTod, pool): cool and
+     grey when it's bad, near-dark at the worst, warm and golden when it's good; tears, a crying mouth, a blank
+     stare; mourning black and the funeral's white chrysanthemums. */
+  --a-mdCool: #0d1726; --a-mdCoolOp: 0.36; --a-mdDark: #000000; --a-mdDarkOp: 0.36; --a-mdNightOp: 0.5; --a-mdWarm: #ffb066; --a-mdWarmOp: 0.14;
+  --a-mdGold: #ff9f4d; --a-mdGoldOp: 0.16; --a-lampCold: #9db3cf;
+  --a-chTear: rgba(190, 215, 240, 0.8); --a-chMouthIn: #2a1416; --a-chWhite2: #bdb8b2; --a-chIrisDull: #4a423d; --a-chMourn: #141518;
+  --a-chrysE: #d9d7cf; --a-chrysC: #b6ab6e; --a-chrysLeaf: #4d5c44; --a-mournFrame: #0c0c0e; --a-mournRibbon: #050506; --a-altarE: #b9b7b0;
+  --a-exitE: #4fc282; --a-incense: #8f7d5c; --a-letterE: #d8d6cf;
+  /* end of mood (v6.5) */
   --a-sky: #31407a; --a-sky2: #6b5d8e; --a-night: #0b1230; --a-night2: #1f2b5a; --a-moon: #f4e7b0;
   --a-star: #fff1c0; --a-sun: #ffb45c; --a-cloud: #8a86b0; --a-dusk: #7a3d5c; --a-dusk2: #c06d5a;
   --a-homeLand: #7a6a2e; --a-muniLine: #4f6a52; --a-school: #ff7a63; --a-schNum: #1b1b1b;
@@ -658,6 +685,9 @@ table.grid td.l { text-align: left; }
 .art .sway-slow { animation: sway 7s ease-in-out infinite; transform-origin: center top; }
 .art .drift { animation: drift 14s ease-in-out infinite alternate; }
 .art .drift.slow { animation-duration: 22s; }
+/* v6.5: a crying mouth trembles a little. */
+.art .tremble { animation: tremble 0.5s steps(2) infinite; }
+@keyframes tremble { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0.25px, 0.15px); } }
 .art .float { animation: float 3.6s ease-in-out infinite; animation-delay: var(--del, 0s); }
 .art .bounce { animation: bounce 1.6s ease-in-out infinite; }
 /* The Pohang earthquake: cracks that shudder a few times, then stop. */
