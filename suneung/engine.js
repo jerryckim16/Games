@@ -592,6 +592,10 @@
   const ENG_DEDUCT = [0, 0, 0.8, 2.0, 3.5, 5.5, 8, 11, 14, 17]; // by English grade 1..9
   const UNI_BY_ID = Object.fromEntries(UNIVERSITIES.map((u) => [u.id, u]));
   const UNI_SLOPE = 0.7; // percentile points per logit: how quickly your odds move around the cut
+  // The 수시 screen's trap warning (susiTrap, v6.7): a pick you'd very likely get in 정시 anyway
+  // (SAFE_JEONGSI) at a school whose cut is TRAP_GAP percentile points or more below the best school
+  // your mock gives a fair chance.
+  const SAFE_JEONGSI = 0.85, TRAP_GAP = 4;
 
   function admissionScore(res) {
     const s = res.subjects;
@@ -1455,7 +1459,7 @@
       run: (g, i, q) => { g.closer(q.a.id, 10); bump(g, { stress: -3, motivation: 2 }); return "r"; } },
     // A birthday party (a kids' café in elementary school, a karaoke room in middle school).
     { id: "soc-birthday", social: true, anyStage: true, weight: 3, choices: 2, when: (g) => (g.atKinder() || g.inClass()) && g.grade <= 9,
-      who: (g, r) => { const p = g.friendPick(r, { here: true, min: 12 }); return p && { a: ref(p), t: g.grade >= 7 ? 1 : 0 }; },
+      who: (g, r) => { const p = g.friendPick(r, { here: true, min: 12 }); return p && { a: ref(p), t: g.grade >= 7 ? 1 : g.grade >= 5 ? 2 : 0 }; }, // t: 0 a kids' café party, 2 Elementary 5–6, 1 middle school
       run: (g, i, q) => {
         if (i === 0) { g.closer(q.a.id, 12); bump(g, { stress: -5, motivation: 2 }); return "r0"; }
         g.closer(q.a.id, -6); bump(g, { stress: 1 }); return "r1";
@@ -1491,7 +1495,7 @@
       } },
     // A friend who moved (or a best friend from an old school) keeps in touch.
     { id: "soc-letter", social: true, weight: 2, when: () => true,
-      who: (g, r) => { const p = g.friendPick(r, { here: false, min: 30, keep: true }); return p && { a: ref(p), t: g.grade >= 7 ? 1 : 0 }; },
+      who: (g, r) => { const p = g.friendPick(r, { here: false, min: 30, keep: true }); return p && { a: ref(p), t: g.grade >= 7 ? 1 : g.grade >= 5 ? 2 : 0 }; }, // t: 0 a kids' café party, 2 Elementary 5–6, 1 middle school
       run: (g, i, q) => { g.closer(q.a.id, 10); bump(g, { stress: -3, motivation: 1 }); return "r"; } },
     // Group study (스터디) with a studious friend.
     { id: "soc-study", social: true, weight: 2.5, choices: 2, when: (g) => g.grade >= 7 && (g.inClass() || g.status === "academy"),
@@ -1848,6 +1852,31 @@
   }
   // A name's weight by rank: the top names are common, the tail still turns up.
   const nameList = (sex) => GIVEN[sex].map((n, i) => [n, 1 / (i + 4)]);
+  // Whether a given name is the player's own (v6.7), so no classmate shares it: "your rival Seojun is
+  // 5th" reads as you. The player types a name in either script: 서준 / 김서준, or Seojun / Seo-jun Kim.
+  // The Latin check uses a bare Revised Romanization of the given name (no hyphens; strings.js does
+  // the display version).
+  const RR = {
+    i: ["g", "kk", "n", "d", "tt", "r", "m", "b", "pp", "s", "ss", "", "j", "jj", "ch", "k", "t", "p", "h"],
+    m: ["a", "ae", "ya", "yae", "eo", "e", "yeo", "ye", "o", "wa", "wae", "oe", "yo", "u", "wo", "we", "wi", "yu", "eu", "ui", "i"],
+    f: ["", "k", "k", "k", "n", "n", "n", "t", "l", "k", "m", "l", "l", "l", "p", "l", "m", "p", "p", "t", "t", "ng", "t", "t", "k", "t", "p", "t"],
+  };
+  function rrBare(word) {
+    let out = "";
+    for (const ch of word) {
+      const c = ch.charCodeAt(0) - 0xac00;
+      if (c < 0 || c > 11171) return null;
+      out += RR.i[Math.floor(c / 588)] + RR.m[Math.floor((c % 588) / 28)] + RR.f[c % 28];
+    }
+    return out;
+  }
+  function isOwnName(me, given) {
+    const raw = String(me || "").trim();
+    if (!raw || !given) return false;
+    if (raw === given || (raw.endsWith(given) && raw.length - given.length <= 2 && /^[가-힣]+$/.test(raw))) return true;
+    const rr = rrBare(given);
+    return !!rr && raw.toLowerCase().split(/[\s,.]+/).some((w) => w.replace(/[^a-z]/g, "") === rr);
+  }
   // What events and log entries carry to name someone: the name itself (strings.js romanizes it in English).
   const ref = (p) => (p ? { id: p.id, s: p.s, n: p.n, x: p.x } : null);
   const one = (p) => (p ? { a: ref(p) } : null);
@@ -2991,7 +3020,9 @@
           top.result = this.sitExam("mock", top.m);
           this.mocks.push(top.result);
           this.practice = clamp(this.practice + 0.03, 0, 1);
-          this.addLog("log.mock", { m: top.m, g: grades(top.result), sch: this.grade, pre: !this.track }, "mock");
+          // v6.7: an unusual paper says so in the log too (display only, from the stored result).
+          const hd = mockHeadline(top.result, null);
+          this.addLog("log.mock", Object.assign({ m: top.m, g: grades(top.result), sch: this.grade, pre: !this.track }, hd ? { hd: hd.key, hs: hd.s } : null), "mock");
           return;
         }
         if (top.type === "exam" && !top.result) {
@@ -3084,13 +3115,35 @@
     options() {
       const top = this.queue[0];
       if (!top || top.type !== "apply") return [];
-      // KAIST and POSTECH admit only in 수시, so they aren't listed.
+      return this.jeongsiOdds(top.score);
+    }
+    // Regular-admission odds for an admission score (the real one, or a mock's as an estimate). KAIST
+    // and POSTECH admit only in 수시, so they aren't listed. Read-only: no RNG.
+    jeongsiOdds(score) {
       return UNIVERSITIES.filter((u) => !u.susiOnly).map((u) => {
         const q = this.quotaFor(u);
         const blocked = u.sci && this.track !== "sci" ? "sci" : this.menBlocked(u) ? "women" : null;
-        const p = blocked ? 0 : admitChance(top.score + (q ? q.pts : 0), u, this.track);
+        const p = blocked ? 0 : admitChance(score + (q ? q.pts : 0), u, this.track);
         return { id: u.id, p, label: chanceLabel(p), blocked, quota: q ? q.kind : null };
       });
+    }
+    // The 수시 납치 trap (v6.7): an early pick at a school well below where your mock puts you in
+    // regular admission. An offer from it would rule out 정시, so the 수시 screen warns. Returns null or
+    // { pick, best, p }: the lowest such pick, the best school the mock gives a fair chance (55%+) in
+    // 정시, and that chance. Display only: no RNG, nothing changes.
+    susiTrap(picks, score) {
+      if (score == null || !picks || !picks.length) return null;
+      const odds = this.jeongsiOdds(score).filter((o) => !o.blocked);
+      const fair = odds.filter((o) => o.p >= 0.55).sort((a, b) => UNI_BY_ID[b.id].cut - UNI_BY_ID[a.id].cut)[0];
+      if (!fair) return null;
+      const bestCut = UNI_BY_ID[fair.id].cut;
+      let low = null;
+      for (const pk of picks) {
+        const u = UNI_BY_ID[pk.uni], o = odds.find((x) => x.id === pk.uni);
+        if (!u || !o || pk.free || o.p < SAFE_JEONGSI || u.cut > bestCut - TRAP_GAP) continue;
+        if (!low || u.cut < UNI_BY_ID[low].cut) low = pk.uni;
+      }
+      return low ? { pick: low, best: fair.id, p: fair.p } : null;
     }
     // Apply to up to three schools (가/나/다군). Returns the offers.
     apply(ids) {
@@ -3507,12 +3560,12 @@
       const x = o.x === "m" || o.x === "f" ? o.x : r() < 0.5 ? "m" : "f";
       const t1 = pickW(r, PERSONAS);
       const t2 = pickW(r, PERSONAS.filter((e) => e[0] !== t1));
-      // No two people in your class with the same given name.
+      // No two people in your class with the same given name, and nobody with yours (v6.7).
       let sur, given;
       for (let k = 0; k < 8; k++) {
         sur = pickW(r, SURNAMES);
         given = pickW(r, nameList(x));
-        if (!s.people.some((q) => q.n === given && (q.here || q.s === sur))) break;
+        if (!s.people.some((q) => q.n === given && (q.here || q.s === sur)) && !isOwnName(this.name, given)) break;
       }
       const th = r.normal() * 0.9 + (PERSONA_TH[t1] || 0) + (PERSONA_TH[t2] || 0) * 0.5 + (o.th || 0);
       const id = ++s.n;
@@ -4121,6 +4174,31 @@
     if (shifts[easiest] < -0.3) return { key: "easy", s: easiest };
     return { key: "normal", s: null };
   }
+  // A mock exam's headline (v6.7), only when a paper was unusual, so a big swing has a story: English
+  // (absolute grading) by the share of the year that got a 1 (real 수능 shares run 3.1–7.8%; in these
+  // mocks the middle half is 3.4–7.4%, and the cut-offs catch about 7% of papers at each end), else
+  // Korean or math when the paper's difficulty moved about two standard deviations (0.28 each). About
+  // one mock in five gets a headline.
+  // prev: an earlier sitting, to say how your own English moved with the paper. Display only: it reads
+  // the stored result and nothing else. Returns null or { key, s, share, a, b }.
+  const MOCK_ENG_HARD = 0.019, MOCK_ENG_EASY = 0.108, MOCK_SHIFT = 0.55;
+  function mockHeadline(res, prev) {
+    if (!res || !res.subjects || !res.shifts) return null;
+    const e = res.subjects.eng;
+    let h = null;
+    if (e && e.grade1Share != null && (e.grade1Share < MOCK_ENG_HARD || e.grade1Share > MOCK_ENG_EASY)) {
+      h = { key: e.grade1Share < MOCK_ENG_HARD ? "engHard" : "engEasy", s: "eng", share: Math.round(e.grade1Share * 1000) / 10 };
+      // Your own English moved two grades or more the same way as the paper.
+      const a = prev && prev.subjects && prev.subjects.eng ? prev.subjects.eng.grade : null;
+      if (a != null && (h.key === "engHard" ? e.grade - a >= 2 : a - e.grade >= 2)) { h.a = a; h.b = e.grade; }
+      return h;
+    }
+    for (const s of ["kor", "math"]) {
+      const x = res.shifts[s];
+      if (Math.abs(x) > MOCK_SHIFT && (!h || Math.abs(x) > Math.abs(res.shifts[h.s]))) h = { key: x > 0 ? "hard" : "easy", s };
+    }
+    return h;
+  }
 
   const api = {
     Game, ACTIVITIES, METHODS, STATUSES, FAMILIES, FAMILY_IDS, REGIONS, REGION_KINDS, SCHOOLS, TEMPERAMENTS, DOLJABI, SUBJECTS, SUBJECT_INFO, INQUIRY, UNIVERSITIES, MOCKS, JOB_PAY,
@@ -4128,7 +4206,7 @@
     UNI_TIER, TIER_IDS, IN_SEOUL, FIELDS_FOR, COLLEGE_PLANS, ARMY, HUNT, JOB30, PAY_FIFTHS, ACHIEVEMENTS, EPI_ACH, EPILOGUE_HOOKS,
     skillScore: (theta) => clamp(Math.round(50 + theta * 16.67), 0, 100),
     NAESIN_CUTS, FIELDS, SUSI_MAX, meetsMin, minGrades,
-    promptTone, TONE_FIX,
+    promptTone, TONE_FIX, mockHeadline,
   };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Suneung = api;

@@ -597,6 +597,8 @@
       "ev.saju.r.mixed.care": "\"Some storms, but they pass.\" She tucks a charm into your blanket. (Luck: a little unlucky.)",
       "ev.saju.r.rough.care": "\"A hard road. This one will have to be tough.\" The carers tell her to stop. (Luck: unlucky. Bad things happen more often.)",
       "ev.firstword.r.care": "Your first word! The carers argue for a week about whose name it was.",
+      "ev.doljabi.text.care": "Your first birthday at the home. The carers set out a little doljabi table in the playroom, and a few volunteers come with a cake: whatever you grab, the tradition goes, foretells your future.",
+      "ev.doljabi.r.stethoscope.care": "The stethoscope! The carers start calling you \"Doctor\" at bath time. (Science aptitude up.)",
       "ev.doljabi.r.money.care": "You grab the money, and the volunteers laugh. A sponsor tucks an envelope into your little hanbok. (₩300,000 now, more New Year's money.)",
       "log.sebae.care": (p, h) => "New Year's money from the staff and sponsors: +" + h.won(p.a) + ".",
       "move.care": "You live in a children's home: the home decides where you live until you leave care.",
@@ -681,7 +683,7 @@
         const res = h.t(p.r.key, p.r.p);
         return p.c == null ? res : h.t("ev." + p.id + ".text") + " → " + h.t("ev." + p.id + ".c")[p.c] + ". " + res;
       },
-      "log.mock": (p, h) => h.mock(p.m, p.sch) + ": " + h.grades(p.g, p.pre),
+      "log.mock": (p, h) => h.mock(p.m, p.sch) + ": " + h.grades(p.g, p.pre) + (p.hd ? " (" + ({ engHard: "a brutal English paper", engEasy: "an easy English paper", hard: "a killer " + h.sub(p.hs) + " paper", easy: "an easy " + h.sub(p.hs) + " paper" })[p.hd] + ")" : ""),
       "log.suneung": (p, h) => (p.y + 1) + " Suneung: " + h.grades(p.g) + " · standard-score total " + p.total,
       "log.apply": (p, h) => "Applications: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "admitted ✓" : "rejected ✗")).join(", "),
       "log.enroll": (p, h) => "March " + p.y + ": you enroll at " + h.uni(p.uni) + ". Exam life is over.",
@@ -865,6 +867,11 @@
       "mock.text": "A practice run at the real thing, graded against the whole country.",
       "mock.total": "Standard-score total: {n}",
       "mock.back": "Back to studying",
+      "mock.head.engHard": (p) => "A brutal English paper: only " + p.share + "% of the country got a 1. Grades fell across the board.",
+      "mock.head.engEasy": (p) => "An easy English paper: " + p.share + "% got a 1. One careless slip could cost a whole grade.",
+      "mock.head.hard": (p, h) => h.sub(p.s) + " was a killer paper: raw scores sank everywhere. Grades are relative, so a low raw score is not as bad as it looks.",
+      "mock.head.easy": (p, h) => h.sub(p.s) + " was unusually easy: raw scores were high everywhere, so a single slip could cost a grade.",
+      "mock.head.you": (p) => "Your English went from a " + p.a + " to a " + p.b + " with it.",
       "exam.title": "{y} Suneung",
       "exam.intro": "November {y}. You walk past the younger students cheering at the school gate, find your seat and put your watch on the desk.",
       "exam.period": (p, h) => "Period " + p.n + " · " + h.sub(p.s),
@@ -1495,6 +1502,8 @@
       "ev.saju.r.mixed.care": "\"풍파가 좀 있겠지만 지나가오.\" 할머니가 이불 속에 부적을 넣어 두셨다. (운: 조금 나쁨)",
       "ev.saju.r.rough.care": "\"험한 길이오. 아이가 강해야겠소.\" 선생님들이 그만하시라고 말렸다. (운: 나쁨. 나쁜 일이 더 자주 일어남)",
       "ev.firstword.r.care": "첫 말을 했다! 선생님들은 일주일 내내 그게 누구 이름이었는지 다툰다.",
+      "ev.doljabi.text.care": "보육원에서 맞는 첫 돌. 선생님들이 놀이방에 작은 돌상을 차리고, 자원봉사자 몇 분이 케이크를 들고 왔다. 무엇을 잡느냐로 아이의 미래를 점친다고 한다(돌잡이).",
+      "ev.doljabi.r.stethoscope.care": "청진기다! 선생님들이 목욕 시간마다 \"우리 의사 선생님\" 하고 부른다. (과학 적성 상승)",
       "ev.doljabi.r.money.care": "돈을 잡자 자원봉사자들이 웃음을 터뜨린다. 후원자 한 분이 작은 한복 주머니에 봉투를 넣어 준다. (지금 30만원, 세뱃돈 증가)",
       "log.sebae.care": (p, h) => "설날, 선생님들과 후원자에게 받은 세뱃돈: +" + h.won(p.a) + ".",
       "move.care": "보육원에서 지내는 동안에는 사는 곳을 보육원이 정합니다.",
@@ -1577,7 +1586,7 @@
         const res = h.t(p.r.key, p.r.p);
         return p.c == null ? res : h.t("ev." + p.id + ".text") + " → " + h.t("ev." + p.id + ".c")[p.c] + ". " + res;
       },
-      "log.mock": (p, h) => h.mock(p.m, p.sch) + ": " + h.grades(p.g, p.pre),
+      "log.mock": (p, h) => h.mock(p.m, p.sch) + ": " + h.grades(p.g, p.pre) + (p.hd ? " (" + ({ engHard: "불영어", engEasy: "물영어", hard: h.sub(p.hs) + " 고난도", easy: h.sub(p.hs) + " 저난도" })[p.hd] + ")" : ""),
       "log.suneung": (p, h) => (p.y + 1) + "학년도 수능: " + h.grades(p.g) + " · 국수탐 표준점수 합 " + p.total,
       "log.apply": (p, h) => "정시 지원: " + p.r.map((r) => h.uni(r[0]) + " " + (r[1] ? "합격 ✓" : "불합격 ✗")).join(", "),
       "log.enroll": (p, h) => p.y + "년 3월, " + h.uni(p.uni) + "에" + " 입학했다. 수험 생활 끝.",
@@ -1758,6 +1767,11 @@
       "mock.text": "전국 수험생과 함께 치르는 실전 연습입니다.",
       "mock.total": "국수탐 표준점수 합: {n}",
       "mock.back": "다시 공부하러",
+      "mock.head.engHard": (p) => "\"불영어\": 영어 1등급이 전국 " + p.share + "%뿐이었다. 다들 등급이 떨어졌다.",
+      "mock.head.engEasy": (p) => "\"물영어\": 영어 1등급이 " + p.share + "%나 나왔다. 실수 하나에 등급이 갈린다.",
+      "mock.head.hard": (p, h) => "이번 모의고사는 " + josa(h.sub(p.s), "이", "가") + " 유난히 어려웠다. 원점수는 다들 낮다. 등급은 상대평가라 보기만큼 나쁘지는 않다.",
+      "mock.head.easy": (p, h) => "이번 모의고사는 " + josa(h.sub(p.s), "이", "가") + " 유난히 쉬웠다. 원점수는 다들 높고, 한 문제 실수가 등급을 가른다.",
+      "mock.head.you": (p) => "내 영어도 " + p.a + "등급에서 " + p.b + "등급으로 함께 움직였다.",
       "exam.title": "{y}학년도 수능",
       "exam.intro": "{y}년 11월. 교문 앞 후배들의 응원을 지나 자리를 찾고, 책상 위에 시계를 올려놓는다.",
       "exam.period": (p, h) => p.n + "교시 " + h.sub(p.s),
@@ -2187,6 +2201,8 @@
       (p.free ? " (KAIST doesn't count)" : "") + ". Your school grades average " + (p.a != null ? p.a.toFixed(2) : "—") + "; your school record scores " + p.r + " out of 100." + (p.est != null ? " Your September mock would give a regular-admission score of " + p.est.toFixed(1) + "." : ""),
     "susi.warn": "⚠ Any early-admission offer, even off a waitlist, rules out regular admission (jeongsi) this year: you take an early place or none. Don't apply to a school you'd be unhappy at.",
     "susi.retake": "As a retaker you apply with the school grades and record you left school with. Some school-grades routes take only this year's graduates.",
+    "susi.trap": (p, h) => "⚠ Your September mock puts " + h.uni(p.best) + " within reach in regular admission (about " + p.p + "%). An early offer from " + h.uni(p.pick) + " would rule that out.",
+    "susi.below": "Your mock already clears this in regular admission",
     "susi.ged": "Without a school record (you left school), only essay exams are open.",
     "susi.types": "School grades: your average decides, often with minimum Suneung grades. Record review: the whole record, sometimes with an interview. Essay: an exam on campus, a long shot, usually with minimum Suneung grades.",
     "susi.chance": "{p}%",
@@ -2276,6 +2292,8 @@
       (p.free ? "(카이스트는 횟수에 안 들어감)" : "") + "까지 쓸 수 있다. 내신 평균 " + (p.a != null ? p.a.toFixed(2) : "—") + "등급, 학생부 평가 " + p.r + "점." + (p.est != null ? " 9월 모평 기준 정시 환산 점수는 " + p.est.toFixed(1) + "점." : ""),
     "susi.warn": "⚠ 수시에 한 곳이라도 합격하면(추가합격 포함) 올해 정시는 지원할 수 없다(수시 납치). 가고 싶지 않은 학교에는 쓰지 말 것.",
     "susi.retake": "재수생은 졸업할 때의 내신과 학생부로 지원한다. 일부 교과전형은 졸업예정자만 받는다.",
+    "susi.trap": (p, h) => "⚠ 9월 모평 성적이면 정시로 " + josa(h.uni(p.best), "을", "를") + " 노려볼 만하다(합격 가능성 약 " + p.p + "%). " + h.uni(p.pick) + "에 수시로 합격하면 정시는 쓸 수 없다.",
+    "susi.below": "모평 성적이면 정시로도 충분한 곳",
     "susi.ged": "학생부가 없어서(자퇴) 논술만 지원할 수 있다.",
     "susi.types": "학생부교과: 내신 평균이 좌우, 수능최저가 붙는 곳이 많다. 학생부종합: 학생부 전체, 면접이 있는 곳도. 논술: 대학에서 치르는 시험, 바늘구멍이고 대개 수능최저가 있다.",
     "susi.chance": "{p}%",
@@ -2460,7 +2478,9 @@
       else if (nx && !nx.raw && x.f === 8 && nx.i === 5) fin = "l"; // ㄹ+ㄹ reads ll
       out += (init === "r" && k === 0 ? "" : init) + RR_M[x.m] + fin;
     }
-    out = out.replace(/^([^A-Za-z]*)([a-z])/, (m, a, b) => a + b.toUpperCase());
+    // Every word starts with a capital: "Korea Haeyang Meister", not "Korea haeyang" (a stem like
+    // 한국 → Korea leaves a space before the romanized rest).
+    out = out.replace(/(^|\s)([^A-Za-z\s]*)([a-z])/g, (m, s, a, b) => s + a + b.toUpperCase());
     return out;
   }
   const NAME_LEVEL = [["초등학교", "Elementary School"], ["중학교", "Middle School"], ["고등학교", "High School"], ["학교", "School"]];
@@ -2715,7 +2735,8 @@
     "ev.soc-seatmate.r.academy": (p, h) => "At the retake academy you sit beside " + h.full(p.a) + ", a retaker too. Every morning at 7 you share the heater and a quiet nod.",
     "ev.soc-seatmate.r.uni": (p, h) => "At your first lecture " + h.full(p.a) + " saves you a seat. " + cap(h.he(p.a)) + " has no idea you're secretly studying for the Suneung again.",
     "ev.soc-playdate.r": (p, h) => cap(h.nm(p.a)) + " comes over for a playdate. You build a block tower taller than both of you, then knock it down together. Best day ever.",
-    "ev.soc-birthday.text": (p, h) => (p.t ? cap(h.nm(p.a)) + "'s birthday is this weekend. A few of you are planning a karaoke room and a convenience-store cake." :
+    "ev.soc-birthday.text": (p, h) => (p.t === 2 ? cap(h.nm(p.a)) + "'s birthday is on Saturday: tteokbokki after school, an hour at the coin karaoke, and a sleepover if everyone's parents say yes." :
+      p.t ? cap(h.nm(p.a)) + "'s birthday is this weekend. A few of you are planning a karaoke room and a convenience-store cake." :
       cap(h.nm(p.a)) + " is having a birthday party at a kids' café on Saturday, and the invitation has your name on it in glitter pen."),
     "ev.soc-birthday.c": ["Go, with a present", "Stay home"],
     "ev.soc-birthday.r0": (p, h) => "You sing the loudest of anyone. " + cap(h.nm(p.a)) + " hugs you at the door. (Closer)",
@@ -2851,7 +2872,8 @@
     "ev.soc-seatmate.r.academy": (p, h) => "재수학원 옆자리는 " + h.full(p.a) + ". 역시 재수생이다. 매일 아침 7시, 난로 하나와 말없는 눈인사를 나눈다.",
     "ev.soc-seatmate.r.uni": (p, h) => "첫 강의에서 " + josa(h.full(p.a), "이", "가") + " 자리를 맡아 줬다. 내가 몰래 수능을 다시 준비하는 줄은 꿈에도 모른다.",
     "ev.soc-playdate.r": (p, h) => h.nm(p.a) + "가 놀러 왔다. 둘보다 키가 큰 블록 탑을 쌓고, 같이 와르르 무너뜨렸다. 최고의 하루.",
-    "ev.soc-birthday.text": (p, h) => (p.t ? "이번 주말이 " + h.nm(p.a) + " 생일이다. 몇 명이서 코인노래방에 가고 편의점 케이크를 사기로 했다." :
+    "ev.soc-birthday.text": (p, h) => (p.t === 2 ? "토요일은 " + h.nm(p.a) + " 생일이다. 학교 끝나고 떡볶이를 먹고 코인노래방에서 한 시간, 집에서 허락하면 다 같이 " + h.nm(p.a) + "네 집에서 자고 오기로 했다." :
+      p.t ? "이번 주말이 " + h.nm(p.a) + " 생일이다. 몇 명이서 코인노래방에 가고 편의점 케이크를 사기로 했다." :
       h.nm(p.a) + "가 토요일에 키즈카페에서 생일 파티를 연다. 반짝이 펜으로 쓴 초대장에 내 이름이 있다."),
     "ev.soc-birthday.c": ["선물을 사 들고 간다", "집에 있는다"],
     "ev.soc-birthday.r0": (p, h) => "누구보다 큰 소리로 생일 축하 노래를 불렀다. " + h.nm(p.a) + "가 문 앞에서 꼭 안아 준다. (더 친해짐)",
