@@ -1619,7 +1619,7 @@
   // insurance money; exam-night and exam-day results change no bars (they move examMods), so they are
   // scored here; a few social results are mostly about a person, which the bars barely show.
   const TONE_FIX = {
-    bereaved: -2, divorce: -2, parentill: -2, accident: -2, hospital: -2, layoff: -1, jeonse: -1, "care-found": -1,
+    bereaved: -2, divorce: -2, parentill: -2, accident: -2, hospital: -1, layoff: -1, jeonse: -1, "care-found": -1,
     jackpot: 2, promotion: 1, "care-sponsor": 1, greatteacher: 1, spark: 2, insight: 1,
     "eve.r0a": -1, "eve.r0b": 1, "eve.r1a": 1, "eve.r1b": -1, "eve.r2": -1, "lunch.r0": 1, "lunch.r1a": -1, "lunch.r1b": 1, "lunch.r2": -1,
     "examluck.sniffler": -1, "examluck.omr": -2, "examluck.guess": 1, "examluck.drilled": 2, "examluck.calm": 1,

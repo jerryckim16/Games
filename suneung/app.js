@@ -1479,7 +1479,7 @@
       '<p class="muted">' + esc(T("susi.types")) + "</p>" +
       '<div class="picks" id="susiPicks" aria-live="polite"></div>' +
       '<div class="susi-list">' + main.map(card).join("") + "</div>" +
-      (rest.length ? '<details class="susi-more"' + (st.moreOpen ? " open" : "") + "><summary>" + esc(T("susi.more", { n: rest.length })) + '</summary><div class="susi-list">' + rest.map(card).join("") + "</div></details>" : "");
+      (rest.length ? '<details class="susi-more"' + (st.moreOpen || !main.length ? " open" : "") + "><summary>" + esc(T("susi.more", { n: rest.length })) + '</summary><div class="susi-list">' + rest.map(card).join("") + "</div></details>" : "");
     openModal(T("susi.title"), body, [
       { label: T("susi.skip"), run: () => { game.applySusi([]); after(); } },
       { label: T("susi.submit", { n: 0 }), primary: true, run: () => {
@@ -1565,7 +1565,9 @@
       "<p>" + esc(T("apply.text", { s: top.score.toFixed(1) })) + "</p>" +
       '<div class="picks" id="applyPicks" aria-live="polite"></div>' +
       '<div class="unis">' + main.map(row).join("") + "</div>" +
-      (long.length ? '<details class="longshots"' + (st.longOpen || long.some((o) => st.picked.indexOf(o.id) >= 0) ? " open" : "") + "><summary>" + esc(T("apply.long", { n: long.length })) +
+      // With fewer than three realistic picks the long shots start open: a weak score must never look
+      // like a screen with nothing to choose and a disabled button.
+      (long.length ? '<details class="longshots"' + (st.longOpen || main.filter((o) => !o.blocked).length < 3 || long.some((o) => st.picked.indexOf(o.id) >= 0) ? " open" : "") + "><summary>" + esc(T("apply.long", { n: long.length })) +
         '</summary><div class="unis">' + long.map(row).join("") + "</div></details>" : "");
     openModal(T("apply.title"), body, [
       { label: T("apply.submit", { n: 0 }), primary: true, run: () => {
