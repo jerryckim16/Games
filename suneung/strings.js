@@ -130,7 +130,7 @@
       target: {
         big: "the big companies", bigline: "the big company's plant", public: "the public enterprises", civil: "the civil service exam", teacher: "the appointment exam", law: "law school",
         hospital: "the hospitals", startup: "the startup", grad: "graduate school", sme: "the small firms", trade: "the trade", service: "the service jobs", shop: "the shop",
-        popular: "the popular specialties", essential: "the essential specialties", gp: "the clinics",
+        popular: "the popular specialties", essential: "the essential specialties", gp: "the clinics", stay: "your job",
       },
     },
     ko: {
@@ -247,7 +247,7 @@
       home: { parents: "부모님 집", oneroom: "원룸", jeonse: "전셋집", ownHelp: "내 집(부모님이 보태 주셨다)" },
       target: {
         big: "대기업", bigline: "대기업 생산직", public: "공기업", civil: "공무원 시험", teacher: "임용고시", law: "로스쿨", hospital: "병원", startup: "스타트업", grad: "대학원",
-        sme: "중소기업", trade: "기술직", service: "서비스직", shop: "가게", popular: "인기과", essential: "필수과", gp: "일반의",
+        sme: "중소기업", trade: "기술직", service: "서비스직", shop: "가게", popular: "인기과", essential: "필수과", gp: "일반의", stay: "지금 직장",
       },
     },
   };
@@ -534,6 +534,26 @@
       "ev.recital.r0": "You nail it in front of everyone. You remember why you chose this school.",
       "ev.recital.r1": "A decent show. Your teacher says you have more in you.",
       "ev.intern.r": "A paid placement at a local company: real work, a real paycheck, and a foreman who says you're a natural.",
+      // v6.8: 고졸 취업, the vocational high's job offer in August of High 3, and the work ending.
+      "ev.joboffer.text": (p) => "The employment teacher calls you in. " + (p.job === "bigline" ?
+        "A big manufacturer is hiring from your class for its plant: maintenance and production, a regular contract, shift work and good pay. They want you." :
+        "A precision-parts firm in the industrial park wants you as a technician: a regular contract, starting with field training this autumn." +
+        (p.boy ? " They can keep you on for your military service too, as an industrial technical worker." : "")) +
+        " Take it, or stay on for the Suneung like the half of your class going on to study?",
+      "ev.joboffer.c": ["Take the job", "Stay on for the Suneung"],
+      "ev.joboffer.r0": (p) => "You sign the contract. In March, while your classmates start university, you start at the " + (p.job === "bigline" ? "plant" : "firm") + ", with a paycheck of your own.",
+      "ev.joboffer.r1": "You turn it down. The employment teacher shrugs: \"University, then. Make it count.\"",
+      "log.work": (p, h) => "March " + p.y + ": you start work as " + h.job30(p.job) + ". Exam life is over.",
+      "end.titleWork": "Straight to work",
+      "end.work": (p, h) => "You never sat the Suneung. In March you start as " + h.job30(p.job) + ", earning, while your old classmates sit in lecture halls.",
+      "card.work": "Work after school",
+      "cut.endwork.0": "March. Work boots and a security pass.",
+      "cut.endwork.1": "{name}, {age}: the first pay envelope.",
+      "epi.text.army.work": (p) => "Most men from vocational schools serve at 19 or 20, and the law keeps your job for you while you're away." +
+        (p.sme ? " At a small firm there's another way: stay on as an industrial technical worker for 34 months, serving at your own job." : ""),
+      "epi.text.hunt.work": (p, h) => "Your job from school is still yours: " + h.job30(p.job) + ". Stay, or try for something else?",
+      "epi.r.army.industrial": "{m} months as an industrial technical worker at your own firm: service and experience at once.",
+      "epi.r.stay": (p, h) => (p.back ? "Back from service and back at work" : "You stay") + ": " + h.job30(p.job) + ".",
       "ev.rankshock.r": (p, h) => "First midterms at " + h.schoolNoun(p.id) + ": for the first time in your life you're in the bottom half. Everyone here was top of their class.",
       "ev.immersion.r": "English week at your private school: a play, a debate, a whole day of English only.",
       "map.seoul": "Seoul",
@@ -817,6 +837,14 @@
       "ev.festival.text": "It's the school festival. Your class is running a tteokbokki stand.",
       "ev.festival.c": ["Join in", "Study in the empty classroom"],
       "ev.festival.r0": "Your class sells out by noon. Last festival of high school. Worth it.",
+      "ev.festival.r0y": "Your class sells out by noon, and they're already planning next year's stand. Worth it.",
+      "ev.draftcheck.r1": "Your draft physical: a day of eye charts, blood tests and questionnaires at the regional military office. Grade 1, fit for active duty. At dinner that night the question comes: \"So, after the exam, when are you going?\"",
+      "ev.draftcheck.r4": "Your draft physical: a day of eye charts, blood tests and questionnaires at the regional military office. Grade 4: social service, not the barracks. Your health has been worse than you let on.",
+      "ev.younger.text": "New faces at the academy. The youngest retakers were in their second year of high school when you sat your first Suneung, and one of them calls you \"sunbae\" in the hallway.",
+      "ev.younger.c": ["Show them the ropes", "Keep to your desk"],
+      "ev.younger.r0": "You share your notes and your mock-exam schedule. Explaining it all to someone else, you find the gaps in your own.",
+      "ev.younger.r1": "You nod and put your earplugs back in. This year is about you.",
+      "ev.lastyear.r": "At dinner your parents set the rule: this is the last year they pay for. \"After this, whatever happens, it's your life to run.\" You lie awake doing the sums: the fees, the months, the years your friends are ahead. Then you set the alarm for six.",
       "ev.festival.r1": "The music drifts up the stairwell while you finish a practice set.",
       "ev.d100.r": "D-100. The countdown banner goes up. Everyone suddenly gets very quiet.",
       "ev.retaker-doubt.text": "Your old classmates post photos from their freshman orientation trip. You're in a retake dorm eating a triangle kimbap.",
@@ -929,7 +957,7 @@
       "end.top": "A top Seoul university. Relatives stop asking awkward questions at Chuseok.",
       "end.solid": "A solid university. A new chapter begins.",
       "end.fresh": "A fresh start. Exams aren't everything.",
-      "end.attempts": "Attempts", "end.age": "Age at enrollment", "end.best": "Best standard-score total", "end.grades": "Best grades (Kor·Math·Eng)",
+      "end.attempts": "Attempts", "end.age": "Age at enrollment", "end.ageWork": "Age starting work", "end.best": "Best standard-score total", "end.grades": "Best grades (Kor·Math·Eng)",
       "end.note": "Your life log and exam history stay on the page below; Ending and card brings this screen back.",
       "end.look": "Look back at this life",
       // ---------- the epilogue: the next ten years ----------
@@ -980,7 +1008,7 @@
         y2: "The most common choice.",
         after: "Finish university in one go, but you start work later and employers see a gap.",
       },
-      "epi.o.army": { army: "Army (18 months)", navy: "Navy (20 months)", air: "Air Force (21 months)", marine: "Marines (18 months)", social: "Social service agent (21 months)", alt: "Alternative service (36 months)", doctor: "Military doctor after residency (36 months and training)" },
+      "epi.o.army": { army: "Army (18 months)", navy: "Navy (20 months)", air: "Air Force (21 months)", marine: "Marines (18 months)", social: "Social service agent (21 months)", alt: "Alternative service (36 months)", doctor: "Military doctor after residency (36 months and training)", industrial: "Industrial technical worker (34 months, at your firm)" },
       "epi.d.army": {
         army: "The default: a frontline or a rear unit.",
         navy: "Ships, ports and seasickness.",
@@ -989,11 +1017,12 @@
         social: "Commute to a public office or a welfare centre.",
         alt: "For conscientious objectors: three years living and working in a prison.",
         doctor: "Serve as a doctor in your thirties; nothing changes before 30.",
+        industrial: "Serve by working at your own firm: no gap in your career, but a longer service.",
       },
       "epi.o.hunt": {
         big: "A big company", bigline: "A big company's production line", public: "A public enterprise", civil: "The civil service exam", teacher: "The teacher appointment exam",
         law: "Law school", hospital: "A hospital", startup: "A startup", grad: "Graduate school", sme: "A small or medium firm", trade: "Learn a trade", service: "A service job",
-        shop: "Open a small shop", popular: "A popular specialty", essential: "An essential specialty", gp: "General practice",
+        shop: "Open a small shop", popular: "A popular specialty", essential: "An essential specialty", gp: "General practice", stay: "Stay at your job",
       },
       "epi.d.hunt": {
         big: "Samsung, Hyundai, SK and the like: the best pay (graduate starting pay about ₩50M a year) and the fiercest competition. The school, grades and experience all count.",
@@ -1012,6 +1041,7 @@
         popular: "Dermatology, ophthalmology, plastic surgery: high pay later, few places, top grades.",
         essential: "Internal medicine, surgery, pediatrics: places are easy to get, the hours aren't.",
         gp: "Skip residency and work at a clinic: good money early, no specialist title.",
+        stay: "Years of experience and a steady wage while others are still studying. A degree later, part-time, is always possible.",
       },
       "epi.o.hunt2": { again: "Try one more year", sme: "Take a job at a small firm", service: "Take a service job", essential: "Switch to an essential specialty", gp: "Work as a general practitioner", parttime: "Part-time work for now" },
       "epi.d.hunt2": {
@@ -1101,6 +1131,7 @@
         vocUni: ["The second road", "From a vocational high school to an in-Seoul university.", "A school meant for work, then Seoul."],
         noUni: ["Another road", "Lived a life without university.", "Put the pencil down."],
         college: ["Learn a craft", "Enrolled at a junior college.", "Two or three years and a profession."],
+        hired: ["Hired out of school", "Took a job straight from a vocational high school.", "The employment office calls in August."],
         bigCo: ["Company badge", "At a big company at 30.", "Pass a big company's open recruitment."],
         civil: ["Iron rice bowl", "A civil servant at 30.", "Pass the civil service exam."],
         lawyer: ["Counsel", "A lawyer at 30.", "Law school and the bar."],
@@ -1150,7 +1181,7 @@
       "art.place.classroom": "Your elementary-school classroom", "art.place.hallway": "The middle-school hallway",
       "art.place.desk": "Your desk, late at night", "art.place.cubicle": "A study-café cubicle", "art.place.academy": "The retake academy's lecture room",
       "art.place.campus": "The university campus", "art.place.examhall": "The exam hall", "art.place.home": "Home, waiting for results",
-      "art.place.gate": "The university gate", "art.place.road": "The road ahead", "art.place.start": "A city at night, about to welcome a new life",
+      "art.place.gate": "The university gate", "art.place.road": "The road ahead", "art.place.plant": "The plant gate on your first day at work", "art.place.start": "A city at night, about to welcome a new life",
       "art.place.baby": "A baby's first days at home", "art.place.nursery": "The nursery at home", "art.place.kinder": "The kindergarten playroom", "art.place.yaja": "Your high-school classroom at night study", "art.place.city": "The neighbourhood streets",
 
       // ----- cutscenes (app.js plays them; each film's captions are numbered by shot) -----
@@ -1432,6 +1463,26 @@
       "ev.recital.r0": "모두 앞에서 완벽하게 해냈다. 이 학교를 고른 이유가 떠오른다.",
       "ev.recital.r1": "무난한 무대였다. 선생님은 더 할 수 있다고 하신다.",
       "ev.intern.r": "동네 회사에서 유급 현장실습을 했다. 진짜 일, 진짜 월급, 그리고 소질이 있다는 반장님의 칭찬.",
+      // v6.8: 고졸 취업.
+      "ev.joboffer.text": (p) => "취업부 선생님이 부른다. " + (p.job === "bigline" ?
+        "대기업 공장에서 우리 반 학생을 뽑는다. 설비·생산직 정규직이고, 교대 근무지만 보수가 좋다. 나를 뽑고 싶다고 한다." :
+        "산업단지의 정밀부품 회사가 기술직으로 와 달라고 한다. 정규직이고, 가을부터 현장실습으로 시작한다." +
+        (p.boy ? " 산업기능요원으로 군 복무도 그 회사에서 할 수 있다." : "")) +
+        " 취업할까, 반 친구 절반처럼 진학하려고 수능을 볼까?",
+      "ev.joboffer.c": ["취업한다", "수능을 준비한다"],
+      "ev.joboffer.r0": (p) => "근로계약서에 서명했다. 3월, 친구들이 대학 새내기가 될 때 나는 " + (p.job === "bigline" ? "공장으로" : "회사로") + " 출근한다. 내 월급을 받으면서.",
+      "ev.joboffer.r1": "거절했다. 취업부 선생님이 어깨를 으쓱한다. \"그럼 대학이다. 제대로 해라.\"",
+      "log.work": (p, h) => p.y + "년 3월, " + h.job30(p.job) + "으로 일을 시작했다. 수험 생활 끝.",
+      "end.titleWork": "고졸 취업",
+      "end.work": (p, h) => "수능은 보지 않았다. 3월, 옛 친구들이 강의실에 앉아 있을 때 나는 " + h.job30(p.job) + "으로 일하며 돈을 번다.",
+      "card.work": "고졸 취업",
+      "cut.endwork.0": "3월. 안전화와 출입증.",
+      "cut.endwork.1": "{name}, {age}. 첫 월급봉투.",
+      "epi.text.army.work": (p) => "특성화고를 나온 남자는 대부분 열아홉, 스무 살에 입대하고, 그동안 일자리는 법으로 지켜진다." +
+        (p.sme ? " 중소기업이라면 다른 길도 있다. 산업기능요원으로 34개월 동안 지금 회사에서 일하며 복무한다." : ""),
+      "epi.text.hunt.work": (p, h) => "졸업하며 얻은 일자리가 아직 있다: " + h.job30(p.job) + ". 계속 다닐까, 다른 길에 도전할까?",
+      "epi.r.army.industrial": "지금 회사에서 산업기능요원으로 {m}개월. 복무와 경력을 한 번에.",
+      "epi.r.stay": (p, h) => (p.back ? "전역하고 다시 출근" : "계속 다닌다") + ": " + h.job30(p.job) + ".",
       "ev.rankshock.r": (p, h) => h.schoolNoun(p.id) + "의 첫 중간고사: 태어나서 처음으로 반에서 중간 아래다. 여기 애들은 다 전교 1등이었다.",
       "ev.immersion.r": "사립 초등학교의 영어 주간: 연극, 토론, 하루 종일 영어만 쓰는 날.",
       "map.seoul": "서울",
@@ -1718,6 +1769,14 @@
       "ev.festival.text": "학교 축제다. 우리 반은 떡볶이 가게를 연다.",
       "ev.festival.c": ["같이 한다", "빈 교실에서 공부한다"],
       "ev.festival.r0": "정오에 다 팔렸다. 고등학교 마지막 축제. 후회 없다.",
+      "ev.festival.r0y": "정오에 다 팔렸다. 벌써 내년 가게 얘기가 나온다. 후회 없다.",
+      "ev.draftcheck.r1": "병역판정검사 날. 지방병무청에서 시력 검사, 피검사, 심리 검사로 하루를 보냈다. 1급, 현역 판정. 그날 저녁 식탁에서 질문이 나온다. \"그래서, 수능 끝나면 언제 갈 거냐?\"",
+      "ev.draftcheck.r4": "병역판정검사 날. 지방병무청에서 시력 검사, 피검사, 심리 검사로 하루를 보냈다. 4급, 사회복무요원 판정. 생각보다 몸이 많이 상해 있었다.",
+      "ev.younger.text": "학원에 새 얼굴들이 왔다. 막내 재수생들은 내가 첫 수능을 볼 때 고2였고, 그중 한 명은 복도에서 나를 \"선배\"라고 부른다.",
+      "ev.younger.c": ["이것저것 알려 준다", "내 자리만 지킨다"],
+      "ev.younger.r0": "노트와 모의고사 일정을 나눠 줬다. 남에게 설명하다 보니 내 빈틈이 보인다.",
+      "ev.younger.r1": "고개만 끄덕이고 다시 귀마개를 꽂는다. 올해는 나만 생각한다.",
+      "ev.lastyear.r": "저녁 식탁에서 부모님이 선을 그으셨다. 뒷바라지는 올해가 마지막이다. \"이번이 끝나면, 어떻게 되든 네 인생은 네가 꾸려라.\" 밤새 계산을 했다. 들어간 돈, 남은 달, 친구들보다 늦어진 햇수. 그리고 알람을 6시에 맞췄다.",
       "ev.festival.r1": "계단을 타고 음악 소리가 올라오는 동안 모의고사 한 세트를 끝냈다.",
       "ev.d100.r": "D-100. 교실에 카운트다운 현수막이 걸렸다. 다들 갑자기 조용해진다.",
       "ev.retaker-doubt.text": "고등학교 동창들이 새터 사진을 올렸다. 나는 재수 기숙사에서 삼각김밥을 먹는 중이다.",
@@ -1829,7 +1888,7 @@
       "end.top": "서울 상위권 대학. 추석에 친척들의 곤란한 질문이 사라졌다.",
       "end.solid": "탄탄한 대학. 새로운 장이 시작된다.",
       "end.fresh": "새로운 출발. 시험이 인생의 전부는 아니다.",
-      "end.attempts": "도전 횟수", "end.age": "입학 나이", "end.best": "최고 국수탐 표준점수 합", "end.grades": "최고 성적 국·수·영",
+      "end.attempts": "도전 횟수", "end.age": "입학 나이", "end.ageWork": "취업 나이", "end.best": "최고 국수탐 표준점수 합", "end.grades": "최고 성적 국·수·영",
       "end.note": "인생 기록과 시험 기록은 아래에 남아 있고, '엔딩과 카드' 버튼으로 이 화면을 다시 볼 수 있습니다.",
       "end.look": "이번 인생 돌아보기",
       // ---------- 에필로그: 그 후 10년 ----------
@@ -1880,7 +1939,7 @@
         y2: "가장 흔한 선택.",
         after: "학교는 한 번에 마치지만, 일은 늦게 시작하고 공백이 생긴다.",
       },
-      "epi.o.army": { army: "육군 (18개월)", navy: "해군 (20개월)", air: "공군 (21개월)", marine: "해병대 (18개월)", social: "사회복무요원 (21개월)", alt: "대체복무 (36개월)", doctor: "전문의 후 군의관 (36개월+훈련)" },
+      "epi.o.army": { army: "육군 (18개월)", navy: "해군 (20개월)", air: "공군 (21개월)", marine: "해병대 (18개월)", social: "사회복무요원 (21개월)", alt: "대체복무 (36개월)", doctor: "전문의 후 군의관 (36개월+훈련)", industrial: "산업기능요원 (34개월, 지금 회사)" },
       "epi.d.army": {
         army: "기본: 전방이나 후방 부대.",
         navy: "배, 항구, 그리고 뱃멀미.",
@@ -1889,11 +1948,12 @@
         social: "공공기관이나 복지관으로 출퇴근.",
         alt: "양심적 병역거부자: 3년 동안 교정시설에서 합숙하며 근무.",
         doctor: "30대에 군의관으로 복무한다. 서른 전에는 달라지는 게 없다.",
+        industrial: "지금 회사에서 일하며 복무한다. 경력에 공백은 없지만 복무 기간이 길다.",
       },
       "epi.o.hunt": {
         big: "대기업 공채", bigline: "대기업 생산직", public: "공기업", civil: "공무원 시험(공시)", teacher: "임용고시",
         law: "로스쿨", hospital: "병원 취업", startup: "스타트업", grad: "대학원", sme: "중소기업", trade: "기술 배우기", service: "서비스직",
-        shop: "작은 가게 창업", popular: "인기과 전공의", essential: "필수과 전공의", gp: "일반의",
+        shop: "작은 가게 창업", popular: "인기과 전공의", essential: "필수과 전공의", gp: "일반의", stay: "지금 직장에 남기",
       },
       "epi.d.hunt": {
         big: "삼성, 현대, SK 같은 곳: 대졸 초임 연 5천만원 안팎으로 가장 많이 주고 경쟁도 가장 치열하다. 회사는 학교, 학점, 스펙을 모두 본다.",
@@ -1912,6 +1972,7 @@
         popular: "피부과, 안과, 성형외과: 나중에 수입이 많고 자리가 적어 최상위 성적이 필요하다.",
         essential: "내과, 외과, 소아과: 자리는 쉽게 나고 근무는 고되다.",
         gp: "수련을 건너뛰고 의원에서 일한다. 초반 수입은 좋고 전문의 타이틀은 없다.",
+        stay: "남들이 공부할 때 쌓는 경력과 꾸준한 월급. 나중에 일하면서 학위를 따는 길도 있다.",
       },
       "epi.o.hunt2": { again: "1년 더 준비", sme: "중소기업에 들어가기", service: "서비스직으로 일하기", essential: "필수과로 바꾸기", gp: "일반의로 일하기", parttime: "당분간 알바" },
       "epi.d.hunt2": {
@@ -2001,6 +2062,7 @@
         vocUni: ["두 번째 길", "특성화고에서 인서울 대학에 갔다.", "취업을 위한 학교, 그리고 서울."],
         noUni: ["다른 길", "대학 없이 인생을 살았다.", "펜을 내려놓기."],
         college: ["기술을 배우다", "전문대에 입학했다.", "2–3년, 그리고 직업."],
+        hired: ["졸업 전 취업", "특성화고에서 바로 취업했다.", "8월, 취업부에서 연락이 온다."],
         bigCo: ["대기업 사원증", "서른 살에 대기업에 다닌다.", "대기업 공채에 합격하기."],
         civil: ["철밥통", "서른 살에 공무원이다.", "공무원 시험 합격."],
         lawyer: ["변호사님", "서른 살에 변호사다.", "로스쿨과 변호사시험."],
@@ -2050,7 +2112,7 @@
       "art.place.classroom": "초등학교 교실", "art.place.hallway": "중학교 복도",
       "art.place.desk": "늦은 밤 내 책상", "art.place.cubicle": "독서실 칸막이 자리", "art.place.academy": "재종반 강의실",
       "art.place.campus": "대학 캠퍼스", "art.place.examhall": "수능 시험장", "art.place.home": "결과를 기다리는 집",
-      "art.place.gate": "대학교 정문", "art.place.road": "앞으로 이어진 길", "art.place.start": "새 생명을 기다리는 밤의 도시",
+      "art.place.gate": "대학교 정문", "art.place.road": "앞으로 이어진 길", "art.place.plant": "첫 출근 날의 공장 정문", "art.place.start": "새 생명을 기다리는 밤의 도시",
       "art.place.baby": "집에서 보내는 아기의 첫날들", "art.place.nursery": "집 안의 아기 방", "art.place.kinder": "유치원 놀이방", "art.place.yaja": "야간 자율 학습 중인 고등학교 교실", "art.place.city": "동네 거리",
 
       // ----- 컷신 -----

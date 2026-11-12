@@ -280,16 +280,18 @@
     const c = artCtx({
       ending: !!g.ending,
       label: g.ending && g.ending.uni ? L.uni(g.ending.uni) : "",
+      // v6.8: straight to work out of a vocational high (the plant gate).
+      work: !!(g.ending && g.ending.work),
       examMonth: !school && !g.ending && g.month === 11,
       results: !school && !g.ending && g.month === 12,
       // The countdown on the wall only means something in an exam year.
       dday: !school && !g.ending && g.month <= 11 ? Math.max(0, g.daysToExam()) : null,
     });
     // At the university gate you're cheering, whatever the bars say.
-    if (c.ending && c.label) c.mood = "happy";
+    if (c.ending && (c.label || c.work)) c.mood = "happy";
     // v6.5: the picture's light follows what just happened (see Game.recentTone); the end of the road
     // without a university is grey, the gate is warm.
-    c.tone = c.ending ? (c.label ? 1 : -1) : g.recentTone ? g.recentTone() : 0;
+    c.tone = c.ending ? (c.label || c.work ? 1 : -1) : g.recentTone ? g.recentTone() : 0;
     c.aria = T("art.place." + Art.sceneName(c.stage, c));
     // Rebuilding the SVG restarts its animations, so only redraw when something visible changed.
     const key = JSON.stringify(c) + lang;
@@ -1688,6 +1690,7 @@
     const g = game;
     const e = g.ending;
     const u = e.uni ? UNIVERSITIES.find((x) => x.id === e.uni) : null;
+    const work = e.work || null;
     const best = e.best;
     const gr = best ? [best.subjects.kor.grade, best.subjects.math.grade, best.subjects.eng.grade] : null;
     const epi = g.epi && g.epi.done ? g.epi : null;
@@ -1701,15 +1704,15 @@
     if ((g.lifeRecorded || 0) < stage) { recordLife(g); g.lifeRecorded = stage; }
     save(); // so reopening the finished life doesn't add the same entries again
     unlock(g);
-    const verdict = !u ? "end.none" : u.id === "med" ? "end.med" : ["snu", "yonsei", "korea", "kaist", "postech"].indexOf(u.id) >= 0 ? "end.sky" :
+    const verdict = !u ? (work ? "end.work" : "end.none") : u.id === "med" ? "end.med" : ["snu", "yonsei", "korea", "kaist", "postech"].indexOf(u.id) >= 0 ? "end.sky" :
       u.cut >= 93 ? "end.top" : u.cut >= 85 ? "end.solid" : "end.fresh";
     const tile = (k, v) => '<div><span class="k">' + esc(T(k)) + '</span><span class="v">' + esc(v) + "</span></div>";
     const list = T("ach.list"), mine = g.achievements({ lives: loadLives().length });
     const ach = mine.length ? '<div class="ach-chips">' + mine.map((id) => '<span class="chip' + (freshAch.has(id) ? " new" : "") + '" title="' + esc(list[id][1]) + '">🏅 ' + esc(list[id][0]) +
       (freshAch.has(id) ? " <small>" + esc(T("end.achNew")) + "</small>" : "") + "</span>").join("") + "</div>" : '<p class="muted">' + esc(T("end.achNone")) + "</p>";
-    openModal(u ? T("end.title", { uni: L.uni(u.id) }) : T("end.titleNone"),
-      '<p class="story">' + esc(T(verdict)) + '</p><div class="summary">' +
-      tile("end.attempts", e.attempts) + tile("end.age", L.age(e.age)) + tile("end.best", best ? best.total : "—") + tile("end.grades", gr ? gr.join("·") : "—") + "</div>" +
+    openModal(u ? T("end.title", { uni: L.uni(u.id) }) : work ? T("end.titleWork") : T("end.titleNone"),
+      '<p class="story">' + esc(T(verdict, { job: work })) + '</p><div class="summary">' +
+      tile("end.attempts", e.attempts || "—") + tile(work && !u ? "end.ageWork" : "end.age", L.age(e.age)) + tile("end.best", best ? best.total : "—") + tile("end.grades", gr ? gr.join("·") : "—") + "</div>" +
       (epi ? "<h3>" + esc(T("epi.title.at30", { name: g.name })) + "</h3>" + at30Html(g) : "") +
       "<h3>" + esc(T("end.card")) + '</h3><div class="card-wrap">' + cardSvg(g) + '</div><div class="card-out"></div>' +
       "<h3>" + esc(T("end.ach")) + "</h3>" + ach +
@@ -1719,7 +1722,7 @@
         { label: T("end.png"), run: downloadCard },
         g.epi ? { label: T("newLife"), primary: true, run: startOver } : { label: T("newLife"), run: startOver },
       ].concat(g.epi ? [] : [{ label: T("end.epi"), primary: true, run: () => { g.startEpilogue(); after(); } }]),
-      Art.screenArt("ending", artCtx({ stage: "uni", label: u ? L.uni(u.id) : "", mood: u ? "happy" : "ok", tone: u ? 2 : -1 })));
+      Art.screenArt("ending", artCtx({ stage: "uni", label: u ? L.uni(u.id) : "", work: !!work, mood: u || work ? "happy" : "ok", tone: u ? 2 : work ? 1 : -1 })));
   }
 
   // Where the closest friends ended up (the engine's friendOutcomes), drawn as university students.
@@ -1796,7 +1799,7 @@
     const a = g.epi && g.epi.done ? g.epi.at30 : null;
     return {
       id: lifeId(g), seed: g.seed, name: g.name, sex: g.sex || null, sy: g.startYear, by: b.year, reg: b.reg, fam: b.fam, par: b.par, jobs: b.jobs,
-      uni: e ? e.uni : null, total: best ? best.total : null, att: e ? e.attempts : g.attempt, ach: g.achievements({ lives: loadLives().length }),
+      uni: e ? e.uni : null, work: e && e.work ? e.work : null, total: best ? best.total : null, att: e ? e.attempts : g.attempt, ach: g.achievements({ lives: loadLives().length }),
       daily: g.daily || null, at30: a ? { job: a.job, pay: a.pay, fifth: a.fifth } : null, t: Date.now(),
     };
   }
@@ -1852,9 +1855,9 @@
     return '<div class="life-cards">' + list.map((e, i) =>
       '<article class="card life-card"><div class="lc-head"><b>' + esc(e.name) + "</b>" + (e.daily ? ' <span class="tag">' + esc(T("lives.dailyOn", { d: e.daily })) + "</span>" : "") +
       '<button type="button" class="small" data-replay="' + i + '">' + esc(T("lives.replay")) + "</button></div>" +
-      '<div class="lc-out">🎓 ' + esc(e.uni ? L.uni(e.uni) : T("fame.none")) + (e.at30 ? ' <span class="muted">· ' + esc(T("lives.at30", { job: e.at30.job })) + "</span>" : "") + "</div>" +
+      '<div class="lc-out">' + (e.work && !e.uni ? "🏭 " + esc(L.job30(e.work)) : "🎓 " + esc(e.uni ? L.uni(e.uni) : T("fame.none"))) + (e.at30 ? ' <span class="muted">· ' + esc(T("lives.at30", { job: e.at30.job })) + "</span>" : "") + "</div>" +
       '<div class="lc-facts">' + fact(1, e.by) + fact(2, L.regionShort(e.reg)) + fact(3, e.par === "care" ? L.parents("care") : L.family(e.fam)) + fact(4, jobs(e.jobs)) + "</div>" +
-      '<div class="chips">' + '<span class="chip sm info">' + esc(h[6]) + " " + (e.total != null ? e.total : "—") + '</span><span class="chip sm info">' + esc(h[7]) + " " + esc(e.att) +
+      '<div class="chips">' + '<span class="chip sm info">' + esc(h[6]) + " " + (e.total != null ? e.total : "—") + '</span><span class="chip sm info">' + esc(h[7]) + " " + esc(e.att || "—") +
       '</span><span class="chip sm info">🏅 ' + (Array.isArray(e.ach) ? e.ach.length : 0) + "</span></div></article>").join("") + "</div>";
   }
   function bindReplay(root) {
@@ -1915,18 +1918,20 @@
   const EPI_ICON = {
     hum: "📜", soc: "📊", edu: "🍎", eng: "⚙️", nat: "🔬", health: "🩺", arts: "🎨",
     library: "📚", balance: "⚖️", exchange: "✈️", gap: "💼", campus: "🎉", y1: "1️⃣", y2: "2️⃣", after: "🎓",
-    army: "🪖", navy: "⚓", air: "✈️", marine: "🦅", social: "🏢", alt: "🕊️", doctor: "⚕️",
+    army: "🪖", navy: "⚓", air: "✈️", marine: "🦅", social: "🏢", alt: "🕊️", doctor: "⚕️", industrial: "🔩", stay: "💼",
     big: "🏢", bigline: "🏭", public: "⚡", civil: "🏛️", teacher: "🍎", law: "⚖️", hospital: "🏥", startup: "🚀", grad: "🧪", sme: "🏬",
     trade: "🔧", service: "🛍️", shop: "🏪", popular: "💉", essential: "🩺", gp: "🏥", again: "🔁", parttime: "⏰",
   };
   function epiText(g, top) {
     const st = top.step, med = top.tier === 6, none = top.tier === 0;
     const e = g.epi;
-    const p = { age: Math.round(g.ending.age + g.epiYearsToReady()), gpa: e.gpa != null ? e.gpa.toFixed(2) : "", t: e.target };
+    const work = g.ending.work || null;
+    const p = { age: Math.round(g.ending.age + g.epiYearsToReady()), gpa: e.gpa != null ? e.gpa.toFixed(2) : "", t: e.target, job: work, sme: work === "sme" };
     let k = "epi.text." + st;
     if (st === "college" && med) k += ".med";
-    if (st === "army") k += top.opts.indexOf("social") >= 0 ? ".social" : med ? ".med" : none ? ".none" : "";
-    if (st === "hunt") k += med ? ".med" : none ? ".none" : "";
+    // v6.8: a job taken out of school gets its own lines (the law keeps it during service; 산업기능요원).
+    if (st === "army") k += top.opts.indexOf("social") >= 0 ? ".social" : med ? ".med" : none ? (work ? ".work" : ".none") : "";
+    if (st === "hunt") k += med ? ".med" : none ? (work ? ".work" : ".none") : "";
     return T(k, p);
   }
   function showEpi(top) {
@@ -1975,14 +1980,14 @@
     const b = g.birthInfo(), e = g.ending, best = e.best;
     const a = g.epi && g.epi.done ? g.epi.at30 : null;
     const lines = [[T("card.born"), b.year + " · " + L.regionShort(b.reg)], [T("card.family"), b.par === "care" ? L.parents("care") : L.family(b.fam)],
-      [T("card.outcome"), e.uni ? L.uni(e.uni) : T("card.none")], [T("card.tries"), L.att(e.attempts)]];
+      [T("card.outcome"), e.uni ? L.uni(e.uni) : e.work ? T("card.work") : T("card.none")], [T("card.tries"), e.attempts ? L.att(e.attempts) : "—"]];
     // English job names start with "a" / "an", which the card doesn't need.
     if (a) lines.push([T("card.at30"), L.job30(a.job).replace(/^an? /, "")]);
     return Art.shareCard({
       ctx: artCtx({ stage: "uni" }), title: T("card.title"), daily: g.daily ? T("card.daily", { d: g.daily }) : "", name: g.name, lines,
-      gradesLabel: T("card.grades"), grades: best ? SUBJECTS.map((s) => best.subjects[s].grade) : null, mood: e.uni ? "happy" : "ok",
+      gradesLabel: T("card.grades"), grades: best ? SUBJECTS.map((s) => best.subjects[s].grade) : null, mood: e.uni || e.work ? "happy" : "ok",
       mob: { from: S.FAMILY_IDS.indexOf(b.fam) + 1, to: a ? a.fifth : null, labels: [T("card.mobBorn"), T("card.mobNow")] },
-      aria: g.name + ", " + (e.uni ? L.uni(e.uni) : T("card.none")),
+      aria: g.name + ", " + (e.uni ? L.uni(e.uni) : e.work ? T("card.work") : T("card.none")),
     });
   }
   // Published as a claude.ai artifact, the page can't download files itself: the viewer's "downloads"
@@ -2078,6 +2083,7 @@
     if (g.ending) {
       if (g.endingSeen) return null;
       const uni = g.ending.uni ? L.uni(g.ending.uni) : "";
+      if (g.ending.work && !uni) return film("end", "end", { stage: "uni", work: true, tone: 1 }, { name: g.name, age: L.age(g.ending.age) }, "endwork");
       return film("end", "end", { stage: "uni", label: uni, tone: uni ? 2 : -1 }, { uni, name: g.name, age: L.age(g.ending.age) }, uni ? "end" : "endroad");
     }
     // Moving house (by choice or by an event) this turn.
