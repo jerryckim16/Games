@@ -296,7 +296,7 @@ Retrieved: 2026-10-28
 | Lotto 6/45 average 1st prize | about 20억 per winner, about 15 winners per draw | recent | Won | — | https://glasswallet.com/calculate/lotto-prize/winning-odds | unverified |
 
 ## 13. After school
-Retrieved: 2026-10-28
+Retrieved: 2026-11-12 (vocational rows added)
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -304,6 +304,9 @@ Retrieved: 2026-10-28
 | Employment rate by field | medicine 79.4%; education 71.1%; engineering 70.4%; social sciences 69.0%; arts & PE 66.7%; natural sciences 65.4%; humanities 61.1% | 2024 | Share employed | MOE | same | official |
 | Employment rate by institution | graduate school 82.1%; junior college 72.1%; university 62.8%; teachers' university 60.5% | 2024 | Share employed | MOE | same | official |
 | Employment kept after 11 months | 81.8% (engineering 85.8%, education 85.7%, arts & PE 67.8%) | 2024 | Share | MOE | same | official |
+| Vocational high-school graduates' employment rate (직업계고 취업률) | 55.2% (−0.1pp); Meister 73.1%, 특성화고 52.4%, general schools' vocational classes 38.2%; lowest since 2020 (50.7%) | 2025 graduates (published 2025-11-25) | Employed ÷ (graduates − those going on to study − those enlisting − exempt) | MOE / KEDI, 직업계고 졸업자 취업통계 | https://www.newsis.com/view/NISX20251125_0003415817 | unverified (news citing the release) |
+| Vocational graduates' destinations | 59,661 graduates: 15,296 employed (25.6% of all), 29,373 going on to study (진학률 49.2%, up from 45.0% in 2021), 1,523 enlisted; 20.8% neither | 2025 graduates | Persons; % | MOE / KEDI | https://www.newsis.com/view/NISX20251125_0003415817 | unverified (news citing the release) |
+| Vocational graduates hired by large firms | 36.3% of the employed at firms of 300+ (fourth year of rises); employment kept: 83.1% at the first check, 68.2% at the second (2024 graduates; Meister 88.1% / 71.5%) | 2025 | % | MOE / KEDI | https://hangyo.com/news/article.html?no=105920 | unverified (news citing the release) |
 
 ---
 
@@ -345,7 +348,8 @@ Retrieved: 2026-11-10 (read from search-result text; the session's network block
 | Active-duty service length | army and marines 18; navy 20; air force 21 | 2026 | Months | Military Manpower Administration (병무청) | https://mma.go.kr/contents.do?mc=usr0000041 | official (search-result text of the MMA page) |
 | Alternative service (대체복무요원) | 36, living in correctional facilities | 2026 | Months | Military Manpower Administration | https://mma.go.kr/contents.do?mc=usr0000041 | official (search-result text) |
 | Social service agents (사회복무요원) | 21 (one report says 20 from 2026-01-01) | 2026 | Months | news citing MMA | https://jab-guyver.co.kr/m/1633 ; https://dazabi.com/insurance_magazine/article.php?id=3911 | unverified; sources disagree, the game uses 21 |
-| Industrial / research service | 산업기능요원 34 (현역) or 23 (보충역); 전문연구요원 36 | 2026 | Months | secondary guide | https://calcnara.com/guides/military-service-guide | unverified; not used |
+| Job kept during service (병역법 제74조 복직보장) | an employer must put a conscripted employee on leave and take them back after service; service counts as time worked for promotion; no worse treatment in hiring or promotion for owing service | 2024 text (in force 2024-08-07) | Law | Military Service Act, via a law wiki | https://www.nepla.ai/wiki/국가와-민주주의/국방과-보훈/-유권해석-병역법-제74조-복직보장-등-1509xq528ol4 | unverified (secondary copy of the act); the game says "the law keeps your job for you" (v6.8) |
+| Industrial / research service | 산업기능요원 34 (현역) or 23 (보충역); 전문연구요원 36 | 2026 | Months | secondary guide | https://calcnara.com/guides/military-service-guide | unverified; the game uses 34 (`ARMY.industrial`, v6.8) |
 | Time to a first wage job after leaving school | 11.3 months (−0.2) | 2025-05 | Mean, youth 15–29 whose first job was a wage job | 국가데이터처, 경제활동인구조사 청년층 부가조사 | https://dailian.co.kr/news/view/1527230/ | unverified (news citing the release) |
 | Tenure of the first job | 1 year 6.4 months | 2025-05 | Mean | same | https://dailian.co.kr/news/view/1527230/ | unverified |
 | Not employed a year or more after leaving school | 46.6% (2025); 48.6% (2026, highest since 2009) | 2025-05 / 2026-05 | % of not-yet-employed school leavers 15–29 | 국가데이터처, 청년층 부가조사 | https://www.mt.co.kr/economy/2026/07/23/2026072308421586967 | unverified (news citing the release) |
@@ -420,6 +424,8 @@ Retrieved: 2026-11-11 (real-figure and verdict columns; game values unchanged; t
 | `CLASS_SIZE` (named classmates) | 6 per new elementary, middle and high school class | class sizes 18.6 / 24.5 / 23.1 (2026; 19.3 / 24.9 / 23.4 in 2025) | only the classmates who matter are named, not the whole class |
 | `TEACHER_F` (homeroom teacher is a woman) | elementary 75%, middle 68%, high 55% | women among all teachers: elementary 76.6%, middle 72.7%, high 60.3% (2026-04-01, §5); homeroom teachers by sex not published | elementary matches; middle 4.7 and high 5.3 points low if homeroom teachers mirror all teachers |
 | `ARMY` (epilogue service lengths) | army 18, navy 20, air force 21, marines 18, social service 21, alternative 36, military doctor 38 months | 18 / 20 / 21 / 18; social service 21 (or 20 from 2026, disputed); alternative 36; 군의관 36 + training (section 15) | matches; 군의관 training length is an estimate |
+| `workOffer()` (고졸 취업, v6.8) | a job offer in August of High 3 to about 60% of 특성화고 and 80% of Meister students (±8 points a 내신 grade); 33% (Meister 50%) of offers at a big firm | 55.2% employed of vocational graduates free to work (Meister 73.1%, 특성화고 52.4%); 36.3% of them at firms of 300+ (2025) | game estimate set a little above the real rates (an offer is not a job); big-firm share matches |
+| `ARMY.industrial` (산업기능요원) | 34 months at your own small firm | 34 (현역) / 23 (보충역) months | matches the 현역 length (unverified secondary source) |
 | `FIELD_EMP` (epilogue, job-hunt nudge by major) | the MOE rates by field, as logit offsets from 69.5% | graduate employment by field (section 13) | matches (used directly) |
 | `HUNT` rows (epilogue job-hunt chances) | per year of trying; big firm about 50% from SKY, 35% top Seoul, 20% mid, 10% other four-year (sensible GPA) | no official hiring rate by school tier; 9급 28.6 applicants a place; bar 51% per sitting; first job takes 11.3 months; 46.6–48.6% of the not-yet-employed have looked a year or more | tier rows are game estimates; the exam rows follow the official odds loosely (many applicants never sit) |
 | `JOB30` (pay at 30) | big firm ₩5.2M, public enterprise ₩4.3M, SME ₩3.0M, civil servant ₩3.0M, teacher ₩3.3M, resident ₩6.07M, lawyer ₩6.0M, nurse ₩4.0M | big-firm graduate starting pay ₩50.01M a year (₩4.17M a month), under-300 ₩32.38M; SME mean ₩3.07M; 30s mean ₩3.97M; residents ₩72.8M a year (section 15) | big firm and SME calc from starting pay plus raises; resident matches; the rest are estimates |

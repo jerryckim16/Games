@@ -73,6 +73,7 @@ Built for a first-time player on a phone as much as a desktop (checked at 390px 
 
 ## Features
 
+- **Straight to work (고졸 취업).** At a vocational or Meister high school, the employment office calls you in in August of High 3, before early applications open: a regular job at a big manufacturer's plant or a technician's job at a small firm. Take it and exam life ends there: no 수능, an ending of its own ("Straight to work"), a short film at the plant gate and a first pay envelope, and the achievement "Hired out of school". Turn it down and you sit the 수능 like anyone else. About 60% of 특성화고 students get an offer (80% at a Meister school), more with better school grades, and about a third of offers are at a big firm (more at a Meister school), set a little above the real rates: 55.2% of 2025's vocational graduates free to work were employed (Meister 73.1%, 특성화고 52.4%), 36.3% of them at firms of 300 or more. The offer rolls from its own seeded stream. In the epilogue you can keep the job ("Stay at your job"; the law keeps it for you during service), and a man at a small firm can serve there for 34 months as an industrial technical worker (산업기능요원) instead of joining up, so service is no gap in his career.
 - **After the exam: the next ten years.** From the ending screen, an epilogue of a few screens with real choices, driven by real figures (see After the exam below):
   - **A major** from your track (humanities, social sciences, education and arts on humanities; engineering, natural sciences, nursing and health, education and arts on sciences; medicine for 의대), shown with its real employment rate.
   - **University years:** the library, a balance, an exchange semester (₩5M from your savings if your family can't pay), a year off for internships, or campus life. They set your GPA (out of 4.5) and your experience.
@@ -330,7 +331,7 @@ Built for a first-time player on a phone as much as a desktop (checked at 390px 
   | | Science / gifted (과학고·영재학교) | ₩150,000 | math and science far ahead of your year, up to 70% | math and science lessons ×1.6, Korean ×0.9, sciences track only, +3 motivation, +5 stress |
   | | Foreign language / international (외고·국제고) | ₩500,000 | English and Korean well ahead, up to 75% | English ×1.6, Korean ×1.25, social studies ×1.15, math ×0.95, humanities track only |
   | | Arts / sports (예고·체고) | ₩400,000 | audition on years of arts & sports lessons, up to 80% | practice takes a block a turn, academic lessons ×0.7, +3 motivation, −3 stress |
-  | | Vocational (특성화고·마이스터고) | – | 95% | workshop hours take a block a turn, academic lessons ×0.4, part-time pay ×1.5, −2 motivation, −3 stress |
+  | | Vocational (특성화고·마이스터고) | – | 95% | workshop hours take a block a turn, academic lessons ×0.4, part-time pay ×1.5, −2 motivation, −3 stress; a job offer in August of High 3 (see Straight to work) |
 
   - "How far ahead" is your ability in those subjects against the typical level for your year (the line class ranks use), so selective schools reward studying ahead in childhood; a science school takes a real math-and-science focus.
   - The multipliers apply to school lessons (see Learning), not to your own study.
@@ -515,23 +516,23 @@ The epilogue's logic is in `engine.js` (`startEpilogue`, `epiChoose`), its figur
 
 | University | Lives | Big firm | Public enterprise, civil service, teacher | Doctor, lawyer, nurse, researcher | SME, startup, trade, shop, service | No steady job | Mean pay a month | Top two fifths |
 |---|---|---|---|---|---|---|---|---|
-| No university | 14 | 0% | 0% | 0% | 100% | 0% | ₩302만 | 29% |
-| Junior college | 39 | 3% | 10% | 8% | 77% | 3% | ₩335만 | 44% |
-| Other four-year university | 199 | 0% | 24% | 10% | 60% | 6% | ₩331만 | 45% |
-| Mid (flagship nationals, rest of in-Seoul) | 141 | 18% | 23% | 16% | 40% | 2% | ₩382만 | 57% |
-| Top Seoul (SKKU to UOS) | 122 | 43% | 18% | 16% | 20% | 2% | ₩427만 | 73% |
-| SKY | 59 | 59% | 14% | 14% | 14% | 0% | ₩458만 | 76% |
-| Medical school | 26 | 0% | 0% | 100% | 0% | 0% | ₩585만 | 100% |
+| No university | 9 | 0% | 0% | 0% | 100% | 0% | ₩334만 | 56% |
+| Junior college | 43 | 2% | 21% | 2% | 67% | 7% | ₩341만 | 44% |
+| Other four-year university | 193 | 0% | 23% | 9% | 62% | 5% | ₩327만 | 40% |
+| Mid (flagship nationals, rest of in-Seoul) | 135 | 17% | 22% | 20% | 36% | 4% | ₩369만 | 58% |
+| Top Seoul (SKKU to UOS) | 133 | 46% | 16% | 13% | 23% | 2% | ₩429만 | 72% |
+| SKY | 64 | 59% | 22% | 8% | 11% | 0% | ₩459만 | 77% |
+| Medical school | 23 | 0% | 0% | 100% | 0% | 0% | ₩592만 | 100% |
 
 By the family you were born into (your own earnings fifth at 30 against your family's household fifth at birth):
 
 | Born into | Lives | Four-year university | SKY or medicine | Mean pay a month | Mean fifth at 30 | Up | Same | Down | Top fifth |
 |---|---|---|---|---|---|---|---|---|---|
-| Bottom fifth | 132 | 91% | 13% | ₩360만 | 3.53 | 95% | 5% | 0% | 17% |
-| Second fifth | 131 | 90% | 16% | ₩360만 | 3.54 | 92% | 5% | 3% | 15% |
-| Middle fifth | 111 | 93% | 9% | ₩386만 | 3.71 | 56% | 37% | 7% | 24% |
-| Fourth fifth | 107 | 94% | 20% | ₩422만 | 3.92 | 26% | 45% | 29% | 26% |
-| Top fifth | 119 | 88% | 13% | ₩408만 | 3.84 | 0% | 26% | 74% | 26% |
+| Bottom fifth | 132 | 90% | 13% | ₩349만 | 3.45 | 93% | 7% | 0% | 14% |
+| Second fifth | 131 | 93% | 15% | ₩362만 | 3.53 | 92% | 4% | 4% | 17% |
+| Middle fifth | 111 | 86% | 14% | ₩403만 | 3.82 | 59% | 33% | 7% | 32% |
+| Fourth fifth | 107 | 92% | 15% | ₩413만 | 3.90 | 21% | 50% | 29% | 21% |
+| Top fifth | 119 | 95% | 16% | ₩406만 | 3.81 | 0% | 25% | 75% | 25% |
 
 How to read it against reality:
 
@@ -594,11 +595,11 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 | grinder (no rest), self-study, 1 try | 67 | 2.8 · 2.2 · 2.5 | 372 | 372 | 1.00 | 3% | 0% | 55% |
 | smart, online lectures, 1 try | 67 | 2.1 · 2.1 · 2.4 | 381 | 381 | 1.00 | 5% | 3% | 68% |
 | smart, best affordable method, 1 try | 69 | 1.9 · 1.9 · 2.2 | 385 | 385 | 1.00 | 11% | 3% | 76% |
-| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.9 · 2.2 | 385 | 410 | 2.55 | 69% | 25% | 98% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 384 | 418 | 3.41 | 94% | 88% | 99% |
+| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.9 · 2.2 | 385 | 410 | 2.52 | 66% | 25% | 99% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 384 | 419 | 3.34 | 93% | 90% | 100% |
 | smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.9 · 2.2 | 386 | 386 | 1.00 | 6% | 0% | 79% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.1 · 2.0 · 2.3 | 383 | 419 | 3.39 | 95% | 89% | 100% |
-| balanced, self-study, vocational high school, 1 try | 60 | 2.5 · 2.1 · 2.5 | 362 | 362 | 1.00 | 0% | 0% | 40% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.1 · 2.0 · 2.3 | 383 | 420 | 3.34 | 94% | 91% | 100% |
+| balanced, self-study, vocational high school, 1 try | 60 | 2.5 · 2.2 · 2.6 | 362 | 362 | 1.00 | 0% | 0% | 39% |
 | balanced, self-study, leaves school at High 1, 1 try | 62 | 2.6 · 2.4 · 2.7 | 366 | 366 | 1.00 | 0% | 0% | 45% |
 | smart, best affordable, leaves school at High 1, 1 try | 68 | 2.0 · 2.0 · 2.3 | 383 | 383 | 1.00 | 10% | 3% | 78% |
 | smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.1 · 2.5 | 379 | 379 | 1.00 | 8% | 1% | 66% |
@@ -617,10 +618,10 @@ Admissions in the same lives (v6.0): the 내신 average at the end of High 3's f
 | smart, online lectures, 1 try | 2.55 | 46 | 2.5 | 16% | 16% | 0% |
 | smart, best affordable method, 1 try | 2.38 | 49 | 2.7 | 18% | 18% | 0% |
 | smart, best affordable, retakes up to 3 tries | 2.38 | 49 | 0.1 | 1% | 13% | 0% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.39 | 49 | 0.0 | 0% | 13% | 0% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.39 | 49 | 0.0 | 0% | 14% | 0% |
 | smart, best affordable, tries for selective schools, 1 try | 2.49 | 49 | 2.4 | 16% | 16% | 0% |
 | smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 2.51 | 48 | 0.0 | 0% | 13% | 0% |
-| balanced, self-study, vocational high school, 1 try | 1.90 | 48 | 3.5 | 33% | 33% | 0% |
+| balanced, self-study, vocational high school, 1 try | 1.90 | 48 | 3.5 | 31% | 31% | 0% |
 | balanced, self-study, leaves school at High 1, 1 try | - | 26 | 1.9 | 16% | 16% | 0% |
 | smart, best affordable, leaves school at High 1, 1 try | - | 26 | 2.0 | 13% | 13% | 0% |
 | smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | - | - | 1.6 | 13% | 13% | 0% |
@@ -650,13 +651,13 @@ By region kind, where the life ended up (the same smart bot, first try; 의대 i
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 16 | 68 | 390 | 19% | 81% | 88% |
-| Seoul academy district | 5 | 71 | 380 | 0% | 80% | 80% |
-| Seoul | 5 | 72 | 392 | 20% | 80% | 100% |
-| Capital-region city | 20 | 68 | 384 | 15% | 70% | 80% |
+| Gangnam | 16 | 68 | 390 | 19% | 81% | 94% |
+| Seoul academy district | 5 | 71 | 380 | 0% | 80% | 100% |
+| Seoul | 5 | 72 | 392 | 20% | 80% | 80% |
+| Capital-region city | 20 | 68 | 384 | 15% | 70% | 85% |
 | Big city | 12 | 71 | 386 | 0% | 92% | 100% |
-| Mid-sized city | 13 | 68 | 388 | 15% | 69% | 77% |
-| Rural county | 9 | 66 | 369 | 0% | 67% | 100% |
+| Mid-sized city | 13 | 68 | 388 | 15% | 69% | 85% |
+| Rural county | 9 | 66 | 369 | 0% | 67% | 89% |
 
 What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 73% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
@@ -720,6 +721,12 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script; `--epilogue [lives]` plays only the epilogue tables.
 
 ## Changelog
+
+- **v6.8:** from the third daily play-through (six more lives by hand in both languages: a Cheongju boy at a technical high school, a Jeonju girl raised by her mom, a Mokdong boy who retook twice, a Gwangju girl raised by her grandparents who left school in High 1, a Daegu boy who aimed at a foreign-language high, and a Jeju girl on the sciences track; then six Pohang vocational lives to test the new path).
+  - **Straight to work (고졸 취업):** a vocational high used to push every student through 학력평가, 세특 presentations and a 수능 like everyone else, though most real vocational graduates who can work go to work. Now the employment office offers most of them a job in August of High 3 (`workOffer`, its own stream; 55.2% of 2025's vocational graduates free to work were employed, Meister schools 73.1%, 36.3% at firms of 300+). Taking it ends the life with `ending.work` (no 수능, attempts 0), its own ending, film and share-card line, the achievement "Hired out of school" (45 in all), and in the epilogue "Stay at your job" and, for a man at a small firm, 34 months as an industrial technical worker (산업기능요원) served at that firm. sim.js's bots turn the offer down, so its rows keep meaning a 수능 candidate.
+  - **The later retake years:** a 삼수 replayed the 재수 year's events (the same nagging, cold and "your classmates' orientation photos"). New: the draft physical for men from the second try (grade 1, or grade 4 and social service when health has been poor, matching the epilogue), younger retakers at the academy calling you "sunbae" from the third try, and the year your family says is the last they'll pay for.
+  - **Wording:** the school festival in High 1 and 2 is no longer "the last festival of high school" (that line is now only for High 3).
+  - Balance: calibration and the top end are unchanged; the strategy rows with retakes moved a little (the new retake events change which event a retake month gets), and the epilogue table moved with them; both regenerated.
 
 - **v6.7:** from the second daily play-through (seven more lives by hand in both languages: a Gangnam 의대 hopeful who retook, a science-high applicant in Daejeon, a Pohang Meister-school boy, an arts-school hopeful in Mapo, a Jeju girl and a Haenam boy on the local and rural quotas, and a child in care in Jeonju).
   - **The 수시 납치 trap, named:** the 수시 screen marks every school your September mock already clears in regular admission, and ticking one puts a warning in the picks bar: "Your September mock puts Chung-Ang University within reach in regular admission (about 66%). An early offer from a regional private university would rule that out." A retaker with all 1s in his mocks used to tick a regional university as a safety without a word and lose 정시 twice. The check (`susiTrap`, with `jeongsiOdds`, which `options()` now uses too) is display only.

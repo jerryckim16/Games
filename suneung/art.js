@@ -1627,6 +1627,24 @@
       s += P("M770 140 Q640 150 520 160 Q470 164 434 170", null, "inkE", 0.8, "opacity:0.4");
       return s + vignette(W, H, 0.5);
     },
+    // v6.8: the plant on the first morning of work (고졸 취업): a long shed with a sawtooth roof and roof
+    // glazing, a chimney, the guard booth and the boom barrier at the gate, the access road.
+    plant(ctx) {
+      let s = sky(0, 0, W, H, { tod: "day", seed: 61, sunX: 0.2, sunY: 0.2 }) + ridge(0, W, 150, 50, 5, "mtnFar", ctx.season) + haze(0, 110, W, 60, 0.6);
+      s += R(640, 34, 18, 120, "concrete2") + R(636, 30, 26, 8, "steel2") + R(640, 50, 18, 6, "accentRed", 0, null, 0, "opacity:0.7");
+      s += boxP(300, 178, 460, 82, 0.05, [400, 120], "concrete", "roofGreen", "concrete2");
+      let saw = "M300 96";
+      for (let i = 0; i < 8; i++) { const x = 300 + i * 57.5; saw += " L" + (x + 57.5) + " 72 L" + (x + 57.5) + " 96"; }
+      s += P(saw + " Z", "roofGreen");
+      for (let i = 0; i < 8; i++) s += L(300 + (i + 1) * 57.5, 74, 300 + (i + 1) * 57.5, 95, "winDay", 3);
+      for (let i = 0; i < 10; i++) s += R(318 + i * 44, 112, 28, 14, "winDay") + R(318 + i * 44, 112, 28, 3, "aoC", 0, null, 0, "opacity:0.2");
+      s += R(470, 138, 64, 40, "steel2") + L(470, 148, 534, 148, "steel", 1) + L(470, 158, 534, 158, "steel", 1) + L(470, 168, 534, 168, "steel", 1);
+      s += R(0, 178, W, 10, "pavement") + R(0, 188, W, 72, "asphalt") + L(0, 222, W, 222, "lane", 2, "stroke-dasharray:18 14");
+      // The gate: a guard booth, a post and a striped barrier arm, raised for you.
+      s += shadow(50, 180, 40, 5) + boxP(20, 180, 60, 58, 0.05, [400, 120], "concrete2", "steel2", "concrete") + R(28, 134, 44, 18, "winDay");
+      s += R(100, 140, 10, 40, "steel") + G(106, 146, L(0, 0, 110, -54, "paperE", 6) + L(14, -7, 30, -15, "accentRed", 6) + L(46, -23, 62, -31, "accentRed", 6) + L(78, -38, 94, -46, "accentRed", 6));
+      return s + vignette(W, H, 0.4);
+    },
     // The setup banner: a city at night under a low moon, Namsan Tower in the haze, lit apartment windows.
     start() {
       let s = sky(0, 0, W, H, { tod: "night", seed: 2, sunX: 0.51, sunY: 0.45, sunR: 16 });
@@ -1665,9 +1683,9 @@
   const SCENES = {};
   // v6.5: the mood's grade goes over the set and under you, and lightly over everything.
   for (const n in SETS) SCENES[n] = (ctx) => SETS[n](ctx) + grade(W, H, "back") + (n === "start" ? "" : person(ctx, n === "kinder" ? 380 : n === "hallway" ? 330 : n === "cubicle" ? 330 : 350, FEET, n === "cubicle" ? 1.02 : 1.05,
-    n === "gate" ? { pose: "cheer", mood: "happy" } : n === "cubicle" || n === "campus" ? { prop: "book" } : MOOD <= -2 ? { pose: "slump" } : null)) + grade(W, H, "front");
+    n === "gate" ? { pose: "cheer", mood: "happy" } : n === "plant" ? { gear: "vest", mood: MOOD >= 0 ? "happy" : "ok" } : n === "cubicle" || n === "campus" ? { prop: "book" } : MOOD <= -2 ? { pose: "slump" } : null)) + grade(W, H, "front");
   function sceneName(stage, ctx) {
-    if (ctx.ending) return ctx.label ? "gate" : "road";
+    if (ctx.ending) return ctx.label ? "gate" : ctx.work ? "plant" : "road";
     if (ctx.examMonth) return "examhall";
     if (ctx.results) return "home";
     if (stage === "baby") return "nursery";
@@ -1894,6 +1912,7 @@
     city: (ctx) => fit(SETS.city(ctx)),
     hospital: (ctx) => fit(SETS.hospital(ctx)),
     pcbang: (ctx) => fit(SETS.pcbang(ctx)),
+    plant: (ctx) => fit(SETS.plant(ctx)),
     kitchen: (ctx, night) => fit(SETS.kitchen(ctx, night)),
     street: (ctx) => fit(SETS.street(ctx)),
     cubicle: (ctx) => fit(SETS.cubicle(ctx)),
@@ -2081,6 +2100,9 @@
     "retaker-doubt": { bg: "cubicle", fx: "polaroids", mood: "tired", prop: "phone", pose: "hold", x: 160, icon: "📸" },
     "phone-broke": { bg: "bath", fx: "toilet", mood: "stressed", icon: "🚽" },
     mentor: { bg: "class", fx: "planner", mood: "ok", icon: "🗓️" },
+    draftcheck: { bg: "hospital", fx: "doctor", mood: "ok", icon: "🪖" },
+    younger: { bg: "class", fx: "notes", mood: "ok", icon: "🧑‍🤝‍🧑", res: { r0: { mood: "happy" } } },
+    lastyear: { bg: "kitchen", fx: "mom", mood: "stressed", x: 200, icon: "⏳" },
     // Parents' jobs.
     momwork: { bg: "city", fx: "sparkles", mood: "happy", icon: "💼" },
     "job-shop": { bg: "street", fx: "shop", mood: "ok", x: 420, icon: "🍗" },
@@ -2114,6 +2136,7 @@
     rne: { bg: "class", fx: "mathsyms", mood: "happy", icon: "🔬", res: { r1: { mood: "ok" } } },
     recital: { bg: "field", fx: "podium", mood: "happy", pose: "cheer", icon: "🎻", res: { r1: { mood: "ok", pose: null } } },
     intern: { bg: "street", fx: "shop", mood: "happy", x: 420, icon: "🔧" },
+    joboffer: { bg: "plant", fx: "counsel", mood: "ok", x: 250, icon: "💼", res: { r0: { mood: "happy", pose: "cheer" }, r1: { mood: "ok" } } },
     rankshock: { bg: "class", fx: "raincloud", mood: "stressed", icon: "📉" },
     immersion: { bg: "class", fx: "chat", mood: "happy", icon: "🗣️" },
     // Luck: the 사주 reading, the family's fortunes, accidents and lucky breaks, and exam-day luck.
@@ -2206,7 +2229,7 @@
   }
   const GLOOMY_FX = { raincloud: 1, looming: 1, candle: 1, cracks: 1, sheep: 1 };
   // Backdrops out of doors, where a bad moment brings rain across the whole frame.
-  const OUTDOORS = { field: 1, city: 1, street: 1, beach: 1, farm: 1, campus: 1, busstop: 1 };
+  const OUTDOORS = { field: 1, city: 1, street: 1, beach: 1, farm: 1, campus: 1, busstop: 1, plant: 1 };
   // ctx: { id, variant, stage, look, mood, season, view, region, people, tone }
   //   tone (v6.5): -2…+2 from the engine (the outcome's tone, or promptTone for a question). It sets the
   //   light (withMood), and with it how you look: at -2 the spec's low mood and pose (default crying,
@@ -2433,7 +2456,7 @@
     REGION = (ctx && ctx.region) || "";
     begin();
     return withMood(ctx.tone, () => {
-      if ((name === "offers" || name === "ending") && !(name === "offers" && !ctx.label && MOOD <= -1)) { const b = SCENES[ctx.label ? "gate" : name === "ending" ? "road" : "home"](ctx); return svg("0 0 " + W + " " + H, tidy(defsOut() + b), "event-art wide"); }
+      if ((name === "offers" || name === "ending") && !(name === "offers" && !ctx.label && MOOD <= -1)) { const b = SCENES[ctx.label ? "gate" : name === "ending" ? (ctx.work ? "plant" : "road") : "home"](ctx); return svg("0 0 " + W + " " + H, tidy(defsOut() + b), "event-art wide"); }
       const b = SCREENS[name === "offers" ? "rejected" : name](ctx) + grade(EW, EH, "all");
       return svg("0 0 " + EW + " " + EH, tidy(defsOut() + b), "event-art");
     });
@@ -2749,6 +2772,14 @@
     },
     // The ending: a suitcase on a road under cherry trees, then through the university gate. No offer: a dusk road.
     end(ctx) {
+      // v6.8: straight to work. The plant seen big, you walking in through the raised barrier in a safety
+      // vest; then the first pay envelope.
+      if (ctx.work) {
+        const k = CH / H, x0 = -(W * k - CW) / 2;
+        const a = G(x0, 0, SETS.plant(ctx) + walk(-260, 0, 0.1, 2.8, person(ctx, 330, FEET, 1.0, { gear: "vest", mood: "happy" })), k);
+        const b = G(x0, 0, SETS.plant(ctx) + person(ctx, 400, FEET, 1.1, { gear: "vest", mood: "happy", pose: "hold", prop: "envelope" }), k);
+        return [cutShot(3.2, a + vignette(CW, CH, 0.6), { s0: 1.0, s1: 1.08, ox: 400, oy: 300 }), cutShot(3.0, b + vignette(CW, CH, 0.6), { s0: 1.35, s1: 1.1, ox: 400 * k + x0, oy: 330 })];
+      }
       const suitcase = (x) => G(x, CF, shadow(0, 0, 26, 4) + R(-22, -60, 44, 56, "suitcase", 5) + R(-22, -60, 8, 56, "hiE", 4, null, 0, "opacity:0.15") + R(-8, -70, 16, 12, null, 3, "steel2", 3) + O(-12, -2, 4, "inkE") + O(12, -2, 4, "inkE"));
       if (!ctx.label) {
         let a = sky(0, 0, CW, CH, { tod: "gold", seed: 12, sunX: 0.7, sunY: 0.58, sunR: 20 }) + ridge(0, CW, 300, 100, 8, "mtnFar", "fall") + haze(0, 220, CW, 90, 0.7) + ridge(0, CW, 330, 50, 9, "mtnMid", "fall");

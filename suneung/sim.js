@@ -202,7 +202,8 @@ function playCareer(seed, bot, opts) {
       g.advance(plan, method);
       continue;
     }
-    if (top.type === "event") { g.choose(top.id === "early" && !opts.early ? 1 : 0); continue; }
+    // The bots sit the 수능, so they turn down the vocational high's job offer (v6.8).
+    if (top.type === "event") { g.choose((top.id === "early" && !opts.early) || top.id === "joboffer" ? 1 : 0); continue; }
     if (top.type === "birth") { g.dismiss(); continue; }
     // Schools: the public one unless the bot has a list of schools it tries for (first open one with
     // a fair chance).

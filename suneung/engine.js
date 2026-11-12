@@ -1216,6 +1216,19 @@
       },
     },
     { id: "intern", weight: 2, when: (g) => g.atSchool("vocHigh") && g.grade >= 11, run: (g) => { g.money += 600000; bump(g, { motivation: 4, stress: -2 }); return "r"; } },
+    // v6.8 (고졸 취업): in August of High 3 a vocational high's employment office has a job for most of its
+    // class (workOffer, its own stream). Taking it ends exam life (choose() calls startWork); turning it
+    // down keeps you on the road to the 수능.
+    {
+      id: "joboffer", weight: (g) => (g.flags.workOffer == null && g.workOffer() ? 100 : 0), when: (g) => g.status === "hs3" && g.month === 8, choices: 2,
+      params: (g) => g.workOffer(),
+      run: (g, i, q) => {
+        g.flags.workOffer = g.clock;
+        if (i === 0) { bump(g, { stress: -10, motivation: 4 }); return ["r0", { job: q && q.job }]; }
+        bump(g, { stress: 2, motivation: 3 });
+        return ["r1", { job: q && q.job }];
+      },
+    },
     // Everyone at an elite high school was top of their class; the first exams sort that out.
     {
       id: "rankshock", weight: 100, when: (g) => g.atSchool("autoHigh", "sciHigh", "langHigh") && g.grade === 10 && !g.flags.rankShock,
@@ -1422,7 +1435,8 @@
     {
       id: "festival", weight: 1, when: (g) => g.dropout == null && ((g.status === "hs3" && (g.month === 5 || g.month === 10)) || g.status === "high"), choices: 2,
       run: (g, i) => {
-        if (i === 0) { bump(g, { stress: -14, motivation: 4 }); if (g.recordOpen()) g.record.comm += 1; return "r0"; }
+        // "The last festival of high school" only in High 3 (v6.8: High 1 and 2 have their own line).
+        if (i === 0) { bump(g, { stress: -14, motivation: 4 }); if (g.recordOpen()) g.record.comm += 1; return g.status === "hs3" ? "r0" : "r0y"; }
         studyBoost(g, pickWeak(g), 0.025); bump(g, { stress: 4 }); return "r1";
       },
     },
@@ -1439,6 +1453,26 @@
     },
     { id: "phone-broke", weight: 1, when: (g) => g.flags.phone, run: (g) => { bump(g, { motivation: 6 }); return "r"; } },
     { id: "mentor", weight: 1, when: (g) => g.status === "academy", run: (g) => { bump(g, { motivation: 8 }); return "r"; } },
+    // v6.8: more for the later retake years, which used to replay the second year's events.
+    // The draft physical (병역판정검사) comes in the year a man turns 19: grade 1–3 means active duty,
+    // grade 4 social service (the epilogue's ARMY_SOCIAL_HEALTH line).
+    {
+      id: "draftcheck", weight: 2, when: (g) => g.servesArmy() && g.attempt >= 2 && g.age >= 18 && !g.flags.draftCheck,
+      run: (g) => { g.flags.draftCheck = g.clock; bump(g, { stress: 3 }); return g.health < ARMY_SOCIAL_HEALTH ? "r4" : "r1"; },
+    },
+    // 삼수 and on: the new retakers at the academy are younger than you.
+    {
+      id: "younger", weight: 2, when: (g) => g.attempt >= 3 && g.status === "academy", choices: 2,
+      run: (g, i) => {
+        if (i === 0) { bump(g, { motivation: 5, stress: 2 }); studyBoost(g, pickWeak(g), 0.015); return "r0"; }
+        bump(g, { stress: -2, motivation: -1 }); return "r1";
+      },
+    },
+    // 삼수 and on: whoever pays sets a last year.
+    {
+      id: "lastyear", weight: 2, when: (g) => g.attempt >= 3 && g.parents !== "care" && !g.flags.lastYear,
+      run: (g) => { g.flags.lastYear = g.clock; bump(g, { motivation: 7, stress: 6 }); return "r"; },
+    },
     {
       id: "campus", weight: 1.5, when: (g) => g.status === "halfretake", choices: 2,
       run: (g, i) => {
@@ -1628,7 +1662,7 @@
     "eve.r0a": -1, "eve.r0b": 1, "eve.r1a": 1, "eve.r1b": -1, "eve.r2": -1, "lunch.r0": 1, "lunch.r1a": -1, "lunch.r1b": 1, "lunch.r2": -1,
     "examluck.sniffler": -1, "examluck.omr": -2, "examluck.guess": 1, "examluck.drilled": 2, "examluck.calm": 1,
     "saju.r.great": 2, "saju.r.good": 1, "saju.r.even": 0, "saju.r.mixed": -1, "saju.r.rough": -1,
-    "bloom.up": 1, "bloom.down": -1, "bloom.mixed": 0,
+    "bloom.up": 1, "bloom.down": -1, "bloom.mixed": 0, "joboffer.r0": 1, "joboffer.r1": 0, "draftcheck": 0, "lastyear": -1,
     "soc-birthday.r0": 1, "soc-moveaway": -1, "soc-breakup.r0": -1, "soc-breakup.r1": 0, "soc-reunion.r0": 1, "soc-date": 1, "soc-makeup": 1, "soc-playdate": 1,
     "soc-gate": 1, "soc-rivalrank.rw": 1, "soc-rivalrank.rl": -1, "soc-rivalmock.rw": 1, "soc-rivalmock.rl": -1,
     "ged.pass0": 2, "ged.pass1": 2, "ged.fail0": -1, "ged.fail1": -1, "olympiad.r0a": 2, "olympiad.r0b": -1, "prodigy.r0a": 2, "prodigy.r0b": -1,
@@ -1928,6 +1962,9 @@
     social: { months: 21, spec: 0.2 },
     alt: { months: 36, spec: 0 },
     doctor: { months: 38, spec: 0 },
+    // v6.8: 산업기능요원 (industrial technical personnel), for a man already working at a small firm out of a
+    // vocational high: 34 months (현역) served at that firm, so the years count as work, not a gap.
+    industrial: { months: 34, spec: 0, work: true },
   };
   const ARMY_WHEN = { y1: { gpa: 0.1, hunt: 0 }, y2: { gpa: 0, hunt: 0 }, after: { gpa: 0, hunt: -0.2 } };
   // Grade 4 (social service) when health has been poor; the game's own rule, not a real share.
@@ -1983,7 +2020,7 @@
   const ACHIEVEMENTS = [
     "perfectPaper", "allOnes", "med", "snu", "sky", "inSeoul", "firstTry", "nsu5", "dragon", "dropoutSeoul", "careUni", "scholar",
     "bullySurvivor", "hagwonAll", "selfMade", "early", "waitlist", "halfUp", "ruralSeoul", "daechi", "mover", "familyUp", "jackpot",
-    "omr", "stethoscope", "sciHigh", "vocUni", "noUni", "college",
+    "omr", "stethoscope", "sciHigh", "vocUni", "noUni", "college", "hired",
     "bigCo", "civil", "lawyer", "gavel", "doctor30", "topFifth", "riseTwo", "ragsToRiches", "served", "altService", "exchange", "startupWin",
     "daily", "replay", "veteran",
   ];
@@ -2908,6 +2945,8 @@
         this.addLog("log.event", { id: top.id, c: null, r: res }, "event");
       }
       this.queue.shift();
+      // v6.8: taking the vocational high's job offer ends exam life here.
+      if (top.id === "joboffer" && i === 0 && top.p && top.p.job) { this.startWork(top.p.job); return res; }
       this.flush();
       return res;
     }
@@ -3307,6 +3346,33 @@
       const run = this.naesinAvg();
       this.addLog("log.naesin", { gr: this.grade, sem, kind, avg: exam.avg, sa: semRec && semRec.avg, run }, "mock");
       return { type: "naesin", result: exam, sem: semRec, run };
+    }
+    // v6.8 (고졸 취업): the job a vocational high's employment office has for you in August of High 3, or
+    // null. Of 2025's vocational graduates free to work (not going on to study or serving), 55.2% were
+    // employed (Meister schools 73.1%, 특성화고 52.4%), 36.3% of them at firms of 300 or more (MOE, 직업계고
+    // 졸업자 취업통계 2025; data/korea-stats.md section 13). An offer isn't a job, so the game's chances sit
+    // a little above those: about 60% at a 특성화고 and 80% at a Meister school, better with better school
+    // grades. From its own stream of the seed and the year, so it never moves g.rng and reads the same every
+    // time it's asked. Only on the first try, at school.
+    workOffer() {
+      if (!(this.status === "hs3" && this.attempt === 1 && this.dropout == null && this.atSchool("vocHigh"))) return null;
+      const r = makeRng(hashSeed(this.seed, "work", this.year));
+      const meister = !!(this.real && /마이스터/.test(this.real.name || ""));
+      const avg = this.naesinAvg() == null ? 3 : this.naesinAvg();
+      if (r() >= clamp((meister ? 0.8 : 0.6) + 0.08 * (3 - avg), 0.3, 0.95)) return null;
+      const big = r() < clamp((meister ? 0.5 : 0.33) + 0.08 * (3 - avg), 0.1, 0.8);
+      return { job: big ? "bigline" : "sme", meister, boy: this.servesArmy() };
+    }
+    // Takes the job: school ends with the year, and in March you start work. The ending has no university
+    // and no attempt at the 수능 (attempts 0); ending.work is the job, which the epilogue lets you keep.
+    startWork(job) {
+      this.queue = [];
+      this.leaveSchool();
+      this.month = 3;
+      this.year += 1;
+      this.age += 1;
+      this.ending = { uni: null, work: job, attempts: 0, age: this.age, best: this.bestResult() };
+      this.addLog("log.work", { job, y: this.year }, "milestone");
     }
     // Your 내신 average: every semester grade of every subject, equally weighted (real schools weight
     // by credit hours). null before the first semester ends, or with no record.
@@ -3880,6 +3946,8 @@
       } else if (step === "armyWhen") opts.push("y1", "y2", "after");
       else if (step === "army") {
         if (e.tier === 6) opts.push("doctor");
+        // v6.8: a small firm hired out of a vocational high can keep you on as 산업기능요원.
+        if (this.ending.work === "sme") opts.push("industrial");
         if (this.health < ARMY_SOCIAL_HEALTH) opts.push("social");
         else opts.push("army", "navy", "air", "marine");
         opts.push("alt");
@@ -3900,7 +3968,9 @@
       if (t === 6) return ["popular", "essential", "gp"];
       if (t === 0) {
         const voc = (this.log || []).some((l) => l.key === "log.school" && l.p && l.p.id === "vocHigh");
-        return (voc ? ["bigline"] : []).concat(["trade", "civil", "service", "shop"]);
+        const work = this.ending.work;
+        // v6.8: a job taken straight from school is yours to keep ("stay"), or to leave for another try.
+        return (work ? ["stay"] : []).concat(voc && work !== "bigline" ? ["bigline"] : [], ["trade", "civil", "service", "shop"]);
       }
       const o = [];
       if (HUNT.big.tier[t] != null) o.push("big");
@@ -3949,12 +4019,20 @@
       } else if (step === "army") {
         e.army = id;
         const a = ARMY[id];
-        // A 군의관 serves after residency, past 30.
-        if (id !== "doctor") e.years += a.months / 12;
+        // A 군의관 serves after residency, past 30; 산업기능요원 serve at work, so it isn't a gap.
+        if (id !== "doctor" && !a.work) e.years += a.months / 12;
         e.spec += a.spec;
         if (e.tier === 6 && id !== "doctor") e.when = "y2";
         res = { key: "epi.r.army." + id, p: { m: a.months } };
         this.epiPush("hunt");
+      } else if (step === "hunt" && id === "stay") {
+        // v6.8: keep the job you took out of school (back to it after service, if you served elsewhere).
+        e.target = id;
+        e.tries = 1;
+        e.job = this.ending.work;
+        e.start = this.ending.age + e.years;
+        res = { key: "epi.r.stay", p: { job: e.job, back: e.years > 0 } };
+        this.epiFinish();
       } else if (step === "hunt") {
         e.target = id;
         e.tries = 1;
@@ -4114,6 +4192,7 @@
         if (log.some((l) => l.key === "log.school" && l.p && l.p.id === "vocHigh") && seoulish) has("vocUni");
         if (!uni) has("noUni");
         if (uni === "college") has("college");
+        if (end.work) has("hired");
         if (this.daily) has("daily");
         if (this.replayOf) has("replay");
       }
