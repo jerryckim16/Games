@@ -2166,11 +2166,12 @@
   Object.assign(DATA.en.uni, {
     kaist: "KAIST", postech: "POSTECH", ewha: "Ewha Womans University", sookmyung: "Sookmyung Women's University", seoultech: "Seoul Nat'l Univ. of Science & Technology",
     kwangwoon: "Kwangwoon University", sejong: "Sejong University", jnu: "Chonnam National University", cnu: "Chungnam National University",
+    cbnu: "Chungbuk National University", jbnu: "Jeonbuk National University", jejunu: "Jeju National University",
     sungshin: "Sungshin Women's University", dankook: "Dankook University", swu: "Seoul Women's University", myongji: "Myongji University",
     incheon: "Incheon National University", duksung: "Duksung Women's University", dongduk: "Dongduk Women's University", kwangjuWomen: "Kwangju Women's University",
   });
   Object.assign(DATA.ko.uni, {
-    kaist: "카이스트", postech: "포스텍", ewha: "이화여대", sookmyung: "숙명여대", seoultech: "서울과기대", kwangwoon: "광운대", sejong: "세종대", jnu: "전남대", cnu: "충남대",
+    kaist: "카이스트", postech: "포스텍", ewha: "이화여대", sookmyung: "숙명여대", seoultech: "서울과기대", kwangwoon: "광운대", sejong: "세종대", jnu: "전남대", cnu: "충남대", cbnu: "충북대", jbnu: "전북대", jejunu: "제주대",
     sungshin: "성신여대", dankook: "단국대", swu: "서울여대", myongji: "명지대", incheon: "인천대", duksung: "덕성여대", dongduk: "동덕여대", kwangjuWomen: "광주여대",
   });
   Object.assign(DATA.en.act, { prep: "Exam prep", club: "Club", volunteer: "Volunteering", project: "Research project" });
