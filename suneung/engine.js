@@ -222,9 +222,9 @@
     { id: "gwangju", kind: "metro", pop: 2.7, nat: "jnu" },
     { id: "daejeon", kind: "metro", pop: 3.6, nat: "cnu" },
     { id: "pohang", kind: "city", pop: 8.2, view: "sea", nat: "knu" },
-    { id: "jeonju", kind: "city", pop: 4.3 },
-    { id: "cheongju", kind: "city", pop: 7.3 },
-    { id: "jeju", kind: "city", pop: 1.3, view: "sea" },
+    { id: "jeonju", kind: "city", pop: 4.3, nat: "jbnu" },
+    { id: "cheongju", kind: "city", pop: 7.3, nat: "cbnu" },
+    { id: "jeju", kind: "city", pop: 1.3, view: "sea", nat: "jejunu" },
     { id: "pyeongchang", kind: "rural", pop: 6.1, view: "country" },
     { id: "haenam", kind: "rural", pop: 2.5, view: "sea", nat: "jnu" },
   ];
@@ -571,6 +571,13 @@
     { id: "inha", cut: 85.0, susi: 70, gk: 1.57, jh: 66, ns: true },
     { id: "ajou", cut: 85.8, susi: 68, gk: 1.57, jh: 67, ns: true },
     { id: "cnu", cut: 85.0, susi: 78, gk: 1.87, gkMin: [2, 6], jh: 64 },
+    // v6.9: the flagship national universities of North Chungcheong, North Jeolla and Jeju, so every
+    // provincial region has a local-quota national university. Placed by tier just under Chungnam
+    // (Chungbuk and Chungnam about level, Jeonbuk a little below, Jeju lower; see data/korea-stats.md
+    // section 8), all under the in-Seoul+ line so sim.js's groups keep their members. None runs 논술.
+    { id: "cbnu", cut: 84.3, susi: 77, gk: 1.92, gkMin: [2, 6], jh: 63 },
+    { id: "jbnu", cut: 84.0, susi: 76, gk: 1.97, gkMin: [2, 7], jh: 62 },
+    { id: "jejunu", cut: 81.5, susi: 78, gk: 2.25, gkMin: [2, 7], jh: 57 },
     { id: "sungshin", cut: 85.0, women: true, susi: 66, gk: 1.82, jh: 64 },
     { id: "dankook", cut: 84.8, susi: 66, gk: 1.72, jh: 64, ns: true },
     { id: "swu", cut: 84.0, women: true, susi: 67, gk: 1.92, jh: 62 },
@@ -2832,11 +2839,16 @@
       if (q === undefined) q = e.params ? e.params(this) : null;
       if (e.choices) this.queue.push(q ? { type: "event", id: e.id, choices: e.choices, p: q } : { type: "event", id: e.id, choices: e.choices });
       else {
-        const before = toneSnap(this);
+        const before = toneSnap(this), logN = this.log.length;
         const res = outcome(e.id, e.run(this, null, q));
         if (q) res.p = Object.assign({}, q, res.p);
         res.tone = toneOf(this, before, e.id, res);
-        this.queue.push(q ? { type: "event", id: e.id, choices: 0, result: res, p: q } : { type: "event", id: e.id, choices: 0, result: res });
+        const item = q ? { type: "event", id: e.id, choices: 0, result: res, p: q } : { type: "event", id: e.id, choices: 0, result: res };
+        // v6.9: what the event did (log.fortune, log.job, log.schoolFee, ...) is logged after the event
+        // itself, when it's answered, so the life log reads cause before effect.
+        const after = this.log.splice(logN);
+        if (after.length) item.after = after;
+        this.queue.push(item);
       }
     }
 
@@ -2933,16 +2945,20 @@
       let res;
       if (top.choices) {
         i = clamp(i | 0, 0, top.choices - 1);
-        const before = toneSnap(this);
+        const before = toneSnap(this), logN = this.log.length;
         if (top.id === "eve") res = outcome("eve", this.resolveEve(i));
         else if (top.id === "lunch") res = outcome("lunch", this.resolveLunch(i));
         else res = outcome(top.id, EVENTS.find((e) => e.id === top.id).run(this, i, top.p || null));
         if (top.p) res.p = Object.assign({}, top.p, res.p);
         res.tone = toneOf(this, before, top.id, res);
+        const after = this.log.splice(logN);
         this.addLog("log.event", top.p ? { id: top.id, c: i, r: res, q: top.p } : { id: top.id, c: i, r: res }, "event");
+        this.log.push(...after);
       } else {
         res = top.result;
         this.addLog("log.event", { id: top.id, c: null, r: res }, "event");
+        // Old saves' queued events have no after (their lines were logged when the event fired).
+        if (top.after) this.log.push(...top.after.map((l) => Object.assign({}, l, { t: this.t(), att: this.attempt })));
       }
       this.queue.shift();
       // v6.8: taking the vocational high's job offer ends exam life here.
