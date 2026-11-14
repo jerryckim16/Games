@@ -152,11 +152,11 @@ Built for a first-time player on a phone as much as a desktop (checked at 390px 
   - **학생부교과 (school grades):** your 내신 average against the school's line, often with a 최저; the top schools take only this year's graduates.
   - **학생부종합 (record review):** your record score; at SNU, Yonsei, medical schools, KAIST, POSTECH and a few others a document round in October (about three times as many pass as are admitted), then an interview after the 수능 (prepare with teachers, reread your record, or rest).
   - **논술 (essay exam):** your Korean and your math (sciences) or social studies against a line above the school's 정시 level; never better than 18%, usually with a 최저.
-  - **Quotas:** 지역인재 (regional talent) at medical schools and the regional national university, 농어촌 (rural) and 기회균형 (opportunity balance: children in care and about half of the lowest income fifth) make the 교과 and 종합 lines easier.
+  - **Quotas:** 지역인재 (regional talent) at medical schools and the regional national university, 농어촌 (rural) and 기회균형 (opportunity balance: children in care and about half of the lowest income fifth) make the 교과 and 종합 lines easier (where two apply, the bigger: rural over local; the medical local quota counts half in Jeju and Gangwon).
   - **Up to six applications** (KAIST doesn't count, as in reality). Every 수시 application rolls its own hidden swing in the line, and a rejection can still come good off the waitlist.
   - **수시 납치:** any 수시 offer, even off a waitlist, rules out 정시 that year. You choose among your 수시 offers (or 반수 at one, or retake), so applying to a school below what your 수능 might reach is a real risk. The screen warns in red, marks each school your latest mock already clears in 정시 (at least 85%, and 4 or more percentile points below the best school the mock gives a 55% chance), and when you tick one of those, a warning in the picks bar names that best school and your chance there.
   - **Retakers** apply with the 내신 and record they left school with (교과 at the top schools is closed to them); students who left school (검정고시) can apply only to essay exams. Saves from before v6.0 that were already in high school have no record and play 정시 only.
-- **More universities.** The list now has 43 schools (v6.9 added Chungbuk, Jeonbuk and Jeju National University, the local-quota schools for Cheongju, Jeonju and Jeju): Korea's women's universities (Ewha, Sookmyung, Sungshin, Seoul Women's, Duksung, Dongduk, and Kwangju Women's University among the regional ones), which admit women only (a male player sees them closed in both rounds), the next tier of Seoul schools (Seoul National University of Science and Technology, Kwangwoon, Sejong, Myongji, Dankook), Incheon National University, Chonnam and Chungnam National University (now the local-quota schools for Gwangju, Haenam and Daejeon), and KAIST and POSTECH, which admit only in 수시 (sciences only).
+- **More universities.** The list now has 44 schools (v6.9 added Chungbuk, Jeonbuk and Jeju National University, the local-quota schools for Cheongju, Jeonju and Jeju, and v6.10 Kangwon National University for Gangwon): Korea's women's universities (Ewha, Sookmyung, Sungshin, Seoul Women's, Duksung, Dongduk, and Kwangju Women's University among the regional ones), which admit women only (a male player sees them closed in both rounds), the next tier of Seoul schools (Seoul National University of Science and Technology, Kwangwoon, Sejong, Myongji, Dankook), Incheon National University, Chonnam and Chungnam National University (now the local-quota schools for Gwangju, Haenam and Daejeon), and KAIST and POSTECH, which admit only in 수시 (sciences only).
 - **Six exam sections, scored the way the real 수능 is** (2022–2027 format):
   - 국어 and 수학: raw /100, 표준점수 (mean 100, sd 20), 백분위, and 등급 1–9 by the 4/11/23/40/60/77/89/96% cut-offs;
   - 탐구 ×2: raw /50, 표준점수 (mean 50, sd 10), 백분위, 등급;
@@ -220,8 +220,8 @@ Built for a first-time player on a phone as much as a desktop (checked at 390px 
   - **Your family is dealt next, from that place's mix of incomes.** The region-by-income table is balanced (iterative proportional fitting) so every place keeps exactly its population share and every income fifth stays exactly 20% overall, while a child born in Gangnam is in the top fifth half the time (3% in the bottom fifth), and a rural child is in the bottom fifth 36% of the time (8% in the top).
   - **Cram school and tutor** multipliers apply to the method's study speed and price. A retake academy's speed follows its region too.
   - **Quotas** (real 정시 practice, simplified as points off a university's cut; both need middle and high school in the region, so you must arrive by Middle 1):
-    - 지역인재 (local quota): 0.6 points at medical school, and at the local national university (Pusan National for Busan, Kyungpook National for Daegu and Pohang, Chonnam National for Gwangju and Haenam, Chungnam National for Daejeon, and from v6.9 Chungbuk National for Cheongju, Jeonbuk National for Jeonju and Jeju National for Jeju; Pyeongchang has none), for students outside the capital region;
-    - 농어촌 전형 (rural quota): 0.8 points at most universities for rural students.
+    - 지역인재 (local quota): 0.6 points at medical school, and at the local national university (Pusan National for Busan, Kyungpook National for Daegu and Pohang, Chonnam National for Gwangju and Haenam, Chungnam National for Daejeon, and from v6.9 Chungbuk National for Cheongju, Jeonbuk National for Jeonju and Jeju National for Jeju; from v6.10 Kangwon National for Pyeongchang), for students outside the capital region. At medical school it's half as much (0.3) in Jeju and Gangwon, where the law asks for 20% of places instead of 40%;
+    - 농어촌 전형 (rural quota): 0.8 points at most universities for rural students. Where both apply (Pyeongchang and Haenam at medical school and the local national university), you get the bigger, rural one, in 정시 and (from v6.10) in 수시 too.
   - **Moving** is the family's decision: a block of packing next turn, +8 stress, −3 motivation, and the new-kid risk of bullying (moving can also end bullying at the old school, 70%). You can move once every 12 months; Seoul takes a middle-income family or above, Gangnam an upper-middle one.
   - **Region events:** typhoons closing school on Jeju, the Pohang earthquake, beach days on the coast, harvest weekends in the countryside, Gangnam's race to study years ahead, the long bus ride to a rural cram school, news of the medical-school local quota, and capital-region parents moving to Daegu for that quota (의대 지방 유학). The Daechi-dong event now really moves you to Gangnam.
   - The scene outside your window follows the region: city, sea or countryside.
@@ -237,7 +237,8 @@ Built for a first-time player on a phone as much as a desktop (checked at 390px 
 - **Retake paths:**
   - **재종반 (retake academy):** 6 blocks a month at cram-school speed for every subject, and a higher motivation baseline. The ₩2.9M monthly fee is paid by middle-income families and above; lower-income families can only go on a scholarship (admission score 85+).
   - **독학재수 (self-study retake):** 6 blocks a month, with any study method.
-  - **반수 (half-retake):** you start at a university you got into, with only 2 blocks a month until June. That school stays an option at next year's decision.
+  - **반수 (half-retake):** you start at a university you got into, with only 2 blocks a month until June. That school stays an option at next year's decision. The year has its own events: midterms in April in the same week as the academy's mock (study for them and lose a block, or sit them cold), a choice in July between a leave of absence for the fall (most 반수 students take one; the campus events stop) and staying enrolled for cover (a block less the next month), a department classmate who sees the workbook in your bag, the club trip, and the group chat planning a year you may not be there for.
+  - **The later years:** a 삼수 has the draft physical for men, younger retakers who call you "sunbae" and the year your family says is the last they'll pay for; from the fourth try, a farewell dinner for a friend who's enlisting, the army's letter with an enlistment date you have to keep putting off (men), and a parent's health checkup. What your old classmates post follows the year: orientation photos, then the festival; a training-center gate in your third year; internships and discharge photos after that.
 - **Condition:**
   - **Health** below 40 slows study.
   - **Stress** above 75 slows study, and 85+ risks burnout (−2 blocks next turn).
@@ -516,13 +517,13 @@ The epilogue's logic is in `engine.js` (`startEpilogue`, `epiChoose`), its figur
 
 | University | Lives | Big firm | Public enterprise, civil service, teacher | Doctor, lawyer, nurse, researcher | SME, startup, trade, shop, service | No steady job | Mean pay a month | Top two fifths |
 |---|---|---|---|---|---|---|---|---|
-| No university | 9 | 0% | 0% | 0% | 100% | 0% | ₩332만 | 56% |
+| No university | 10 | 0% | 0% | 0% | 100% | 0% | ₩342만 | 60% |
 | Junior college | 43 | 2% | 21% | 2% | 67% | 7% | ₩341만 | 44% |
-| Other four-year university | 199 | 0% | 23% | 9% | 63% | 5% | ₩327만 | 39% |
-| Mid (flagship nationals, rest of in-Seoul) | 132 | 17% | 23% | 20% | 35% | 5% | ₩372만 | 59% |
-| Top Seoul (SKKU to UOS) | 133 | 47% | 16% | 13% | 23% | 2% | ₩430만 | 72% |
-| SKY | 61 | 57% | 23% | 8% | 11% | 0% | ₩454만 | 75% |
-| Medical school | 23 | 0% | 0% | 100% | 0% | 0% | ₩592만 | 100% |
+| Other four-year university | 198 | 0% | 23% | 9% | 63% | 5% | ₩326만 | 39% |
+| Mid (flagship nationals, rest of in-Seoul) | 133 | 18% | 23% | 20% | 35% | 5% | ₩373만 | 59% |
+| Top Seoul (SKKU to UOS) | 131 | 46% | 16% | 13% | 23% | 2% | ₩429만 | 72% |
+| SKY | 61 | 57% | 23% | 8% | 11% | 0% | ₩455만 | 75% |
+| Medical school | 24 | 0% | 0% | 100% | 0% | 0% | ₩585만 | 100% |
 
 By the family you were born into (your own earnings fifth at 30 against your family's household fifth at birth):
 
@@ -531,8 +532,8 @@ By the family you were born into (your own earnings fifth at 30 against your fam
 | Bottom fifth | 132 | 89% | 13% | ₩347만 | 3.42 | 93% | 7% | 0% | 14% |
 | Second fifth | 131 | 93% | 15% | ₩361만 | 3.53 | 92% | 4% | 4% | 16% |
 | Middle fifth | 111 | 87% | 14% | ₩402만 | 3.82 | 59% | 33% | 7% | 32% |
-| Fourth fifth | 107 | 92% | 14% | ₩413만 | 3.90 | 21% | 50% | 29% | 21% |
-| Top fifth | 119 | 95% | 15% | ₩406만 | 3.81 | 0% | 25% | 75% | 25% |
+| Fourth fifth | 107 | 92% | 15% | ₩413만 | 3.90 | 21% | 50% | 29% | 21% |
+| Top fifth | 119 | 94% | 15% | ₩406만 | 3.80 | 0% | 24% | 76% | 24% |
 
 How to read it against reality:
 
@@ -596,9 +597,9 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 | smart, online lectures, 1 try | 67 | 2.1 · 2.1 · 2.4 | 381 | 381 | 1.00 | 5% | 3% | 66% |
 | smart, best affordable method, 1 try | 69 | 1.9 · 1.9 · 2.2 | 385 | 385 | 1.00 | 11% | 3% | 76% |
 | smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.9 · 2.2 | 385 | 410 | 2.55 | 63% | 24% | 98% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 384 | 419 | 3.39 | 93% | 90% | 100% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 384 | 419 | 3.38 | 91% | 89% | 100% |
 | smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.9 · 2.2 | 386 | 386 | 1.00 | 6% | 0% | 76% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.1 · 2.0 · 2.3 | 383 | 420 | 3.36 | 94% | 91% | 100% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.1 · 2.0 · 2.3 | 383 | 420 | 3.35 | 91% | 90% | 100% |
 | balanced, self-study, vocational high school, 1 try | 60 | 2.5 · 2.2 · 2.6 | 362 | 362 | 1.00 | 0% | 0% | 34% |
 | balanced, self-study, leaves school at High 1, 1 try | 62 | 2.6 · 2.4 · 2.7 | 366 | 366 | 1.00 | 0% | 0% | 45% |
 | smart, best affordable, leaves school at High 1, 1 try | 68 | 2.0 · 2.0 · 2.3 | 383 | 383 | 1.00 | 10% | 3% | 78% |
@@ -613,15 +614,15 @@ Admissions in the same lives (v6.0): the 내신 average at the end of High 3's f
 | Strategy | 내신 average | Record score | 수시 applications | 수시 offer | Enrolled via 수시 | Women's university |
 |---|---|---|---|---|---|---|
 | balanced, self-study, 1 try | 2.87 | 44 | 2.5 | 16% | 16% | 0% |
-| slacker (half games & friends), 1 try | 3.46 | 33 | 2.5 | 16% | 16% | 0% |
+| slacker (half games & friends), 1 try | 3.46 | 33 | 2.5 | 18% | 18% | 0% |
 | grinder (no rest), self-study, 1 try | 2.59 | 44 | 2.9 | 20% | 20% | 0% |
 | smart, online lectures, 1 try | 2.55 | 46 | 2.6 | 16% | 16% | 0% |
 | smart, best affordable method, 1 try | 2.38 | 49 | 2.8 | 18% | 18% | 0% |
 | smart, best affordable, retakes up to 3 tries | 2.38 | 49 | 0.1 | 1% | 13% | 0% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.39 | 49 | 0.0 | 0% | 14% | 0% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.39 | 49 | 0.0 | 0% | 16% | 0% |
 | smart, best affordable, tries for selective schools, 1 try | 2.49 | 49 | 2.5 | 20% | 20% | 0% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 2.51 | 48 | 0.0 | 0% | 13% | 0% |
-| balanced, self-study, vocational high school, 1 try | 1.90 | 48 | 3.8 | 38% | 38% | 0% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 2.51 | 48 | 0.0 | 0% | 16% | 0% |
+| balanced, self-study, vocational high school, 1 try | 1.90 | 48 | 3.9 | 38% | 38% | 0% |
 | balanced, self-study, leaves school at High 1, 1 try | - | 26 | 1.9 | 16% | 16% | 0% |
 | smart, best affordable, leaves school at High 1, 1 try | - | 26 | 2.0 | 13% | 13% | 0% |
 | smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | - | - | 1.6 | 13% | 13% | 0% |
@@ -651,13 +652,13 @@ By region kind, where the life ended up (the same smart bot, first try; 의대 i
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 16 | 68 | 390 | 19% | 81% | 94% |
+| Gangnam | 16 | 68 | 390 | 19% | 81% | 100% |
 | Seoul academy district | 5 | 71 | 380 | 0% | 80% | 100% |
 | Seoul | 5 | 72 | 392 | 20% | 80% | 80% |
 | Capital-region city | 20 | 68 | 384 | 15% | 70% | 85% |
 | Big city | 12 | 71 | 386 | 0% | 92% | 100% |
-| Mid-sized city | 13 | 68 | 388 | 15% | 69% | 85% |
-| Rural county | 9 | 66 | 369 | 0% | 67% | 89% |
+| Mid-sized city | 13 | 68 | 388 | 15% | 69% | 77% |
+| Rural county | 9 | 66 | 369 | 0% | 67% | 78% |
 
 What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 73% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
@@ -721,6 +722,13 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script; `--epilogue [lives]` plays only the epilogue tables.
 
 ## Changelog
+
+- **v6.10:** from the fifth daily play-through (five lives in both languages: a Pyeongchang boy on the sciences track, a Busan girl in a children's home, a Daegu boy at a private high school who retook three times (4수), a Gwangju girl raised by her dad who enrolled and retook in secret (반수), and a Haenam boy at a vocational high who took the plant job in High 3).
+  - **The 반수 year is a year at university:** it used to borrow the retake academy's lines ("You're in a retake dorm eating a triangle kimbap", twice). Now it has its own: April midterms in the same week as the academy's mock, a July choice between a leave of absence for the fall (the campus events stop) and staying enrolled for cover, a department classmate who spots the workbook in your bag, and the group chat planning a year you may not be there for.
+  - **The fourth try and on:** a 4수 had no event of its own. New: a farewell dinner for a friend who's enlisting, the army's letter with an enlistment date to put off again (men), and a parent's health checkup. What your old classmates post now follows the year (orientation photos, then the festival; a training-center gate in your third year; internships and discharge photos after that) and where you are (between academy classes, or in a study café when you retake alone).
+  - **Kangwon National University** (`kangwon`, 정시 cut 83.2) for Gangwon, so every province in the game has a local national university (44 schools). **Jeju and Gangwon's medical local quota is half the size it is elsewhere** (the law asks them for 20% of places, not 40%; `REGIONS[*].medLocal`, sources in `data/korea-stats.md`), and the move dialog says so. **Fix:** in 수시 a rural student was given the local quota at medical school and the local national university, though the rural quota is bigger (정시 already took the bigger one).
+  - **Wording:** in a children's home the carer who finds your screen time no longer brags about "my friend's son" (엄친아), but points at the home's own High 3 students.
+  - Balance: calibration and the top end are unchanged (byte-identical). The 의대-chaser rows that retake up to five times moved a few points (the new retake events change which event a month gets), and the region table's 의대 column for cities and rural counties fell from 85% / 89% to 77% / 78% (9–13 lives a row, so one or two lives each). The epilogue table moved by a life or two a row. All regenerated.
 
 - **v6.9:** from the fourth daily play-through (five lives by hand in both languages: a Jeju girl on the sciences track, a Jeonju boy raised by his mom who left school in High 1, a Cheongju girl who enrolled and retook in secret (반수), a Gangnam boy who retook twice, and a Haenam girl raised by her grandparents).
   - **Local national universities for Cheongju, Jeonju and Jeju:** students there had no local-quota national university (a Jeonju student could go to "Jeonbuk University Affiliated High School" and find no Jeonbuk National to apply to). Chungbuk (`cbnu`, 정시 cut 84.3), Jeonbuk (`jbnu`, 84.0) and Jeju National University (`jejunu`, 81.5) join the list, placed by tier just under Chungnam National and below the in-Seoul+ line, with 수시 by school grades (minimum grades 2 within 6 or 7) and record review, no essay exam, and the regions' `nat` set, so the 지역인재 quota applies in both rounds and the move dialog names them. Sources in `data/korea-stats.md` section 8 (the 지방대육성법 40% rule, Jeju and Gangwon 20%, and blog-level cut figures; the game uses the same quota points everywhere).

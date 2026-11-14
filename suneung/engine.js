@@ -208,7 +208,8 @@
   // Gangwon, Jeju = Jeju, Pyeongchang / Haenam = the rural counties.
   // view: what the windows show.
   // need: the family income fifth it takes to move there (housing). nat: the regional national
-  // university whose local quota you can use.
+  // university whose local quota you can use. medLocal (v6.10): the medical local quota's size against
+  // the 40% norm; the law asks Gangwon and Jeju for 20% (data/korea-stats.md section 8), so half.
   const REGIONS = [
     { id: "gangnam", kind: "gangnam", capital: true, pop: 3.2, need: 4 },
     { id: "nowon", kind: "seoulAcad", capital: true, pop: 4.4, need: 3 },
@@ -224,8 +225,8 @@
     { id: "pohang", kind: "city", pop: 8.2, view: "sea", nat: "knu" },
     { id: "jeonju", kind: "city", pop: 4.3, nat: "jbnu" },
     { id: "cheongju", kind: "city", pop: 7.3, nat: "cbnu" },
-    { id: "jeju", kind: "city", pop: 1.3, view: "sea", nat: "jejunu" },
-    { id: "pyeongchang", kind: "rural", pop: 6.1, view: "country" },
+    { id: "jeju", kind: "city", pop: 1.3, view: "sea", nat: "jejunu", medLocal: 0.5 },
+    { id: "pyeongchang", kind: "rural", pop: 6.1, view: "country", nat: "kangwon", medLocal: 0.5 },
     { id: "haenam", kind: "rural", pop: 2.5, view: "sea", nat: "jnu" },
   ];
   const REGION_BY_ID = Object.fromEntries(REGIONS.map((r) => [r.id, r]));
@@ -577,6 +578,9 @@
     // section 8), all under the in-Seoul+ line so sim.js's groups keep their members. None runs 논술.
     { id: "cbnu", cut: 84.3, susi: 77, gk: 1.92, gkMin: [2, 6], jh: 63 },
     { id: "jbnu", cut: 84.0, susi: 76, gk: 1.97, gkMin: [2, 7], jh: 62 },
+    // v6.10: Kangwon National, Gangwon's flagship national university (Pyeongchang's local school),
+    // placed by tier between Jeonbuk and Jeju.
+    { id: "kangwon", cut: 83.2, susi: 77, gk: 2.05, gkMin: [2, 7], jh: 60 },
     { id: "jejunu", cut: 81.5, susi: 78, gk: 2.25, gkMin: [2, 7], jh: 57 },
     { id: "sungshin", cut: 85.0, women: true, susi: 66, gk: 1.82, jh: 64 },
     { id: "dankook", cut: 84.8, susi: 66, gk: 1.72, jh: 64, ns: true },
@@ -1453,9 +1457,14 @@
     },
     {
       id: "retaker-doubt", weight: 2, when: (g) => g.attempt >= 2, choices: 2,
-      run: (g, i) => {
+      // v6.10: what the old classmates post follows the year (orientation photos, then the festival; in
+      // a 삼수 the army and second-year trips, from a 4수 internships and discharge photos) and where you
+      // are (a 반수 student is on campus, not at the academy). Read-only; old queued items have no p.
+      params: (g) => ({ n: g.attempt, m: g.month, st: g.status === "halfretake" && g.flags.halfOff === g.attempt ? "halfoff" : g.status }),
+      run: (g, i, q) => {
+        const half = q && q.st === "halfretake";
         if (i === 0) { bump(g, { motivation: 5, stress: 5 }); return "r0"; }
-        bump(g, { motivation: -8, stress: 6 }); return "r1";
+        bump(g, { motivation: -8, stress: 6 }); return half ? "r1h" : "r1";
       },
     },
     { id: "phone-broke", weight: 1, when: (g) => g.flags.phone, run: (g) => { bump(g, { motivation: 6 }); return "r"; } },
@@ -1480,8 +1489,52 @@
       id: "lastyear", weight: 2, when: (g) => g.attempt >= 3 && g.parents !== "care" && !g.flags.lastYear,
       run: (g) => { g.flags.lastYear = g.clock; bump(g, { motivation: 7, stress: 6 }); return "r"; },
     },
+    // v6.10: the 반수 year, which used to have one event of its own (the club trip). University
+    // midterms in April clash with the academy's test; in July the semester is over and most 반수
+    // students take a leave of absence (휴학) for the fall; a classmate sees the workbook in your bag.
     {
-      id: "campus", weight: 1.5, when: (g) => g.status === "halfretake", choices: 2,
+      id: "halfmid", weight: (g) => (g.flags["halfmid-" + g.attempt] ? 0 : 100), when: (g) => g.status === "halfretake" && g.month === 4, choices: 2,
+      run: (g, i) => {
+        g.flags["halfmid-" + g.attempt] = 1;
+        if (i === 0) { bump(g, { stress: 6, motivation: 2 }); g.lostBlocks += 1; return "r0"; }
+        studyBoost(g, pickWeak(g), 0.02); bump(g, { stress: 3, motivation: -2 }); return "r1";
+      },
+    },
+    {
+      id: "halfleave", weight: (g) => (g.flags["halfleave-" + g.attempt] ? 0 : 100), when: (g) => g.status === "halfretake" && g.month === 7, choices: 2,
+      run: (g, i) => {
+        g.flags["halfleave-" + g.attempt] = 1;
+        // On leave (halfOff = this try), the campus events stop.
+        if (i === 0) { g.flags.halfOff = g.attempt; bump(g, { stress: -6, motivation: 6 }); return "r0"; }
+        bump(g, { stress: 6 }); g.lostBlocks += 1; return "r1";
+      },
+    },
+    {
+      id: "halfseen", weight: 1.5, when: (g) => g.status === "halfretake" && g.month >= 4 && g.flags.halfOff !== g.attempt, choices: 2,
+      run: (g, i) => {
+        if (i === 0) { bump(g, { stress: -8, motivation: 3 }); return "r0"; }
+        bump(g, { stress: 4 }); return "r1";
+      },
+    },
+    // v6.10: 4수 and on. Friends from high school are moving on (enlisting, internships), the army's
+    // letters keep coming for a man, and the parent who pays is getting older.
+    {
+      id: "sendoff", weight: 2, when: (g) => g.attempt >= 4 && g.status !== "halfretake", choices: 2,
+      run: (g, i) => {
+        if (i === 0) { bump(g, { stress: -10, motivation: -3 }); return "r0"; }
+        bump(g, { stress: 6, motivation: 3 }); return "r1";
+      },
+    },
+    {
+      id: "enlistlate", weight: 2, when: (g) => g.servesArmy() && g.attempt >= 4 && g.age >= 20 && !g.flags.enlistLate,
+      run: (g) => { g.flags.enlistLate = g.clock; bump(g, { stress: 7, motivation: 2 }); return "r"; },
+    },
+    {
+      id: "parentcheck", weight: 2, when: (g) => g.attempt >= 4 && g.parents !== "care" && !g.flags.parentCheck,
+      run: (g) => { g.flags.parentCheck = g.clock; bump(g, { stress: 8, motivation: 5 }); return "r"; },
+    },
+    {
+      id: "campus", weight: 1.5, when: (g) => g.status === "halfretake" && g.flags.halfOff !== g.attempt, choices: 2,
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -12, motivation: -6 }); return "r0"; }
         studyBoost(g, pickWeak(g), 0.03); bump(g, { stress: 5 }); return "r1";
@@ -2459,11 +2512,14 @@
     quotaFor(u) {
       // 검정고시 holders don't count as having gone to school in the region.
       if (this.dropout != null) return null;
-      const local = this.localQuota() && (u.id === "med" || u.id === this.regionInfo().nat) ? LOCAL_QUOTA : 0;
+      const local = this.localQuota() && (u.id === "med" || u.id === this.regionInfo().nat) ? LOCAL_QUOTA * this.quotaScale("local", u) : 0;
       const rural = this.ruralQuota() && u.id !== "college" ? RURAL_QUOTA : 0;
       if (!local && !rural) return null;
       return local >= rural ? { kind: "local", pts: local } : { kind: "rural", pts: rural };
     }
+    // How big a quota is here against the usual (v6.10): Gangwon's and Jeju's medical schools need only
+    // half the usual share of local students. Read-only.
+    quotaScale(kind, u) { return kind === "local" && u.id === "med" ? this.regionInfo().medLocal || 1 : 1; }
     // Cram schools and tutors are stronger and dearer in Gangnam and Seoul; rural counties have no tutors.
     methodAvailable(id) { return id !== "tutor" || this.regionKindInfo().tutor > 0; }
     methodMult(id) {
@@ -3460,8 +3516,10 @@
     // The best 수시 quota you qualify for at a university, or null.
     susiQuota(u) {
       if (this.dropout != null || !this.record) return null;
-      if (this.localQuota() && (u.id === "med" || u.id === this.regionInfo().nat)) return "local";
+      // v6.10: the rural quota first, since it's the bigger one (a rural student used to be given the
+      // local quota at medical school and the local national university, though 농어촌 helps more).
       if (this.ruralQuota() && u.id !== "college") return "rural";
+      if (this.localQuota() && (u.id === "med" || u.id === this.regionInfo().nat)) return "local";
       if (this.balanceQuota() && u.id !== "college") return "balance";
       return null;
     }
@@ -3509,7 +3567,7 @@
       const minP = {};
       const mp = (m) => { const k = m ? m.join(",") : "-"; if (minP[k] == null) minP[k] = this.minChance(m); return minP[k]; };
       for (const u of UNIVERSITIES) {
-        const q = this.susiQuota(u);
+        const q = this.susiQuota(u), qs = q ? this.quotaScale(q, u) : 1;
         for (const type of ["gk", "jh", "ns"]) {
           if (type === "ns" ? !u.ns : u[type] == null) continue;
           const min = u[type + "Min"] || null;
@@ -3520,12 +3578,12 @@
           else if (type === "gk" && grad && u.gkGrad === false) blocked = "grad";
           else if (type === "gk" && avg == null) blocked = "ged";
           if (!blocked) {
-            if (type === "gk") p = gkChance(avg + (GK_PENALTY[this.record.school] || 0), u.gk + (q ? SUSI_QUOTA[q].gk : 0));
-            else if (type === "jh") p = logistic((this.recordScore(u) - u.jh + (q ? SUSI_QUOTA[q].jh : 0)) / JH_SLOPE);
+            if (type === "gk") p = gkChance(avg + (GK_PENALTY[this.record.school] || 0), u.gk + (q ? SUSI_QUOTA[q].gk * qs : 0));
+            else if (type === "jh") p = logistic((this.recordScore(u) - u.jh + (q ? SUSI_QUOTA[q].jh * qs : 0)) / JH_SLOPE);
             else p = this.nsChance(u);
           }
           const m = blocked ? 1 : mp(min);
-          out.push({ uni: u.id, type, p, min, minP: m, all: p * m, label: chanceLabel(p * m), blocked, quota: type === "ns" ? null : q, iv: type === "jh" && !!u.iv, free: !!u.free });
+          out.push({ uni: u.id, type, p, min, minP: m, all: p * m, label: chanceLabel(p * m), blocked, quota: type === "ns" ? null : q, qs, iv: type === "jh" && !!u.iv, free: !!u.free });
         }
       }
       return out;
@@ -3542,7 +3600,7 @@
         if (!o || o.blocked) throw new Error("susi.closed");
         if (seen.has(o.uni + o.type)) continue;
         seen.add(o.uni + o.type);
-        apps.push({ uni: o.uni, type: o.type, quota: o.quota, p: Math.round(o.p * 1000) / 1000, min: o.min, iv: o.iv, free: o.free,
+        apps.push({ uni: o.uni, type: o.type, quota: o.quota, qs: o.qs, p: Math.round(o.p * 1000) / 1000, min: o.min, iv: o.iv, free: o.free,
           s: o.type === "jh" ? this.recordScore(UNI_BY_ID[o.uni]) : null });
       }
       if (apps.filter((a) => !a.free).length > SUSI_MAX) throw new Error("susi.max");
@@ -3557,7 +3615,7 @@
       const apps = this.susi.apps.filter((a) => a.type === "jh" && a.iv);
       for (const a of apps) {
         const u = UNI_BY_ID[a.uni];
-        const cut = u.jh - (a.quota ? SUSI_QUOTA[a.quota].jh : 0);
+        const cut = u.jh - (a.quota ? SUSI_QUOTA[a.quota].jh * (a.qs || 1) : 0);
         a.pass1 = makeRng(hashSeed(this.seed, "susi1", this.year, a.uni))() < logistic((a.s - cut + JH_STAGE) / JH_SLOPE);
       }
       this.addLog("log.susiStage", { r: apps.map((a) => [a.uni, a.pass1]) }, "milestone");
@@ -3571,11 +3629,12 @@
       for (const a of this.susi.apps) {
         const u = UNI_BY_ID[a.uni];
         const r = makeRng(hashSeed(this.seed, "susi", this.year, a.uni, a.type));
-        const q = a.quota ? SUSI_QUOTA[a.quota] : null;
+        // qs: the quota's size where you applied (v6.10; missing in old saves = the usual size).
+        const q = a.quota ? SUSI_QUOTA[a.quota] : null, qs = a.qs || 1;
         let real;
-        if (a.type === "gk") real = gkChance(this.susi.avg + (GK_PENALTY[this.record.school] || 0), u.gk + (q ? q.gk : 0) + r.normal() * SUSI_SWING.gk);
+        if (a.type === "gk") real = gkChance(this.susi.avg + (GK_PENALTY[this.record.school] || 0), u.gk + (q ? q.gk * qs : 0) + r.normal() * SUSI_SWING.gk);
         else if (a.type === "jh") {
-          const cut = u.jh - (q ? q.jh : 0) + r.normal() * SUSI_SWING.jh;
+          const cut = u.jh - (q ? q.jh * qs : 0) + r.normal() * SUSI_SWING.jh;
           if (a.iv) {
             // Given the document round, the interview decides: the odds you'd have with the
             // interview's points, over the odds of having passed the first round.

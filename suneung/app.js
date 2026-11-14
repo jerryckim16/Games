@@ -781,7 +781,7 @@
       const fx = T("move.fx", { hag: k.hagwon, tut: k.tutor, price: k.price, stress: k.stress });
       // The quotas need middle and high school in the region, so moving after grade 7 is too late.
       const inTime = g.inSchool() && g.grade <= 7;
-      const quota = r.capital ? "" : g.dropout != null ? T("move.noQuota") : !inTime ? T("move.late") : r.kind === "rural" ? T("move.rural") : T("move.local", { nat: r.nat });
+      const quota = r.capital ? "" : g.dropout != null ? T("move.noQuota") : !inTime ? T("move.late") : r.kind === "rural" ? T("move.rural") : T("move.local", { nat: r.nat, half: r.medLocal < 1 });
       // A short status pill on the right; the reason goes under the name so phones keep the name readable.
       const note = here ? T("move.here") : why ? T("move." + why) : "";
       const tag = here ? '<span class="chance ch-safe">' + esc(T("move.hereTag")) + "</span>" : why ? '<span class="chance ch-long">' + esc(T("move.noTag")) + "</span>" : "<span></span>";
