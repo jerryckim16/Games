@@ -393,7 +393,7 @@
       "move.cooldown": "You moved less than a year ago.",
       "move.fx": (p) => "Cram school ×" + p.hag.toFixed(2) + (p.tut ? " · tutors ×" + p.tut.toFixed(2) : " · no private tutors") + " · prices ×" + p.price.toFixed(2) +
         (p.stress > 0 ? " · more pressure" : p.stress < 0 ? " · a calmer life" : ""),
-      "move.local": (p, h) => "Regional quota for medical school" + (p.nat ? " and " + h.uni(p.nat) : "") + " if you do middle and high school here.",
+      "move.local": (p, h) => "Regional quota for medical school" + (p.nat ? " and " + h.uni(p.nat) : "") + " if you do middle and high school here." + (p.half ? " The medical one is smaller here: the law asks for 20% of places, not 40%." : ""),
       "move.rural": "Rural-student quota at most universities if you do middle and high school here.",
       "move.late": "Too late for the local quotas here: they need middle and high school in the region.",
       "plan.noTutor": "There are no private tutors to hire out here.",
@@ -734,6 +734,9 @@
       "ev.nag.c": ["Apologize and lock the phone in a timer box", "Argue back"],
       "ev.nag.r0": "The box clicks shut. You feel lighter, and also like a prisoner.",
       "ev.nag.r1": "Doors slam. Dinner is silent for three days.",
+      // v6.10: a carer doesn't brag about a friend's son, and dinner in a home isn't a family's.
+      "ev.nag.text.care": "Your carer finds your phone screen time: 6 hours a day. \"The older kids here are up past midnight studying for their exams, you know.\"",
+      "ev.nag.r1.care": "Doors slam. You eat dinner at the far end of the table for three days.",
       "ev.crush.text": "Someone from your study room slips you a note and a canned coffee. 😳",
       "ev.crush.c": ["Start dating", "Politely say \"after the exam\""],
       "ev.crush.r0a": "You quiz each other on vocabulary at the café. Weirdly productive.",
@@ -847,16 +850,45 @@
       "ev.lastyear.r": "At dinner your parents set the rule: this is the last year they pay for. \"After this, whatever happens, it's your life to run.\" You lie awake doing the sums: the fees, the months, the years your friends are ahead. Then you set the alarm for six.",
       "ev.festival.r1": "The music drifts up the stairwell while you finish a practice set.",
       "ev.d100.r": "D-100. The countdown banner goes up. Everyone suddenly gets very quiet.",
-      "ev.retaker-doubt.text": "Your old classmates post photos from their freshman orientation trip. You're in a retake dorm eating a triangle kimbap.",
+      // v6.10: by year and place (p.n the try, p.m the month, p.st the status); old queued items have no p.
+      "ev.retaker-doubt.text": (p) => {
+        if (p.n == null) return "Your old classmates post photos from their freshman orientation trip. You're in a retake dorm eating a triangle kimbap.";
+        if (p.st === "halfretake") return "Your department's group chat is planning the rest of the year: a club trip, a festival booth, who takes which classes in the fall. They've put you down for everything. Nobody knows you might not be here next year.";
+        if (p.n === 2) return (p.m >= 5 ? "Your old classmates post photos from their first university festival." : "Your old classmates post photos from their freshman orientation trip.") +
+          (p.st === "selfstudy" ? " You're in a study café eating a triangle kimbap." : " You're eating a triangle kimbap between academy classes.");
+        if (p.n === 3) return "Your old classmates are second-years now. One posts a department field trip, another a photo at the training-center gate with a fresh buzz cut. You're at the same desk with the same past papers.";
+        const ord = ["", "", "", "", "fourth", "fifth", "sixth", "seventh"][p.n] || p.n + "th";
+        return "Your old classmates are " + (p.n === 4 ? "third-years" : "about to graduate") + " now: exchange semesters, internships, discharge photos. You're about to sit the Suneung for the " + ord + " time.";
+      },
       "ev.retaker-doubt.c": ["Mute them and study", "Scroll for an hour"],
       "ev.retaker-doubt.r0": "Next year, you tell yourself. Next year.",
       "ev.retaker-doubt.r1": "Everyone looks so happy. You feel left behind.",
+      "ev.retaker-doubt.r1h": "You end up planning a year you may never have.",
       "ev.phone-broke.r": "You dropped your phone in the toilet. Forced digital detox. Your focus is incredible.",
       "ev.mentor.r": "The academy's head counselor sits you down with a planner. You leave with a schedule down to the minute.",
       "ev.campus.text": "Your university friends are planning a club trip. You're supposed to be secretly studying for the exam.",
       "ev.campus.c": ["Go on the trip", "Make an excuse and study"],
       "ev.campus.r0": "It's fun. You wonder if you even need to retake.",
       "ev.campus.r1": "\"Family thing,\" you say. The library is empty and perfect.",
+      // v6.10: the 반수 year and the fourth try on.
+      "ev.halfmid.text": "University midterms fall in the same week as the academy's monthly mock. Your classmates are forming study groups.",
+      "ev.halfmid.c": ["Study for the midterms", "Sit them cold and study for the Suneung"],
+      "ev.halfmid.r0": "Decent grades: somewhere to come back to if this year goes wrong. It costs you a week of Suneung study.",
+      "ev.halfmid.r1": "You sit the midterms half-asleep. A C+ you'll explain later. The academy's mock goes well.",
+      "ev.halfleave.text": "The first semester is over. Most students retaking from university take a leave of absence for the fall and study full time. Staying enrolled keeps up appearances, but it takes time.",
+      "ev.halfleave.c": ["Take a leave of absence", "Stay enrolled and keep a few classes"],
+      "ev.halfleave.r0": "You file the form online. The fall is yours: the academy's summer course starts on Monday.",
+      "ev.halfleave.r1": "You keep two classes for cover. They cost you hours every week, but nobody asks questions.",
+      "ev.halfseen.text": "A classmate from your department catches sight of the Suneung workbook in your bag.",
+      "ev.halfseen.c": ["Tell the truth", "Say it's for tutoring a kid"],
+      "ev.halfseen.r0": "\"Honestly? Half our year is thinking about it.\" A weight comes off.",
+      "ev.halfseen.r1": "\"Oh, nice. How much does that pay?\" You change the subject.",
+      "ev.sendoff.text": "One high-school friend enlists next week; another has just started an internship. The old group chat plans a farewell dinner on a weekday night.",
+      "ev.sendoff.c": ["Go to the dinner", "Say you're busy"],
+      "ev.sendoff.r0": "Everyone asks what you're doing now. \"Still studying,\" you say, and change the subject. It's good to laugh, though.",
+      "ev.sendoff.r1": "They send a photo of the table with an empty chair: \"Next time, after the exam!\"",
+      "ev.enlistlate.r": "A letter from the Military Manpower Administration: an enlistment date. You apply to put it off for the exam. The clerk on the phone is polite and clear: you can't keep doing this for long.",
+      "ev.parentcheck.r": "Your mom's health checkup comes back with high blood pressure, and the doctor says to rest more and worry less. At dinner nobody mentions what this year is costing.",
       "ev.insight.r": (p, h) => "Something clicks in " + h.sub(p.s) + ". Problems that looked impossible now look... fine.",
       "ev.eve.title": "The night before the exam",
       "ev.eve.text": "Your bag is packed: admission ticket, ID, black computer-marking pen, analog watch. It's 9pm.",
@@ -1323,7 +1355,7 @@
       "move.cooldown": "이사한 지 1년이 지나지 않았습니다.",
       "move.fx": (p) => "학원 ×" + p.hag.toFixed(2) + (p.tut ? " · 과외 ×" + p.tut.toFixed(2) : " · 과외 선생님 없음") + " · 물가 ×" + p.price.toFixed(2) +
         (p.stress > 0 ? " · 경쟁 압박 큼" : p.stress < 0 ? " · 여유로운 생활" : ""),
-      "move.local": (p, h) => "여기서 중·고등학교를 다니면 의대" + (p.nat ? "와 " + h.uni(p.nat) : "") + " 지역인재 전형에 지원할 수 있습니다.",
+      "move.local": (p, h) => "여기서 중·고등학교를 다니면 의대" + (p.nat ? "와 " + h.uni(p.nat) : "") + " 지역인재 전형에 지원할 수 있습니다." + (p.half ? " 다만 이 지역 의대의 지역인재 비율은 40%가 아니라 20%입니다." : ""),
       "move.rural": "여기서 중·고등학교를 다니면 대부분 대학의 농어촌 전형에 지원할 수 있습니다.",
       "move.late": "이곳의 지역 전형을 받기엔 늦었습니다. 중·고등학교를 모두 이 지역에서 다녀야 합니다.",
       "plan.noTutor": "이 지역에서는 과외 선생님을 구할 수 없습니다.",
@@ -1667,6 +1699,8 @@
       "ev.nag.c": ["사과하고 휴대폰을 타임락 상자에 넣는다", "말대꾸한다"],
       "ev.nag.r0": "상자가 딸깍 잠긴다. 홀가분하면서도 감옥에 갇힌 기분이다.",
       "ev.nag.r1": "문이 쾅 닫힌다. 사흘 동안 저녁 식탁이 조용하다.",
+      "ev.nag.text.care": "보육원 선생님이 휴대폰 사용 시간을 봤다. 하루 6시간. \"여기 고3 애들은 밤 12시 넘어서까지 공부하는 거 알지?\"",
+      "ev.nag.r1.care": "문이 쾅 닫힌다. 사흘 동안 식탁 맨 끝자리에서 밥을 먹는다.",
       "ev.crush.text": "독서실의 누군가가 쪽지와 캔커피를 건넸다. 😳",
       "ev.crush.c": ["사귄다", "\"수능 끝나고\"라고 정중하게 말한다"],
       "ev.crush.r0a": "카페에서 서로 영단어 시험을 내 준다. 의외로 효율적이다.",
@@ -1779,16 +1813,43 @@
       "ev.lastyear.r": "저녁 식탁에서 부모님이 선을 그으셨다. 뒷바라지는 올해가 마지막이다. \"이번이 끝나면, 어떻게 되든 네 인생은 네가 꾸려라.\" 밤새 계산을 했다. 들어간 돈, 남은 달, 친구들보다 늦어진 햇수. 그리고 알람을 6시에 맞췄다.",
       "ev.festival.r1": "계단을 타고 음악 소리가 올라오는 동안 모의고사 한 세트를 끝냈다.",
       "ev.d100.r": "D-100. 교실에 카운트다운 현수막이 걸렸다. 다들 갑자기 조용해진다.",
-      "ev.retaker-doubt.text": "고등학교 동창들이 새터 사진을 올렸다. 나는 재수 기숙사에서 삼각김밥을 먹는 중이다.",
+      "ev.retaker-doubt.text": (p) => {
+        if (p.n == null) return "고등학교 동창들이 새터 사진을 올렸다. 나는 재수 기숙사에서 삼각김밥을 먹는 중이다.";
+        if (p.st === "halfretake") return "과 단톡방에서 MT, 축제 부스, 2학기 시간표까지 올해 계획을 짠다. 내 이름도 다 들어가 있다. 내년에 내가 여기 없을지도 모른다는 건 아무도 모른다.";
+        if (p.n === 2) return (p.m >= 5 ? "고등학교 동창들이 대학 축제 사진을 올렸다." : "고등학교 동창들이 새터 사진을 올렸다.") +
+          (p.st === "selfstudy" ? " 나는 독서실에서 삼각김밥을 먹는 중이다." : " 나는 학원 쉬는 시간에 삼각김밥을 먹는 중이다.");
+        if (p.n === 3) return "동창들은 벌써 2학년이다. 한 명은 과 답사 사진을, 한 명은 머리를 짧게 깎고 훈련소 앞에서 찍은 사진을 올렸다. 나는 같은 책상에서 같은 기출문제를 푼다.";
+        const ord = ["", "", "", "", "네", "다섯", "여섯", "일곱"][p.n] || String(p.n);
+        return "동창들은 벌써 " + (p.n === 4 ? "3학년이다" : "졸업을 앞두고 있다") + ". 교환학생, 인턴, 전역 사진이 올라온다. 나는 " + ord + " 번째 수능을 앞두고 있다.";
+      },
       "ev.retaker-doubt.c": ["숨김 처리하고 공부한다", "한 시간 동안 스크롤한다"],
       "ev.retaker-doubt.r0": "내년엔. 내년엔 꼭.",
       "ev.retaker-doubt.r1": "다들 너무 행복해 보인다. 나만 뒤처진 기분이다.",
+      "ev.retaker-doubt.r1h": "결국 오지 않을지도 모를 한 해의 계획을 같이 짰다.",
       "ev.phone-broke.r": "휴대폰을 변기에 빠뜨렸다. 강제 디지털 디톡스. 집중력이 놀랍다.",
       "ev.mentor.r": "학원 담임이 플래너를 펴 놓고 상담해 줬다. 분 단위 계획표를 들고 나왔다.",
       "ev.campus.text": "과 동기들이 동아리 MT를 간다. 나는 몰래 수능 공부를 해야 하는데.",
       "ev.campus.c": ["MT에 간다", "핑계를 대고 공부한다"],
       "ev.campus.r0": "재밌다. 굳이 다시 볼 필요가 있나 싶어진다.",
       "ev.campus.r1": "\"집안일이 좀 있어서.\" 텅 빈 도서관이 완벽하다.",
+      "ev.halfmid.text": "대학 중간고사가 학원 월례 모의고사와 같은 주다. 과 동기들은 시험 스터디를 짜고 있다.",
+      "ev.halfmid.c": ["중간고사 공부를 한다", "중간고사는 대충 보고 수능 공부를 한다"],
+      "ev.halfmid.r0": "학점은 무난하게 나왔다. 올해가 잘못되면 돌아올 곳이다. 대신 수능 공부 한 주를 잃었다.",
+      "ev.halfmid.r1": "중간고사는 졸면서 봤다. C+는 나중에 설명하면 된다. 학원 모의고사는 잘 봤다.",
+      "ev.halfleave.text": "1학기가 끝났다. 반수생은 대부분 2학기에 휴학하고 수능에만 매달린다. 학교에 남으면 핑계는 서지만 시간이 든다.",
+      "ev.halfleave.c": ["휴학한다", "학교에 남아 수업 몇 개만 듣는다"],
+      "ev.halfleave.r0": "온라인으로 휴학 신청을 했다. 가을은 온전히 내 것이다. 월요일부터 학원 여름 특강이다.",
+      "ev.halfleave.r1": "핑계용으로 두 과목만 남겼다. 매주 몇 시간씩 들지만, 아무도 묻지 않는다.",
+      "ev.halfseen.text": "과 동기가 내 가방 속 수능 문제집을 봤다.",
+      "ev.halfseen.c": ["사실대로 말한다", "과외 교재라고 둘러댄다"],
+      "ev.halfseen.r0": "\"솔직히 우리 과 절반은 고민 중이야.\" 마음이 한결 가볍다.",
+      "ev.halfseen.r1": "\"오, 과외 얼마 받아?\" 얼른 화제를 돌린다.",
+      "ev.sendoff.text": "고등학교 친구 한 명은 다음 주에 입대하고, 한 명은 인턴을 시작했다. 옛날 단톡방에서 평일 저녁에 송별회를 잡았다.",
+      "ev.sendoff.c": ["송별회에 간다", "바쁘다고 한다"],
+      "ev.sendoff.r0": "다들 요즘 뭐 하냐고 묻는다. \"아직 공부 중.\" 하고 화제를 돌렸다. 그래도 오랜만에 실컷 웃었다.",
+      "ev.sendoff.r1": "빈 의자가 하나 있는 테이블 사진이 온다. \"다음엔 꼭! 시험 끝나고!\"",
+      "ev.enlistlate.r": "병무청에서 입영 통지서가 왔다. 수능을 이유로 입영 연기를 신청했다. 전화 너머 담당자는 친절하지만 분명하다. 이렇게 계속 미룰 수는 없다.",
+      "ev.parentcheck.r": "엄마 건강검진에서 고혈압이 나왔다. 의사는 무리하지 말고 마음 편히 지내라고 했다. 저녁 식탁에서 아무도 올해 드는 돈 얘기를 꺼내지 않는다.",
       "ev.insight.r": (p, h) => h.sub(p.s) + "에서 뭔가 탁 트였다. 불가능해 보이던 문제들이 이제는... 할 만하다.",
       "ev.eve.title": "수능 전날 밤",
       "ev.eve.text": "가방을 쌌다. 수험표, 신분증, 컴퓨터용 사인펜, 아날로그 시계. 밤 9시다.",
@@ -2166,12 +2227,12 @@
   Object.assign(DATA.en.uni, {
     kaist: "KAIST", postech: "POSTECH", ewha: "Ewha Womans University", sookmyung: "Sookmyung Women's University", seoultech: "Seoul Nat'l Univ. of Science & Technology",
     kwangwoon: "Kwangwoon University", sejong: "Sejong University", jnu: "Chonnam National University", cnu: "Chungnam National University",
-    cbnu: "Chungbuk National University", jbnu: "Jeonbuk National University", jejunu: "Jeju National University",
+    cbnu: "Chungbuk National University", jbnu: "Jeonbuk National University", jejunu: "Jeju National University", kangwon: "Kangwon National University",
     sungshin: "Sungshin Women's University", dankook: "Dankook University", swu: "Seoul Women's University", myongji: "Myongji University",
     incheon: "Incheon National University", duksung: "Duksung Women's University", dongduk: "Dongduk Women's University", kwangjuWomen: "Kwangju Women's University",
   });
   Object.assign(DATA.ko.uni, {
-    kaist: "카이스트", postech: "포스텍", ewha: "이화여대", sookmyung: "숙명여대", seoultech: "서울과기대", kwangwoon: "광운대", sejong: "세종대", jnu: "전남대", cnu: "충남대", cbnu: "충북대", jbnu: "전북대", jejunu: "제주대",
+    kaist: "카이스트", postech: "포스텍", ewha: "이화여대", sookmyung: "숙명여대", seoultech: "서울과기대", kwangwoon: "광운대", sejong: "세종대", jnu: "전남대", cnu: "충남대", cbnu: "충북대", jbnu: "전북대", jejunu: "제주대", kangwon: "강원대",
     sungshin: "성신여대", dankook: "단국대", swu: "서울여대", myongji: "명지대", incheon: "인천대", duksung: "덕성여대", dongduk: "동덕여대", kwangjuWomen: "광주여대",
   });
   Object.assign(DATA.en.act, { prep: "Exam prep", club: "Club", volunteer: "Volunteering", project: "Research project" });

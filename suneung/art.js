@@ -2098,6 +2098,13 @@
     festival: { bg: "field", fx: "stall", mood: "happy", pose: "wave", icon: "🎪" },
     d100: { bg: "class", fx: "banner", mood: "stressed", x: 160, icon: "⏳" },
     "retaker-doubt": { bg: "cubicle", fx: "polaroids", mood: "tired", prop: "phone", pose: "hold", x: 160, icon: "📸" },
+    // v6.10: the 반수 year and the fourth try on.
+    halfmid: { bg: "campus", fx: "notes", mood: "stressed", icon: "📝", res: { r0: { mood: "ok" } } },
+    halfleave: { bg: "campus", fx: "laptop", mood: "ok", icon: "🗂️" },
+    halfseen: { bg: "campus", fx: "notes", mood: "stressed", icon: "🎒", res: { r0: { mood: "happy" } } },
+    sendoff: { bg: "street", fx: "chat", mood: "ok", icon: "🍽️", res: { r1: { mood: "tired" } } },
+    enlistlate: { bg: "room", fx: "notes", mood: "stressed", icon: "✉️" },
+    parentcheck: { bg: "kitchen", night: true, fx: "mom", mood: "tired", x: 200, icon: "🩺" },
     "phone-broke": { bg: "bath", fx: "toilet", mood: "stressed", icon: "🚽" },
     mentor: { bg: "class", fx: "planner", mood: "ok", icon: "🗓️" },
     draftcheck: { bg: "hospital", fx: "doctor", mood: "ok", icon: "🪖" },
