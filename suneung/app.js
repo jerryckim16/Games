@@ -656,7 +656,8 @@
     if (month.p.cost) chips.push({ key: "sum.spent", p: { a: month.p.cost }, tone: "cost" });
     else if (g.money > before.money) chips.push({ key: "sum.earned", p: { a: g.money - before.money }, tone: "good" });
     const rep = fresh.find((l) => l.key === "log.report");
-    if (rep) chips.push({ key: "sum.rank", p: { r: rep.p.rank, of: rep.p.of }, tone: rep.p.rank <= 10 ? "good" : "info" });
+    // v6.11: the free semester has no exams, so no rank chip.
+    if (rep) chips.push(rep.p.free ? { key: "sum.free", p: {}, tone: "info" } : { key: "sum.rank", p: { r: rep.p.rank, of: rep.p.of }, tone: rep.p.rank <= 10 ? "good" : "info" });
     return { t: month.t, chips: chips.slice(0, 4) };
   }
   function renderTurnSum() {
