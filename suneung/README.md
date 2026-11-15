@@ -36,7 +36,7 @@ School years are counted the Korean way, with each school numbering its own year
 4. **Handle events.** Most turns bring one: a sports day, a math olympiad, the smartphone debate, a move to Daechi-dong, class elections, 중2, a PC방 invitation, a crush, a slump, a star lecturer's new course. Some only need an OK; others ask you to choose. Some lives also run into bullying (학교폭력), which hangs over every turn until it's dealt with.
 5. **Watch your standing.**
    - The elementary-school teacher writes a report-card comment (통지표) each year: how you're doing, what your free time went to (books, friends, games, sport), and your strongest subject. A worn-out teacher writes one line; a child who is being bullied just "seems quieter lately".
-   - Middle school shows your class rank each semester.
+   - Middle school shows your class rank each semester (Middle 1's first semester is the free semester, 자유학기제: no midterms or finals, only projects and unit tests), and at the end of each year the homeroom teacher writes the year's comment on your record (종합의견), in the same way as the elementary report card.
    - High 1 and 2 sit mock exams (학력평가) in June and November.
    - From High 1 to the first semester of High 3, each semester has a midterm and a final (중간·기말고사) graded against your year at your school: a report card after each (see School grades below).
 6. **Choose a track** at the end of High 1: humanities (확률과 통계 + two social-studies subjects) or sciences (미적분 + two science subjects; the only track that can apply to medical school). While humanities is selected, a red warning says it closes medical school for good and the button reads "Confirm humanities". Your social-studies ability carries into the humanities subjects, your science ability into the science ones.
@@ -247,6 +247,7 @@ Built for a first-time player on a phone as much as a desktop (checked at 390px 
   - Stress and health also drift toward a resting level each turn, so a steady workload settles instead of spiralling.
   - High stress or low health on exam day lowers your scores.
 - **About 30 random events** with conditions (by school grade, family, phone ownership, stress, retakers, 반수 students). After an event fires it can't recur for 4 months, and each time it has happened its chance halves (so the same PC방 invitation or cold doesn't come round again and again, and rarer events get their turn). Fixed milestones always fire: the free-semester career week (Middle 1), 중2 (Middle 2) and D-100 (August of each 수능 year).
+  - **Events that come back every year follow where you are** (`whereNow()`, stored on the event as `p.w`): the PC방 is after class at school, after the academy lets out, tonight in a self-study year or after a lecture in a 반수 year, and anyone under 19 is sent home at 10pm (the youth curfew); a crush in middle school leaves a strawberry milk on your desk, and later it's someone from your study room, academy class, study café or department; a cold at 8 is cartoons on the sofa; a rival who's no longer in your class is your old rival; D-100 is a banner in the classroom or the academy's study hall, a sticky note in a study café, an app on your phone when you've left school, and a secret on campus in a 반수. A rival you start going out with stops being your rival.
 - **Bullying (학교폭력)**, a storyline that lasts until it's resolved:
   - **When:** it can start in Elementary 3 to High 2, most often in elementary school, as in the national survey (4.2% of elementary, 1.6% of middle and 0.5% of high school students a year in 2024): about three in four episodes start in elementary school, one in five in middle school. It's twice as likely for a year after you move (Daechi-dong) or change schools, and 1.4× as likely when your last plan had no time with friends. Each earlier episode halves the chance, and a new episode can't start within a year of the last one ending. About 3 in 10 lives meet it.
   - **Severity:** mild, serious or severe. It starts mild, or serious (more often in middle school).
@@ -519,10 +520,10 @@ The epilogue's logic is in `engine.js` (`startEpilogue`, `epiChoose`), its figur
 |---|---|---|---|---|---|---|---|---|
 | No university | 10 | 0% | 0% | 0% | 100% | 0% | ₩342만 | 60% |
 | Junior college | 43 | 2% | 21% | 2% | 67% | 7% | ₩341만 | 44% |
-| Other four-year university | 198 | 0% | 23% | 9% | 63% | 5% | ₩326만 | 39% |
-| Mid (flagship nationals, rest of in-Seoul) | 133 | 18% | 23% | 20% | 35% | 5% | ₩373만 | 59% |
-| Top Seoul (SKKU to UOS) | 131 | 46% | 16% | 13% | 23% | 2% | ₩429만 | 72% |
-| SKY | 61 | 57% | 23% | 8% | 11% | 0% | ₩455만 | 75% |
+| Other four-year university | 199 | 0% | 23% | 9% | 63% | 5% | ₩326만 | 39% |
+| Mid (flagship nationals, rest of in-Seoul) | 132 | 18% | 22% | 20% | 35% | 5% | ₩372만 | 59% |
+| Top Seoul (SKKU to UOS) | 130 | 46% | 16% | 13% | 22% | 2% | ₩430만 | 72% |
+| SKY | 62 | 56% | 23% | 8% | 13% | 0% | ₩453만 | 74% |
 | Medical school | 24 | 0% | 0% | 100% | 0% | 0% | ₩585만 | 100% |
 
 By the family you were born into (your own earnings fifth at 30 against your family's household fifth at birth):
@@ -533,7 +534,7 @@ By the family you were born into (your own earnings fifth at 30 against your fam
 | Second fifth | 131 | 93% | 15% | ₩361만 | 3.53 | 92% | 4% | 4% | 16% |
 | Middle fifth | 111 | 87% | 14% | ₩402만 | 3.82 | 59% | 33% | 7% | 32% |
 | Fourth fifth | 107 | 92% | 15% | ₩413만 | 3.90 | 21% | 50% | 29% | 21% |
-| Top fifth | 119 | 94% | 15% | ₩406만 | 3.80 | 0% | 24% | 76% | 24% |
+| Top fifth | 119 | 94% | 15% | ₩404만 | 3.79 | 0% | 24% | 76% | 24% |
 
 How to read it against reality:
 
@@ -592,22 +593,22 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 | Strategy | Start | First 수능 국·수·영 grades | First total | Last total | Tries | SKY+ | 의대 | In-Seoul+ |
 |---|---|---|---|---|---|---|---|---|
 | balanced, self-study, 1 try | 63 | 2.6 · 2.2 · 2.2 | 367 | 367 | 1.00 | 3% | 0% | 46% |
-| slacker (half games & friends), 1 try | 57 | 2.9 · 2.4 · 5.4 | 356 | 356 | 1.00 | 0% | 0% | 23% |
+| slacker (half games & friends), 1 try | 57 | 2.9 · 2.4 · 5.5 | 356 | 356 | 1.00 | 0% | 0% | 23% |
 | grinder (no rest), self-study, 1 try | 67 | 2.8 · 2.2 · 2.5 | 372 | 372 | 1.00 | 3% | 0% | 55% |
-| smart, online lectures, 1 try | 67 | 2.1 · 2.1 · 2.4 | 381 | 381 | 1.00 | 5% | 3% | 66% |
-| smart, best affordable method, 1 try | 69 | 1.9 · 1.9 · 2.2 | 385 | 385 | 1.00 | 11% | 3% | 76% |
-| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.9 · 2.2 | 385 | 410 | 2.55 | 63% | 24% | 98% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 384 | 419 | 3.38 | 91% | 89% | 100% |
-| smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.9 · 2.2 | 386 | 386 | 1.00 | 6% | 0% | 76% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.1 · 2.0 · 2.3 | 383 | 420 | 3.35 | 91% | 90% | 100% |
+| smart, online lectures, 1 try | 67 | 2.1 · 2.1 · 2.4 | 381 | 381 | 1.00 | 5% | 3% | 68% |
+| smart, best affordable method, 1 try | 69 | 1.9 · 2.0 · 2.2 | 385 | 385 | 1.00 | 11% | 3% | 76% |
+| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 2.0 · 2.2 | 385 | 410 | 2.54 | 63% | 24% | 98% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 384 | 419 | 3.36 | 91% | 89% | 100% |
+| smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.8 · 2.2 | 386 | 386 | 1.00 | 6% | 0% | 76% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.1 · 2.0 · 2.3 | 384 | 420 | 3.31 | 91% | 90% | 100% |
 | balanced, self-study, vocational high school, 1 try | 60 | 2.5 · 2.2 · 2.6 | 362 | 362 | 1.00 | 0% | 0% | 34% |
 | balanced, self-study, leaves school at High 1, 1 try | 62 | 2.6 · 2.4 · 2.7 | 366 | 366 | 1.00 | 0% | 0% | 45% |
 | smart, best affordable, leaves school at High 1, 1 try | 68 | 2.0 · 2.0 · 2.3 | 383 | 383 | 1.00 | 10% | 3% | 78% |
 | smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.3 · 2.1 · 2.5 | 379 | 379 | 1.00 | 8% | 1% | 66% |
 | balanced, self-study, 1 try, 정시 only (no 수시) | 63 | 2.6 · 2.2 · 2.2 | 367 | 367 | 1.00 | 3% | 0% | 41% |
-| smart, best affordable, 1 try, 정시 only (no 수시) | 69 | 1.9 · 1.9 · 2.2 | 385 | 385 | 1.00 | 10% | 3% | 75% |
+| smart, best affordable, 1 try, 정시 only (no 수시) | 69 | 1.9 · 2.0 · 2.2 | 385 | 385 | 1.00 | 10% | 3% | 75% |
 | smart, best affordable, builds the school record, 1 try | 68 | 1.9 · 1.9 · 2.3 | 384 | 384 | 1.00 | 18% | 6% | 81% |
-| smart, best affordable, 1 try, the same lives as girls | 69 | 1.8 · 1.9 · 2.2 | 386 | 386 | 1.00 | 9% | 3% | 73% |
+| smart, best affordable, 1 try, the same lives as girls | 69 | 1.8 · 1.8 · 2.2 | 386 | 386 | 1.00 | 9% | 3% | 73% |
 
 Admissions in the same lives (v6.0): the 내신 average at the end of High 3's first semester, the record score (as an ordinary university reads it), how many 수시 applications the bot sent on its first try, how often it got a 수시 offer on its first try, how often the school it finally enrolled at came through 수시 (on any try), and how often that school was a women's university:
 
@@ -617,12 +618,12 @@ Admissions in the same lives (v6.0): the 내신 average at the end of High 3's f
 | slacker (half games & friends), 1 try | 3.46 | 33 | 2.5 | 18% | 18% | 0% |
 | grinder (no rest), self-study, 1 try | 2.59 | 44 | 2.9 | 20% | 20% | 0% |
 | smart, online lectures, 1 try | 2.55 | 46 | 2.6 | 16% | 16% | 0% |
-| smart, best affordable method, 1 try | 2.38 | 49 | 2.8 | 18% | 18% | 0% |
+| smart, best affordable method, 1 try | 2.38 | 49 | 2.7 | 18% | 18% | 0% |
 | smart, best affordable, retakes up to 3 tries | 2.38 | 49 | 0.1 | 1% | 13% | 0% |
 | smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.39 | 49 | 0.0 | 0% | 16% | 0% |
-| smart, best affordable, tries for selective schools, 1 try | 2.49 | 49 | 2.5 | 20% | 20% | 0% |
+| smart, best affordable, tries for selective schools, 1 try | 2.49 | 49 | 2.6 | 21% | 21% | 0% |
 | smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 2.51 | 48 | 0.0 | 0% | 16% | 0% |
-| balanced, self-study, vocational high school, 1 try | 1.90 | 48 | 3.9 | 38% | 38% | 0% |
+| balanced, self-study, vocational high school, 1 try | 1.90 | 48 | 3.8 | 38% | 38% | 0% |
 | balanced, self-study, leaves school at High 1, 1 try | - | 26 | 1.9 | 16% | 16% | 0% |
 | smart, best affordable, leaves school at High 1, 1 try | - | 26 | 2.0 | 13% | 13% | 0% |
 | smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | - | - | 1.6 | 13% | 13% | 0% |
@@ -645,8 +646,8 @@ The smart bot with the best affordable method, first try only, by the family it 
 | Low income | 14 | 67 | 374 | 0% | 64% |
 | Lower-middle income | 21 | 68 | 389 | 5% | 71% |
 | Middle income | 16 | 69 | 387 | 13% | 88% |
-| Upper-middle income | 22 | 71 | 391 | 27% | 86% |
-| High income | 7 | 65 | 370 | 0% | 57% |
+| Upper-middle income | 23 | 71 | 389 | 26% | 83% |
+| High income | 6 | 66 | 374 | 0% | 67% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
@@ -664,22 +665,22 @@ What each trait is worth, in a paired test: the same 80 lives (smart bot, best a
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.2 | +3.9 | 75% |
-| Easygoing (순한 아기) | -0.0 | +2.4 | 80% |
-| Curious (호기심 많은 아기) | +0.4 | +2.4 | 79% |
-| Good sleeper (잘 자는 아기) | -0.1 | +3.9 | 78% |
-| Unflappable (겁 없는 아기) | +0.0 | +2.0 | 79% |
-| All smiles (잘 웃는 아기) | -0.0 | +1.9 | 73% |
+| Sturdy (튼튼한 아기) | +0.2 | +4.0 | 75% |
+| Easygoing (순한 아기) | -0.0 | +2.5 | 80% |
+| Curious (호기심 많은 아기) | +0.4 | +2.5 | 79% |
+| Good sleeper (잘 자는 아기) | -0.1 | +4.0 | 76% |
+| Unflappable (겁 없는 아기) | +0.0 | +2.5 | 79% |
+| All smiles (잘 웃는 아기) | -0.0 | +2.0 | 73% |
 | Pencil (연필) | +1.7 | +5.8 | 84% |
-| Book (책) | +1.0 | +2.6 | 75% |
+| Book (책) | +1.0 | +2.8 | 76% |
 | Computer mouse (마우스) | +1.2 | +6.4 | 78% |
-| Stethoscope (청진기) | +0.8 | +3.4 | 76% |
-| Microphone (마이크) | +1.0 | +3.6 | 79% |
-| Judge's gavel (판사봉) | +1.0 | +3.6 | 80% |
-| Ball (공) | +0.2 | +3.4 | 78% |
-| Thread (실) | +0.2 | +2.5 | 74% |
-| Money (돈) | +0.2 | +2.7 | 73% |
-| Paintbrush (붓) | -0.0 | +1.0 | 70% |
+| Stethoscope (청진기) | +0.8 | +3.6 | 76% |
+| Microphone (마이크) | +1.0 | +3.7 | 79% |
+| Judge's gavel (판사봉) | +1.0 | +3.5 | 80% |
+| Ball (공) | +0.2 | +3.6 | 78% |
+| Thread (실) | +0.2 | +2.6 | 74% |
+| Money (돈) | +0.2 | +2.8 | 73% |
+| Paintbrush (붓) | -0.1 | +1.2 | 70% |
 
 Who raises you, on the same 80 lives (smart bot, best affordable method, first try) with the family setup forced at birth. Lives that start with both parents can still lose one later:
 
@@ -722,6 +723,14 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script; `--epilogue [lives]` plays only the epilogue tables.
 
 ## Changelog
+
+- **v6.11:** from the sixth daily play-through (six lives in both languages, read closely through elementary and middle school: a Daegu girl who was bullied in Elementary 6 and lost her dad in Middle 3, a Haenam boy whose parents divorced in High 3 and who retook alone in a study café, a Cheongju girl who aimed at a foreign-language high, a Mapo boy who aimed at a science high, a Suwon boy who left school in High 1 and passed the GED, and a Busan girl at a girls' high who skipped 수시).
+  - **Events that come back every year follow where you are:** the PC방, the crush, the rival's study planner, a cold, a long hospital stay, D-100 and a confession were written for a high-school student, so a self-study retaker's rival posted "in the class group chat" and D-100 hung a banner in a classroom they no longer had, and a dropout was confessed to "after class". Now each takes `whereNow()` (`p.w`: elem, mid, high, hs3, out, academy, selfstudy, half) and words it for that year; old queued items and log lines keep the old text.
+  - **Realism:** a Middle 1 student no longer walks home from the PC방 at 2am: under-19s are sent home at 10pm (the youth curfew). A middle-school crush leaves a strawberry milk, not a canned coffee from the study room, and "after exams" means the next exams. A cold at 8 is cartoons on the sofa, not blurry online lectures. The smartphone debate in Middle 1 offers to wait "until next year", not "until middle school". A girl's mom compares her with her friend's daughter (엄친딸).
+  - **Middle school's record:** Middle 1's first semester is the free semester (자유학기제), so it has no midterm or final ranks (projects and unit tests instead, and the turn summary says so), and each middle-school year ends with the homeroom teacher's comment on your record (학년말 종합의견), in the elementary report card's style (`teacherNote` with `mid`).
+  - **Fix:** a rival you start going out with stopped being only a girlfriend or boyfriend: "your rival Ji-an" kept comparing mock percentiles with you on dates. Dating a rival now ends the rivalry (the next class brings a new rival).
+  - **Spelling:** the English text is American throughout (center, neighborhood, favorite, enroll).
+  - Balance: calibration and the top end are unchanged (byte-identical). Lives where you date your rival play differently from then on (no more rival results), so a few strategy rows moved by a point or two (smart online lectures in-Seoul+ 66 → 68%, the income-fifth rows by a life), and the epilogue table by a life a row; regenerated.
 
 - **v6.10:** from the fifth daily play-through (five lives in both languages: a Pyeongchang boy on the sciences track, a Busan girl in a children's home, a Daegu boy at a private high school who retook three times (4수), a Gwangju girl raised by her dad who enrolled and retook in secret (반수), and a Haenam boy at a vocational high who took the plant job in High 3).
   - **The 반수 year is a year at university:** it used to borrow the retake academy's lines ("You're in a retake dorm eating a triangle kimbap", twice). Now it has its own: April midterms in the same week as the academy's mock, a July choice between a leave of absence for the fall (the campus events stop) and staying enrolled for cover, a department classmate who spots the workbook in your bag, and the group chat planning a year you may not be there for.

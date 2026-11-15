@@ -83,7 +83,7 @@
         sciHigh: "Science high or gifted school", langHigh: "Foreign language high school", artsHigh: "Arts or sports high school", vocHigh: "Vocational high school",
       },
       schoolNoun: {
-        kinder: "the neighbourhood kindergarten", homeCare: "home, with family", forest: "a forest kindergarten", engKinder: "an English kindergarten",
+        kinder: "the neighborhood kindergarten", homeCare: "home, with family", forest: "a forest kindergarten", engKinder: "an English kindergarten",
         pubElem: "the local public elementary school", privElem: "a private elementary school",
         pubMid: "the local public middle school", privMid: "a private middle school", intlMid: "an international middle school",
         pubHigh: "a public high school", privHigh: "a private high school", autoHigh: "an autonomous private high school",
@@ -461,14 +461,14 @@
       "ev.firststeps.r": "Three wobbly steps across the living room, then a proud thump onto your bottom.",
       "ev.daycarecold.r": "Another cold from kindergarten. The whole class has it.",
       "ev.bump.r": "You fall off the slide and bump your head. Lots of tears, no harm done.",
-      "ev.sibling.r": (p) => "A baby " + (p.sib === "f" ? "sister" : "brother") + " arrives. Suddenly you're not the centre of the world.",
+      "ev.sibling.r": (p) => "A baby " + (p.sib === "f" ? "sister" : "brother") + " arrives. Suddenly you're not the center of the world.",
       "ev.grandstory.r": "Your grandmother tells you old stories of kings, tigers and the war, every night you stay over.",
       "ev.hangul.text": "Other kids at kindergarten are already reading Hangul. Your parents wonder whether to start you on it.",
       "ev.hangul.c": ["Start Hangul flashcards", "Let you play; school will teach it"],
       "ev.hangul.r0": "Flashcards at breakfast. You can read the subway signs by summer.",
       "ev.hangul.r1": "More time in the sandpit. You'll learn when you learn.",
       "ev.kinderplay.r": "The kindergarten play: you're the second tree from the left, and you're magnificent.",
-      "ev.prodigy.text": "A gifted-child centre offers a test the year before school.",
+      "ev.prodigy.text": "A gifted-child center offers a test the year before school.",
       "ev.prodigy.c": ["Take the test", "Skip it"],
       "ev.prodigy.r0a": "The tester raises an eyebrow and writes \"gifted\" on the form. Your parents frame it.",
       "ev.prodigy.r0b": "Strange puzzles, a stern lady, and tears afterwards. Not this time.",
@@ -490,10 +490,10 @@
         pubElem: "Close to home. Standard lessons.",
         privElem: "Small classes, English immersion: lessons ×1.15, English ×1.5. By lottery, about 1 in 2.",
         pubMid: "Close to home. Standard lessons.",
-        privMid: "Same fees as public, often stricter: lessons ×1.08, a little more pressure. The lottery honours your preference 60% of the time.",
+        privMid: "Same fees as public, often stricter: lessons ×1.08, a little more pressure. The lottery honors your preference 60% of the time.",
         intlMid: "English-medium boarding school: lessons ×1.1, English ×1.6, more pressure. Screening needs grades well ahead of your year, then a lottery.",
         pubHigh: "Close to home. Standard lessons.",
-        privHigh: "Same fees as public: lessons ×1.08, a little more pressure. The lottery honours your preference 60% of the time.",
+        privHigh: "Same fees as public: lessons ×1.08, a little more pressure. The lottery honors your preference 60% of the time.",
         autoHigh: "Built around the Suneung: Korean, math and English lessons ×1.25, other lessons ×1.1. Strong classmates, more pressure. Selection on grades and an interview.",
         sciHigh: "Math and science lessons ×1.6, Korean ×0.9. Sciences track only, and intense. Needs math and science far ahead of your year.",
         langHigh: "English lessons ×1.6, Korean ×1.25. Humanities track only. Needs English and Korean well ahead of your year.",
@@ -529,7 +529,7 @@
       "ev.rne.c": ["Go all in", "Do the minimum"],
       "ev.rne.r0": "Weeks in the lab, a poster, and math and science that finally click.",
       "ev.rne.r1": "You hand in something tidy and keep your evenings.",
-      "ev.recital.text": "The end-of-term showcase is coming, and your teacher wants you front and centre.",
+      "ev.recital.text": "The end-of-term showcase is coming, and your teacher wants you front and center.",
       "ev.recital.c": ["Practise every evening (−1 block next turn)", "Keep your usual routine"],
       "ev.recital.r0": "You nail it in front of everyone. You remember why you chose this school.",
       "ev.recital.r1": "A decent show. Your teacher says you have more in you.",
@@ -686,10 +686,10 @@
       "log.born": (p, h) => "Born " + (p.sex ? (p.sex === "f" ? "a girl " : "a boy ") : "") + "into " + h.an(h.familyAdj(p.fam)) + " family" + (p.reg ? " in " + h.regionShort(p.reg) : "") + " (household income about " + h.wonShort(p.inc * 10000) + " a month). " + (p.early ? "March " + p.y + "." : "March " + p.y + ": you start elementary school."),
       "log.grade": (p, h) => "March " + p.y + ": " + (p.out ? "your age group moves up to " : "you start ") + h.schoolYear(p.g) + ".",
       "log.stage": (p) => "March " + p.y + ": " + (p.out ? { mid: "your age group starts middle school.", high: "your age group starts high school.", hs3: "your age group's Suneung year. You'll sit it in November." } : { elem: "you start elementary school.", mid: "you start middle school.", high: "you start high school.", hs3: "your final year of high school. The Suneung is in November." })[p.st],
-      "log.teacher": (p, h) => (!p.hab ? "Teacher's note: " + ["", "\"Needs more support at home.\"", "\"Steady, careful work.\"", "\"Outstanding. One of the best in the class.\""][p.lvl] : noteText(p, h, NOTE.en, false)),
+      "log.teacher": (p, h) => (!p.hab ? "Teacher's note: " + ["", "\"Needs more support at home.\"", "\"Steady, careful work.\"", "\"Outstanding. One of the best in the class.\""][p.lvl] : noteText(p, h, p.mid ? NOTE.en.mid : NOTE.en, false)),
       // v6.6: the same comment in a life in care, where "at home" means the children's home.
-      "log.teacher.care": (p, h) => (!p.hab ? MSG.en["log.teacher"](p, h) : noteText(p, h, NOTE.en, true)),
-      "log.report": (p) => "Semester " + p.sem + " exams: ranked " + p.rank + " of " + p.of + " in your class.",
+      "log.teacher.care": (p, h) => (!p.hab ? MSG.en["log.teacher"](p, h) : noteText(p, h, p.mid ? NOTE.en.mid : NOTE.en, true)),
+      "log.report": (p) => (p.free ? "Semester 1 is the free semester: no midterms or finals, only projects and unit tests. By those you'd be about " + ordinal(p.rank) + " of " + p.of + "." : "Semester " + p.sem + " exams: ranked " + p.rank + " of " + p.of + " in your class."),
       "log.sebae": (p, h) => "New Year's money from relatives: +" + h.won(p.a) + ".",
       "log.track": (p, h) => "You choose the " + h.track(p.track).toLowerCase() + " track: " + h.inq(p.inq[0]) + " and " + h.inq(p.inq[1]) + ".",
       "log.month": (p, h) => {
@@ -1046,7 +1046,7 @@
         navy: "Ships, ports and seasickness.",
         air: "The longest, but regular hours: time to study for certificates and English.",
         marine: "The toughest training, and a story for life.",
-        social: "Commute to a public office or a welfare centre.",
+        social: "Commute to a public office or a welfare center.",
         alt: "For conscientious objectors: three years living and working in a prison.",
         doctor: "Serve as a doctor in your thirties; nothing changes before 30.",
         industrial: "Serve by working at your own firm: no gap in your career, but a longer service.",
@@ -1084,7 +1084,7 @@
         gp: "A clinic job without a specialist title.",
         parttime: "Pay the rent and keep looking.",
       },
-      "epi.r.major": (p, h) => "You enrol in " + h.field(p.f).toLowerCase() + ".",
+      "epi.r.major": (p, h) => "You enroll in " + h.field(p.f).toLowerCase() + ".",
       "epi.r.college.library": "Four years in the library. GPA {gpa}.",
       "epi.r.college.balance": "Classes, a club and a part-time job. GPA {gpa}.",
       "epi.r.college.exchange": "A semester in another country changes how you see home. GPA {gpa}.",
@@ -1097,7 +1097,7 @@
       "epi.r.army.navy": "{m} months in the navy. You get your sea legs eventually.",
       "epi.r.army.air": "{m} months in the air force, and a language certificate on the side.",
       "epi.r.army.marine": "{m} months in the marines. You never stop telling people.",
-      "epi.r.army.social": "{m} months as a social service agent at the local community centre.",
+      "epi.r.army.social": "{m} months as a social service agent at the local community center.",
       "epi.r.army.alt": "{m} months of alternative service in a prison kitchen. It was your conscience.",
       "epi.r.army.doctor": "You'll serve as a military doctor after residency.",
       "epi.r.fail": (p, h) => "Not this year: " + h.target(p.t) + " said no" + (p.n > 1 ? " again" : "") + ".",
@@ -1214,7 +1214,7 @@
       "art.place.desk": "Your desk, late at night", "art.place.cubicle": "A study-café cubicle", "art.place.academy": "The retake academy's lecture room",
       "art.place.campus": "The university campus", "art.place.examhall": "The exam hall", "art.place.home": "Home, waiting for results",
       "art.place.gate": "The university gate", "art.place.road": "The road ahead", "art.place.plant": "The plant gate on your first day at work", "art.place.start": "A city at night, about to welcome a new life",
-      "art.place.baby": "A baby's first days at home", "art.place.nursery": "The nursery at home", "art.place.kinder": "The kindergarten playroom", "art.place.yaja": "Your high-school classroom at night study", "art.place.city": "The neighbourhood streets",
+      "art.place.baby": "A baby's first days at home", "art.place.nursery": "The nursery at home", "art.place.kinder": "The kindergarten playroom", "art.place.yaja": "Your high-school classroom at night study", "art.place.city": "The neighborhood streets",
 
       // ----- cutscenes (app.js plays them; each film's captions are numbered by shot) -----
       "cut.label": "Cutscene",
@@ -1653,9 +1653,9 @@
       "log.born": (p, h) => (p.reg ? h.regionShort(p.reg) + "의 " : "") + h.familyAdj(p.fam) + " 가정에서 " + (p.sex ? (p.sex === "f" ? "여자아이로 " : "남자아이로 ") : "") + "태어났다(월 가구소득 약 " + h.wonShort(p.inc * 10000) + "). " + (p.early ? p.y + "년 3월." : p.y + "년 3월, 초등학교에 입학했다."),
       "log.grade": (p, h) => p.y + "년 3월, " + (p.out ? "또래들이 " : "") + josa(h.schoolGrade(p.g), "이", "가") + " 되었다.",
       "log.stage": (p) => p.y + "년 3월, " + (p.out ? { mid: "또래들이 중학교에 입학했다.", high: "또래들이 고등학교에 입학했다.", hs3: "또래들이 고3이 되었다. 나도 11월에 수능을 본다." } : { elem: "초등학교에 입학했다.", mid: "중학교에 입학했다.", high: "고등학교에 입학했다.", hs3: "고3이 되었다. 수능은 11월이다." })[p.st],
-      "log.teacher": (p, h) => (!p.hab ? "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl] : noteText(p, h, NOTE.ko, false)),
-      "log.teacher.care": (p, h) => (!p.hab ? MSG.ko["log.teacher"](p, h) : noteText(p, h, NOTE.ko, true)),
-      "log.report": (p) => p.sem + "학기 시험: 반 " + p.of + "명 중 " + p.rank + "등.",
+      "log.teacher": (p, h) => (!p.hab ? "담임 선생님 한마디: " + ["", "\"가정에서 조금 더 지도해 주세요.\"", "\"성실하게 잘하고 있습니다.\"", "\"반에서 가장 뛰어난 학생 중 하나입니다.\""][p.lvl] : noteText(p, h, p.mid ? NOTE.ko.mid : NOTE.ko, false)),
+      "log.teacher.care": (p, h) => (!p.hab ? MSG.ko["log.teacher"](p, h) : noteText(p, h, p.mid ? NOTE.ko.mid : NOTE.ko, true)),
+      "log.report": (p) => (p.free ? "1학기는 자유학기: 중간·기말고사 없이 프로젝트와 단원평가뿐. 그걸로 치면 반 " + p.of + "명 중 " + p.rank + "등쯤." : p.sem + "학기 시험: 반 " + p.of + "명 중 " + p.rank + "등."),
       "log.sebae": (p, h) => "설날 세뱃돈: +" + h.won(p.a) + ".",
       "log.track": (p, h) => h.track(p.track) + "를 선택했다. 탐구 과목은 " + h.inq(p.inq[0]) + ", " + h.inq(p.inq[1]) + ".",
       "log.month": (p, h) => {
@@ -2478,7 +2478,7 @@
       hab: {
         study: "Pays attention in class and always hands in homework.",
         reading: "Always has a book open, even at break time.",
-        friends: "Gets along with everyone and is a favourite with classmates.",
+        friends: "Gets along with everyone and is a favorite with classmates.",
         games: "Talks about games a lot and could use help managing screen time.",
         exercise: "Full of energy, and shines in PE.",
         arts: "Has a real gift for art and music.",
@@ -2487,6 +2487,24 @@
       },
       best: (sub) => "Especially strong in " + sub + ".",
       more: "I look forward to seeing more next year!",
+      // v6.11: middle school's end-of-year comment (p.mid), written by the year's homeroom teacher.
+      mid: {
+        head: (who) => "End-of-year comment, " + who + ": ",
+        lvl: ["", "Needs to firm up the basics before high school.", "Diligent, with a steady attitude to schoolwork.", "Near the top of the year in most subjects, and a model for classmates."],
+        lvlCare: "Needs more help with the basics before high school.",
+        hab: {
+          study: "Keeps up in lessons and never misses an assignment.",
+          reading: "Reads widely and writes with real thought.",
+          friends: "Has a wide circle of friends and gets on with everyone.",
+          games: "Spends a lot of time on games and the phone; learning to manage it would help.",
+          exercise: "Throws everything into PE and sports day.",
+          arts: "Shows real talent in art and music.",
+          rest: "Calm and easygoing, though more initiative would help.",
+          quiet: "Has been quieter this year; we are keeping an eye on things.",
+        },
+        best: (sub) => "Shows particular strength in " + sub + ".",
+        more: "I look forward to seeing how far this goes in high school.",
+      },
     },
     ko: {
       head: (who) => "통지표 · " + who + ": ",
@@ -2504,6 +2522,23 @@
       },
       best: (sub) => sub + " 과목에서 특히 뛰어난 이해력을 보임.",
       more: "앞으로의 성장이 더욱 기대됨.",
+      mid: {
+        head: (who) => "학년말 종합의견 · " + who + ": ",
+        lvl: ["", "고등학교 진학 전에 기초 학력을 다질 필요가 있음.", "학습 태도가 성실하고 꾸준함.", "대부분의 교과에서 학년 최상위권의 성취를 보이며 급우들의 모범이 됨."],
+        lvlCare: "고등학교 진학 전에 기초 학력 보충에 관심과 지도가 필요함.",
+        hab: {
+          study: "수업에 성실히 참여하며 수행평가 과제를 빠짐없이 제출함.",
+          reading: "폭넓은 독서를 바탕으로 자기 생각을 깊이 있게 표현함.",
+          friends: "교우 관계가 넓고 원만하여 누구와도 잘 어울림.",
+          games: "게임과 스마트폰 사용 시간이 많아 스스로 조절하는 노력이 필요함.",
+          exercise: "체육 활동과 체육대회에 적극적으로 참여함.",
+          arts: "미술과 음악에 뛰어난 소질을 보임.",
+          rest: "온순하고 차분하나 좀 더 적극적인 태도가 필요함.",
+          quiet: "올해 들어 말수가 줄어 관심을 가지고 지켜보고 있음.",
+        },
+        best: (sub) => sub + " 교과에서 특히 뛰어난 성취를 보임.",
+        more: "고등학교에서의 성장이 더욱 기대됨.",
+      },
     },
   };
   function noteText(p, h, N, care) {
@@ -2832,7 +2867,7 @@
     }[p.t.sty],
     "log.soc.class": (p, h) => {
       const st = p.why === "move" ? "A new school after the move: a class full of strangers." : p.why === "transfer" ? "A new school after the transfer. Nobody here knows what happened." : {
-        play: "The neighbourhood kids at the playground become your first friends.", kinder: "Your kindergarten class: a room full of new faces.", elem: "Elementary school: a new class, and a lot of new names to learn.",
+        play: "The neighborhood kids at the playground become your first friends.", kinder: "Your kindergarten class: a room full of new faces.", elem: "Elementary school: a new class, and a lot of new names to learn.",
         mid: "Middle school: a new class, mostly strangers.", high: "High school: a new class.", academy: "The retake academy: a new class of retakers.", uni: "Campus: new faces in every lecture.",
       }[p.st];
       const w = p.with || [];
@@ -3089,10 +3124,98 @@
   named("ko", "ev.bully-on.c", (p, h, old) => (p.fr ? old().map((c, i) => (i === 2 ? h.nm(p.fr) + "와 친구들 곁에 붙어 다닌다" : c)) : old()));
   named("en", "ev.bully-on.r2", (p, h, old) => (p.fr && p.f ? cap(h.nm(p.fr)) + " walks with you between classes and at lunch" + (p.by ? ", and tells " + h.nm(p.by) + " to back off" : "") + ". You're a harder target with a friend beside you. " + h.t("bully.res." + p.x) : old()));
   named("ko", "ev.bully-on.r2", (p, h, old) => (p.fr && p.f ? "쉬는 시간과 점심시간마다 " + h.nm(p.fr) + "가 함께 다녀 준다" + (p.by ? ". " + h.nm(p.by) + "한테 그만하라고 맞서 주기도 한다" : "") + ". 친구가 옆에 있으면 함부로 건드리지 못한다. " + h.t("bully.res." + p.x) : old()));
-  named("en", "ev.pcbang.text", (p, h, old) => (p.a ? cap(h.nm(p.a)) + " and the others are heading to the PC café after class. \"Just one game,\" " + h.he(p.a) + " says." : old()));
-  named("ko", "ev.pcbang.text", (p, h, old) => (p.a ? h.nm(p.a) + "와 친구들이 수업 끝나고 PC방에 가자고 한다. \"딱 한 판만.\"" : old()));
-  named("en", "ev.rival.r", (p, h, old) => (p.a ? "Your rival " + h.nm(p.a) + " posted a photo of " + h.his(p.a) + " study planner in the class group chat: fourteen hours yesterday, every box ticked. You're fired up." : old()));
-  named("ko", "ev.rival.r", (p, h, old) => (p.a ? "라이벌 " + h.nm(p.a) + "가 반 단톡방에 스터디 플래너 사진을 올렸다. 어제 순공 14시간, 칸마다 빼곡하다. 승부욕이 불탄다." : old()));
+  // v6.11: events shared by every year of the game follow where you are (p.w from engine.whereNow():
+  // elem, mid, high, hs3, out, academy, selfstudy, half). Old queued items and log entries have no p.w
+  // and keep the old words. Under-19s are sent home from a PC방 at 10pm (the youth curfew).
+  const ADULT = { academy: 1, selfstudy: 1, half: 1 };
+  const PC_WHEN = {
+    en: { out: "this afternoon", academy: "after the academy lets out", selfstudy: "tonight", half: "after your last lecture" },
+    ko: { out: "오늘 오후에", academy: "학원 끝나고", selfstudy: "오늘 밤", half: "마지막 강의 끝나고" },
+  };
+  named("en", "ev.pcbang.text", (p, h, old) => {
+    const when = PC_WHEN.en[p.w] || "after class";
+    return p.a ? cap(h.nm(p.a)) + " and the others are heading to the PC café " + when + ". \"Just one game,\" " + h.he(p.a) + " says." : p.w ? "Your friends are heading to the PC café " + when + ". \"Just one game,\" they say." : old();
+  });
+  named("ko", "ev.pcbang.text", (p, h, old) => {
+    const when = PC_WHEN.ko[p.w] || "수업 끝나고";
+    return p.a ? h.nm(p.a) + "와 친구들이 " + when + " PC방에 가자고 한다. \"딱 한 판만.\"" : p.w ? "친구들이 " + when + " PC방에 가자고 한다. \"딱 한 판만.\"" : old();
+  });
+  named("en", "ev.pcbang.r0", (p, h, old) => (p.w && !ADULT[p.w] ? "At ten the owner calls time on everyone under 19, and you walk home oddly refreshed and deeply guilty. It was never one game." : old()));
+  named("ko", "ev.pcbang.r0", (p, h, old) => (p.w && !ADULT[p.w] ? "밤 10시, 사장님이 청소년은 이제 나가라고 한다. 묘하게 개운하고, 엄청나게 찔린 채로 집에 간다. 역시 한 판으로 끝나지 않았다." : old()));
+  named("en", "ev.rival.r", (p, h, old) => {
+    if (p.a && p.old) return "Your old rival " + h.nm(p.a) + " posted a photo of " + h.his(p.a) + " desk at midnight, captioned \"Not done yet.\" You're fired up.";
+    if (p.a) return "Your rival " + h.nm(p.a) + " posted a photo of " + h.his(p.a) + " study planner in the " + (p.w === "academy" ? "academy" : "class") + " group chat: fourteen hours yesterday, every box ticked. You're fired up.";
+    return p.w && p.w !== "mid" && p.w !== "high" && p.w !== "hs3" ? "Someone from your old class posted a photo of a study planner: fourteen hours yesterday, every box ticked. You're fired up." : old();
+  });
+  named("ko", "ev.rival.r", (p, h, old) => {
+    if (p.a && p.old) return "옛 라이벌 " + h.nm(p.a) + "가 자정에 책상 사진을 올렸다. \"아직 안 끝났다.\" 승부욕이 불탄다.";
+    if (p.a) return "라이벌 " + h.nm(p.a) + "가 " + (p.w === "academy" ? "학원" : "반") + " 단톡방에 스터디 플래너 사진을 올렸다. 어제 순공 14시간, 칸마다 빼곡하다. 승부욕이 불탄다.";
+    return p.w && p.w !== "mid" && p.w !== "high" && p.w !== "hs3" ? "예전 반 친구가 스터디 플래너 사진을 올렸다. 어제 순공 14시간, 칸마다 빼곡하다. 승부욕이 불탄다." : old();
+  });
+  const CRUSH = {
+    en: {
+      mid: "Someone from the class next door leaves a note and a strawberry milk on your desk. 😳",
+      academy: "Someone from your academy class slips you a note and a canned coffee. 😳",
+      selfstudy: "Someone from your study café slips you a note and a canned coffee. 😳",
+      half: "Someone from your department slips you a note and a canned coffee after a lecture. 😳",
+    },
+    ko: {
+      mid: "옆 반의 누군가가 내 책상에 쪽지와 딸기우유를 두고 갔다. 😳",
+      academy: "같은 학원 반의 누군가가 쪽지와 캔커피를 건넸다. 😳",
+      selfstudy: "스터디카페의 누군가가 쪽지와 캔커피를 건넸다. 😳",
+      half: "같은 과 누군가가 강의가 끝나고 쪽지와 캔커피를 건넸다. 😳",
+    },
+  };
+  named("en", "ev.crush.text", (p, h, old) => CRUSH.en[p.w] || old());
+  named("ko", "ev.crush.text", (p, h, old) => CRUSH.ko[p.w] || old());
+  // In middle school "the exam" is the next set of exams, not the Suneung.
+  named("en", "ev.crush.c", (p, h, old) => (p.w === "mid" ? ["Start dating", "Politely say \"after exams\""] : old()));
+  named("ko", "ev.crush.c", (p, h, old) => (p.w === "mid" ? ["사귄다", "\"시험 끝나고\"라고 정중하게 말한다"] : old()));
+  named("en", "ev.crush.r0b", (p, h, old) => (p.w === "mid" ? "Long phone calls every night. Your workbooks gather dust." : old()));
+  named("ko", "ev.crush.r0b", (p, h, old) => (p.w === "mid" ? "매일 밤 긴 통화. 문제집에는 먼지가 쌓인다." : old()));
+  named("en", "ev.crush.r1", (p, h, old) => (p.w === "mid" ? "\"After exams\" becomes your new favorite phrase." : old()));
+  named("ko", "ev.crush.r1", (p, h, old) => (p.w === "mid" ? "\"시험 끝나고\"가 요즘 제일 좋아하는 말이 됐다." : old()));
+  named("en", "ev.smartphone.c", (p, h, old) => (p.g === 7 ? ["Get one now", "Agree to wait until next year"] : old()));
+  named("ko", "ev.smartphone.c", (p, h, old) => (p.g === 7 ? ["지금 산다", "내년까지 기다리기로 한다"] : old()));
+  // A cold at 8 is cartoons on the sofa; at school it's the handouts piling up; from High 3 it's 인강.
+  named("en", "ev.cold.r", (p, h, old) => (p.w === "elem" ? "You caught a nasty cold. Three days of tissues, rice porridge and cartoons on the sofa." : p.w === "mid" || p.w === "high" ? "You caught a nasty cold. Three days of tissues, and a pile of handouts on your desk when you get back." : old()));
+  named("ko", "ev.cold.r", (p, h, old) => (p.w === "elem" ? "독한 감기에 걸렸다. 사흘 동안 휴지와 죽, 소파에서 보는 만화뿐이었다." : p.w === "mid" || p.w === "high" ? "독한 감기에 걸렸다. 사흘 동안 휴지를 달고 살았고, 학교에 돌아오니 책상에 유인물이 수북하다." : old()));
+  const HOSP = {
+    en: { academy: "The academy's syllabus keeps going without you.", selfstudy: "Weeks of your study plan go by in a hospital bed.", out: "Weeks of your study plan go by in a hospital bed.", half: "Lectures go on without you, and so does your secret study plan." },
+    ko: { academy: "학원 진도는 나 없이 나간다.", selfstudy: "계획표의 몇 주가 병실에서 지나간다.", out: "계획표의 몇 주가 병실에서 지나간다.", half: "강의도, 몰래 세운 공부 계획도 나 없이 흘러간다." },
+  };
+  named("en", "ev.hospital.r", (p, h, old) => (HOSP.en[p.w] ? "A long illness puts you in hospital for weeks. " + HOSP.en[p.w] : old()));
+  named("ko", "ev.hospital.r", (p, h, old) => (HOSP.ko[p.w] ? "오래 앓아 몇 주 동안 입원했다. " + HOSP.ko[p.w] : old()));
+  const D100 = {
+    en: {
+      academy: "D-100. The countdown banner goes up in the academy's study hall. Everyone suddenly gets very quiet.",
+      selfstudy: "D-100. You write it on a sticky note on your study-café desk. Nobody else in the room needs telling.",
+      half: "D-100. Nobody on campus knows what today is. You do.",
+      out: "D-100. The countdown app on your phone hits three digits for the last time. Nobody hangs a banner for you, so you write it on the wall above your desk.",
+    },
+    ko: {
+      academy: "D-100. 학원 자습실에 카운트다운 현수막이 걸렸다. 다들 갑자기 조용해진다.",
+      selfstudy: "D-100. 스터디카페 책상에 포스트잇으로 붙였다. 이 방에서 그걸 모르는 사람은 없다.",
+      half: "D-100. 캠퍼스에서 오늘이 무슨 날인지 아는 사람은 나뿐이다.",
+      out: "D-100. 휴대폰 디데이 앱이 마지막으로 세 자리가 됐다. 현수막을 걸어 줄 사람은 없으니 책상 위 벽에 직접 써 붙였다.",
+    },
+  };
+  named("en", "ev.d100.r", (p, h, old) => D100.en[p.w] || old());
+  named("ko", "ev.d100.r", (p, h, old) => D100.ko[p.w] || old());
+  const CONF_WHERE = {
+    en: { academy: "after the academy's last class", selfstudy: "outside the study café", out: "outside the study café", half: "after a lecture" },
+    ko: { academy: "학원 마지막 수업이 끝나고", selfstudy: "스터디카페 앞에서", out: "스터디카페 앞에서", half: "강의가 끝나고" },
+  };
+  named("en", "ev.soc-confessed.text", (p, h, old) => (CONF_WHERE.en[p.w] ? old().replace("after class", CONF_WHERE.en[p.w]) : old()));
+  named("ko", "ev.soc-confessed.text", (p, h, old) => (CONF_WHERE.ko[p.w] ? old().replace("방과 후에", CONF_WHERE.ko[p.w]) : old()));
+  // The free semester (자유학기제) has no exams, only unit tests and projects.
+  named("en", "ev.soc-rivalrank.rw", (p, h, old) => (p.free ? old().replace("Class ranks are out:", "No exams in the free semester, but everyone compares unit-test marks:") : old()));
+  named("en", "ev.soc-rivalrank.rl", (p, h, old) => (p.free ? old().replace("Class ranks are out:", "No exams in the free semester, but everyone compares unit-test marks:") : old()));
+  named("ko", "ev.soc-rivalrank.rw", (p, h, old) => (p.free ? old().replace("반 등수가 나왔다.", "자유학기라 시험은 없지만 다들 단원평가 점수를 맞춰 본다.") : old()));
+  named("ko", "ev.soc-rivalrank.rl", (p, h, old) => (p.free ? old().replace("반 등수가 나왔다.", "자유학기라 시험은 없지만 다들 단원평가 점수를 맞춰 본다.") : old()));
+  // A girl hears about her mom's friend's daughter (엄친딸), not the son.
+  named("en", "ev.nag.text", (p, h, old) => (p.x === "f" ? old().replace("friend's son", "friend's daughter") : old()));
+  named("ko", "ev.nag.text", (p, h, old) => (p.x === "f" ? old().replace("엄친아는", "엄친딸은") : old()));
   named("en", "ev.lonely.text", (p, h, old) => (p.a ? cap(h.nm(p.a)) + " and your old classmates post photos from a school trip. You've talked to nobody but family all week." : old()));
   named("ko", "ev.lonely.text", (p, h, old) => (p.a ? h.nm(p.a) + "와 예전 반 친구들이 수학여행 사진을 올렸다. 이번 주에 가족 말고는 아무하고도 말을 안 했다." : old()));
   // Log lines: an event's question names its people (q), and a turn says who you spent it with.
@@ -3120,6 +3243,7 @@
     "sum.spent": (p, h) => "Spent " + h.wonShort(p.a),
     "sum.earned": (p, h) => "Earned " + h.wonShort(p.a),
     "sum.rank": "Class rank {r} of {of}",
+    "sum.free": "Free semester: no exams",
     "sum.none": "A quiet turn.",
     "fx.up": "+{s}", "fx.down": "−{s}", "fx.downBig": "Big −{s}",
     "fx.free": "Free", "fx.events": "Things happen", "fx.all": "All subjects",
@@ -3148,6 +3272,7 @@
     "sum.spent": (p, h) => h.wonShort(p.a) + " 지출",
     "sum.earned": (p, h) => h.wonShort(p.a) + " 수입",
     "sum.rank": "반 {r}등 ({of}명 중)",
+    "sum.free": "자유학기: 시험 없음",
     "sum.none": "조용한 턴이었습니다.",
     "fx.up": "{s} +", "fx.down": "{s} −", "fx.downBig": "{s} 크게 −",
     "fx.free": "무료", "fx.events": "사건 발생", "fx.all": "전 과목",

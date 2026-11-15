@@ -982,7 +982,7 @@
     // Your own body: an accident or a long illness costs time you can't get back.
     // About 0.25% of children are hurt in traffic each year: a few percent over a childhood.
     { id: "accident", luck: -1, weight: 0.03, when: (g) => !g.flags.accident, run: (g) => { g.flags.accident = 1; bump(g, { health: -35, stress: 10, motivation: -4 }); g.lostBlocks += 3; return "r"; } },
-    { id: "hospital", luck: -1, weight: 0.3, when: (g) => g.grade >= 4, run: (g) => { bump(g, { health: -22, stress: 6, motivation: -4 }); g.lostBlocks += 2; return "r"; } },
+    { id: "hospital", luck: -1, weight: 0.3, when: (g) => g.grade >= 4, params: (g) => ({ w: g.whereNow() }), run: (g) => { bump(g, { health: -22, stress: 6, motivation: -4 }); g.lostBlocks += 2; return "r"; } },
     // And the lucky breaks: a teacher who changes everything, or a subject that suddenly clicks.
     {
       id: "greatteacher", luck: 1, weight: 0.5, when: (g) => g.inClass(),
@@ -1086,7 +1086,7 @@
       },
     },
     {
-      id: "smartphone", weight: 3, when: (g) => g.grade >= 4 && g.grade <= 7 && !g.flags.phone, choices: 2,
+      id: "smartphone", weight: 3, when: (g) => g.grade >= 4 && g.grade <= 7 && !g.flags.phone, choices: 2, params: (g) => ({ g: g.grade }),
       run: (g, i) => {
         g.flags.phone = 1;
         if (i === 0) { bump(g, { stress: -6, motivation: -5 }); return "r0"; }
@@ -1394,13 +1394,15 @@
     // ----- school years and beyond -----
     {
       id: "pcbang", weight: 3, when: (g) => g.grade >= 7 && g.status !== "academy", choices: 2,
-      params: (g) => one(g.friendPick(g.srng("pc"), { min: 15, tag: "gamer" }) || g.friendPick(g.srng("pc2"), { min: 15 })),
+      // v6.11: p.w says where you are (after class, after a lecture, out of school), and under-19s are
+      // sent home at 10pm (the youth curfew); before, a Middle 1 student walked home at 2am.
+      params: (g) => Object.assign({ w: g.whereNow() }, one(g.friendPick(g.srng("pc"), { min: 15, tag: "gamer" }) || g.friendPick(g.srng("pc2"), { min: 15 }))),
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -12, motivation: -4 }); return "r0"; }
         bump(g, { stress: 4, motivation: 3 }); studyBoost(g, pickWeak(g), 0.03); return "r1";
       },
     },
-    { id: "cold", luck: -1, weight: (g) => 2 * g.trait("ill"), when: () => true, run: (g) => { bump(g, { health: -18, stress: 4 }); return "r"; } },
+    { id: "cold", luck: -1, weight: (g) => 2 * g.trait("ill"), when: () => true, params: (g) => ({ w: g.whereNow() }), run: (g) => { bump(g, { health: -18, stress: 4 }); return "r"; } },
     { id: "flu", luck: -1, weight: (g) => g.trait("ill"), when: (g) => g.health < 45, run: (g) => { bump(g, { health: -25, stress: 6 }); g.lostBlocks += 2; return "r"; } },
     {
       id: "star", weight: 2, when: (g) => g.grade >= 10 && g.money >= 300000, choices: 2,
@@ -1411,20 +1413,22 @@
       },
     },
     {
-      id: "nag", weight: 2, when: (g) => g.flags.phone && g.status !== "halfretake", choices: 2,
+      id: "nag", weight: 2, when: (g) => g.flags.phone && g.status !== "halfretake", choices: 2, params: (g) => (g.sex === "f" ? { x: "f" } : null), // v6.11: a girl hears about "my friend's daughter" (엄친딸)
       run: (g, i) => {
         if (i === 0) { bump(g, { motivation: 6, stress: 3 }); return "r0"; }
         bump(g, { stress: 9, motivation: -3 }); return "r1";
       },
     },
     {
-      id: "crush", weight: 1.5, when: (g) => g.grade >= 8 && g.age <= 20, choices: 2,
+      id: "crush", weight: 1.5, when: (g) => g.grade >= 8 && g.age <= 20, choices: 2, params: (g) => ({ w: g.whereNow() }),
       run: (g, i) => {
         if (i === 0) { bump(g, { stress: -15, motivation: g.rng() < 0.5 ? 8 : -8 }); return g.motivation > 55 ? "r0a" : "r0b"; }
         bump(g, { motivation: 4, stress: 3 }); return "r1";
       },
     },
-    { id: "rival", weight: 1.5, when: (g) => g.grade >= 7, params: (g) => one(g.person(g.soc().rival)), run: (g) => { bump(g, { motivation: 8, stress: 5 }); return "r"; } },
+    // v6.11: a rival who's no longer in your class (a retake year, out of school) is your old rival,
+    // posting from wherever they are now (p.old).
+    { id: "rival", weight: 1.5, when: (g) => g.grade >= 7, params: (g) => { const p = g.person(g.soc().rival); return Object.assign({ w: g.whereNow() }, one(p), p && !p.here ? { old: 1 } : null); }, run: (g) => { bump(g, { motivation: 8, stress: 5 }); return "r"; } },
     {
       id: "slump", weight: 1.5, when: (g) => g.grade >= 7 && g.stress > 60, choices: 2,
       run: (g, i) => {
@@ -1452,7 +1456,7 @@
       },
     },
     {
-      id: "d100", weight: 100, when: (g) => g.grade >= 12 && g.month === 8 && !g.flags["d100-" + g.attempt],
+      id: "d100", weight: 100, when: (g) => g.grade >= 12 && g.month === 8 && !g.flags["d100-" + g.attempt], params: (g) => ({ w: g.whereNow() }),
       run: (g) => { g.flags["d100-" + g.attempt] = 1; bump(g, { motivation: 10, stress: 6 }); return "r"; },
     },
     {
@@ -1631,7 +1635,7 @@
       } },
     // Someone confesses to you.
     { id: "soc-confessed", social: true, weight: (g) => (g.social && g.social.partner == null ? 0.8 : 0), choices: 2, when: (g) => g.grade >= 9 && g.age <= 20,
-      who: (g, r) => { const p = g.romancePick(r, true); return p && { a: ref(p), out: p.out || null }; },
+      who: (g, r) => { const p = g.romancePick(r, true); return p && { a: ref(p), out: p.out || null, w: g.whereNow() }; },
       run: (g, i, q) => {
         const p = g.person(q.a.id);
         if (!p) return "r1";
@@ -2781,7 +2785,13 @@
       }
       this.addLog("log.month", Object.assign({ m: this.month, plan: Object.assign({}, plan), cost, d: deltas, cls: Math.round(lessons * 16.67 * 10) / 10 }, st.fr ? { fr: st.fr, sg: st.sg } : {}), "month");
       if (this.status === "elem") this.addLog("log.teacher", this.teacherNote(plan), "");
-      if (this.status === "mid" && !drop) this.addLog("log.report", { rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, "mock");
+      // v6.11: Middle 1's first semester is the free semester (자유학기제): no midterms or finals, so the
+      // log speaks of unit tests and projects (free). At the end of each middle-school year (the second
+      // semester's turn) the homeroom teacher writes the year's comment, as in elementary school (mid).
+      if (this.status === "mid" && !drop) {
+        this.addLog("log.report", Object.assign({ rank: this.classRank(), of: 30, sem: this.month === 3 ? 1 : 2 }, this.freeSem() ? { free: 1 } : null), "mock");
+        if (this.month === 9) this.addLog("log.teacher", Object.assign(this.teacherNote(plan), { mid: 1 }), "");
+      }
       // New Year's money (세뱃돈) from relatives, whenever a turn runs through January.
       if (school && (this.month === 3 && months === 12 || this.month + months > 12)) {
         // In care it comes from the staff and sponsors, and there's less of it.
@@ -2843,8 +2853,19 @@
     typicalLevel() { return -START_GAP + TYPICAL_CLIMB * (this.grade - 1); }
     // Sitting in classes this turn: school years and grade 12, unless you've left school.
     inClass() { return (this.inSchool() || this.status === "hs3") && this.dropout == null && !this.isEarly(); }
+    // v6.11: where you spend your days, for events that happen in every year of the game (a PC방 after
+    // class or after the academy, a crush from the study room, a cold): "elem", "mid", "high", "hs3",
+    // "out" (left school, before the first 수능), "academy", "selfstudy" or "half" (반수). Read-only; it
+    // goes on the queued event as p.w, so the log keeps the words of the year it happened in.
+    whereNow() {
+      if (this.status === "halfretake") return "half";
+      if (this.status === "academy" || this.status === "selfstudy") return this.status;
+      return this.dropout != null ? "out" : this.status;
+    }
     // Ages 3–5, at whatever kindergarten (or home) was picked.
     atKinder() { return this.isEarly() && this.age >= 3; }
+    // The free semester (자유학기제): Middle 1, spring, at school.
+    freeSem() { return this.status === "mid" && this.grade === 7 && this.month === 3 && this.dropout == null; }
     classRank() { return clamp(Math.round((1 - this.standing()) * 30) + 1, 1, 30); }
     classLevel() { const s = this.standing(); return s > 0.8 ? 3 : s > 0.4 ? 2 : 1; }
     // The elementary report card's comment (행동특성 및 종합의견), written by this year's teacher about
@@ -3824,6 +3845,9 @@
       const s = this.social;
       s.crush = null;
       s.partner = p.id;
+      // v6.11: the rival you start going out with stops being your rival ("your rival Ji-an is 8th,
+      // you're 9th. Ji-an gives you a small smile" read oddly on a date). The next class brings a new one.
+      if (s.rival === p.id) s.rival = null;
       this.closer(p.id, 20);
       this.addLog("log.soc.partner", { a: ref(p) }, "event");
     }
@@ -3914,7 +3938,7 @@
       const mine = this.classRank();
       let theirs = clamp(Math.round((1 - phi((this.thNow(p) + this.srng("rank").normal() * 0.15 - this.typicalLevel()) / 0.8)) * 30) + 1, 1, 30);
       if (theirs === mine) theirs = mine === 1 ? 2 : mine - 1;
-      this.fireEvent(EVENTS.find((e) => e.id === "soc-rivalrank"), { a: ref(p), me: mine, them: theirs });
+      this.fireEvent(EVENTS.find((e) => e.id === "soc-rivalrank"), Object.assign({ a: ref(p), me: mine, them: theirs }, this.freeSem() ? { free: 1 } : null));
     }
     // Who's at the 수능 gate for you (or texting, in a retake year): someone you're dating, your best
     // friend, or a close friend. Nobody, and there's no screen.
