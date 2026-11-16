@@ -2082,7 +2082,7 @@
     president: { bg: "class", fx: "podium", pose: "wave", icon: "🗳️", res: { r0a: { pose: "cheer", mood: "happy" }, r0b: { mood: "tired", pose: "stand" } } },
     career: { bg: "hospital", fx: "doctor", mood: "happy", icon: "🩺" },
     jung2: { bg: "room", fx: "door", mood: "grumpy", prop: "headphones", icon: "🎧", res: { r1: { mood: "ok", prop: null } } },
-    pcbang: { bg: "pcbang", fx: "monitors", mood: "happy", prop: "headphones", icon: "🎮" },
+    pcbang: { bg: "pcbang", fx: "monitors", mood: "happy", prop: "headphones", icon: "🎮", res: { r1: { bg: "cubicle", fx: "notes", prop: "book", pose: "hold", alone: true, mood: "ok" } } },
     cold: { bg: "room", fx: "bed", mood: "sick", prop: "mask", icon: "🤧" },
     flu: { bg: "room", fx: "bed", mood: "sick", prop: "mask", icon: "🤒" },
     star: { bg: "room", night: true, fx: "laptop", icon: "⭐" },
@@ -2147,7 +2147,7 @@
     rankshock: { bg: "class", fx: "raincloud", mood: "stressed", icon: "📉" },
     immersion: { bg: "class", fx: "chat", mood: "happy", icon: "🗣️" },
     // Luck: the 사주 reading, the family's fortunes, accidents and lucky breaks, and exam-day luck.
-    saju: { bg: "room", night: true, fx: "candle", mood: "ok", icon: "🔮", res: { great: { mood: "happy" }, good: { mood: "happy" }, mixed: { mood: "tired" }, rough: { mood: "stressed" } } },
+    saju: { bg: "room", night: true, fx: "candle", mood: "ok", held: true, icon: "🔮", res: { great: { mood: "happy" }, good: { mood: "happy" }, mixed: { mood: "tired" }, rough: { mood: "stressed" } } },
     promotion: { bg: "kitchen", fx: "sparkles", mood: "happy", icon: "📈" },
     jackpot: { bg: "street", fx: "shop", mood: "happy", pose: "cheer", x: 420, icon: "🎰" },
     // v6.5: the bad turns have their own staging. low*: how the picture changes at tone -2 (lowBg and
@@ -2166,7 +2166,7 @@
     divorce: { bg: "kitchen", fx: "raincloud", mood: "stressed", x: 200, lowBg: "emptyhouse", lowFx: "none", low: "numb", lowX: 300, icon: "💔" },
     bereaved: { bg: "room", night: true, fx: "candle", mood: "tired", lowBg: "funeral", lowFx: "none", low: "crying", lowGear: "mourn", lowX: 470, icon: "🕯️" },
     // Early childhood. The two trait reveals, then the early-years events.
-    newborn: { bg: "nursery", fx: "mobile", mood: "happy", x: 200, icon: "👶" },
+    newborn: { bg: "nursery", fx: "mobile", mood: "happy", x: 200, held: true, icon: "👶" },
     doljabi: { bg: "nursery", fx: "doljabi", mood: "happy", pose: "cheer", x: 200, icon: "🎂" },
     firstword: { bg: "nursery", fx: "hearts", mood: "happy", icon: "🗣️" },
     firststeps: { bg: "nursery", fx: "sparkles", mood: "happy", pose: "cheer", icon: "👣" },
@@ -2234,6 +2234,10 @@
     const m = variant ? res.mood : spec.mood;
     return m && NEG_ART[m] ? -1 : m === "happy" && variant ? 1 : 0;
   }
+  // Sets lit mostly by screens, and the light they throw on the people in them (v6.12).
+  const SCREEN_LIT = { pcbang: "monitorGlow" };
+  // A soft light over a figure's head and shoulders (screen blend, so it only ever lightens).
+  const keyLight = (x, y, tok, op) => E(x, y, 24, 44, null, null, 0, fill(glowF(tok), "opacity:" + op + ";mix-blend-mode:screen"));
   const GLOOMY_FX = { raincloud: 1, looming: 1, candle: 1, cracks: 1, sheep: 1 };
   // Backdrops out of doors, where a bad moment brings rain across the whole frame.
   const OUTDOORS = { field: 1, city: 1, street: 1, beach: 1, farm: 1, campus: 1, busstop: 1, plant: 1 };
@@ -2253,14 +2257,16 @@
     return withMood(tone, () => {
       const c = Object.assign({}, ctx, { tone });
       // The worst moments have sets of their own (lowBg), and so can the bad ones (sadBg).
-      const bg = (tone <= -2 && spec.lowBg) || (tone <= -1 && spec.sadBg) || spec.bg;
+      // v6.12: a result can move the picture somewhere else (res.bg, res.fx; res.alone leaves the
+      // people the event named out of it): saying no to the PC bang puts you in the study room.
+      const bg = (tone <= -2 && spec.lowBg) || (tone <= -1 && spec.sadBg) || res.bg || spec.bg;
       let s = BACKDROPS[bg](c, !!spec.night || tone <= -2);
       s += grade(EW, EH, "back");
       if (tone <= -1 && OUTDOORS[bg]) s += rain(EW, EH, tone <= -2 ? 40 : 26, 7);
       // Foregrounds are drawn for the full 600-wide frame; nudging them left keeps them inside the
       // narrower crop a phone shows.
       // A happy ending to a gloomy event (the bullying stops, the slump lifts) loses the gloom.
-      const fx = (tone <= -2 && spec.lowFx) || (tone <= -1 && spec.sadFx) || (tone >= 1 && ctx.variant && GLOOMY_FX[spec.fx] ? "sparkles" : spec.fx);
+      const fx = (tone <= -2 && spec.lowFx) || (tone <= -1 && spec.sadFx) || res.fx || (tone >= 1 && ctx.variant && GLOOMY_FX[spec.fx] ? "sparkles" : spec.fx);
       s += G(-40, 0, FX[fx](ctx.variant, ctx.id, tone, c));
       let mood = res.mood || (ctx.variant ? null : spec.mood);
       if (!mood || (tone <= -2 && !res.mood)) mood = tone <= -2 ? spec.low || "crying" : tone <= -1 ? (NEG_ART[spec.mood] ? spec.mood : "sad") : tone >= 1 ? "happy" : spec.mood || ctx.mood;
@@ -2273,7 +2279,7 @@
       // The people the event names ({ lk, x } from the engine) stand beside you, in your stage's clothes.
       const px = (tone <= -2 && spec.lowX) || spec.x || 200;
       const pm = tone <= -1 ? (res.pmood && SAD_MOODS[res.pmood] ? res.pmood : "sad") : res.pmood || spec.pmood || "happy";
-      const people = spec.alone ? [] : (ctx.people || []).slice(0, 2);
+      const people = spec.alone || res.alone ? [] : (ctx.people || []).slice(0, 2);
       const comfort = tone <= -2 && people.length && spec.lowPeople === "comfort";
       let after = "";
       people.forEach((q, k) => {
@@ -2283,7 +2289,18 @@
         // Whoever comforts you is drawn after you, so the hand lands on your shoulder.
         if (comfort && !k) after = fig; else s += fig;
       });
-      s += shadow(px, EFEET, 32, 5, 0.8) + person(c, px, EFEET, 0.86, extra) + after;
+      // v6.12: a few weeks old you can't stand: events at birth (spec.held) show you in the arms of
+      // whoever raises you (a dad on his own holds you himself), with their mood.
+      const me = spec.held ? (momHolds(c) ? mom : dad)(c, px, EFEET, 0.9, { mood: extra.mood, pose: "hold", prop: "baby" }) : person(c, px, EFEET, 0.86, extra);
+      s += shadow(px, EFEET, 32, 5, 0.8) + me + after;
+      // v6.12: light on the faces. Night sets and dark mode left people as dark shapes on a dark set, so
+      // a soft key light (only in dark mode: --a-keyOp is 0 in light) falls on the head and shoulders of
+      // everyone in the picture, and a set lit by screens (the PC bang) throws its own cold glow on them.
+      const xs = [px].concat(people.map((q, k) => (comfort && !k ? px + 50 : px <= 300 ? px + 92 + k * 74 : px - 92 - k * 74)));
+      const lit = SCREEN_LIT[bg];
+      // Seated, slumped or hunched, the head is lower.
+      const ys = xs.map((x, k) => (/^(slump|hunch|sit)$/.test(k ? (tone <= -2 && !(comfort && k === 1) ? "slump" : "") : pose || "") ? EFEET - 70 : EFEET - 96));
+      xs.forEach((x, k) => { s += keyLight(x, ys[k], "keyLight", "var(--a-keyOp)") + (lit ? keyLight(x, ys[k] + 4, lit, "var(--a-screenLitOp)") : ""); });
       return svg("0 0 " + EW + " " + EH, tidy(defsOut() + s + grade(EW, EH, "front") + vignette(EW, EH)), "event-art");
     });
   }
@@ -2389,7 +2406,9 @@
       let s = sky(0, 0, EW, EH, { tod: "day", seed: 85 }) + ridge(0, EW, 140, 60, 6, "mtnFar", "winter") + haze(0, 90, EW, 50, 0.5) + ridge(0, EW, 160, 30, 7, "mtnMid", "winter") + R(0, 172, EW, 48, "dirt");
       s += boxP(330, 172, 220, 62, 0.06, [300, 80], "concrete", "roofGreen", "concrete2") + P("M322 112 L440 92 L558 112 Z", "roofGreen");
       for (let i = 0; i < 5; i++) s += R(344 + i * 42, 128, 24, 16, "winDay") + R(344 + i * 42, 128, 24, 16, "winLit", 0, null, 0, "opacity:var(--a-litOp)");
-      s += L(110, 178, 110, 54, "steel", 2.5) + G(112, 58, A("sway", R(0, 0, 40, 26, "paperE") + O(20, 13, 6, "accentRed") + P("M14 13 A6 6 0 0 0 26 13 A3 3 0 0 0 20 13 A3 3 0 0 1 14 13 Z", "accentBlue")));
+      s += L(110, 178, 110, 54, "steel", 2.5) + G(112, 58, A("sway", R(0, 0, 40, 26, "paperE") + O(20, 13, 6, "accentRed") + P("M14 13 A6 6 0 0 0 26 13 A3 3 0 0 0 20 13 A3 3 0 0 1 14 13 Z", "accentBlue") +
+        // The four trigrams (v6.12): without them, at a phone's size, the flag read as a red disc on white.
+        [[6, 4, -1], [34, 4, 1], [6, 22, 1], [34, 22, -1]].map(([x, y, d]) => G(x, y, '<g transform="rotate(' + d * 33 + ')">' + [-2.4, 0, 2.4].map((o) => R(-2.6, o - 0.6, 5.2, 1.2, "inkE")).join("") + "</g>")).join("")));
       s += G(230, 196, shadow(0, 2, 36, 5) + E(0, -8, 34, 13, "olive") + R(-30, -20, 60, 16, "olive2", 8));
       return s + particles("winter", 0, 0, EW, 170, false, 10, 22) + shadow(300, EFEET, 30, 5, 0.8) + person(ctx, 300, EFEET, 0.95, { mood: ctx.mood || "ok" }) + vignette(EW, EH);
     },

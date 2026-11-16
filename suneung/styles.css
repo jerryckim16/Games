@@ -33,6 +33,7 @@
   --r-friend: #2f5bea; --r-other: #8b93a3; --r-focus: #f0a020; --cl-fill: #ef6b8a; --cl-track: #f1e3e7;
   /* environments (v6.4): scenes, skies, rooms, event backdrops, cutscenes, the map and the share card (art.js). Light is day, dark is night. */
   /* light and air */
+  --a-keyLight: #ffffff; --a-keyOp: 0; --a-screenLitOp: 0.16;
   --a-aoC: #1e2230; --a-hiE: #ffffff; --a-glowOp: 0.5; --a-vigOp: 0.32; --a-starOp: 0; --a-litOp: 0.22; --a-sunOp: 0.34; --a-moteOp: 0.5;
   --a-veilOp: 0.16; --a-nightVeilOp: 0.55; --a-bgVeil: #f1f0ec;
   /* skies by time of day */
@@ -174,6 +175,7 @@
     --r-friend: #6b8cff; --r-other: #8a91a0; --r-focus: #ffbf47; --cl-fill: #f07a98; --cl-track: #3a2c33;
     /* environments (v6.4): scenes, skies, rooms, event backdrops, cutscenes, the map and the share card (art.js). Light is day, dark is night. */
     /* light and air */
+    --a-keyLight: #ffe8cc; --a-keyOp: 0.2; --a-screenLitOp: 0.4;
     --a-aoC: #000000; --a-hiE: #d8e2f0; --a-glowOp: 0.9; --a-vigOp: 0.55; --a-starOp: 0.85; --a-litOp: 0.95; --a-sunOp: 0.1; --a-moteOp: 0.15;
     --a-veilOp: 0.18; --a-nightVeilOp: 0.15; --a-bgVeil: #0b0e14;
     /* skies by time of day */
@@ -314,6 +316,7 @@
   --r-friend: #6b8cff; --r-other: #8a91a0; --r-focus: #ffbf47; --cl-fill: #f07a98; --cl-track: #3a2c33;
   /* environments (v6.4): scenes, skies, rooms, event backdrops, cutscenes, the map and the share card (art.js). Light is day, dark is night. */
   /* light and air */
+  --a-keyLight: #ffe8cc; --a-keyOp: 0.2; --a-screenLitOp: 0.4;
   --a-aoC: #000000; --a-hiE: #d8e2f0; --a-glowOp: 0.9; --a-vigOp: 0.55; --a-starOp: 0.85; --a-litOp: 0.95; --a-sunOp: 0.1; --a-moteOp: 0.15;
   --a-veilOp: 0.18; --a-nightVeilOp: 0.15; --a-bgVeil: #0b0e14;
   /* skies by time of day */
@@ -1289,4 +1292,9 @@ table.grid td.empty { white-space: normal; }
 /* The dialog's language switch sits top-left, clear of the names art.js centres on its banners. */
 .modal.has-art .modal-lang { right: auto; left: 10px; }
 /* With a dialog open, toasts drop in from the top so they never cover its footer. */
-body.modal-open .toast { bottom: auto; top: max(16px, env(safe-area-inset-top, 0px)); }
+body.modal-open .toast { bottom: auto; top: max(16px, env(safe-area-inset-top, 0px)); pointer-events: none; }
+/* v6.12: on a phone the dialog's language switch sits top left, under where the toast dropped in;
+   the toast keeps to the right of it instead (and taps go through it either way). */
+@media (max-width: 600px) {
+  body.modal-open .toast { left: auto; right: 12px; transform: none; max-width: calc(100vw - 196px); font-size: 0.85rem; }
+}

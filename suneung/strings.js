@@ -297,6 +297,8 @@
 
   // ---------- messages ----------
   // A value is a string with {placeholders}, or a function (p, h) for anything that needs logic.
+  // Jobs with no ladder to climb: a "big promotion" reads wrong for a cleaner or a driver (v6.12).
+  const HOURLY = { service: 1, driver: 1, factory: 1, labor: 1, builder: 1 };
   const MSG = {
     en: {
       "lang.html": "en",
@@ -407,7 +409,7 @@
       "ev.saju.r.mixed": "\"Some storms, but they pass.\" Your grandmother tucks a charm into your blanket. (Luck: a little unlucky.)",
       "ev.saju.r.rough": "\"A hard road. This one will have to be tough.\" Nobody repeats it at dinner. (Luck: unlucky. Bad things happen more often.)",
       "ev.promotion.r": (p, h) => !p || !p.who ? "Your parents get good news at work: a big promotion, or the shop finally takes off. There's more money for your education now." :
-        "Your " + (p.who === "mom" ? "mom" : "dad") + (p.job === "shop" ? "'s shop finally takes off: a line out the door every evening." : p.job === "farmer" ? " has a record harvest, and prices hold." : " gets a big promotion.") + " There's more money for your education now.",
+        "Your " + (p.who === "mom" ? "mom" : "dad") + (p.job === "shop" ? "'s shop finally takes off: a line out the door every evening." : p.job === "farmer" ? " has a record harvest, and prices hold." : HOURLY[p.job] ? " gets a steady contract with better pay and overtime." : " gets a big promotion.") + " There's more money for your education now.",
       "ev.jackpot.r1": "An unexpected inheritance from a distant relative. The family is better off for good.",
       "ev.jackpot.r2": "A winning lottery ticket! Not millions, but enough to change everything.",
       "ev.layoff.r": (p, h) => !p || !p.who ? "Your parents' income dries up: a layoff, or the business goes under. Money is tight from now on." :
@@ -1368,7 +1370,7 @@
       "ev.saju.r.mixed": "\"풍파가 좀 있겠지만 지나가오.\" 할머니가 이불 속에 부적을 넣어 두셨다. (운: 조금 나쁨)",
       "ev.saju.r.rough": "\"험한 길이오. 아이가 강해야겠소.\" 아무도 저녁 식탁에서 그 얘기를 꺼내지 않는다. (운: 나쁨. 나쁜 일이 더 자주 생김)",
       "ev.promotion.r": (p, h) => !p || !p.who ? "부모님이 크게 승진하셨다(혹은 가게가 드디어 잘되기 시작했다). 이제 교육비에 쓸 돈이 더 있다." :
-        (p.who === "mom" ? "엄마" : "아빠") + (p.job === "shop" ? " 가게가 드디어 대박이 났다. 저녁마다 줄이 선다." : p.job === "farmer" ? "가 올해 대풍을 거뒀고 값도 잘 받았다." : "가 크게 승진하셨다.") + " 이제 교육비에 쓸 돈이 더 있다.",
+        (p.who === "mom" ? "엄마" : "아빠") + (p.job === "shop" ? " 가게가 드디어 대박이 났다. 저녁마다 줄이 선다." : p.job === "farmer" ? "가 올해 대풍을 거뒀고 값도 잘 받았다." : HOURLY[p.job] ? "가 벌이가 더 좋은 안정적인 일자리를 구하셨다." : "가 크게 승진하셨다.") + " 이제 교육비에 쓸 돈이 더 있다.",
       "ev.jackpot.r1": "먼 친척에게서 뜻밖의 유산을 받았다. 집안 형편이 확 폈다.",
       "ev.jackpot.r2": "복권 당첨! 수십억은 아니지만 모든 걸 바꿀 만큼이다.",
       "ev.layoff.r": (p, h) => !p || !p.who ? "부모님이 회사에서 잘리셨다(혹은 사업이 망했다). 이제부터 돈이 빠듯하다." :
@@ -2474,6 +2476,11 @@
     en: {
       head: (who) => "Report card, " + who + ": ",
       lvl: ["", "Needs more support at home with the basics.", "Works steadily and carefully.", "Outstanding: one of the best in the class."],
+      // v6.12: other teachers' ways of saying the same thing, so six report cards don't open alike.
+      lvlAlt: [null,
+        ["Still finds the basics hard; a little practice at home each day would help.", "Is working on the basics and needs steady support at home."],
+        ["Does careful, solid work and finishes what is started.", "Keeps a steady pace and takes care over every task."],
+        ["Grasps new ideas quickly and is among the very best in the class.", "Excellent work across the board; one of the strongest in the class."]],
       lvlCare: "Needs more help with the basics.",
       hab: {
         study: "Pays attention in class and always hands in homework.",
@@ -2509,6 +2516,10 @@
     ko: {
       head: (who) => "통지표 · " + who + ": ",
       lvl: ["", "기초 학습에 가정의 관심과 지도가 필요함.", "맡은 일을 성실히 해내며 학습 태도가 바름.", "학업 성취도가 매우 우수하여 학급의 모범이 됨."],
+      lvlAlt: [null,
+        ["기초 학습을 어려워하여 가정에서 매일 조금씩 복습하면 도움이 되겠음.", "기초를 다지는 중이며 가정의 꾸준한 지도가 필요함."],
+        ["주어진 과제를 꼼꼼히 끝까지 해내는 성실한 학생임.", "차분하고 꾸준한 태도로 모든 활동에 정성을 다함."],
+        ["새로운 내용을 빠르게 이해하며 학급에서 손꼽히는 실력을 보임.", "전 교과에 걸쳐 성취가 뛰어나 학급에서 가장 우수한 학생 중 하나임."]],
       lvlCare: "기초 학습에 좀 더 관심과 지도가 필요함.",
       hab: {
         study: "수업 시간에 집중력이 좋고 과제를 빠짐없이 해 옴.",
@@ -2543,7 +2554,15 @@
   };
   function noteText(p, h, N, care) {
     const who = p.by ? h.tch(p.by) : h.lang === "en" ? "your teacher" : "담임 선생님";
-    const out = [care && p.lvl === 1 ? N.lvlCare : N.lvl[p.lvl] || N.lvl[2]];
+    // Which wording a teacher uses comes from the note itself (the school year, and who wrote it, their
+    // style, your best subject and habit for old entries without one), so it's the same on every redraw.
+    const alt = N.lvlAlt && N.lvlAlt[p.lvl], k = [p.by && p.by.s, p.by && p.by.x, p.sty, p.hab, p.best].join("|");
+    let hsh = 0;
+    for (let i = 0; i < k.length; i++) hsh = Math.imul(hsh ^ k.charCodeAt(i), 0x9e3779b1) >>> 0;
+    hsh = Math.imul(hsh ^ (hsh >>> 15), 0x85ebca6b) >>> 0;
+    hsh = (hsh ^ (hsh >>> 13)) >>> 0;
+    const pick = !alt ? 0 : p.yr != null ? p.yr % (alt.length + 1) : hsh % (alt.length + 1);
+    const out = [care && p.lvl === 1 ? N.lvlCare : pick ? alt[pick - 1] : N.lvl[p.lvl] || N.lvl[2]];
     // A tired teacher writes one line, and doesn't notice anything else.
     if (p.sty !== "tired") {
       if (N.hab[p.hab]) out.push(N.hab[p.hab]);
@@ -3142,6 +3161,10 @@
   });
   named("en", "ev.pcbang.r0", (p, h, old) => (p.w && !ADULT[p.w] ? "At ten the owner calls time on everyone under 19, and you walk home oddly refreshed and deeply guilty. It was never one game." : old()));
   named("ko", "ev.pcbang.r0", (p, h, old) => (p.w && !ADULT[p.w] ? "밤 10시, 사장님이 청소년은 이제 나가라고 한다. 묘하게 개운하고, 엄청나게 찔린 채로 집에 간다. 역시 한 판으로 끝나지 않았다." : old()));
+  // v6.12: the parent who falls ill has a name (p.who: mom, dad, gma, gpa); old saves keep "your parent".
+  const ILL = { en: { mom: "Your mom", dad: "Your dad", gma: "Your grandma", gpa: "Your grandpa" }, ko: { mom: "엄마가", dad: "아빠가", gma: "할머니가", gpa: "할아버지가" } };
+  named("en", "ev.parentill.r", (p, h, old) => (ILL.en[p.who] ? ILL.en[p.who] + " falls seriously ill. Hospital bills, worry, and less money for anything else." : old()));
+  named("ko", "ev.parentill.r", (p, h, old) => (ILL.ko[p.who] ? ILL.ko[p.who] + " 크게 편찮으시다. 병원비와 걱정, 그리고 다른 데 쓸 돈이 줄었다." : old()));
   named("en", "ev.rival.r", (p, h, old) => {
     if (p.a && p.old) return "Your old rival " + h.nm(p.a) + " posted a photo of " + h.his(p.a) + " desk at midnight, captioned \"Not done yet.\" You're fired up.";
     if (p.a) return "Your rival " + h.nm(p.a) + " posted a photo of " + h.his(p.a) + " study planner in the " + (p.w === "academy" ? "academy" : "class") + " group chat: fourteen hours yesterday, every box ticked. You're fired up.";
