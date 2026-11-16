@@ -834,7 +834,7 @@
     // The family's fortunes. Each moves the income fifth (and the education budget) for good.
     {
       // A promotion, or a family business that takes off. Safe jobs (civil servants) rise more slowly.
-      id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" && g.parents !== "grand" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("promotion") : 0), when: () => true,
+      id: "promotion", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" && g.parents !== "grand" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("promotion") : 0), when: fortuneGap,
       run: (g) => {
         const who = g.fortuneParent("promotion");
         g.shiftFamily(1, "promotion");
@@ -844,13 +844,13 @@
     },
     {
       // Mostly an inheritance; a lottery jackpot (1 in 8,145,060 a ticket) is a once-in-a-lifetime fluke.
-      id: "jackpot", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.03 : 0), when: () => true,
+      id: "jackpot", anyStage: true, luck: 1, weight: (g) => (g.family !== "q5" ? 0.03 : 0), when: fortuneGap,
       run: (g) => { const two = g.rng() < 0.01; g.shiftFamily(two ? 2 : 1, "jackpot"); g.money += 500000; bump(g, { stress: -6, motivation: 4 }); return two ? "r2" : "r1"; },
     },
     {
       // A layoff, or a business that goes under (most small shops close within five years). Teachers
       // and civil servants are rarely let go. The parent finds other work: often a shop or a steering wheel.
-      id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" && g.parents !== "grand" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("layoff") : 0), when: () => true,
+      id: "layoff", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" && g.parents !== "grand" && !(g.jobs && !g.workingParents().length) ? 0.4 * g.trait("layoff") : 0), when: fortuneGap,
       run: (g) => {
         const who = g.fortuneParent("layoff");
         const from = who && g.jobs[who];
@@ -864,12 +864,14 @@
     {
       // 전세 사기: the deposit on the family's rented home is gone.
       // 41,559 victims nationally from mid-2023 to 2026: about 1% of families over a childhood.
-      id: "jeonse", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.006 : 0), when: () => true,
+      id: "jeonse", anyStage: true, luck: -1, weight: (g) => (g.family !== "q1" ? 0.006 : 0), when: fortuneGap,
       run: (g) => { g.shiftFamily(-1, "jeonse"); g.money = Math.max(0, g.money - 300000); bump(g, { stress: 12 }); return "r"; },
     },
     {
       // Cancer in a parent's 40s–50s (414–595 per 100,000 a year): roughly 15–20% of childhoods.
-      id: "parentill", anyStage: true, luck: -1, weight: 0.09, when: (g) => !g.flags.parentIll,
+      id: "parentill", anyStage: true, luck: -1, weight: 0.09, when: (g) => !g.flags.parentIll && fortuneGap(g),
+      // v6.12: which parent (or grandparent) it is, from its own stream: before, "your parent".
+      params: (g) => ({ who: illWho(g) }),
       run: (g) => { g.flags.parentIll = 1; if (g.family !== "q1") g.shiftFamily(-1, "parentill"); bump(g, { stress: 14, motivation: -5 }); g.lostBlocks += 1; return "r"; },
     },
     // Divorce: about one child in eight sees their parents split before they're grown. Custody mostly
@@ -1802,6 +1804,25 @@
   function studyBoost(g, s, amount) {
     g.skills[s] += amount * headroom(g.skills[s]) * 1.5;
   }
+  // ---------- family fortunes ----------
+  // v6.12: the family's big turns (a promotion, a layoff, a windfall, a jeonse scam, a parent's illness)
+  // keep at least FORTUNE_GAP months apart. Events roll per turn, so in the month-by-month years (High 3,
+  // retakes) they used to pile up: a mom laid off in March and promoted in April.
+  const FORTUNE_GAP = 12;
+  const FORTUNE_IDS = ["promotion", "layoff", "jackpot", "jeonse", "parentill"];
+  function fortuneGap(g) {
+    let last = -99;
+    for (const id of FORTUNE_IDS) if (g.flags["ev-" + id] != null && g.flags["ev-" + id] > last) last = g.flags["ev-" + id];
+    return g.clock - last >= FORTUNE_GAP;
+  }
+  // Who falls ill: one of the parents you live with (a single parent is the one), or a grandparent.
+  function illWho(g) {
+    const r = makeRng(hashSeed(g.seed, "ill"))();
+    if (g.parents === "mom" || g.parents === "dad") return g.parents;
+    if (g.parents === "grand") return r < 0.5 ? "gma" : "gpa";
+    return r < 0.5 ? "mom" : "dad";
+  }
+
   // ---------- bullying ----------
   // How likely bullying is to start this turn, relative to the other events. Per year, elementary school
   // is the peak and high school the low; the stage factor also allows for turn length (a year in
@@ -2873,7 +2894,8 @@
     // and the teacher's style (sty: a tired teacher writes one line). A bullied child just seems
     // quieter. Read-only: no rolls. Old log entries carry only lvl and keep the old one-liner.
     teacherNote(plan) {
-      const p = { lvl: this.classLevel() };
+      // yr (v6.12): the school year, so the comment's wording changes from one year to the next.
+      const p = { lvl: this.classLevel(), yr: this.grade };
       const t = this.social && this.social.teacher;
       if (t) { p.by = { s: t.s, x: t.x }; p.sty = t.sty; }
       let study = 0, top = null;
@@ -3879,8 +3901,11 @@
       const d = { stress: 0, health: 0, motivation: 0 };
       const focus = this.person(s.focus);
       let with1 = null, together = 0;
+      // v6.12: who you spent this turn with (s.met), so a bully this turn is never one of them.
+      s.met = [];
       for (let i = 0; i < (plan.friends || 0) && pool.length; i++) {
         const t = focus && pool.indexOf(focus) >= 0 ? focus : pickW(r, pool.map((p) => [p, (p.cl + 15) * (p.tr.indexOf("kind") >= 0 ? 1.2 : 1)]));
+        if (s.met.indexOf(t.id) < 0) s.met.push(t.id);
         const has = (k) => t.tr.indexOf(k) >= 0;
         t.cl += (FRIEND_GAIN + 4 * r()) * Math.sqrt(this.trait("friends")) * (has("kind") ? 1.2 : 1) * (has("quiet") ? 0.85 : 1);
         if (!with1) with1 = t;
@@ -3952,7 +3977,10 @@
     // stand by you. Only names: the bullying rates and odds are the same as without them.
     pickBully() {
       const s = this.soc(), r = this.srng("bully");
-      const pool = s.people.filter((p) => p.here && p.id !== s.best && p.id !== s.partner && p.cl < GROUP);
+      // Never your best friend, whoever you're dating, a friend from your group, the friend you chose to
+      // spend time with, or anyone you hung out with this very turn (v6.12; s.met, missing in old saves).
+      const met = s.met || [];
+      const pool = s.people.filter((p) => p.here && p.id !== s.best && p.id !== s.partner && p.cl < GROUP && p.id !== s.focus && met.indexOf(p.id) < 0);
       const mean = pool.filter((p) => p.tr.indexOf("bossy") >= 0 || p.tr.indexOf("troubled") >= 0);
       let p = mean.length ? mean[Math.floor(r() * mean.length)] : null;
       if (!p) {
