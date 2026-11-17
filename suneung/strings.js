@@ -619,6 +619,10 @@
       "ev.saju.r.mixed.care": "\"Some storms, but they pass.\" She tucks a charm into your blanket. (Luck: a little unlucky.)",
       "ev.saju.r.rough.care": "\"A hard road. This one will have to be tough.\" The carers tell her to stop. (Luck: unlucky. Bad things happen more often.)",
       "ev.firstword.r.care": "Your first word! The carers argue for a week about whose name it was.",
+      // v6.13: one parent can't argue with the other about it (key + ".mom" / ".dad" / ".grand", see t()).
+      "ev.firstword.r.mom": "Your first word! It was \"mama\", and your mom tells everyone she meets for a week.",
+      "ev.firstword.r.dad": "Your first word! It was \"dada\", and your dad tells everyone he meets for a week.",
+      "ev.firstword.r.grand": "Your first word! Your grandparents argue for a week about whether it was \"grandma\" or \"grandpa\".",
       "ev.doljabi.text.care": "Your first birthday at the home. The carers set out a little doljabi table in the playroom, and a few volunteers come with a cake: whatever you grab, the tradition goes, foretells your future.",
       "ev.doljabi.r.stethoscope.care": "The stethoscope! The carers start calling you \"Doctor\" at bath time. (Science aptitude up.)",
       "ev.doljabi.r.money.care": "You grab the money, and the volunteers laugh. A sponsor tucks an envelope into your little hanbok. (₩300,000 now, more New Year's money.)",
@@ -856,7 +860,8 @@
       "ev.retaker-doubt.text": (p) => {
         if (p.n == null) return "Your old classmates post photos from their freshman orientation trip. You're in a retake dorm eating a triangle kimbap.";
         if (p.st === "halfretake") return "Your department's group chat is planning the rest of the year: a club trip, a festival booth, who takes which classes in the fall. They've put you down for everything. Nobody knows you might not be here next year.";
-        if (p.n === 2) return (p.m >= 5 ? "Your old classmates post photos from their first university festival." : "Your old classmates post photos from their freshman orientation trip.") +
+        // v6.13: a retake year can bring this twice; the second time it's the summer trips or the fall festival.
+        if (p.n === 2) return (p.m >= 9 ? "Your old classmates post photos from the fall festival: a famous singer on the main stage and their club's food stall." : p.m >= 7 ? "Your old classmates post photos from their summer break: a trip to Japan, a beach in Busan, a club camp." : p.m >= 5 ? "Your old classmates post photos from their first university festival." : "Your old classmates post photos from their freshman orientation trip.") +
           (p.st === "selfstudy" ? " You're in a study café eating a triangle kimbap." : " You're eating a triangle kimbap between academy classes.");
         if (p.n === 3) return "Your old classmates are second-years now. One posts a department field trip, another a photo at the training-center gate with a fresh buzz cut. You're at the same desk with the same past papers.";
         const ord = ["", "", "", "", "fourth", "fifth", "sixth", "seventh"][p.n] || p.n + "th";
@@ -1587,6 +1592,9 @@
       "ev.saju.r.mixed.care": "\"풍파가 좀 있겠지만 지나가오.\" 할머니가 이불 속에 부적을 넣어 두셨다. (운: 조금 나쁨)",
       "ev.saju.r.rough.care": "\"험한 길이오. 아이가 강해야겠소.\" 선생님들이 그만하시라고 말렸다. (운: 나쁨. 나쁜 일이 더 자주 일어남)",
       "ev.firstword.r.care": "첫 말을 했다! 선생님들은 일주일 내내 그게 누구 이름이었는지 다툰다.",
+      "ev.firstword.r.mom": "첫 말을 했다! \"엄마\". 엄마는 일주일 내내 만나는 사람마다 자랑하신다.",
+      "ev.firstword.r.dad": "첫 말을 했다! \"아빠\". 아빠는 일주일 내내 만나는 사람마다 자랑하신다.",
+      "ev.firstword.r.grand": "첫 말을 했다! 할머니 할아버지는 일주일 내내 그게 \"할머니\"였는지 \"할아버지\"였는지 다투신다.",
       "ev.doljabi.text.care": "보육원에서 맞는 첫 돌. 선생님들이 놀이방에 작은 돌상을 차리고, 자원봉사자 몇 분이 케이크를 들고 왔다. 무엇을 잡느냐로 아이의 미래를 점친다고 한다(돌잡이).",
       "ev.doljabi.r.stethoscope.care": "청진기다! 선생님들이 목욕 시간마다 \"우리 의사 선생님\" 하고 부른다. (과학 적성 상승)",
       "ev.doljabi.r.money.care": "돈을 잡자 자원봉사자들이 웃음을 터뜨린다. 후원자 한 분이 작은 한복 주머니에 봉투를 넣어 준다. (지금 30만원, 세뱃돈 증가)",
@@ -1818,7 +1826,7 @@
       "ev.retaker-doubt.text": (p) => {
         if (p.n == null) return "고등학교 동창들이 새터 사진을 올렸다. 나는 재수 기숙사에서 삼각김밥을 먹는 중이다.";
         if (p.st === "halfretake") return "과 단톡방에서 MT, 축제 부스, 2학기 시간표까지 올해 계획을 짠다. 내 이름도 다 들어가 있다. 내년에 내가 여기 없을지도 모른다는 건 아무도 모른다.";
-        if (p.n === 2) return (p.m >= 5 ? "고등학교 동창들이 대학 축제 사진을 올렸다." : "고등학교 동창들이 새터 사진을 올렸다.") +
+        if (p.n === 2) return (p.m >= 9 ? "고등학교 동창들이 가을 축제 사진을 올렸다. 메인 무대의 유명 가수, 동아리 주점." : p.m >= 7 ? "고등학교 동창들이 방학 사진을 올렸다. 일본 여행, 부산 바다, 동아리 MT." : p.m >= 5 ? "고등학교 동창들이 대학 축제 사진을 올렸다." : "고등학교 동창들이 새터 사진을 올렸다.") +
           (p.st === "selfstudy" ? " 나는 독서실에서 삼각김밥을 먹는 중이다." : " 나는 학원 쉬는 시간에 삼각김밥을 먹는 중이다.");
         if (p.n === 3) return "동창들은 벌써 2학년이다. 한 명은 과 답사 사진을, 한 명은 머리를 짧게 깎고 훈련소 앞에서 찍은 사진을 올렸다. 나는 같은 책상에서 같은 기출문제를 푼다.";
         const ord = ["", "", "", "", "네", "다섯", "여섯", "일곱"][p.n] || String(p.n);
@@ -2698,8 +2706,10 @@
       lang,
       t(key, p) {
         const c = ctx && ctx();
-        // A life in care reads its own version of a message where one exists (key + ".care").
-        const v = c && c.parents === "care" && M[key + ".care"] != null ? M[key + ".care"] : M[key];
+        // A life in care reads its own version of a message where one exists (key + ".care"), and so
+        // does a life with one parent or with grandparents (v6.13: key + ".mom", ".dad", ".grand").
+        const alt = c && c.parents && c.parents !== "both" ? M[key + "." + c.parents] : null;
+        const v = alt != null ? alt : M[key];
         if (v == null) return key;
         let out;
         if (typeof v === "function") out = v(p || {}, h);
@@ -3198,6 +3208,46 @@
   named("ko", "ev.crush.r0b", (p, h, old) => (p.w === "mid" ? "매일 밤 긴 통화. 문제집에는 먼지가 쌓인다." : old()));
   named("en", "ev.crush.r1", (p, h, old) => (p.w === "mid" ? "\"After exams\" becomes your new favorite phrase." : old()));
   named("ko", "ev.crush.r1", (p, h, old) => (p.w === "mid" ? "\"시험 끝나고\"가 요즘 제일 좋아하는 말이 됐다." : old()));
+  // v6.13: a crush from outside your class (church, a friend's friend) or from a class you've left no
+  // longer "walks past" or hears it "behind the building after class". p.w and p.here are missing on
+  // old saves, which keep the old words. crushAt: "church", "phone" (a friend's friend, someone from an
+  // old class, or a year out of school), "hagwon", "academy" (the retake academy), or null (school).
+  const crushAt = (p) => (p.w == null ? null : p.out === "church" ? "church" : p.out === "friend" || (!p.out && !p.here) ? "phone" : p.out === "hagwon" ? "hagwon" : p.w === "academy" ? "academy" : p.w === "selfstudy" || p.w === "half" || p.w === "out" ? "phone" : null);
+  const CRUSH_SAY = {
+    en: {
+      church: (n) => "After the service you say it, badly, by the vending machine. " + n + " goes red and says \"me too.\" You're going out.",
+      phone: (n) => "You type it at 1am, delete it twice, and send it. " + n + " replies a minute later: \"me too.\" You're going out.",
+      hagwon: (n) => "You say it, badly, at the bus stop after the last class. " + n + " goes red and says \"me too.\" You're going out.",
+      academy: (n) => "You say it, badly, on the academy roof in the dinner break. " + n + " goes red and says \"me too.\" You're going out.",
+    },
+    ko: {
+      church: (n) => "예배가 끝나고 자판기 앞에서 더듬더듬 말했다. " + n + "가 빨개진 얼굴로 \"나도\"라고 한다. 사귀게 됐다.",
+      phone: (n) => "새벽 1시, 썼다 지우기를 두 번 하고 보냈다. 1분 뒤 " + n + "의 답장: \"나도.\" 사귀게 됐다.",
+      hagwon: (n) => "마지막 수업이 끝나고 버스 정류장에서 더듬더듬 말했다. " + n + "가 빨개진 얼굴로 \"나도\"라고 한다. 사귀게 됐다.",
+      academy: (n) => "저녁 쉬는 시간에 학원 옥상에서 더듬더듬 말했다. " + n + "가 빨개진 얼굴로 \"나도\"라고 한다. 사귀게 됐다.",
+    },
+  };
+  const CRUSH_KEEP = {
+    en: {
+      church: (n) => "You keep it to yourself. Every Sunday " + n + " saves you a seat, and your heart does something stupid.",
+      phone: (n) => "You keep it to yourself. Every time " + n + "'s name lights up your phone, your heart does something stupid.",
+    },
+    ko: {
+      church: (n) => "마음속에만 담아 둔다. 일요일마다 " + n + "가 자리를 맡아 줄 때면 심장이 바보같이 뛴다.",
+      phone: (n) => "마음속에만 담아 둔다. 휴대폰에 " + n + "의 이름이 뜰 때마다 심장이 바보같이 뛴다.",
+    },
+  };
+  for (const lang of ["en", "ko"]) {
+    named(lang, "ev.soc-crush.r0a", (p, h, old) => { const k = crushAt(p); return k ? CRUSH_SAY[lang][k](lang === "en" ? cap(h.nm(p.a)) : h.nm(p.a)) : old(); });
+    named(lang, "ev.soc-crush.r1", (p, h, old) => { const k = crushAt(p); return k && CRUSH_KEEP[lang][k] ? CRUSH_KEEP[lang][k](h.nm(p.a)) : old(); });
+    // Turned down by text: there's no long way home, just the phone.
+    named(lang, "ev.soc-crush.r0b", (p, h, old) => (crushAt(p) === "phone" ? (lang === "en" ? "The reply takes an hour. " + cap(h.nm(p.a)) + " says sorry: " + h.he(p.a) + " only sees you as a friend. You put the phone face down. (Stress up)" : "답장은 한 시간 뒤에 왔다. " + h.nm(p.a) + "가 미안하다고, 친구로만 생각한다고 한다. 휴대폰을 엎어 둔다. (스트레스 증가)") : old()));
+  }
+  // A friend's friend "from another school" is retaking too in a retake year, or at another university
+  // in a 반수 year.
+  const crushFar = (p) => p.out === "friend" && !p.again && (p.w === "academy" || p.w === "selfstudy" || p.w === "half");
+  named("en", "ev.soc-crush.text", (p, h, old) => (crushFar(p) ? "A friend introduced you to " + h.full(p.a) + (p.w === "half" ? ", who goes to another university." : ", who's retaking the exam too, across town.") + " Now you check your phone for " + h.his(p.a) + " messages all day." : old()));
+  named("ko", "ev.soc-crush.text", (p, h, old) => (crushFar(p) ? "친구가 " + (p.w === "half" ? "다른 대학에 다니는 " : "다른 동네에서 재수하는 ") + josa(h.full(p.a), "을", "를") + " 소개해 줬다. 하루 종일 메시지가 왔나 휴대폰만 본다." : old()));
   named("en", "ev.smartphone.c", (p, h, old) => (p.g === 7 ? ["Get one now", "Agree to wait until next year"] : old()));
   named("ko", "ev.smartphone.c", (p, h, old) => (p.g === 7 ? ["지금 산다", "내년까지 기다리기로 한다"] : old()));
   // A cold at 8 is cartoons on the sofa; at school it's the handouts piling up; from High 3 it's 인강.
@@ -3229,8 +3279,14 @@
     en: { academy: "after the academy's last class", selfstudy: "outside the study café", out: "outside the study café", half: "after a lecture" },
     ko: { academy: "학원 마지막 수업이 끝나고", selfstudy: "스터디카페 앞에서", out: "스터디카페 앞에서", half: "강의가 끝나고" },
   };
-  named("en", "ev.soc-confessed.text", (p, h, old) => (CONF_WHERE.en[p.w] ? old().replace("after class", CONF_WHERE.en[p.w]) : old()));
-  named("ko", "ev.soc-confessed.text", (p, h, old) => (CONF_WHERE.ko[p.w] ? old().replace("방과 후에", CONF_WHERE.ko[p.w]) : old()));
+  // v6.13: someone from outside school (church, the cram school, a friend's friend) confesses where you
+  // actually see them, not "after class".
+  const CONF_OUT = {
+    en: { church: "after the Sunday service", hagwon: "at the bus stop after the last class", friend: "at the café where you all met up" },
+    ko: { church: "주일 예배가 끝나고", hagwon: "마지막 수업이 끝나고 버스 정류장에서", friend: "다 같이 만난 카페에서" },
+  };
+  named("en", "ev.soc-confessed.text", (p, h, old) => { const w = CONF_OUT.en[p.out] || CONF_WHERE.en[p.w]; return w ? old().replace("after class", w) : old(); });
+  named("ko", "ev.soc-confessed.text", (p, h, old) => { const w = CONF_OUT.ko[p.out] || CONF_WHERE.ko[p.w]; return w ? old().replace("방과 후에", w) : old(); });
   // The free semester (자유학기제) has no exams, only unit tests and projects.
   named("en", "ev.soc-rivalrank.rw", (p, h, old) => (p.free ? old().replace("Class ranks are out:", "No exams in the free semester, but everyone compares unit-test marks:") : old()));
   named("en", "ev.soc-rivalrank.rl", (p, h, old) => (p.free ? old().replace("Class ranks are out:", "No exams in the free semester, but everyone compares unit-test marks:") : old()));
