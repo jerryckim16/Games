@@ -1755,7 +1755,23 @@
           s += pool(m[0], m[1], sc * 0.9, sc * 0.5, i % 3 ? "monitorGlow" : "neonA", 0.65) + R(m[0] - sc * 0.32, m[1] - sc * 0.2, sc * 0.64, sc * 0.38, "inkE", 1);
           const c = p(x, 0.45, z - 0.15), k = 560 / (z - 0.15);
           s += R(c[0] - k * 0.26, c[1] - k * 0.75, k * 0.52, k * 0.78, "chairBlack", k * 0.08) + R(c[0] - k * 0.26, c[1] - k * 0.75, k * 0.52, k * 0.06, "neonB", 1, null, 0, "opacity:0.6");
-          if ((i + Math.round(z)) % 3 !== 0) s += E(c[0], c[1] - k * 0.86, k * 0.12, k * 0.14, "hairE") + P("M" + (c[0] - k * 0.14) + " " + (c[1] - k * 0.84) + " Q" + c[0] + " " + (c[1] - k * 1.12) + " " + (c[0] + k * 0.14) + " " + (c[1] - k * 0.84), null, "inkE", Math.max(1, k * 0.03));
+          // v6.13: the other gamers, seen from behind over their chair backs: shoulders in a hoodie or a
+          // uniform, a neck, the back of a head with the monitor's glow round its edge, and a headset with
+          // lit cups. They used to be one dark ellipse each, which read as faceless black blobs.
+          // The front row's middle seats stay empty, so nobody's head sits between the people in the picture,
+          // and the back row (a few pixels high) is empty chairs.
+          if ((i + Math.round(z)) % 3 !== 0 && !(z < 4 && Math.abs(x) < 3) && k > 50) {
+            const top = c[1] - k * 0.75, hx = c[0], hy = c[1] - k * 0.9, sw = k * 0.2, glow = i % 3 ? "monitorGlow" : "neonA", near = k > 75;
+            const cloth = ["hoodie", "uniform", "hoodie2", "jeans"][(i * 3 + Math.round(z)) % 4];
+            s += P("M" + (hx - sw) + " " + top + " C" + (hx - sw) + " " + (top - k * 0.13) + " " + (hx + sw) + " " + (top - k * 0.13) + " " + (hx + sw) + " " + top + "Z", cloth);
+            if (near) s += R(hx - k * 0.045, top - k * 0.13, k * 0.09, k * 0.07, "chSkin" + ((i + Math.round(z * 2)) % 3));
+            s += E(hx, hy, k * 0.11, k * 0.13, "hairE", glow, Math.max(0.8, k * 0.018), "stroke-opacity:0.75");
+            if (near) s += E(hx - k * 0.02, hy - k * 0.05, k * 0.06, k * 0.05, glow, null, 0, "opacity:0.18");
+            // The headset: the band over the head, then both cups as one thick stroke each.
+            s += P("M" + (hx - k * 0.12) + " " + (hy + k * 0.01) + " Q" + hx + " " + (hy - k * 0.24) + " " + (hx + k * 0.12) + " " + (hy + k * 0.01), null, "inkE", Math.max(1, k * 0.028));
+            s += P("M" + (hx - k * 0.125) + " " + (hy - k * 0.01) + "v" + k * 0.05 + "M" + (hx + k * 0.125) + " " + (hy - k * 0.01) + "v" + k * 0.05, null, "inkE", k * 0.05);
+            if (near) s += P("M" + (hx - k * 0.14) + " " + hy + "v" + k * 0.03 + "M" + (hx + k * 0.14) + " " + hy + "v" + k * 0.03, null, i % 2 ? "neonB" : "neonA", k * 0.012);
+          }
         }
         s += q([[-hw + 0.3, 0.75, z + 0.2], [hw - 0.3, 0.75, z + 0.2], [hw - 0.3, 0.75, z + 0.7], [-hw + 0.3, 0.75, z + 0.7]], "inkE", "opacity:0.8");
       }

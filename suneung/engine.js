@@ -1624,7 +1624,7 @@
     // A crush, and a confession (고백). From Middle 2; at a boys' or girls' school it's someone from
     // outside school.
     { id: "soc-crush", social: true, weight: (g) => (g.social && g.social.partner == null ? 1.6 : 0), choices: 2, when: (g) => g.grade >= 8 && g.age <= 20,
-      who: (g, r) => { const p = g.romancePick(r); return p && { a: ref(p), out: p.out || null, again: g.social.crush === p.id ? 1 : 0 }; },
+      who: (g, r) => { const p = g.romancePick(r); return p && { a: ref(p), out: p.out || null, again: g.social.crush === p.id ? 1 : 0, w: g.whereNow(), here: p.here ? 1 : 0 }; },
       run: (g, i, q) => {
         const p = g.person(q.a.id);
         if (!p) return "r1";
@@ -1732,7 +1732,7 @@
     "soc-birthday.r0": 1, "soc-moveaway": -1, "soc-breakup.r0": -1, "soc-breakup.r1": 0, "soc-reunion.r0": 1, "soc-date": 1, "soc-makeup": 1, "soc-playdate": 1,
     "soc-gate": 1, "soc-rivalrank.rw": 1, "soc-rivalrank.rl": -1, "soc-rivalmock.rw": 1, "soc-rivalmock.rl": -1,
     "ged.pass0": 2, "ged.pass1": 2, "ged.fail0": -1, "ged.fail1": -1, "olympiad.r0a": 2, "olympiad.r0b": -1, "prodigy.r0a": 2, "prodigy.r0b": -1,
-    "president.r0a": 2, "president.r0b": -1, "seteuk.r0": 1, sibling: 0, "firstword": 1, "firststeps": 1, "kinderplay": 1, "sportsday": 1, "festival": 1, "beach": 1,
+    "president.r0a": 2, "president.r0b": -1, "seteuk.r0": 1, "crush.r0a": 1, "crush.r0b": 0, "crush.r1": 0, sibling: 0, "firstword": 1, "firststeps": 1, "kinderplay": 1, "sportsday": 1, "festival": 1, "beach": 1,
   };
   // Choice events before you answer: how the question itself feels. Known hardships lean dark, the
   // bad-luck events (luck: -1) too; anything else is neutral unless it's plainly a happy occasion.
@@ -1949,6 +1949,12 @@
   const STUDY_TOGETHER = 0.012;
   // The chance of a social event in a turn, times √(months in the turn).
   const SOCIAL_RATE = 0.18;
+  // How many random events a turn brings: none below [0], one below [1], else two (one roll of the
+  // main RNG). A year, a semester or a season: 0.92 on average. A month (High 3, retake years; v6.13):
+  // 0.70, so those years get about six random events instead of eight (High 1–2 get four a year), and
+  // a quiet month now and then lets the year read as a grind rather than a stream of interruptions.
+  const TURN_EVENTS = [0.2, 0.88];
+  const MONTH_EVENTS = [0.34, 0.96];
   const MAX_PEOPLE = 40;
   // The homeroom teacher (담임), new every March. lessons: multiplier on school lessons; stress: added
   // each turn; mot: on the motivation baseline. Small, and weighted to exactly nothing on average
@@ -2821,9 +2827,12 @@
         this.addLog("log.sebae", { a: gift }, "");
       }
 
-      // Events: usually one per turn, sometimes none, sometimes two when life piles up.
+      // Events: usually one per turn, sometimes none, sometimes two when life piles up. A month-by-month
+      // year (High 3, retakes) is quieter per turn (MONTH_EVENTS, v6.13): one event a month made those
+      // nine months as eventful as the two years before them put together.
       const roll = rng();
-      const n = roll < 0.2 ? 0 : roll < 0.88 ? 1 : 2;
+      const ev = months === 1 ? MONTH_EVENTS : TURN_EVENTS;
+      const n = roll < ev[0] ? 0 : roll < ev[1] ? 1 : 2;
       const seen = new Set();
       // Fixed milestones (D-100, free-semester career week, 중2) always fire when their time comes, and so
       // does the bullying follow-up while it lasts.
@@ -2877,9 +2886,10 @@
     // v6.11: where you spend your days, for events that happen in every year of the game (a PC방 after
     // class or after the academy, a crush from the study room, a cold): "elem", "mid", "high", "hs3",
     // "out" (left school, before the first 수능), "academy", "selfstudy" or "half" (반수). Read-only; it
-    // goes on the queued event as p.w, so the log keeps the words of the year it happened in.
+    // goes on the queued event as p.w, so the log keeps the words of the year it happened in. A 반수
+    // student on leave for the fall (flags.halfOff, v6.13) is at the academy's course, not on campus.
     whereNow() {
-      if (this.status === "halfretake") return "half";
+      if (this.status === "halfretake") return this.flags.halfOff === this.attempt ? "academy" : "half";
       if (this.status === "academy" || this.status === "selfstudy") return this.status;
       return this.dropout != null ? "out" : this.status;
     }
