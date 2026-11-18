@@ -1915,13 +1915,14 @@
   els.endBtn.addEventListener("click", () => { if (!freeModal() || !game.ending) return; game.endingSeen = false; after(); });
 
   // ---------- the epilogue screens ----------
-  const EPI_ART = { major: "campus", college: "campus", armyWhen: "army", army: "army", hunt: "hunt", hunt2: "hunt" };
+  const EPI_ART = { major: "campus", college: "campus", armyWhen: "army", army: "army", hunt: "hunt", hunt2: "hunt", degree: "campus" };
   const EPI_ICON = {
     hum: "📜", soc: "📊", edu: "🍎", eng: "⚙️", nat: "🔬", health: "🩺", arts: "🎨",
     library: "📚", balance: "⚖️", exchange: "✈️", gap: "💼", campus: "🎉", y1: "1️⃣", y2: "2️⃣", after: "🎓",
     army: "🪖", navy: "⚓", air: "✈️", marine: "🦅", social: "🏢", alt: "🕊️", doctor: "⚕️", industrial: "🔩", stay: "💼",
     big: "🏢", bigline: "🏭", public: "⚡", civil: "🏛️", teacher: "🍎", law: "⚖️", hospital: "🏥", startup: "🚀", grad: "🧪", sme: "🏬",
     trade: "🔧", service: "🛍️", shop: "🏪", popular: "💉", essential: "🩺", gp: "🏥", again: "🔁", parttime: "⏰",
+    night: "🌙", contract: "🤝", keep: "🧰",
   };
   function epiText(g, top) {
     const st = top.step, med = top.tier === 6, none = top.tier === 0;
@@ -1933,6 +1934,8 @@
     // v6.8: a job taken out of school gets its own lines (the law keeps it during service; 산업기능요원).
     if (st === "army") k += top.opts.indexOf("social") >= 0 ? ".social" : med ? ".med" : none ? (work ? ".work" : ".none") : "";
     if (st === "hunt") k += med ? ".med" : none ? (work ? ".work" : ".none") : "";
+    // v6.14: the workers' admission comes after three years at work (the engine stores the age).
+    if (st === "degree" && top.age != null) p.age = top.age;
     return T(k, p);
   }
   function showEpi(top) {
@@ -1968,7 +1971,7 @@
     const e = g.epi, a = e.at30;
     const tile = (k, v, cls) => "<div" + (cls ? ' class="' + cls + '"' : "") + '><span class="k">' + esc(T(k)) + '</span><span class="v">' + esc(v) + "</span></div>";
     const d = a.fifth - a.born;
-    let h = '<div class="summary">' + tile("epi.at30.job", L.job30(a.job)) + tile("epi.at30.pay", a.pay ? L.won(a.pay) : T("epi.at30.noPay")) +
+    let h = '<div class="summary">' + tile("epi.at30.job", L.job30(a.job) + (a.degree ? " · " + T("epi.at30.degree") : "")) + tile("epi.at30.pay", a.pay ? L.won(a.pay) : T("epi.at30.noPay")) +
       tile("epi.at30.fifth", L.fifth("q" + a.fifth)) + tile("epi.at30.born", L.fifth("q" + a.born)) + tile("epi.at30.where", T("epi.at30.lives", { reg: a.region, home: a.home }), "wide") + "</div>";
     h += '<p class="mob ' + (d > 0 ? "up" : d < 0 ? "down" : "") + '">' + (d > 0 ? "↑ " : d < 0 ? "↓ " : "→ ") + esc(T("epi.at30.mob", { from: a.born, to: a.fifth })) + "</p>";
     h += "<h3>" + esc(T("epi.at30.story")) + '</h3><ol class="epi-story">' + e.lines.map((l) => "<li>" + esc(T(l.key, l.p)) + "</li>").join("") + "</ol>";
