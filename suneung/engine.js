@@ -514,6 +514,10 @@
   // outside Seoul and the regional national universities reserve seats for students who did middle and
   // high school in the region. 농어촌 (rural students): a separate quota at most universities.
   const LOCAL_QUOTA = 0.6, RURAL_QUOTA = 0.8;
+  // v6.14: 기회균형 (opportunity balance) in 정시 too. In 2027 it has 1,006 정시 places outside the quota
+  // for basic-livelihood, near-poverty and single-parent households (4,896 in both rounds; KCUE plan,
+  // data/korea-stats.md section 8), a small pool for a small group: a little under the local quota.
+  const BALANCE_QUOTA = 0.5;
   const MOVE_COOLDOWN = 12; // months between moves
 
   // 수능-year mocks (month → true); grades 10–11 sit 학력평가 in June and November instead.
@@ -2105,6 +2109,19 @@
   // bodies left the capital region in 2012–19).
   const SEOUL_JOBS = new Set(["big", "lawyer", "startup", "startupWin", "research", "phd"]);
   const AWAY_JOBS = { public: ["daegu", "busan", "jeonju", "jeju", "gwangju", "cheongju"] };
+  // v6.14: the workers' admission (재직자 전형). A vocational or Meister graduate with three years of work
+  // can apply to a university's evening and weekend courses (5,921 places in 2027, nearly all 수시 and
+  // outside the quota), or study in a contract department (계약학과) that an employer sponsors (2,468
+  // places, mostly run with bigger firms and public bodies). KCUE 2027 plan, data/korea-stats.md
+  // section 8. Competition is mild, so most who apply get in (p: the logit before ability and luck);
+  // finish is the share who see four years of lectures after work through, and pay what the degree
+  // adds at 30. Neither has a published figure: game estimates.
+  const DEGREE = {
+    night: { p: 1.0, finish: 0.82, pay: 0.08, years: 4 },
+    contract: { p: 1.8, finish: 0.92, pay: 0.1, years: 4 },
+  };
+  const DEGREE_WAIT = 3; // years of work before you can apply
+  const DEGREE_FIRMS = new Set(["big", "bigline", "public"]); // employers that run contract departments
 
   // A life's achievements: ids only (strings.js has the names, descriptions and hints). `epi`: needs the
   // epilogue; `meta`: needs something outside this life (lives played on this device).
@@ -2541,12 +2558,15 @@
     ruralQuota() { return this.dropout == null && this.regionInfo().kind === "rural" && (this.regionFrom || 1) <= 7; }
     // Percentile points taken off a university's cut by the quotas you qualify for, and which applies.
     quotaFor(u) {
+      // v6.14: 기회균형 doesn't ask where you went to school, so a 검정고시 holder can use it in 정시.
+      const balance = this.balanceQuota() && u.id !== "college" ? BALANCE_QUOTA : 0;
       // 검정고시 holders don't count as having gone to school in the region.
-      if (this.dropout != null) return null;
+      if (this.dropout != null) return balance ? { kind: "balance", pts: balance } : null;
       const local = this.localQuota() && (u.id === "med" || u.id === this.regionInfo().nat) ? LOCAL_QUOTA * this.quotaScale("local", u) : 0;
       const rural = this.ruralQuota() && u.id !== "college" ? RURAL_QUOTA : 0;
-      if (!local && !rural) return null;
-      return local >= rural ? { kind: "local", pts: local } : { kind: "rural", pts: rural };
+      if (!local && !rural && !balance) return null;
+      if (rural >= local && rural >= balance) return { kind: "rural", pts: rural };
+      return local >= balance ? { kind: "local", pts: local } : { kind: "balance", pts: balance };
     }
     // How big a quota is here against the usual (v6.10): Gangwon's and Jeju's medical schools need only
     // half the usual share of local students. Read-only.
@@ -3170,6 +3190,11 @@
         }
         // High 1: report cards and the school record start (old saves reaching it get them too).
         if (this.status === "high" && was === "mid" && this.dropout == null && !this.record) this.newRecord();
+        // v6.14: from High 1 the school tells you once if you qualify for 기회균형 (display only).
+        if (this.grade >= 10 && this.flags.balanceNote == null && this.balanceQuota()) {
+          this.flags.balanceNote = this.clock;
+          this.addLog("log.balance", { why: this.balanceWhy() }, "milestone");
+        }
         if (this.grade === 11 && this.dropout != null && this.flags.ged != null) this.queue.push({ type: "event", id: "early", choices: 2 });
       }
       // Severe bullying costs a block a turn: days you can't face school, or can't focus when you're there.
@@ -3562,9 +3587,18 @@
 
     // ----- 수시 (v6.0) -----
     // 기회균형 eligibility: in care, or a low-income household on basic livelihood or near-poverty
-    // support (about half the bottom fifth here; its own stream, so it's fixed for the life).
-    balanceQuota() {
-      return this.parents === "care" || (this.family === "q1" && makeRng(hashSeed(this.seed, "balance"))() < 0.5);
+    // support (about half the bottom fifth here; its own stream, so it's fixed for the life). v6.14: a
+    // single-parent family (한부모가족 support, an income test of about 63% of the median) in the bottom
+    // fifth always counts, and in the second fifth half the time (the same draw). Read-only.
+    balanceQuota() { return !!this.balanceWhy(); }
+    // Why you qualify: "care", "single" or "low"; null if you don't.
+    balanceWhy() {
+      if (this.parents === "care") return "care";
+      if (this.family !== "q1" && this.family !== "q2") return null;
+      const single = this.parents === "mom" || this.parents === "dad";
+      const r = makeRng(hashSeed(this.seed, "balance"))();
+      if (single && (this.family === "q1" || r < 0.5)) return "single";
+      return this.family === "q1" && r < 0.5 ? "low" : null;
     }
     // The best 수시 quota you qualify for at a university, or null.
     susiQuota(u) {
@@ -4096,15 +4130,20 @@
         else if (e.target !== "sme") opts.push("sme");
         opts.push("parttime");
       } else if (step === "at30") opts.push("ok");
+      else if (step === "degree") {
+        opts.push("night", "contract", "keep");
+        if (!DEGREE_FIRMS.has(e.job)) blocked.contract = "firm";
+      }
       if (step === "hunt" && opts.indexOf("shop") >= 0 && !((famI >= 2 && !careKid) || this.money >= HUNT.shop.money)) blocked.shop = "money";
-      this.queue.push({ type: "epi", step, opts, blocked, tier: e.tier });
+      // The degree screen says how old you are when you can apply.
+      this.queue.push(Object.assign({ type: "epi", step, opts, blocked, tier: e.tier }, step === "degree" ? { age: Math.round(e.start + DEGREE_WAIT) } : null));
     }
     // Job-hunt targets for your tier and major.
     huntTargets() {
       const e = this.epi, t = e.tier;
       if (t === 6) return ["popular", "essential", "gp"];
       if (t === 0) {
-        const voc = (this.log || []).some((l) => l.key === "log.school" && l.p && l.p.id === "vocHigh");
+        const voc = this.vocGrad();
         const work = this.ending.work;
         // v6.8: a job taken straight from school is yours to keep ("stay"), or to leave for another try.
         return (work ? ["stay"] : []).concat(voc && work !== "bigline" ? ["bigline"] : [], ["trade", "civil", "service", "shop"]);
@@ -4119,6 +4158,15 @@
       if (t >= 2) o.push("grad");
       o.push("sme");
       return o;
+    }
+    // Went to a vocational (or Meister) high school and finished it.
+    vocGrad() { return this.dropout == null && (this.log || []).some((l) => l.key === "log.school" && l.p && l.p.id === "vocHigh"); }
+    // v6.14: the workers' admission is open to a vocational graduate without a university who holds a
+    // job, once three years of work and four of lectures still end by 30.
+    degreeOpen() {
+      const e = this.epi, job = e.job;
+      if (e.tier !== 0 || !this.vocGrad() || !job || !JOB30[job] || job === "parttime" || job === "freelance") return false;
+      return e.start != null && e.start + DEGREE_WAIT + DEGREE.night.years <= 30;
     }
     epiYearsToReady() {
       const e = this.epi;
@@ -4185,6 +4233,26 @@
           e.tries += 1;
           res = this.epiHunt();
         }
+      } else if (step === "degree") {
+        // v6.14: the workers' admission. You keep the job either way; a degree adds to your pay at 30.
+        const age = Math.round(e.start + DEGREE_WAIT);
+        if (id === "keep") {
+          e.degree = null;
+          res = { key: "epi.r.degree.keep", p: { a: age } };
+        } else {
+          const d = DEGREE[id], r = this.epiRng("degree", id);
+          if (r() >= sigmoid(d.p + 0.5 * (this.finalAbility() - 0.5) + 0.25 * (this.luck || 0))) {
+            e.degree = null;
+            res = { key: "epi.r.degree.miss", p: { d: id, a: age } };
+          } else if (r() >= d.finish) {
+            e.degree = null;
+            res = { key: "epi.r.degree.quit", p: { d: id, a: age } };
+          } else {
+            e.degree = id;
+            res = { key: "epi.r.degree." + id, p: { a: age, b: age + d.years } };
+          }
+        }
+        this.epiFinish();
       } else if (step === "at30") {
         e.done = true;
         res = { key: "epi.r.done", p: {} };
@@ -4259,6 +4327,9 @@
     // among workers against the family you were born into, where you live.
     epiFinish() {
       const e = this.epi;
+      // v6.14: a vocational graduate in work gets the workers'-admission screen first (once; old saves
+      // and lives that never saw it have no e.degree).
+      if (e.degree === undefined && this.degreeOpen()) { this.epiPush("degree"); return; }
       const birth = this.birthInfo();
       const ready = this.ending.age + this.epiYearsToReady();
       let job = e.job;
@@ -4269,7 +4340,9 @@
       const born = FAMILY_IDS.indexOf(birth.fam) + 1;
       // Pay: the job's level at 30, a little for years in it, the family's pull (FAMILY_PAY a fifth: half
       // of the 19% top-vs-bottom-fifth wage gap KRIVET finds; the rest comes through school), and luck.
-      const pay = base ? Math.round((base * clamp(1 + 0.02 * (yearsIn - 4), 0.85, 1.15) * (1 + FAMILY_PAY * (born - 3)) * Math.exp(r.normal() * 0.12)) / 10000) * 10000 : 0;
+      // A degree earned at work (v6.14) adds DEGREE[*].pay; the draw is the same either way.
+      const deg = e.degree && DEGREE[e.degree] && job === e.job ? DEGREE[e.degree].pay : 0;
+      const pay = base ? Math.round((base * clamp(1 + 0.02 * (yearsIn - 4), 0.85, 1.15) * (1 + FAMILY_PAY * (born - 3)) * (1 + deg) * Math.exp(r.normal() * 0.12)) / 10000) * 10000 : 0;
       const fifth = pay ? payFifth(pay) : 1;
       // Where you live: big firms, law, startups and research pull you to Seoul; public enterprises sit
       // in the 혁신도시 outside it; teachers and civil servants stay home; the rest mostly stay too.
@@ -4285,6 +4358,7 @@
       else if (pay >= 4500000) home = "jeonse";
       else home = "oneroom";
       e.at30 = { job, pay, fifth, born, region, home };
+      if (e.degree) e.at30.degree = e.degree;
       e.extra = [];
       for (const hook of EPILOGUE_HOOKS) {
         try { const lines = hook(this); if (Array.isArray(lines)) e.extra.push(...lines); } catch (err) { /* a broken hook never stops the ending */ }
