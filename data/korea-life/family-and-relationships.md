@@ -2,16 +2,16 @@
 
 Scope: official Korean statistics on adult partnership, marriage, divorce, childbearing, parental leave and child benefits, work–family balance and later family life, for an adult-life extension of the Suneung Simulator. It extends `data/korea-stats.md` section 3 (divorce totals 2024–25, single-parent and care-system rows) and section 4 (daycare and kindergarten); rows already there are not repeated except where a newer release replaces them (2025 final births and divorces).
 
-Sources read: attachments on mods.go.kr (국가데이터처) boards were downloaded and read in full unless a row says otherwise: `2025년 혼인·이혼 통계` (hwpx, bid 204, list 444103), `2025년 출생 통계` (hwpx, bid 204, list 446625), `2026년 8월 인구동향` (pdf, bid 204, list 447664), `지난 30년간 우리나라의 혼인·출생 변화` (pdf, bid 204, list 438375), `2025년 다문화 인구동태 통계` (pdf, bid 204, list 447832), `2024년 사회조사 결과(가족 …)` (pdf, bid 219, list 433638), `2024년 생활시간조사 결과` (hwpx, bid 220, list 437764), `생활시간조사로 본 청년의 혼인 및 자녀 유무별 시간사용 변화` (pdf, bid 220, list 447502), `2024년 육아휴직통계 결과(잠정)` (hwpx, bid 11814, list 442470), `2024년 신혼부부통계 결과` (hwpx, bid 11815, list 442387), `2025년 상반기 지역별고용조사 기혼여성의 고용 현황` (pdf, bid 211, list 439372), `2025년 하반기 맞벌이 가구 및 1인 가구 취업 현황` (pdf, bid 211, list 445516), `2026 고령자 통계` (pdf, bid 10820, list 447294). Ministry pages (mohw.go.kr, moel.go.kr, kca.go.kr) were read as page text; the MAFRA pet survey was read from its press-release pdf on korea.kr.
+Sources read: attachments on mods.go.kr (국가데이터처) boards were downloaded and read in full unless a row says otherwise: `2026년 사회조사 결과 통계표.xlsx` and `보도자료.pdf` (bid 219, list 447970, seq 3 and 1), `2025년 혼인·이혼 통계` (hwpx, bid 204, list 444103), `2025년 출생 통계` (hwpx, bid 204, list 446625), `2026년 8월 인구동향` (pdf, bid 204, list 447664), `지난 30년간 우리나라의 혼인·출생 변화` (pdf, bid 204, list 438375), `2025년 다문화 인구동태 통계` (pdf, bid 204, list 447832), `2024년 사회조사 결과(가족 …)` (pdf, bid 219, list 433638), `2024년 생활시간조사 결과` (hwpx, bid 220, list 437764), `생활시간조사로 본 청년의 혼인 및 자녀 유무별 시간사용 변화` (pdf, bid 220, list 447502), `2024년 육아휴직통계 결과(잠정)` (hwpx, bid 11814, list 442470), `2024년 신혼부부통계 결과` (hwpx, bid 11815, list 442387), `2025년 상반기 지역별고용조사 기혼여성의 고용 현황` (pdf, bid 211, list 439372), `2025년 하반기 맞벌이 가구 및 1인 가구 취업 현황` (pdf, bid 211, list 445516), `2026 고령자 통계` (pdf, bid 10820, list 447294). Ministry pages (mohw.go.kr, moel.go.kr, kca.go.kr) were read as page text; the MAFRA pet survey was read from its press-release pdf on korea.kr.
 
 Currency: 만원 = ₩10,000, 억 = ₩100,000,000. Rates "per 1,000" are per 1,000 people of that sex and age unless stated.
 
 ---
 
 ## 1. Attitudes to marriage, cohabitation and children
-Retrieved: 2026-11-10
+Retrieved: 2026-11-18 (2026 rows); 2024 rows 2026-11-10
 
-All rows: 2024 사회조사 (Social Survey, family module; asked every two years of people aged 13+, ~36,000 people in ~19,000 households; fieldwork May 2024). The 2026 family module had not been published on the retrieval date.
+Rows marked 2024 are from the 2024 사회조사 (Social Survey, family module; asked every two years of people aged 13+, ~36,000 people in ~19,000 households; fieldwork May 2024). The 2026 family module was published on 2026-11-18 (fieldwork 2026-05-13 to 05-28, ~34,000 people 13+ in ~19,000 households; release page https://mods.go.kr/board.es?mid=a10301010000&bid=219&act=view&list_no=447970); its rows are added below the 2024 ones as newer-year rows, read from the attached 통계표 xlsx.
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -27,6 +27,12 @@ All rows: 2024 사회조사 (Social Survey, family module; asked every two years
 | Views on remarriage | should remarry 8.3 (2014: 16.5); either is fine 67.0; better not 16.1 | 2024 | % of people 13+ | 국가데이터처, 사회조사 | same | official; women 19.5% "better not", men 12.6% |
 | Wedding culture is excessive | 76.9% (2022 73.1); age 30–39 82.0, 40–49 83.1 | 2024 | % "somewhat / very excessive" (cost and rituals) | 국가데이터처, 사회조사 | same | official; rises with household income (₩6M+/month: 81.3%) |
 | Most effective policy against low fertility | housing support 33.4%, youth job support 20.8% | 2024 | % of people 13+ (first choice) | 국가데이터처, 사회조사 | same | official (summary page) |
+| "One should marry", 2026 | 55.0% (52.5 in 2024; rising since 2022's 50.0): must 16.3, better to 38.7; men 60.2, women 49.8; never-married men 43.9, never-married women 29.9; age 13–19 36.8, 20–29 44.7, 30–39 49.1, 40–49 47.5, 60+ 70.4 | 2026 | % of people 13+ answering "must" or "better to" | 국가데이터처, 2026년 사회조사 (sheet 5-1) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row for the two 2024 rows above |
+| Main reason for not marrying, 2026 | lack of money for marriage 29.0; unstable job 15.5; burden of childbirth and childrearing 12.5; see no need 11.2; haven't met the right person 10.7; hard to combine work and family 8.8; can't give up freedom 7.5; never-married men: money 33.7, unstable job 14.0; never-married women: money 23.0, see no need 20.1, not met 13.4 | 2026 | % of people 13+, main reason | 국가데이터처, 2026년 사회조사 (sheet 5-2) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row; job insecurity overtook the childcare burden |
+| Marriage-culture views, 2026 | cohabitation acceptable 67.8% (men 70.3, women 65.3; age 20–29 79.2, 30–39 79.9, 65+ 50.0); children without marriage acceptable 38.1% (men 39.9, women 36.3); "a married couple should have children" 70.2% (men 74.5, women 66.0; age 20–29 56.4, 30–39 60.9, 65+ 86.8) | 2026 | % agreeing (strongly + somewhat) | 국가데이터처, 2026년 사회조사 (sheets 7-1 to 7-3) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row for the three 2024 rows above |
+| Ideal number of children, 2026 | mean 1.89; 0: 1.7%, 1: 18.4%, 2: 69.8%, 3: 9.0%, 4+: 1.0%; never-married men 1.7, never-married women 1.6; age 20–29 1.7, 60+ 2.1 | 2026 | Children per family | 국가데이터처, 2026년 사회조사 (sheet 9; mean from the summary) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx) |
+| Views on divorce, 2026 | shouldn't divorce 26.2 (men 29.8, women 22.6; 65+ 46.1); may or may not 48.1; better to divorce if there is a reason 21.4 (never-married women 31.8) | 2026 | % of people 13+ | 국가데이터처, 2026년 사회조사 (sheet 6-1) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx) |
+| Most effective policy against low fertility, 2026 | housing support 32.0%, youth job support 25.7% | 2026 | % of people 13+ (first choice) | 국가데이터처, 2026년 사회조사 (summary) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=1 | official (attached pdf) |
 
 ## 2. Marriage
 Retrieved: 2026-11-10
@@ -127,7 +133,7 @@ Retrieved: 2026-11-10
 | Child allowance (아동수당) | ₩100,000 a month, now under age 9 (was under 8), rising one year a year to under 13 by 2030; +₩5,000–20,000 outside the capital region or in depopulating areas | 2026– | Won/month per child | 보건복지부 | https://www.mohw.go.kr/board.es?mid=a10503010100&bid=0027&act=view&list_no=1490257 | official (page text); first expanded payment 24 Apr 2026 |
 
 ## 8. Work–family balance, career breaks and housework
-Retrieved: 2026-11-10
+Retrieved: 2026-11-18 (2026 사회조사 rows); earlier rows 2026-11-10
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -143,9 +149,11 @@ Retrieved: 2026-11-10
 | Housework should be shared equally vs is shared | should: 68.9% (men 64.2, women 73.6); actually equal, wives' reports: 23.3% (age 19–29 55.2%, 30–39 36.8%, 50–59 17.5%) | 2024 | % of people 13+; % of married people 19+ | 국가데이터처, 사회조사 | https://mods.go.kr/boardDownload.es?bid=219&list_no=433638&seq=8 | official; husbands report 24.4% equal |
 | "Men work, women keep house" | agree 25.6% (men 31.8, women 19.6); age 20–29 14.3%, 60–69 34.9%, 80+ 49.3% | 2024 | % agreeing | 국가데이터처, 생활시간조사 (통계표 19) | https://mods.go.kr/boardDownload.es?bid=220&list_no=437764&seq=8 | official; 21.0% of women and 5.0% of men are dissatisfied with how housework is shared at home |
 | Family-relationship satisfaction | overall 63.5%; with children 78.1%, with spouse 75.6% (men 80.5, women 70.7), with own parents 70.5%, with spouse's parents 59.8% | 2024 | % satisfied, people 13+ | 국가데이터처, 사회조사 | https://mods.go.kr/boardDownload.es?bid=219&list_no=433638&seq=8 | official |
+| Housework sharing, 2026 | should be shared equally 69.1% (women 72.3%); actually shared equally 27.6% (23.8% in 2024), wife mostly 68.6%, husband mostly 3.9%; equal sharing by age: 20–29 47.1%, 30–39 47.3%, 40–49 31.5%, 50–59 25.4%, 60+ 18.8% | 2026 | % of people 13+ (should); % of married people 19+ living with their spouse (actually) | 국가데이터처, 2026년 사회조사 (sheets 2-1 and 2-2) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row; the 2024 "actually" figure above was wives' reports only |
+| Family-relationship satisfaction, 2026 | overall 66.3% (63.5 in 2024; 13–19 80.4%, 60+ 57.7%); with children 80.3%, with spouse 74.5% (men 79.9, women 69.1), with own parents 72.2%, with spouse's parents 63.4% | 2026 | % satisfied, people 13+ | 국가데이터처, 2026년 사회조사 (sheet 1 and summary) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row |
 
 ## 9. Later family life
-Retrieved: 2026-11-10
+Retrieved: 2026-11-18 (2026 사회조사 row); earlier rows 2026-11-10
 
 Health, long-term care and loneliness of older people are in `health-and-later-life.md` section 10; this section keeps the family side.
 
@@ -157,6 +165,7 @@ Health, long-term care and loneliness of older people are in `health-and-later-l
 | Who cares for frail older people | family 81.4%, long-term-care insurance 30.7% (2020: 19.1%), relatives / neighbours 20.0%, private carer 11.0% | 2023 | % of care recipients (multiple answers) | 보건복지부, 노인실태조사 | same | official; 18.6% of 65+ have a functional limitation, and 47.2% of them receive care |
 | Inheritance plans | divide equally among children 51.4%; spend on self and spouse 24.2% (2020: 17.4%); more to the child who cared most 8.8%; more to eldest son 6.5% (2008: 21.3%) | 2023 | % of people 65+ | 보건복지부, 노인실태조사 | same | official |
 | Who should support elderly parents | family, state and society together 60.3%; family 18.2% (2014: 31.7%); parents themselves 16.4% (2022: 12.6%); state 5.0% | 2024 | % of people 13+ | 국가데이터처, 사회조사 | https://mods.go.kr/boardDownload.es?bid=219&list_no=433638&seq=8 | official |
+| Who should support elderly parents, 2026 | family, state and society together 56.0%; family 21.2%; parents themselves 19.0%; state and society 3.7%; age 20–39: parents themselves 22–24% | 2026 | % of people 13+ | 국가데이터처, 2026년 사회조사 (sheet 3 and summary) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row: family up from 18.2% and parents themselves from 16.4% (2024) |
 | How older people pay their living costs | self or spouse 74.7% (2015: 58.5%); children or relatives 13.1% (down 15.5 percentage points in 10 years); of self-funded: work 48.2%, pensions 38.3%, property 8.2% | 2025 | % of people 65+ | 국가데이터처, 2026 고령자 통계 (from 사회조사) | https://mods.go.kr/boardDownload.es?bid=10820&list_no=447294&seq=4 | official |
 | Older people's family satisfaction | with children 72.7% (2014: 66.6%); with spouse 70.3% (2014: 58.8%; men 75.5, women 63.9); family overall 55.1% (2014: 47.8%) | 2024 | % of people 65+ satisfied | 국가데이터처, 2026 고령자 통계 (from 사회조사) | https://mods.go.kr/boardDownload.es?bid=10820&list_no=447294&seq=4 | official (attached pdf); men/women split from the 2025 edition (bid 10820, list 438832) |
 | Households with pets | 29.2% (dogs 80.5% of pet households, cats 14.4%); ₩121,000 a month per animal (vet ₩37,000; dog ₩135,000, cat ₩92,000) | 2025 | % of households (3,000-household visit survey on the census sample, first approved statistic) | 농림축산식품부, 2025 반려동물 양육현황조사 | https://www.korea.kr/common/download.do?fileId=198358592&tblKey=GMN | official (attached press pdf; release page https://www.korea.kr/briefing/pressReleaseView.do?newsId=156744443); not comparable with earlier online surveys; pets came from acquaintances 46.0%, pet shops 28.7% |

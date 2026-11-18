@@ -118,7 +118,7 @@ Retrieved: 2026-11-10
 | Mental health service use | 12.1% lifetime, 7.2% past year among people with a disorder; depression 28.2% | 2021 | % of those diagnosed | 보건복지부 | same | official; vs USA 43.1% (2015) |
 
 ## 8. Lifestyle
-Retrieved: 2026-11-10
+Retrieved: 2026-11-18 (2026 사회조사 rows); 2026-11-10
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -131,6 +131,11 @@ Retrieved: 2026-11-10
 | Healthy habits of older people | breakfast 91.6%, adequate sleep (6–8 h) 82.4%, regular exercise 52.0% | 2024 | % of people 65+ who practise | 국가데이터처, 사회조사 | same | official; exercise is up 9.3 percentage points in 10 years. This is the only sleep figure found |
 | Self-rated health | 53.8% "good" (men 57.2%, women 50.5%); age 10–19: 83.8%, 60+: 34.1% | 2024 | % of people 13+ | 국가데이터처, 2024 사회조사 | https://mods.go.kr/board.es?mid=a10301010000&bid=219&act=view&list_no=433638 | official; attachment `2024년 사회조사 결과 보도자료.pdf` |
 | Stress in daily life | 38.4% (women 40.1%); work stress 62.1%, school 35.7%, home 34.7% | 2024 | % of people 13+ | 국가데이터처, 2024 사회조사 | same | official; down 6.5 percentage points from 2022 |
+| Self-rated health, 2026 | 57.0% "good" (53.8% in 2024), 10.5% "bad"; men 60.1%, women 53.9%; age 13–19 85.2%, 20–29 79.2%, 30–39 70.0%, 40–49 61.5%, 50–59 53.0%, 65+ 31.2% (27.8% "bad") | 2026 | % of people 13+ | 국가데이터처, 2026년 사회조사 (sheet 23) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row for the 2024 rows here and in section 10 |
+| Stress in daily life, 2026 | 33.8% (38.4% in 2024): men 31.6%, women 36.0%; age 13–19 27.1%, 20–29 28.2%, 40–49 38.3%; at work 58.0% (30–39 63.2%, 40–49 65.4%); at home 31.6%; at school 34.7% (girls 40.2%, boys 29.5%) | 2026 | % feeling "very much" or "somewhat" stressed in the last two weeks, people 13+ (workers for work, students for school) | 국가데이터처, 2026년 사회조사 (sheet 27) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row |
+| Health habits, all ages, 2026 | breakfast 65.8% (63.3 in 2024); adequate sleep 79.9% (79.9); regular exercise 51.7% (48.4); regular check-ups 88.3% (86.5) | 2026 | % of people 13+ who practise each habit | 국가데이터처, 2026년 사회조사 (summary) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=1 | official (attached pdf); "adequate sleep" is the survey's yes/no habit item, not hours |
+| Suicidal thoughts in the past year, 2026 | 3.8% (4.8% in 2024): men 2.8%, women 4.8%; age 20–29 3.2%, 40–49 4.4%, 65+ 3.8%; reasons (all ages): money 29.1%, mental illness 18.5%, physical illness 15.4%, family conflict 12.5%, work 8.7%, loneliness 8.2%; 65+: physical illness 44.2%, money 21.2% | 2026 | % of people 13+; reasons as % of those with thoughts | 국가데이터처, 2026년 사회조사 (sheet 28) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); from 2026 physical and mental illness are separate answers |
+| Fear of cancer and activity limits, 2026 | afraid of getting cancer 33.7% (−2.6pp); health problems make daily activities very hard or impossible 5.1% (5.8% in 2024) | 2026 | % of people 13+ | 국가데이터처, 2026년 사회조사 (summary) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=1 | official (attached pdf) |
 | Health check-up participation, adults | 75.6% (17.517 million of 23.182 million eligible); cancer screening 60.2% | 2024 | % of those eligible for the NHIS general check-up | 국민건강보험공단 (NHIS), 건강검진통계연보, via news | https://www.heraldk.com/article/2025123017000062652 | unverified; nhis.or.kr was unreachable. News outlets disagree on the year-on-year change |
 | Health check-up participation, 65+ | 68.9% (65–69: 79.0%, 70–79: 73.8%, 80+: 43.8%) | 2024 | % of people 65+ | 국가데이터처, 2026 고령자 통계 (from NHIS) | https://mods.go.kr/board.es?mid=a10301010000&bid=10820&act=view&list_no=447294 | official |
 
@@ -205,7 +210,7 @@ Retrieved: 2026-11-10
 - **2025 life table:** due December 2026. The 2024 table is used here.
 - **Adult mental health survey after 2021:** only the 2021 정신건강실태조사 was found. The 2022 child and adolescent survey exists, but was seen only in news.
 - **Private health insurance:** no official figure found for the share of people with 실손보험 (indemnity) or other private health insurance. Sources to check: FSS or 보험연구원, then a Statistics Korea or NHIS survey.
-- **Sleep:** no national adult sleep-duration figure was found. The only sleep figure is the 65+ "adequate sleep" practice rate. Source to check: KDCA 지역사회건강조사.
+- **Sleep:** no national adult sleep-duration figure was found. The only sleep figures are the "adequate sleep" practice rates (65+, and all ages 79.9% in the 2026 사회조사, section 8), and time-use sleep hours in `society-and-daily-life.md`. Source to check: KDCA 지역사회건강조사.
 - **Lifetime medical spending by age:** the NHIS lifetime-medical-cost analysis (share of lifetime spending after 65) was not reached. nhis.or.kr and hira.or.kr were unreachable.
 - **Long-term care grade distribution:** the split of grades 1–5 and the cognitive-support grade, from NHIS 노인장기요양보험통계, was not reached.
 - **Chronic disease count by age band:** only the 65+ average (2.2) was found.

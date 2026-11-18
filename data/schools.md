@@ -7,7 +7,7 @@ How many schools of each kind Korea has, and named lists of the special schools 
 ---
 
 ## 0. Counts from the national list
-Retrieved: 2026-10-29. calc: counted from `data/schools/korea-schools-2026-09.csv` (official, 한국교육시설안전원, data date 2026-09-20, https://www.data.go.kr/data/15159184/fileData.do).
+Retrieved: 2026-10-29. calc: counted from `data/schools/korea-schools-2026-09.csv` (official, 한국교육시설안전원, data date 2026-09-20, https://www.data.go.kr/data/15159184/fileData.do). Checked 2026-11-18: data.go.kr still offers only the 2026-09-20 release (next due 2027-03-31), so the counts stand.
 
 | Office of education (시도교육청) | Elementary | Middle | High | Total |
 |---|---|---|---|---|
@@ -81,7 +81,7 @@ Retrieved: 2026-11-11
 Counts of 일반고, 특성화고, 자율형 공립고, 예술고 and 체육고 are now in the official row at the top. Not found: any count by province.
 
 ## 3. Named lists
-Retrieved: 2026-11-11 (3.5, 3.7 and 3.9 updated with the 2026 교육기본통계 counts; the lists themselves are from 2026-11-04). Each list says how complete it is. The Korean names are as NEIS gives them (고등학교 shortened to 고); no English names are given now, to avoid unchecked translations.
+Retrieved: 2026-11-18 (3.9 gains the flagship national universities table from the KCUE 2027 plan); 2026-11-11 (3.5, 3.7 and 3.9 updated with the 2026 교육기본통계 counts; the lists themselves are from 2026-11-04). Each list says how complete it is. The Korean names are as NEIS gives them (고등학교 shortened to 고); no English names are given now, to avoid unchecked translations.
 
 Source for every list in 3.1–3.5 and 3.7 (unless noted): each high school in `data/schools/korea-schools-2026-09.csv` was looked up by exact name (and office of education) in the NEIS school-information API (`https://open.neis.go.kr/hub/schoolInfo`, no key; fields `HS_SC_NM` school type and `SPCLY_PURPS_HS_ORD_NM` special-purpose track; NEIS load date 2026-04-23) on 2026-11-04. official (calc: classified and counted by us). All 2,402 schools were looked up; 2,396 matched (the 6 unmatched are four Jeju international schools, a farm-campus annex and a broadcast high school). NEIS types: 일반고 1,637; 특성화고 487; 특목고 159; 자율고 113 (public 74, private 39). Place is the first two parts of the road address.
 
@@ -315,6 +315,25 @@ Official totals on 2026-04-01 (MOE / KEDI, 2026년 교육기본통계, 별첨 �
 - Universities under their own laws (6): 한국과학기술원 (KAIST), 광주과학기술원, 대구경북과학기술원, 울산과학기술원, 한국전통문화대, 한국에너지공과대.
 - Industrial universities (산업대학, 2): 청운대, 호원대. Broadcast university: 한국방송통신대.
 - Mergers in the year to 2026-04-01: 국립강릉원주대 into 강원대 (four-year); 경남도립거창대 and 경남도립남해대 into 국립창원대, 전남도립대 into 국립목포대, 원광보건대 into 원광대 (junior colleges).
+
+#### Flagship national universities (거점국립대): places, 2027 entry
+
+Retrieved: 2026-11-18. From KCUE's 2027학년도 대학입학전형시행계획 주요사항 (plan as of 2025-04-28; 대학별 모집인원 pp. 13–20 and the 지역인재 table pp. 6–11), read from the attached pdf itself: https://www.kcue.or.kr/_upload/news/2025/04/30/application_25d9ccd90388d6ba316a2c7d398ff944.pdf. official; the 지역인재 share is calc (지역인재 ÷ total places). Places include those outside the quota. The plan predates the March 2026 medical allocation (§3.8), so medical schools' added 지역의사 places are not in it, and it still lists 국립강릉원주대 separately from 강원대. 195 universities recruit in 수시 and 141 / 146 / 137 in the 정시 가 / 나 / 다 groups (2027).
+
+| University | Campuses counted | 수시 교과 | 수시 종합 | 정시 수능 | All places | 지역인재 (수시 + 정시) | 지역인재 share |
+|---|---|---|---|---|---|---|---|
+| 강원대 | 본교 (Chuncheon) + 제2캠퍼스 (Samcheok) | 2,456 | 1,266 | 818 | 4,804 | 753 (724 + 29) | 15.7% |
+| 경북대 | 본교 | 2,152 | 1,630 | 1,056 | 5,730 | 1,056 (1,018 + 38) | 18.4% |
+| 경상국립대 | 본교 | 2,184 | 1,514 | 932 | 4,838 | 692 (624 + 68) | 14.3% |
+| 부산대 | 본교 | 1,533 | 1,235 | 1,517 | 4,905 | 774 (659 + 115) | 15.8% |
+| 전남대 | 본교 (Gwangju) + 제2캠퍼스 (Yeosu) | 2,695 | 1,154 | 864 | 4,907 | 1,095 (1,038 + 57) | 22.3% |
+| 전북대 | 본교 | 2,309 | 878 | 975 | 4,505 | 995 (953 + 42) | 22.1% |
+| 제주대 | 본교 | 1,029 | 628 | 628 | 2,571 | 568 (543 + 25) | 22.1% |
+| 충남대 | 본교 | 1,992 | 1,143 | 808 | 4,238 | 883 (826 + 57) | 20.8% |
+| 충북대 | 본교 | 1,652 | 1,064 | 631 | 3,434 | 766 (685 + 81) | 22.3% |
+| 서울대 (for comparison) | 본교 | 0 | 2,116 | 1,529 | 3,736 | none (not a 지방대) | — |
+
+Other columns (논술, 실기, 기타 and the 정시 교과 / 종합 rows) are in the PDF; 경북대 (560) and 부산대 (333) are the only flagships with 논술.
 
 ## 4. Notes and open questions
 
