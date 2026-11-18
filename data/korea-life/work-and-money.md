@@ -24,7 +24,7 @@ Retrieved: 2026-11-11
 | Wage workers by status | 22,318k wage workers: regular (상용) 16,636k (57.8% of all employed), temporary 4,817k (16.7%), daily 865k (3.0%) | 2025 | Thousand persons (annual average) | same (sheet 5) | same | official (xlsx); shares calc ÷ 28,769k; non-wage shares are in korea-stats section 14 |
 
 ## 2. Youth, NEET and "just resting" (쉬었음)
-Retrieved: 2026-11-11
+Retrieved: 2026-11-18 (working-as-a-minor rule); 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -37,6 +37,7 @@ Retrieved: 2026-11-11
 | Why youth left their first job | poor working conditions 44.4%; temporary/seasonal job ended 18.0%; personal/family 14.5% | 2026-05 | % of those who left | same | same | official (pdf) |
 | What not-employed school leavers do | job training or exam preparation 39.3%; "just spending time" 25.3% | 2026-05 | % of youth not employed after leaving school | same | same | official (pdf) |
 | Time to graduate from university | 4 years 5.7 months (men 5y 2.1m, women 3y 11.6m); leave of absence averaged 1y 9.9m | 2026-05 | Mean, graduates incl. 3-year colleges | same | same | official (pdf); makes the section 15 row official |
+| Working as a minor | under-15s (and anyone still at middle school, up to 18) may not be employed; employing an under-18 needs a family-relation certificate proving age and a parent's or guardian's consent, a written contract given to the minor, and a parent may not sign the contract for them; under-19s may not work in a 청소년고용금지업소 (game arcades, lodging, pubs and bars among them) | current (2026) | Rule (근로기준법 제64조, 청소년 보호법) | Songpa-gu Office (Seoul), youth-environment guidance page | https://www.songpa.go.kr/www/contents.do?key=3027 | official (district government page text); first part-time job is legal from 15 outside middle school |
 
 ## 3. Retirement and work after 55
 Retrieved: 2026-11-10
@@ -121,7 +122,7 @@ Retrieved: 2026-11-11
 | Starting a business: new self-employed | 305k started within the year (employers 17.8%); why: to run their own business 70.8%, could not find a wage job 21.7%; prepared 1–3 months 47.0%, under a year 86.5%; start-up money under ₩5M 35.2% (incl. none needed 18.5%), ₩5–20M 19.8%, ₩50–100M 17.3%; funded by own or family money 70.3%, banks 18.9%; hardest part: know-how 28.4%, raising money 24.1%, finding customers 23.6% | 2026-08 | % of those who started in the last 12 months | same (2-아) | same | official (pdf); the self-employed's national-pension coverage (incl. pensioners) is 83.3%, employers' industrial-accident insurance 65.5% |
 
 ## 8. Household finances by age of head (가계금융복지조사)
-Retrieved: 2026-11-11
+Retrieved: 2026-11-18 (2026 Q3 household credit from ECOS); 2026-11-11
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -136,6 +137,7 @@ Retrieved: 2026-11-11
 | Debt-service ratio | 22.0% of disposable income | 2024 | Repayments ÷ disposable income | same | same | calc: 1,328 ÷ 6,032 |
 | Debt to assets; financial debt to savings | 16.8%; 68.2% (under 40: 30.3% and 131.1%) | 2025-03-31 | Ratios | same | same | official (hwpx) |
 | Household credit (가계신용), national | ₩2,019.8 trillion (2026 Q2), of which household loans ₩1,891.3 trillion; ₩1,979.1 trillion at end-2025 (+3.0% on 2024); ₩1,342.5 trillion at end-2016 | 2016–2026 Q2 | ₩ trillion outstanding, loans plus card and instalment credit | Bank of Korea, ECOS 151Y001 (가계신용) | https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/151Y001/Q/2024Q3/2026Q2/1000000 | official (ECOS API); first figure above ₩2,000 trillion; the household-loan delinquency rate was 0.45% in 2026-08 (ECOS key statistics) |
+| Household credit, 2026 Q3 | ₩2,030.5 trillion (household loans ₩1,896.8 trillion); +3.3% on 2025 Q3 (₩1,965.3 trillion); 2026 Q2 now reads ₩2,020.8 trillion (revised from the ₩2,019.8 trillion above) | 2026 Q3 (end-September) | ₩ trillion outstanding | Bank of Korea, ECOS 151Y001 (가계신용) | https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/151Y001/Q/2026Q2/2026Q3/1000000 | official (ECOS API, read 2026-11-18; loans item 1100000); growth is calc 2,030.5 ÷ 1,965.3 |
 | Household credit to household disposable income | 131.2% (2025); 132.5% (2024); 151.3% (2021); 132.2% (2016) | 2016–2025 | Year-end 가계신용 ÷ 가계총처분가능소득 (national accounts) | — | https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/200Y101/A/2016/2025/101051 | calc: 1,979.1 ÷ 1,508.0 trillion (2025); 1,922.4 ÷ 1,450.6 (2024); 1,861.3 ÷ 1,230.1 (2021); 1,342.5 ÷ 1,015.4 (2016); not the BOK's own flow-of-funds ratio; household disposable income per person ₩29.18M (2025, ECOS 200Y101) |
 | Mean net worth by net-worth quintile | Q1 1,132만; Q2 1억 462만; Q3 2억 4,105만; Q4 4억 7,853만; Q5 15억 2,085만 | 2025-03-31 | Mean per household | same (xlsx, 순자산 5분위) | https://mods.go.kr/boardDownload.es?bid=215&list_no=439535&seq=8 | official (xlsx) |
 | Mean income by income quintile | Q1 1,552만; Q2 3,586만; Q3 5,805만; Q4 8,847만; Q5 1억 7,338만 | 2024 income | Mean annual household income | same (xlsx, 소득 5분위) | same | official (xlsx); Q1 and Q5 are in korea-stats section 2 |

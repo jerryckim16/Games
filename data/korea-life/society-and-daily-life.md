@@ -60,7 +60,7 @@ Retrieved: 2026-11-10
 ---
 
 ## 3. Wellbeing and attitudes
-Retrieved: 2026-11-10
+Retrieved: 2026-11-18 (2026 사회조사 education rows); earlier rows 2026-11-10
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -81,6 +81,9 @@ Retrieved: 2026-11-10
 | Suicidal impulses | 4.8% in the past year; reasons: illness/depression 37.2%, money 25.8%, work 11.2%, loneliness 9.0%; 20s: illness 45.2%, work 17.7%; 40s: money 39.3% | 2024 | % of people 13+ | same (sheet 28) | same | official; suicide deaths are in korea-stats.md §9 |
 | Job satisfaction | 38.3% satisfied (25.3% in 2015); professionals/managers 50.3%, clerks 43.1%, service & sales 32.6%, manual 27.8% | 2025 | % of wage workers | 국가데이터처, 2025 사회조사; 국민 삶의 질 2025 | https://mods.go.kr/boardDownload.es?bid=219&list_no=439196&seq=3 | official |
 | Work–family priorities | balance 46.5%, work first 34.3%, family first 19.2%; women's main barrier to work: childcare 51.3% | 2025 | % of adults 19+ | same (p. 48) | same | official |
+| Got as much schooling as wanted | 64.9% (61.3% in 2024); main reason for falling short: money 55.3% | 2026 | % of people 13+ | 국가데이터처, 2026년 사회조사 (sheet 15 and summary) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx) |
+| Online learning | 42.7% learned or trained online in the past year (41.7% in 2024): age 13–19 65.2%, 20–29 65.1%, 30–39 55.1%, 50–59 45.3%, 60+ 17.0%; main field: work 55.4% (20s: exam prep 45.2%) | 2026 | % of people 13+ | same (sheet 22-1 and summary) | same | official |
+| Parents who want their child to study abroad | 52.4% (56.9% in 2024); reasons: to grow a global outlook 47.0%, education suited to the child's ability 24.6%, the Korean system doesn't suit them 12.4%, language 12.2%; don't want 31.2% | 2026 | % of parents 30+ with a child in education | same (sheet 21) | same | official |
 
 ---
 
@@ -117,7 +120,7 @@ Service lengths (army/marines 18, navy 20, air force 21, social service 21, alte
 ---
 
 ## 6. Crime and safety
-Retrieved: 2026-11-10
+Retrieved: 2026-11-18 (2026 사회조사 safety row); 2026-11-10
 
 | Statistic | Value | Year | Unit/definition | Source organization | URL | Notes |
 |---|---|---|---|---|---|---|
@@ -128,6 +131,7 @@ Retrieved: 2026-11-10
 | Digital sex crimes | 10,637 victims supported (new 5,840); 77.6% in their teens or 20s; 75.4% women | 2025 | Victims supported by the central support centre | Ministry of Gender Equality & KWHRI, 2025 디지털성범죄 피해자 지원 보고서 | https://www.newsis.com/view/NISX20260416_0003593532 | unverified (news citing the report) |
 | Drink-driving | 11,037 crashes, 138 deaths; 118,874 drivers caught (243k in 2015) | 2024 | Per year (BAC ≥ 0.03%) | KNPA data via news | https://www.fnnews.com/news/202508031321559651 | unverified |
 | Feeling safe | society is safe 28.9% (33.3% in 2022); men 32.6%, women 25.2%; biggest worry: crime 17.9%, economic risk 16.5%, national security 16.2% (women: crime 22.4%) | 2024 | % of people 13+ | 국가데이터처, 2024 사회조사 (sheets 31, 33) | https://mods.go.kr/boardDownload.es?bid=219&list_no=433638&seq=10 | official |
+| Feeling safe, 2026 | society is safe 37.8% (28.9% in 2024; 13.2% in 2016); men 42.0%; 34.9% say it is safer than five years ago; biggest worry: crime 22.4%, national security 17.6%, economic risk 15.7%, lack of morality 9.7%; safe walking alone at night 71.6% (men 85.5%, women 57.9%) | 2026 | % of people 13+ | 국가데이터처, 2026년 사회조사 (sheets 31, 33, 34-1 and summary) | https://mods.go.kr/boardDownload.es?bid=219&list_no=447970&seq=3 | official (attached xlsx); newer-year row; release page https://mods.go.kr/board.es?mid=a10301010000&bid=219&act=view&list_no=447970 |
 | Fear walking at night | 30.5% feel unsafe (men 15.8%, women 44.9%) | 2024 | % of people 13+ | same (sheet 34-1) | same | official |
 
 ---
