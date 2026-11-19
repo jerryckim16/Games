@@ -3584,20 +3584,56 @@
       const s = this.recordScores(u);
       return s ? Math.round((RECORD_W.acad * s.acad + RECORD_W.career * s.career + RECORD_W.comm * s.comm) * 10) / 10 : 0;
     }
+    // v6.15: why school-grade admissions (교과) look shut on the 수시 screen, or null when they don't.
+    // A Gangnam boy with a 내신 near 3 saw 0% at every school and nothing said why. Returns your average,
+    // the range of the four-year universities' 교과 lines, and, when your classmates are stronger than
+    // at an ordinary school, where your current level would rank there (`alt`) against here (`cur`), as
+    // a continuous grade. `read` is how much record reviews make up for the school (SCHOOL_READ), `pen`
+    // the vocational or arts penalty in 교과. Read-only, no RNG.
+    susiWhy() {
+      const avg = this.naesinAvg(), r = this.record;
+      if (avg == null || !r || this.dropout != null) return null;
+      const pen = GK_PENALTY[r.school] || 0;
+      const unis = UNIVERSITIES.filter((u) => u.gk != null && u.cut >= 80);
+      // The same line as susiOptions(), quotas included.
+      const line = (u) => { const q = this.susiQuota(u); return u.gk + (q ? SUSI_QUOTA[q].gk * this.quotaScale(q, u) : 0); };
+      if (Math.max(...unis.map((u) => gkChance(avg + pen, line(u)))) >= 0.15) return null;
+      const spec = SCHOOL_COHORT[r.school] || {};
+      const general = r.school === "pubHigh" || r.school === "privHigh";
+      const base = this.typicalLevel() + COHORT_MEAN;
+      // A rank (share of classmates ahead of you) as a grade on a continuous 1–5 line through NAESIN_CUTS.
+      const cuts = [0].concat(NAESIN_CUTS, [1]);
+      const asGrade = (top) => {
+        for (let i = 1; i < cuts.length; i++) if (top <= cuts[i]) return clamp(i - 0.5 + (top - cuts[i - 1]) / (cuts[i] - cuts[i - 1]), 1, 5);
+        return 5;
+      };
+      let cur = 0, alt = 0;
+      for (const s of NAESIN_SUBJ) {
+        const shift = (spec[s] != null ? spec[s] : spec.all || 0) + (general ? REGION_COHORT[regionKind(this)] || 0 : 0);
+        cur += asGrade(1 - phi((this.skills[s] - base - shift) / (spec.sd || COHORT_SD))) / NAESIN_SUBJ.length;
+        alt += asGrade(1 - phi((this.skills[s] - base) / COHORT_SD)) / NAESIN_SUBJ.length;
+      }
+      const rd = (x) => Math.round(x * 10) / 10;
+      const strong = cur - alt >= 0.3;
+      return { avg, lo: rd(Math.min(...unis.map((u) => u.gk))), hi: rd(Math.max(...unis.map((u) => u.gk))), pen,
+        why: !strong ? null : general ? "region" : "school", cur: rd(cur), alt: rd(alt), read: SCHOOL_READ[r.school] || 0 };
+    }
 
     // ----- 수시 (v6.0) -----
     // 기회균형 eligibility: in care, or a low-income household on basic livelihood or near-poverty
     // support (about half the bottom fifth here; its own stream, so it's fixed for the life). v6.14: a
     // single-parent family (한부모가족 support, an income test of about 63% of the median) in the bottom
-    // fifth always counts, and in the second fifth half the time (the same draw). Read-only.
+    // fifth always counts, and in the second fifth half the time (the same draw). v6.15: so does a
+    // family where grandparents raise you (조손가족): the same act covers it on the same income test
+    // (한부모가족지원법 art. 5-2), and universities admit it in the same 한부모 category. Read-only.
     balanceQuota() { return !!this.balanceWhy(); }
-    // Why you qualify: "care", "single" or "low"; null if you don't.
+    // Why you qualify: "care", "single", "grand" or "low"; null if you don't.
     balanceWhy() {
       if (this.parents === "care") return "care";
       if (this.family !== "q1" && this.family !== "q2") return null;
-      const single = this.parents === "mom" || this.parents === "dad";
+      const single = this.parents === "mom" || this.parents === "dad" || this.parents === "grand";
       const r = makeRng(hashSeed(this.seed, "balance"))();
-      if (single && (this.family === "q1" || r < 0.5)) return "single";
+      if (single && (this.family === "q1" || r < 0.5)) return this.parents === "grand" ? "grand" : "single";
       return this.family === "q1" && r < 0.5 ? "low" : null;
     }
     // The best 수시 quota you qualify for at a university, or null.
