@@ -126,7 +126,7 @@
         sme: "an employee at a small firm", trade: "a skilled tradesperson", service: "a service worker", shop: "a shop owner", resident: "a resident doctor", gp: "a general practitioner",
         freelance: "a freelancer", parttime: "a part-time worker", student: "still studying", barExam: "preparing for the bar exam", hunting: "still job-hunting",
       },
-      home: { parents: "living with your parents", oneroom: "in a studio flat", jeonse: "in a jeonse apartment", ownHelp: "in an apartment you own (your parents helped with the deposit)" },
+      home: { parents: "living with your parents", oneroom: "in a studio apartment", jeonse: "in a jeonse apartment", ownHelp: "in an apartment you own (your parents helped with the deposit)" },
       target: {
         big: "the big companies", bigline: "the big company's plant", public: "the public enterprises", civil: "the civil service exam", teacher: "the appointment exam", law: "law school",
         hospital: "the hospitals", startup: "the startup", grad: "graduate school", sme: "the small firms", trade: "the trade", service: "the service jobs", shop: "the shop",
@@ -546,7 +546,7 @@
       "ev.joboffer.r0": (p) => "You sign the contract. In March, while your classmates start university, you start at the " + (p.job === "bigline" ? "plant" : "firm") + ", with a paycheck of your own.",
       "ev.joboffer.r1": "You turn it down. The employment teacher shrugs: \"University, then. Make it count.\"",
       "log.work": (p, h) => "March " + p.y + ": you start work as " + h.job30(p.job) + ". Exam life is over.",
-      "log.balance": (p) => "Your homeroom teacher checks your file: " + (p.why === "care" ? "as a child in care" : p.why === "single" ? "with a single-parent family on support" : "with your family on basic-livelihood or near-poverty support") + ", you qualify for the opportunity-balance admissions, a separate pool of places in early and regular admission.",
+      "log.balance": (p) => "Your homeroom teacher checks your file: " + (p.why === "care" ? "as a child in care" : p.why === "single" ? "with a single-parent family on support" : p.why === "grand" ? "with your grandparents raising you on family support" : "with your family on basic-livelihood or near-poverty support") + ", you qualify for the opportunity-balance admissions, a separate pool of places in early and regular admission.",
       "end.titleWork": "Straight to work",
       "end.work": (p, h) => "You never sat the Suneung. In March you start as " + h.job30(p.job) + ", earning, while your old classmates sit in lecture halls.",
       "card.work": "Work after school",
@@ -1214,6 +1214,7 @@
       "daily.btn": "Live today's life",
       "daily.label": (p) => "Today's life: " + p.d,
       "daily.note": "Everyone who starts today's life is born into the same family, with the same talents and the same luck. Compare with friends.",
+      "daily.done": (p) => "You've played it: " + p.out + (p.total != null ? ", best total " + p.total : "") + ". Play it again to beat that.",
 
       // The illustrated view (art.js): mood bubble, turn transition, activity cards and diary.
       "mood.name.happy": "Feeling great", "mood.name.ok": "Doing okay", "mood.name.tired": "Running on empty",
@@ -1528,7 +1529,7 @@
       "ev.joboffer.r0": (p) => "근로계약서에 서명했다. 3월, 친구들이 대학 새내기가 될 때 나는 " + (p.job === "bigline" ? "공장으로" : "회사로") + " 출근한다. 내 월급을 받으면서.",
       "ev.joboffer.r1": "거절했다. 취업부 선생님이 어깨를 으쓱한다. \"그럼 대학이다. 제대로 해라.\"",
       "log.work": (p, h) => p.y + "년 3월, " + h.job30(p.job) + "으로 일을 시작했다. 수험 생활 끝.",
-      "log.balance": (p) => "담임 선생님이 서류를 확인해 주셨다. " + (p.why === "care" ? "보호대상아동이라" : p.why === "single" ? "한부모가족 지원 대상이라" : "기초생활수급·차상위 가구라") + " 수시와 정시 모두 기회균형 전형에 지원할 수 있다. 따로 뽑는 정원이다.",
+      "log.balance": (p) => "담임 선생님이 서류를 확인해 주셨다. " + (p.why === "care" ? "보호대상아동이라" : p.why === "single" ? "한부모가족 지원 대상이라" : p.why === "grand" ? "조손가족 지원 대상이라" : "기초생활수급·차상위 가구라") + " 수시와 정시 모두 기회균형 전형에 지원할 수 있다. 따로 뽑는 정원이다.",
       "end.titleWork": "고졸 취업",
       "end.work": (p, h) => "수능은 보지 않았다. 3월, 옛 친구들이 강의실에 앉아 있을 때 나는 " + h.job30(p.job) + "으로 일하며 돈을 번다.",
       "card.work": "고졸 취업",
@@ -2193,6 +2194,7 @@
       "daily.btn": "오늘의 인생 살기",
       "daily.label": (p) => "오늘의 인생: " + p.d,
       "daily.note": "오늘의 인생을 시작하는 사람은 모두 같은 집안, 같은 재능, 같은 운을 받습니다. 친구들과 비교해 보세요.",
+      "daily.done": (p) => "오늘은 이미 살았습니다: " + p.out + (p.total != null ? ", 최고 " + p.total + "점" : "") + ". 다시 해서 기록을 넘어 보세요.",
 
       // 그림으로 보는 화면(art.js): 기분 말풍선, 턴 전환, 활동 카드, 일기장.
       "mood.name.happy": "기분 최고", "mood.name.ok": "그럭저럭", "mood.name.tired": "방전 직전",
@@ -2366,6 +2368,11 @@
     "susi.text": (p) => "September: applications open for early admission, which fills about 80% of university places (around 60% at the top Seoul schools, which keep 40% for regular admission). You can send up to six" +
       (p.free ? " (KAIST doesn't count)" : "") + ". Your school grades average " + (p.a != null ? p.a.toFixed(2) : "—") + "; your school record scores " + p.r + " out of 100." + (p.est != null ? " Your September mock would give a regular-admission score of " + p.est.toFixed(1) + "." : ""),
     "susi.warn": "⚠ Any early-admission offer, even off a waitlist, rules out regular admission (jeongsi) this year: you take an early place or none. Don't apply to a school you'd be unhappy at.",
+    // v6.15: shown when school-grade admissions are out of reach everywhere (engine susiWhy()).
+    "susi.why": (p) => "Why school-grade admissions look shut: they go by your school-grade average (" + p.avg.toFixed(2) + "), and the four-year universities' lines run from about " + p.lo.toFixed(1) + " to " + p.hi.toFixed(1) + "." +
+      (p.pen ? " Grades from a vocational or arts school also count about " + p.pen + " of a grade worse there." : "") +
+      (p.why ? " Classmates " + (p.why === "school" ? "at a selective school" : "in an academy district like yours") + " are hard to beat: at your current level you'd rank about " + p.alt.toFixed(1) + " at an ordinary high school, against about " + p.cur.toFixed(1) + " here." : "") +
+      (p.read > 0 ? " Record reviews allow for your school (about " + p.read + " of a grade), so they're the likelier early route." : " Regular admission goes by the Suneung alone."),
     "susi.retake": "As a retaker you apply with the school grades and record you left school with. Some school-grades routes take only this year's graduates.",
     "susi.trap": (p, h) => "⚠ Your September mock puts " + h.uni(p.best) + " within reach in regular admission (about " + p.p + "%). An early offer from " + h.uni(p.pick) + " would rule that out.",
     "susi.below": "Your mock already clears this in regular admission",
@@ -2457,6 +2464,10 @@
     "susi.text": (p) => "9월, 수시 원서 접수가 시작됐다. 대학 정원의 약 80%가 수시로 뽑힌다(정시 40%를 지키는 서울 상위권은 약 60%). 최대 6장" +
       (p.free ? "(카이스트는 횟수에 안 들어감)" : "") + "까지 쓸 수 있다. 내신 평균 " + (p.a != null ? p.a.toFixed(2) : "—") + "등급, 학생부 평가 " + p.r + "점." + (p.est != null ? " 9월 모평 기준 정시 환산 점수는 " + p.est.toFixed(1) + "점." : ""),
     "susi.warn": "⚠ 수시에 한 곳이라도 합격하면(추가합격 포함) 올해 정시는 지원할 수 없다(수시 납치). 가고 싶지 않은 학교에는 쓰지 말 것.",
+    "susi.why": (p) => "교과전형이 어려운 이유: 학생부교과는 내신 평균(" + p.avg.toFixed(2) + "등급)으로 뽑는데, 4년제 대학의 합격선은 대략 " + p.lo.toFixed(1) + "~" + p.hi.toFixed(1) + "등급이다." +
+      (p.pen ? " 특성화고·예체능고 내신은 교과전형에서 약 " + p.pen + "등급 불리하게 본다." : "") +
+      (p.why ? " " + (p.why === "school" ? "자사고·특목고" : "학군지 학교") + "라 반 친구들이 강하다. 지금 실력이면 일반고에서는 약 " + p.alt.toFixed(1) + "등급일 텐데 여기서는 약 " + p.cur.toFixed(1) + "등급이다." : "") +
+      (p.read > 0 ? " 학생부종합은 학교 수준을 감안하므로(약 " + p.read + "등급) 수시는 종합 쪽이 승산이 있다." : " 정시는 수능만 본다."),
     "susi.retake": "재수생은 졸업할 때의 내신과 학생부로 지원한다. 일부 교과전형은 졸업예정자만 받는다.",
     "susi.trap": (p, h) => "⚠ 9월 모평 성적이면 정시로 " + josa(h.uni(p.best), "을", "를") + " 노려볼 만하다(합격 가능성 약 " + p.p + "%). " + h.uni(p.pick) + "에 수시로 합격하면 정시는 쓸 수 없다.",
     "susi.below": "모평 성적이면 정시로도 충분한 곳",

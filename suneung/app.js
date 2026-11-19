@@ -151,6 +151,9 @@
     els.name.placeholder = T("setup.namePh." + sex);
     els.setupArt.innerHTML = Art.scene({ scene: "start", aria: T("art.place.start") });
     els.dailyBtn.textContent = T("daily.label", { d: today() });
+    // v6.15: once today's life is played, say how it went (the button still starts it again).
+    const done = loadLives().find((e) => e.daily === today() && (e.uni || e.work || e.total != null));
+    els.dailyNote.textContent = T("daily.note") + (done ? " " + T("daily.done", { out: done.work && !done.uni ? L.job30(done.work) : done.uni ? L.uni(done.uni) : T("fame.none"), total: done.total }) : "");
     renderFame();
     renderAch();
     renderLives();
@@ -1485,6 +1488,8 @@
     const notes = [T("susi.warn")];
     const body = "<p>" + esc(T("susi.text", { a: g.naesinAvg(), r: g.record ? Math.round(g.recordScore()) : "—", est, free: opts.some((o) => o.free && !o.blocked) })) + "</p>" +
       '<p class="cond-note" role="note">' + esc(notes[0]) + "</p>" +
+      // v6.15: when 교과 is out of reach everywhere, say why (a weak average, a selective school's class).
+      (g.susiWhy() ? '<p class="cond-note drop">' + esc(T("susi.why", g.susiWhy())) + "</p>" : "") +
       (g.attempt > 1 ? '<p class="muted">' + esc(T("susi.retake")) + "</p>" : "") + (g.dropout != null ? '<p class="muted">' + esc(T("susi.ged")) + "</p>" : "") +
       '<p class="muted">' + esc(T("susi.types")) + "</p>" +
       '<div class="picks" id="susiPicks" aria-live="polite"></div>' +

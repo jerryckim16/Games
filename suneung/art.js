@@ -3086,6 +3086,18 @@
     '<text x="' + x + '" y="' + y + '" text-anchor="' + (anchor || "start") + '" style="fill:' + C(fill) + ";font-size:" + size + "px;font-weight:" + (weight || 600) + ";" + (font || CARD_FONT) + '">' + esc(text) + "</text>";
   // A string clipped to n characters, so long names and universities stay on the card.
   const clip = (s, n) => (String(s).length > n ? String(s).slice(0, n - 1) + "…" : String(s));
+  // v6.15: a value fitted to a width instead of a character count, which cut "Chungnam National
+  // University" to "Chungnam National Univers…" with room to spare. Widths are estimates in em (Hangul
+  // and other wide glyphs 1, capitals 0.7, spaces and light punctuation 0.3, the rest 0.58, a little
+  // over bold system-ui); the text shrinks down to `min` px before it's clipped. Returns [text, size].
+  const WIDE = /[ᄀ-ᇿ⺀-鿿가-힯＀-￯]/;
+  const emOf = (s) => Array.from(String(s)).reduce((w, ch) => w + (WIDE.test(ch) ? 1 : /[A-Z]/.test(ch) ? 0.7 : /[\s.,·'’()\-]/.test(ch) ? 0.3 : 0.58), 0);
+  function fitText(s, px, size, min) {
+    let t = String(s);
+    const sz = Math.max(min, Math.min(size, px / Math.max(emOf(t), 0.01)));
+    while (t.length > 2 && emOf(t) * sz > px) t = Array.from(t).slice(0, -2).join("").replace(/\s+$/, "") + "…";
+    return [t, Math.round(sz * 10) / 10];
+  }
   function shareCard(o) {
     const Wc = 600, Hc = 340;
     begin();
@@ -3100,9 +3112,14 @@
     let s = R(0, 0, Wc, Hc, "cardBg", 18) + '<clipPath id="' + pid + '"><rect x="16" y="16" width="196" height="308" rx="10"/></clipPath><g clip-path="url(#' + pid + ')">' + pic + "</g>";
     const X = 236, XV = 316;
     s += TL(X, 36, o.title, "cardMute", 11, 700, "start", CARD_FONT + ";letter-spacing:0.14em") + (o.daily ? TL(Wc - 18, 36, clip(o.daily, 30), "cardAccent", 11, 700, "end") : "");
-    s += TL(X, 76, clip(o.name, 16), "cardInk2", 32, 700, "start", CARD_SERIF) + R(X, 90, Wc - 18 - X, 1.2, "cardRule");
+    const [nm, nmSize] = fitText(o.name, Wc - 18 - X, 32, 22);
+    s += TL(X, 76, nm, "cardInk2", nmSize, 700, "start", CARD_SERIF) + R(X, 90, Wc - 18 - X, 1.2, "cardRule");
     let y = 114;
-    for (const [k, v] of o.lines) { s += TL(X, y, k, "cardMute", 11, 600) + TL(XV, y, clip(v, 26), "cardInk2", 13.5, 700) + R(X, y + 8, Wc - 18 - X, 0.6, "cardRule"); y += 23; }
+    for (const [k, v] of o.lines) {
+      const [tv, size] = fitText(v, Wc - 18 - XV, 13.5, 11);
+      s += TL(X, y, k, "cardMute", 11, 600) + TL(XV, y, tv, "cardInk2", size, 700) + R(X, y + 8, Wc - 18 - X, 0.6, "cardRule");
+      y += 23;
+    }
     y += 10;
     s += TL(X, y, o.gradesLabel, "cardMute", 11, 600);
     if (o.grades) {
