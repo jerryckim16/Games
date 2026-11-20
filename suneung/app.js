@@ -1208,7 +1208,9 @@
     let n = 0;
     for (const o of opts) if (o.real) o.n = ++n;
     const rows = opts.map((o) => {
-      const why = o.blocked ? T("school.no." + (o.blocked === "admit" && o.id === "artsHigh" ? "arts" : o.blocked), { sex: g.sex }) : "";
+      // v6.16: a school the family could pay for until a layoff (or a divorce, a scam...) says since when.
+      const fell = o.blocked === "cost" && g.flags.schoolOut && g.flags.schoolOut.ids.indexOf(o.id) >= 0;
+      const why = fell ? T("school.no.costFell", { y: g.flags.schoolOut.y }) : o.blocked ? T("school.no." + (o.blocked === "admit" && o.id === "artsHigh" ? "arts" : o.blocked), { sex: g.sex }) : "";
       const cls = o.def ? "ch-safe" : o.blocked ? "ch-long" : o.p >= 0.55 ? "ch-match" : o.p >= 0.25 ? "ch-reach" : "ch-long";
       const tag = '<span class="chance ' + cls + '" title="' + esc(T("school.chance", { p: o.p, def: o.def })) + '">' + esc(o.def ? T("school.tag.def") : o.blocked ? T("school.tag.no") : Math.round(o.p * 100) + "%") + "</span>";
       const facts = [T("school.fee", { fee: o.fee, income: o.income }), o.track ? T("school.track", { t: o.track }) : ""].filter(Boolean).join(" · ");
