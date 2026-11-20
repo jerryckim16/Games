@@ -3410,6 +3410,75 @@
     "chart.aria": (p) => "시간에 따른 실력 변화. 현재: " + p.list + ".",
   });
 
+  // v6.16: the Middle 3 high-school talk (goip), schools a budget cut put out of reach, and the running
+  // score against your rival.
+  const listEn = (xs) => (xs.length < 2 ? xs.join("") : xs.slice(0, -1).join(", ") + " and " + xs[xs.length - 1]);
+  const listKo = (xs) => xs.join(", ");
+  // The selective schools your marks don't reach yet (an arts high's audition is about lessons, not marks).
+  const goipNo = (p) => (p.no || []).filter((id) => id !== "artsHigh");
+  Object.assign(MSG.en, {
+    "ev.goip.r": (p, h) => {
+      const no = goipNo(p), cost = p.cost || [];
+      return "Middle 3 starts with a talk about high school. Your homeroom teacher goes through the selective schools on your marks so far: " +
+        listEn(p.o.map((x) => h.schoolNoun(x.id) + " (about " + x.p + "%)")) + "." +
+        (no.length ? " " + cap(listEn(no.map((id) => h.schoolNoun(id)))) + (no.length > 1 ? " are" : " is") + " out of reach unless your marks pull well ahead of your year." : "") +
+        (cost.length ? " " + cap(listEn(cost.map((id) => h.schoolNoun(id)))) + (cost.length > 1 ? " are" : " is") + " beyond your parents' budget" + (p.fell ? " since the money got tighter" : "") + "." : "") +
+        " Two semesters left before you apply.";
+    },
+    "ev.goip.none": (p, h) => {
+      const no = goipNo(p), cost = p.cost || [];
+      return "Middle 3 starts with a talk about high school. Your homeroom teacher is honest with you." +
+        (no.length ? " On your marks so far, " + listEn(no.map((id) => h.schoolNoun(id))) + (no.length > 1 ? " are out of reach: they want" : " is out of reach: it wants") + " marks well ahead of your year." : "") +
+        (cost.length ? " " + cap(listEn(cost.map((id) => h.schoolNoun(id)))) + (cost.length > 1 ? " are" : " is") + " beyond your parents' budget" + (p.fell ? " since the money got tighter" : "") + "." : "") +
+        (!no.length && !cost.length ? " None of the selective high schools is open to you from here." : "") +
+        " A public high school takes everyone in the area, and two semesters can still change things.";
+    },
+    "log.schoolOut": (p, h) => "With less money coming in, " + listEn(p.ids.map((id) => h.schoolNoun(id))) + (p.ids.length > 1 ? " are" : " is") + " now beyond your parents' budget.",
+    "school.no.costFell": (p) => "Out of reach since " + p.y + ", when the family's money got tighter: the fees are more than your parents' budget.",
+  });
+  Object.assign(MSG.ko, {
+    "ev.goip.r": (p, h) => {
+      const no = goipNo(p), cost = p.cost || [];
+      const last = (xs) => h.schoolNoun(xs[xs.length - 1]);
+      return "중3 첫 진학 상담. 담임 선생님이 지금까지의 성적으로 갈 만한 학교를 짚어 준다. " +
+        listKo(p.o.map((x) => h.schoolNoun(x.id) + "(약 " + x.p + "%)")) + "." +
+        (no.length ? " " + listKo(no.slice(0, -1).map((id) => h.schoolNoun(id)).concat(josa(last(no), "은", "는"))) + " 성적이 또래보다 한참 앞서야 노려볼 수 있다." : "") +
+        (cost.length ? " " + (p.fell ? "형편이 어려워진 뒤로 " : "") + listKo(cost.slice(0, -1).map((id) => h.schoolNoun(id)).concat(josa(last(cost), "은", "는"))) + " 부모님 교육비로 학비를 감당할 수 없다." : "") +
+        " 원서를 낼 때까지 두 학기가 남았다.";
+    },
+    "ev.goip.none": (p, h) => {
+      const no = goipNo(p), cost = p.cost || [];
+      const last = (xs) => h.schoolNoun(xs[xs.length - 1]);
+      return "중3 첫 진학 상담. 담임 선생님은 솔직하게 말해 준다." +
+        (no.length ? " 지금 성적으로는 " + listKo(no.slice(0, -1).map((id) => h.schoolNoun(id)).concat(josa(last(no), "이", "가"))) + " 어렵다. 또래보다 성적이 한참 앞서야 한다." : "") +
+        (cost.length ? " " + (p.fell ? "형편이 어려워진 뒤로 " : "") + listKo(cost.slice(0, -1).map((id) => h.schoolNoun(id)).concat(josa(last(cost), "은", "는"))) + " 부모님 교육비로 학비를 감당할 수 없다." : "") +
+        (!no.length && !cost.length ? " 여기서 지원할 수 있는 특목고·자사고는 없다." : "") +
+        " 일반고는 지역 학생을 모두 받고, 두 학기면 아직 달라질 수 있다.";
+    },
+    "log.schoolOut": (p, h) => "형편이 어려워져 " + listKo(p.ids.slice(0, -1).map((id) => h.schoolNoun(id)).concat(josa(h.schoolNoun(p.ids[p.ids.length - 1]), "은", "는"))) + " 이제 부모님 교육비로 감당할 수 없다.",
+    "school.no.costFell": (p) => p.y + "년 형편이 어려워진 뒤로 부모님 교육비로는 학비를 감당할 수 없습니다.",
+  });
+  // The rival's running score (v6.16): a streak or a turnaround, then the tally, before the closing
+  // "(Motivation up)" / "(Fired up)". Without w/l (old saves' logs) the old text.
+  const rivalEn = (p, h, win) => {
+    const a = cap(h.nm(p.a));
+    const st = p.st === "flip" ? (win ? " For the first time in a while, you're ahead." : " " + a + "'s back in front.") :
+      p.st === "again" ? (win ? " That's " + p.n + " in a row." : " " + a + " has beaten you " + p.n + " times running.") : "";
+    return st + (p.w + p.l >= 2 ? " Score so far: you " + p.w + ", " + h.nm(p.a) + " " + p.l + "." : "");
+  };
+  const rivalKo = (p, h, win) => {
+    const st = p.st === "flip" ? (win ? " 오랜만에 내가 앞섰다." : " " + h.nm(p.a) + "가 다시 앞섰다.") :
+      p.st === "again" ? (win ? " 벌써 " + p.n + "연승이다." : " " + h.nm(p.a) + "에게 " + p.n + "연패다.") : "";
+    return st + (p.w + p.l >= 2 ? " 지금까지 전적 " + p.w + "승 " + p.l + "패." : "");
+  };
+  const withScore = (txt, extra) => (extra ? txt.replace(/ (\([^()]*\))$/, extra + " $1") : txt);
+  for (const k of ["soc-rivalrank", "soc-rivalmock"]) {
+    for (const r of ["rw", "rl"]) {
+      named("en", "ev." + k + "." + r, (p, h, old) => (p.w != null ? withScore(old(), rivalEn(p, h, r === "rw")) : old()));
+      named("ko", "ev." + k + "." + r, (p, h, old) => (p.w != null ? withScore(old(), rivalKo(p, h, r === "rw")) : old()));
+    }
+  }
+
   const api = { make, LANGS: ["en", "ko"], _MSG: MSG };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.SuneungText = api;

@@ -284,6 +284,8 @@
   };
   const REAL_FAR = { intlMid: "intl", autoHigh: "auto", sciHigh: "sci", langHigh: "lang", artsHigh: "arts", vocHigh: "voc" };
   const DEFAULT_SCHOOL = { kinder: "kinder", elem: "pubElem", mid: "pubMid", high: "pubHigh" };
+  // The selective high schools the Middle 3 talk goes through (goip).
+  const GOIP_SCHOOLS = ["autoHigh", "langHigh", "sciHigh", "artsHigh"];
 
   // ---------- early childhood ----------
   // Life starts at birth. Ability at birth is EARLY_GAP below the age-6 level the rest of the game is
@@ -1338,6 +1340,24 @@
       },
     },
     { id: "career", weight: 100, when: (g) => g.grade === 7 && g.month === 3 && !g.flags.career && !g.dropoutActive(), run: (g) => { g.flags.career = 1; bump(g, { motivation: 8 }); return "r"; } },
+    // v6.16: Middle 3 opens with the high-school talk (고입 진학 상담): where the special high schools
+    // stand on today's marks, which ones the family can't pay for, and two semesters left to move the
+    // numbers before the school screen. Only information: it reads no RNG and changes nothing.
+    // p.o: [{ id, p }] the open ones (chance now, %), p.no: those your marks don't reach yet, p.cost:
+    // shut by the fees (p.fell: since the money got tighter).
+    {
+      id: "goip", weight: 100, when: (g) => g.status === "mid" && g.grade === 9 && g.month === 3 && !g.flags.goip && !g.dropoutActive() && g.inClass(),
+      params: (g) => {
+        const o = g.schoolOptions("high").filter((x) => GOIP_SCHOOLS.indexOf(x.id) >= 0);
+        const fell = (g.flags.schoolOut || {}).ids || [];
+        return {
+          o: o.filter((x) => !x.blocked).map((x) => ({ id: x.id, p: Math.max(1, Math.round(x.p * 100)) })),
+          no: o.filter((x) => x.blocked === "admit").map((x) => x.id),
+          cost: o.filter((x) => x.blocked === "cost").map((x) => x.id),
+          fell: o.some((x) => x.blocked === "cost" && fell.indexOf(x.id) >= 0) ? 1 : 0,
+        };
+      },
+      run: (g, i, q) => { g.flags.goip = 1; return q && q.o.length ? "r" : "none"; } },
     // ----- the school record (v6.0) -----
     // High 1, the first weeks: the 진로 survey asks what you want to study (it goes on the record and
     // 진로역량 is judged against it), and the club fair.
@@ -1691,7 +1711,7 @@
       } },
     // The rival: the semester's class ranks (middle school) and mocks (high school and retakes).
     { id: "soc-rivalrank", social: true, forced: true, weight: 0, when: () => false,
-      run: (g, i, q) => { const win = q.me < q.them; bump(g, win ? { motivation: 2, stress: -1 } : { motivation: 3, stress: 3 }); return win ? "rw" : "rl"; } },
+      run: (g, i, q) => { const win = q.me < q.them; bump(g, win ? { motivation: 2, stress: -1 } : { motivation: 3, stress: 3 }); return [win ? "rw" : "rl", rivalScore(g, q.a.id, win)]; } },
     { id: "soc-rivalmock", social: true, forced: true, weight: 0, when: () => false, choices: 1,
       run: (g, i, q) => {
         const m = g.mocks[g.mocks.length - 1], p = q && g.person(q.a.id);
@@ -1701,12 +1721,25 @@
         const them = clamp(Math.round(phi(g.thNow(p) + g.srng("rivalmock", p.id).normal() * 0.25) * 100), 1, 99);
         const win = me >= them;
         bump(g, win ? { motivation: 2, stress: -1 } : { motivation: 3, stress: 3 });
-        return [win ? "rw" : "rl", { me, them }];
+        return [win ? "rw" : "rl", Object.assign({ me, them }, rivalScore(g, q.a.id, win))];
       } },
     // 수능 morning: someone at the gate for you (or a message, in a retake year).
     { id: "soc-gate", social: true, forced: true, weight: 0, when: () => false,
       run: (g, i, q) => { bump(g, { stress: -3 }); return "r." + q.k; } },
   ];
+  // v6.16: the running score against your rival, across class ranks and mocks (soc().rr = { id, w, l,
+  // run }: run > 0 is a winning streak, < 0 a losing one), started afresh for a new rival. What the
+  // message adds: w and l, n (the streak), st: "flip" (the first result the other way after two or
+  // more) or "again" (three or more in a row). Only bookkeeping: no RNG, no effect on play.
+  function rivalScore(g, id, win) {
+    const s = g.soc();
+    const rr = s.rr && s.rr.id === id ? s.rr : { id, w: 0, l: 0, run: 0 };
+    const was = rr.run;
+    if (win) { rr.w++; rr.run = was > 0 ? was + 1 : 1; } else { rr.l++; rr.run = was < 0 ? was - 1 : -1; }
+    s.rr = rr;
+    const st = (win ? was <= -2 : was >= 2) ? "flip" : Math.abs(rr.run) >= 3 ? "again" : null;
+    return { w: rr.w, l: rr.l, n: Math.abs(rr.run), st };
+  }
   // run() result → { key, p } message.
   function outcome(id, r) {
     return Array.isArray(r) ? { key: "ev." + id + "." + r[0], p: r[1] } : { key: "ev." + id + "." + r, p: null };
@@ -2004,8 +2037,12 @@
     if (!raw || !given) return false;
     if (raw === given || (raw.endsWith(given) && raw.length - given.length <= 2 && /^[가-힣]+$/.test(raw))) return true;
     const rr = rrBare(given);
-    return !!rr && raw.toLowerCase().split(/[\s,.]+/).some((w) => w.replace(/[^a-z]/g, "") === rr);
+    return !!rr && raw.toLowerCase().split(/[\s,.]+/).some((w) => loose(w.replace(/[^a-z]/g, "")) === loose(rr));
   }
+  // v6.16: the spellings people actually use for their names ("Dohyun", "Jihoon", "Sung", "Yuna" for
+  // 도현, 지훈, 성, 유나) match the Revised Romanization ones ("dohyeon", "jihun", "seong"): eo and u, oo and
+  // u, ee and i count as the same. A false match only keeps a name off the class list.
+  function loose(w) { return w.replace(/eo/g, "u").replace(/oo/g, "u").replace(/ee/g, "i"); }
   // What events and log entries carry to name someone: the name itself (strings.js romanizes it in English).
   const ref = (p) => (p ? { id: p.id, s: p.s, n: p.n, x: p.x } : null);
   const one = (p) => (p ? { a: ref(p) } : null);
@@ -2347,6 +2384,32 @@
       this.checkFees();
       return j - i;
     }
+    // v6.16: the fee-paying schools of the stage you'll pick a school for next that the family can pay
+    // for now, so an event that cuts the budget (a layoff, a divorce, a jeonse scam...) can say which
+    // ones it just put out of reach (noteAfford) before the school screen shows them shut. Read-only.
+    affordNext() {
+      if (this.dropout != null || this.attempt > 1) return [];
+      const st = this.status === "early" ? (this.age < 3 ? ["kinder", "elem"] : ["elem"]) : this.status === "elem" ? ["mid"] : this.status === "mid" ? ["high"] : [];
+      if (!st.length) return [];
+      const kind = this.regionInfo().kind;
+      return SCHOOLS.filter((x) => st.indexOf(x.stage) >= 0 && x.fee > 0 && !(x.where && x.where.indexOf(kind) < 0) && x.fee <= this.feeLimit(x)).map((x) => x.id);
+    }
+    // After an event: the schools from prev (affordNext() before it) the family can't pay for any more
+    // get a log line (log.schoolOut) and flags.schoolOut ({ ids, y }), which the school screen reads
+    // to say why they're shut. Schools the family can pay for again leave the list. A local kind of
+    // school your area doesn't have (no real school of it) isn't mentioned.
+    noteAfford(prev) {
+      const out = this.flags.schoolOut;
+      if (!out && !(prev && prev.length)) return;
+      const now = this.affordNext();
+      if (out) { out.ids = out.ids.filter((id) => now.indexOf(id) < 0); if (!out.ids.length) delete this.flags.schoolOut; }
+      if (!prev || !prev.length) return;
+      const lost = prev.filter((id) => now.indexOf(id) < 0 && !(REAL && REAL.areas[this.region] && REAL_LOCAL[id] && !this.realSchoolFor(id)));
+      if (!lost.length) return;
+      const ids = ((this.flags.schoolOut || {}).ids || []).filter((id) => lost.indexOf(id) < 0).concat(lost);
+      this.flags.schoolOut = { ids, y: this.year };
+      this.addLog("log.schoolOut", { ids: lost }, "milestone");
+    }
     // A school the family can no longer pay for: back to the public one (or ordinary kindergarten).
     checkFees() {
       const st = this.status === "hs3" ? "high" : this.status === "early" ? "kinder" : this.status;
@@ -2438,16 +2501,19 @@
     // Every school for the stage on the current school screen, with its chance, why it's closed, and the
     // real school it would be (see realSchoolFor). A private school that doesn't exist where you live
     // is closed like any school that isn't there.
-    schoolOptions() {
+    // stage (v6.16): the options a stage's school screen would show now, for the Middle 3 talk (goip);
+    // without it, the options of the school screen at the top of the queue. Reads no RNG.
+    schoolOptions(stage) {
       const top = this.queue[0];
-      if (!top || top.type !== "school") return [];
+      if (!stage && (!top || top.type !== "school")) return [];
+      stage = stage || top.stage;
       const kind = this.regionInfo().kind;
-      return SCHOOLS.filter((x) => x.stage === top.stage).map((x) => {
+      return SCHOOLS.filter((x) => x.stage === stage).map((x) => {
         const real = this.realSchoolFor(x.id);
         const missing = REAL && REAL.areas[this.region] && REAL_LOCAL[x.id] && !real;
         // Closed only because every such school here is a boys' (or girls') school: say so.
         const wrongSex = missing && this.realSchoolFor(x.id, true);
-        const def = x.id === DEFAULT_SCHOOL[top.stage];
+        const def = x.id === DEFAULT_SCHOOL[stage];
         // The default school is always open (pickSchool can't refuse it), even without a real match.
         const blocked = def ? null : (x.where && x.where.indexOf(kind) < 0) ? "region" : wrongSex ? "sex" : missing ? "region" : x.fee > this.feeLimit(x) ? "cost" : x.admit(this) <= 0 ? "admit" : null;
         return { id: x.id, fee: x.fee, income: !!x.fromIncome, p: blocked ? 0 : x.admit(this), blocked, track: x.track || null, def, real };
@@ -2968,8 +3034,9 @@
       if (q === undefined) q = e.params ? e.params(this) : null;
       if (e.choices) this.queue.push(q ? { type: "event", id: e.id, choices: e.choices, p: q } : { type: "event", id: e.id, choices: e.choices });
       else {
-        const before = toneSnap(this), logN = this.log.length;
+        const before = toneSnap(this), logN = this.log.length, aff = this.affordNext();
         const res = outcome(e.id, e.run(this, null, q));
+        this.noteAfford(aff);
         if (q) res.p = Object.assign({}, q, res.p);
         res.tone = toneOf(this, before, e.id, res);
         const item = q ? { type: "event", id: e.id, choices: 0, result: res, p: q } : { type: "event", id: e.id, choices: 0, result: res };
@@ -3074,10 +3141,11 @@
       let res;
       if (top.choices) {
         i = clamp(i | 0, 0, top.choices - 1);
-        const before = toneSnap(this), logN = this.log.length;
+        const before = toneSnap(this), logN = this.log.length, aff = this.affordNext();
         if (top.id === "eve") res = outcome("eve", this.resolveEve(i));
         else if (top.id === "lunch") res = outcome("lunch", this.resolveLunch(i));
         else res = outcome(top.id, EVENTS.find((e) => e.id === top.id).run(this, i, top.p || null));
+        this.noteAfford(aff);
         if (top.p) res.p = Object.assign({}, top.p, res.p);
         res.tone = toneOf(this, before, top.id, res);
         const after = this.log.splice(logN);

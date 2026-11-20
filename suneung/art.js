@@ -2175,6 +2175,8 @@
     accident: { bg: "street", fx: "cracks", mood: "sick", x: 420, lowBg: "corridor", lowFx: "none", low: "shocked", lowPose: "sit", lowX: 230, icon: "🚑" },
     hospital: { bg: "hospital", fx: "bed", mood: "sick", prop: "mask", low: "sick", lowPose: "stand", lowProp: "mask", icon: "🏥" },
     greatteacher: { bg: "class", fx: "counsel", mood: "happy", icon: "🍎" },
+    // v6.16: the Middle 3 high-school talk; nothing within reach is a quieter picture.
+    goip: { bg: "class", fx: "counsel", mood: "ok", icon: "🏫", res: { none: { mood: "tired" } } },
     spark: { bg: "room", fx: "bulb", mood: "happy", icon: "✨" },
     bloom: { bg: "room", fx: "sparkles", mood: "ok", icon: "🌱", res: { up: { mood: "happy" }, down: { mood: "tired" } } },
     examluck: { bg: "class", fx: "notes", mood: "ok", icon: "🍀", res: { sniffler: { mood: "stressed" }, guess: { mood: "happy" }, drilled: { mood: "happy", pose: "cheer" }, omr: { mood: "shocked" }, calm: { mood: "happy" } } },
