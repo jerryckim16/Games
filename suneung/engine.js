@@ -286,6 +286,24 @@
   const DEFAULT_SCHOOL = { kinder: "kinder", elem: "pubElem", mid: "pubMid", high: "pubHigh" };
   // The selective high schools the Middle 3 talk goes through (goip).
   const GOIP_SCHOOLS = ["autoHigh", "langHigh", "sciHigh", "artsHigh"];
+  // v6.17: middle school's own pressure. Middle school used to weigh exactly what High 1 did (one point
+  // a turn), so a student could study every block for three years and never need a rest. Real middle
+  // schoolers study 5h45m a day against 5h05m in elementary school (2024 time-use survey), 78% are in
+  // private education, and study is the main worry of 49.5% of 13-18s (2026 social survey). A graded
+  // semester (수행평가 crunches and exam weeks; not the free semester) adds MID_PRESSURE to the turn's
+  // pressure, and Middle 3's second semester, the high-school applications, GOIP_PRESSURE more unless
+  // you settled on the local school at the Middle 3 talk. See data/korea-stats.md.
+  const MID_PRESSURE = 4;
+  const GOIP_PRESSURE = 3;
+  // The prep academy for selective high schools (특목고·자사고 입시반), offered at the Middle 3 talk when
+  // one is open to you: PREP_FEE a month (capital prices; Gangnam dearer) out of the education budget for
+  // Middle 3, PREP_STRESS more pressure a turn, and PREP_YEAR (a year's worth, like CLASS_YEAR) of extra
+  // lessons, taught ahead of the year (선행), in the subjects those schools select on. Middle-school
+  // participants in private education spend ₩628,000 a month on average (2024).
+  const PREP_FEE = 350000;
+  const PREP_STRESS = 6;
+  const PREP_YEAR = 0.7;
+  const PREP_SUBJ = { autoHigh: ["kor", "math", "eng", "inq1", "inq2"], langHigh: ["eng", "kor"], sciHigh: ["math", "inq2"] };
 
   // ---------- early childhood ----------
   // Life starts at birth. Ability at birth is EARLY_GAP below the age-6 level the rest of the game is
@@ -1350,14 +1368,34 @@
       params: (g) => {
         const o = g.schoolOptions("high").filter((x) => GOIP_SCHOOLS.indexOf(x.id) >= 0);
         const fell = (g.flags.schoolOut || {}).ids || [];
-        return {
-          o: o.filter((x) => !x.blocked).map((x) => ({ id: x.id, p: Math.max(1, Math.round(x.p * 100)) })),
+        const open = o.filter((x) => !x.blocked);
+        // v6.17: a prep academy when an academic selective school is open and the budget covers it
+        // (p.prep: its fee a month, p.b: the budget a month). Then the talk is a choice (choices below).
+        const prep = open.some((x) => PREP_SUBJ[x.id]) && g.allowance() >= g.prepFee() ? g.prepFee() : 0;
+        return Object.assign({
+          o: open.map((x) => ({ id: x.id, p: Math.max(1, Math.round(x.p * 100)) })),
           no: o.filter((x) => x.blocked === "admit").map((x) => x.id),
           cost: o.filter((x) => x.blocked === "cost").map((x) => x.id),
           fell: o.some((x) => x.blocked === "cost" && fell.indexOf(x.id) >= 0) ? 1 : 0,
-        };
+        }, prep ? { prep, b: g.allowance() } : null);
       },
-      run: (g, i, q) => { g.flags.goip = 1; return q && q.o.length ? "r" : "none"; } },
+      // v6.17: with a prep academy on offer: 0 keep going as you are, 1 the prep academy, 2 settle on
+      // the local high school (no application pressure in the fall). Without one, information only.
+      choices: (g, q) => (q && q.prep ? 3 : 0),
+      run: (g, i, q) => {
+        g.flags.goip = 1;
+        if (i == null) return q && q.o.length ? "r" : "none";
+        if (i === 1) {
+          // The subjects the open academic schools select on.
+          const subs = [];
+          for (const x of q.o) for (const s of PREP_SUBJ[x.id] || []) if (subs.indexOf(s) < 0) subs.push(s);
+          g.flags.goipPrep = { s: subs, fee: q.prep };
+          bump(g, { stress: 4, motivation: 3 });
+          return "r1";
+        }
+        if (i === 2) { g.flags.goipEase = 1; bump(g, { stress: -6, motivation: -2 }); return "r2"; }
+        return "r0";
+      } },
     // ----- the school record (v6.0) -----
     // High 1, the first weeks: the 진로 survey asks what you want to study (it goes on the record and
     // 진로역량 is judged against it), and the club fair.
@@ -2167,9 +2205,9 @@
     "bullySurvivor", "hagwonAll", "selfMade", "early", "waitlist", "halfUp", "ruralSeoul", "daechi", "mover", "familyUp", "jackpot",
     "omr", "stethoscope", "sciHigh", "vocUni", "noUni", "college", "hired",
     "bigCo", "civil", "lawyer", "gavel", "doctor30", "topFifth", "riseTwo", "ragsToRiches", "served", "altService", "exchange", "startupWin",
-    "daily", "replay", "veteran",
+    "daily", "replay", "veteran", "nightDegree",
   ];
-  const EPI_ACH = new Set(["bigCo", "civil", "lawyer", "gavel", "doctor30", "topFifth", "riseTwo", "ragsToRiches", "served", "altService", "exchange", "startupWin"]);
+  const EPI_ACH = new Set(["bigCo", "civil", "lawyer", "gavel", "doctor30", "topFifth", "riseTwo", "ragsToRiches", "served", "altService", "exchange", "startupWin", "nightDegree"]);
   // Other systems can add "where they are now" lines to the epilogue: a function (g) returning an
   // array of { key, p }, called once when the epilogue finishes; the lines land in g.epi.extra and the
   // ending screen renders them under the at-30 summary.
@@ -2468,7 +2506,19 @@
       // From the fourth try the parents pay half; the 자립수당 is the state's and doesn't shrink.
       // Fees paid out of household income (fromIncome) don't come out of this budget.
       const sch = this.inClass() || this.atKinder() ? this.schoolInfo() : null;
-      return Math.max(0, (this.attempt >= 4 && this.parents !== "care" ? Math.round(a / 2) : a) - (sch && !sch.fromIncome ? sch.fee : 0));
+      const left = Math.max(0, (this.attempt >= 4 && this.parents !== "care" ? Math.round(a / 2) : a) - (sch && !sch.fromIncome ? sch.fee : 0));
+      // v6.17: the Middle 3 prep academy comes out of the same budget (prepOn: only while it covers it).
+      return this.prepOn() ? Math.max(0, left - this.prepFee()) : left;
+    }
+    // v6.17: the prep academy for selective high schools (the Middle 3 talk's second choice): its fee a
+    // month, and whether it's running now: Middle 3, at school, and while the budget still covers it
+    // (a budget cut that leaves too little ends it: flags.prepStop and log.prepStop, in advance()).
+    prepFee() { return Math.round(PREP_FEE * this.regionKindInfo().price / 1000) * 1000; }
+    prepOn() { return !!this.flags.goipPrep && !this.flags.prepStop && this.status === "mid" && this.grade === 9 && this.inClass(); }
+    // The turn's extra pressure in middle school (see MID_PRESSURE).
+    midPressure() {
+      if (this.status !== "mid" || !this.inClass()) return 0;
+      return (this.freeSem() ? 0 : MID_PRESSURE) + (this.grade === 9 && this.month === 9 && !this.flags.goipEase ? GOIP_PRESSURE : 0) + (this.prepOn() ? PREP_STRESS : 0);
     }
     // What a family can pay for a school: its education budget, or, for fees families pay out of
     // income (an English kindergarten, a private elementary school, an international middle school),
@@ -2753,6 +2803,13 @@
       }
       this.lostBlocks = 0;
       this.soc();
+      // v6.17: a budget cut that no longer covers the prep academy ends it.
+      if (this.prepOn()) {
+        const f = this.flags.prepStop;
+        this.flags.prepStop = 1;
+        if (this.allowance() >= this.prepFee()) this.flags.prepStop = f;
+        else this.addLog("log.prepStop", {}, "event");
+      }
       // This year's homeroom teacher (see TEACHERS).
       const tf = this.teacherFx();
       const months = this.turnMonths();
@@ -2820,6 +2877,14 @@
           this.skills[s] += g;
           lessons += g;
         }
+        // v6.17: the Middle 3 prep academy's lessons, ahead of the year, in the subjects it drills.
+        if (this.prepOn()) {
+          for (const s of this.flags.goipPrep.s) {
+            const g = PREP_YEAR * (months / 12) * SUBJECT_INFO[s].rate * this.aptitude[s] * attend * headroom(this.skills[s]);
+            this.skills[s] += g;
+            lessons += g;
+          }
+        }
         // The school record (High 1 to August of High 3): what you did this turn goes into it.
         if (this.recordOpen()) {
           const total = Object.keys(plan).reduce((a, x) => a + (plan[x] || 0), 0);
@@ -2844,7 +2909,7 @@
 
       // Condition. Study is stressful; in grade 12 the pressure rises as November gets closer.
       const drop = this.dropoutActive();
-      const pressure = this.status === "elem" || this.isEarly() || drop ? 0 : school ? 1 : this.month >= 9 ? 4 + (this.month - 9) * 2 : 2;
+      const pressure = this.status === "elem" || this.isEarly() || drop ? 0 : school ? 1 + this.midPressure() : this.month >= 9 ? 4 + (this.month - 9) * 2 : 2;
       // Stress and health also recover on their own toward a baseline, so a steady workload settles
       // at a level instead of spiralling; heavy turns push the level up.
       const d = {
@@ -3032,7 +3097,9 @@
       this.flags["ev-" + e.id] = this.clock;
       this.flags["n-" + e.id] = (this.flags["n-" + e.id] || 0) + 1;
       if (q === undefined) q = e.params ? e.params(this) : null;
-      if (e.choices) this.queue.push(q ? { type: "event", id: e.id, choices: e.choices, p: q } : { type: "event", id: e.id, choices: e.choices });
+      // v6.17: choices can depend on the moment (the Middle 3 talk asks only when there's a choice to make).
+      const nc = typeof e.choices === "function" ? e.choices(this, q) : e.choices;
+      if (nc) this.queue.push(q ? { type: "event", id: e.id, choices: nc, p: q } : { type: "event", id: e.id, choices: nc });
       else {
         const before = toneSnap(this), logN = this.log.length, aff = this.affordNext();
         const res = outcome(e.id, e.run(this, null, q));
@@ -3925,6 +3992,9 @@
       if (s.rival != null && !(this.person(s.rival) || {}).here) s.rival = null;
       if (st === "mid" || st === "high" || st === "academy") this.pickRival(r, fresh);
       s.intro = why === "lazy" ? null : fresh[0].id;
+      // v6.17: a new school partway through a stage (a move, a transfer): the seatmate's first day isn't
+      // the first day of middle school (introW; missing in old saves = the start of the stage).
+      s.introW = why === "move" || why === "transfer" ? 1 : null;
       if (why !== "lazy") this.addLog("log.soc.class", { st, why, with: [...carry].map((id) => ref(this.person(id))) }, "");
       this.prunePeople();
     }
@@ -4089,7 +4159,9 @@
       if (s.intro != null) {
         const p = this.person(s.intro);
         s.intro = null;
-        if (p && p.here) { seen.add("soc-seatmate"); this.fireEvent(EVENTS.find((e) => e.id === "soc-seatmate"), { a: ref(p), st: p.st }); return; }
+        const nw = s.introW;
+        s.introW = null;
+        if (p && p.here) { seen.add("soc-seatmate"); this.fireEvent(EVENTS.find((e) => e.id === "soc-seatmate"), Object.assign({ a: ref(p), st: p.st }, nw ? { nw: 1 } : null)); return; }
       }
       if (r() >= SOCIAL_RATE * Math.sqrt(this.turnMonths())) return;
       const pool = EVENTS.filter((e) => e.social && !e.forced && !seen.has(e.id) && this.stageFits(e) && e.when(this) && weightOf(e, this) > 0 && !(this.clock - (this.flags["ev-" + e.id] || -99) < 4));
@@ -4535,6 +4607,8 @@
         if (e.army === "alt") has("altService");
         if (e.plan === "exchange") has("exchange");
         if (j === "startupWin") has("startupWin");
+        // v6.17: a degree finished at evening classes or in a contract department while working (v6.14).
+        if (e.at30.degree) has("nightDegree");
       }
       if (meta && meta.lives >= 10) has("veteran");
       return out;

@@ -1747,14 +1747,26 @@
       s += R(e0[0], e0[1], e1[0] - e0[0], e1[1] - e0[1], "nWall");
       for (const [x, t] of [[-2, "neonB"], [2, "neonA"]]) s += q([[x - 0.05, ht, Z0], [x + 0.05, ht, Z0], [x + 0.05, ht, Z1], [x - 0.05, ht, Z1]], t, "opacity:0.9");
       s += q([[-hw, ht - 0.1, Z0], [-hw, ht - 0.05, Z0], [-hw, ht - 0.05, Z1], [-hw, ht - 0.1, Z1]], "neonB", "opacity:0.7") + q([[hw, ht - 0.1, Z0], [hw, ht - 0.05, Z0], [hw, ht - 0.05, Z1], [hw, ht - 0.1, Z1]], "neonA", "opacity:0.7");
-      for (let z = Z1 - 1.6; z >= 2.6; z -= 1.8) {
+      // v6.17: each row's monitors (with their glow) and its chairs are two <pattern>s, one rect each,
+      // instead of 36 sets of shapes: the picture was 51 KB. Slots are 1.65 apart; the monitors' glow
+      // alternates neonA and monitorGlow over three slots, so their tile is three slots wide.
+      const SP = 1.65, X0 = -hw + 0.9;
+      let row = 0;
+      for (let z = Z1 - 1.6; z >= 2.6; z -= 1.8, row++) {
+        const sc = 560 / (z + 0.35), k = 560 / (z - 0.15), my = p(0, 1.2, z + 0.35)[1], cy = p(0, 0.45, z - 0.15)[1];
+        const mx = p(X0 - SP / 2, 1.2, z + 0.35)[0], cx = p(X0 - SP / 2, 0.45, z - 0.15)[0];
+        const mTop = my - sc * 0.5, cTop = cy - k * 0.75;
+        const mon = def("pcm" + row, (id) => '<pattern id="' + id + '" x="' + mx + '" y="' + mTop + '" width="' + SP * 3 * sc + '" height="' + sc + '" patternUnits="userSpaceOnUse">' +
+          [0, 1, 2].map((j) => { const x = (SP / 2 + j * SP) * sc; return pool(x, sc * 0.5, sc * 0.9, sc * 0.5, j ? "monitorGlow" : "neonA", 0.65) + R(x - sc * 0.32, sc * 0.3, sc * 0.64, sc * 0.38, "inkE", 1); }).join("") + "</pattern>");
+        const chair = def("pcc" + row, (id) => '<pattern id="' + id + '" x="' + cx + '" y="' + cTop + '" width="' + SP * k + '" height="' + k * 0.78 + '" patternUnits="userSpaceOnUse">' +
+          R((SP / 2 - 0.26) * k, 0, k * 0.52, k * 0.78, "chairBlack", k * 0.08) + R((SP / 2 - 0.26) * k, 0, k * 0.52, k * 0.06, "neonB", 1, null, 0, "opacity:0.6") + "</pattern>");
+        s += R(mx, mTop, SP * 6 * sc, sc, null, 0, null, 0, "fill:" + mon) + R(cx, cTop, SP * 6 * k, k * 0.78, null, 0, null, 0, "fill:" + chair);
+        // The row's headsets go in one path per stroke (bands, cups, lit cups), drawn after the heads.
+        let bd = "", cd = "";
+        const ld = { neonA: "", neonB: "" };
         for (let i = 0; i < 6; i++) {
-          const x = -hw + 0.9 + i * 1.65;
-          if (Math.abs(x) < 0.7 && z < 5) continue;
-          const m = p(x, 1.2, z + 0.35), sc = 560 / (z + 0.35);
-          s += pool(m[0], m[1], sc * 0.9, sc * 0.5, i % 3 ? "monitorGlow" : "neonA", 0.65) + R(m[0] - sc * 0.32, m[1] - sc * 0.2, sc * 0.64, sc * 0.38, "inkE", 1);
-          const c = p(x, 0.45, z - 0.15), k = 560 / (z - 0.15);
-          s += R(c[0] - k * 0.26, c[1] - k * 0.75, k * 0.52, k * 0.78, "chairBlack", k * 0.08) + R(c[0] - k * 0.26, c[1] - k * 0.75, k * 0.52, k * 0.06, "neonB", 1, null, 0, "opacity:0.6");
+          const x = X0 + i * SP;
+          const c = p(x, 0.45, z - 0.15);
           // v6.13: the other gamers, seen from behind over their chair backs: shoulders in a hoodie or a
           // uniform, a neck, the back of a head with the monitor's glow round its edge, and a headset with
           // lit cups. They used to be one dark ellipse each, which read as faceless black blobs.
@@ -1768,11 +1780,13 @@
             s += E(hx, hy, k * 0.11, k * 0.13, "hairE", glow, Math.max(0.8, k * 0.018), "stroke-opacity:0.75");
             if (near) s += E(hx - k * 0.02, hy - k * 0.05, k * 0.06, k * 0.05, glow, null, 0, "opacity:0.18");
             // The headset: the band over the head, then both cups as one thick stroke each.
-            s += P("M" + (hx - k * 0.12) + " " + (hy + k * 0.01) + " Q" + hx + " " + (hy - k * 0.24) + " " + (hx + k * 0.12) + " " + (hy + k * 0.01), null, "inkE", Math.max(1, k * 0.028));
-            s += P("M" + (hx - k * 0.125) + " " + (hy - k * 0.01) + "v" + k * 0.05 + "M" + (hx + k * 0.125) + " " + (hy - k * 0.01) + "v" + k * 0.05, null, "inkE", k * 0.05);
-            if (near) s += P("M" + (hx - k * 0.14) + " " + hy + "v" + k * 0.03 + "M" + (hx + k * 0.14) + " " + hy + "v" + k * 0.03, null, i % 2 ? "neonB" : "neonA", k * 0.012);
+            bd += "M" + (hx - k * 0.12) + " " + (hy + k * 0.01) + " Q" + hx + " " + (hy - k * 0.24) + " " + (hx + k * 0.12) + " " + (hy + k * 0.01);
+            cd += "M" + (hx - k * 0.125) + " " + (hy - k * 0.01) + "v" + k * 0.05 + "M" + (hx + k * 0.125) + " " + (hy - k * 0.01) + "v" + k * 0.05;
+            if (near) ld[i % 2 ? "neonB" : "neonA"] += "M" + (hx - k * 0.14) + " " + hy + "v" + k * 0.03 + "M" + (hx + k * 0.14) + " " + hy + "v" + k * 0.03;
           }
         }
+        if (bd) s += P(bd, null, "inkE", Math.max(1, k * 0.028)) + P(cd, null, "inkE", k * 0.05);
+        for (const t in ld) if (ld[t]) s += P(ld[t], null, t, k * 0.012);
         s += q([[-hw + 0.3, 0.75, z + 0.2], [hw - 0.3, 0.75, z + 0.2], [hw - 0.3, 0.75, z + 0.7], [-hw + 0.3, 0.75, z + 0.7]], "inkE", "opacity:0.8");
       }
       return s + vignette(W, H, 0.75);
@@ -2176,7 +2190,7 @@
     hospital: { bg: "hospital", fx: "bed", mood: "sick", prop: "mask", low: "sick", lowPose: "stand", lowProp: "mask", icon: "🏥" },
     greatteacher: { bg: "class", fx: "counsel", mood: "happy", icon: "🍎" },
     // v6.16: the Middle 3 high-school talk; nothing within reach is a quieter picture.
-    goip: { bg: "class", fx: "counsel", mood: "ok", icon: "🏫", res: { none: { mood: "tired" } } },
+    goip: { bg: "class", fx: "counsel", mood: "ok", icon: "🏫", res: { none: { mood: "tired" }, r1: { bg: "cubicle", fx: "notes", mood: "ok" }, r2: { mood: "happy" } } },
     spark: { bg: "room", fx: "bulb", mood: "happy", icon: "✨" },
     bloom: { bg: "room", fx: "sparkles", mood: "ok", icon: "🌱", res: { up: { mood: "happy" }, down: { mood: "tired" } } },
     examluck: { bg: "class", fx: "notes", mood: "ok", icon: "🍀", res: { sniffler: { mood: "stressed" }, guess: { mood: "happy" }, drilled: { mood: "happy", pose: "cheer" }, omr: { mood: "shocked" }, calm: { mood: "happy" } } },

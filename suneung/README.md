@@ -37,7 +37,8 @@ School years are counted the Korean way, with each school numbering its own year
 5. **Watch your standing.**
    - The elementary-school teacher writes a report-card comment (통지표) each year: how you're doing, what your free time went to (books, friends, games, sport), and your strongest subject. A worn-out teacher writes one line; a child who is being bullied just "seems quieter lately". Each year's teacher puts it a little differently, so six report cards don't open with the same sentence.
    - Middle school shows your class rank each semester (Middle 1's first semester is the free semester, 자유학기제: no midterms or finals, only projects and unit tests), and at the end of each year the homeroom teacher writes the year's comment on your record (종합의견), in the same way as the elementary report card.
-   - Middle 3 opens with the high-school talk (고입 진학 상담): your homeroom teacher goes through the selective high schools on your marks so far, with your chance at each one that's open ("an autonomous private high school (about 35%)"), which ones your marks don't reach yet, and which ones your parents' budget can't cover, two semesters before you apply.
+   - Middle 3 opens with the high-school talk (고입 진학 상담): your homeroom teacher goes through the selective high schools on your marks so far, with your chance at each one that's open ("an autonomous private high school (about 35%)"), which ones your marks don't reach yet, and which ones your parents' budget can't cover, two semesters before you apply. When an academic one (자사고, 외고, 과학고) is open and the budget stretches to it, the talk ends in a choice: keep going as you are, sign up at the prep academy for selective high schools (특목고·자사고 입시반: ₩350,000 a month at capital prices, ₩490,000 in Gangnam, out of the education budget for the rest of Middle 3; extra lessons a year ahead in the subjects those schools select on, worth about +5 points on a 자사고 chance and +7 on a science high's for the same lives played the same way; and 6 more stress a turn, so it starts High 1 about 7 higher), or settle on the local high school (−6 stress now, and no application pressure in the fall). A budget cut that no longer covers the academy ends it.
+   - Middle school has its own pressure: every graded semester (not the free semester) brings 수행평가 deadlines and exam weeks (+4 stress a turn), and Middle 3's second semester, the applications, 3 more. A student who studies every block now needs a rest or an afternoon with friends now and then before High 1; one who mixes in friends barely notices.
    - High 1 and 2 sit mock exams (학력평가) in June and November.
    - From High 1 to the first semester of High 3, each semester has a midterm and a final (중간·기말고사) graded against your year at your school: a report card after each (see School grades below).
 6. **Choose a track** at the end of High 1: humanities (확률과 통계 + two social-studies subjects) or sciences (미적분 + two science subjects; the only track that can apply to medical school). While humanities is selected, a red warning says it closes medical school for good and the button reads "Confirm humanities". Your social-studies ability carries into the humanities subjects, your science ability into the science ones.
@@ -83,7 +84,7 @@ Built for a first-time player on a phone as much as a desktop (checked at 390px 
   - **A degree while you work (재직자 전형, v6.14):** a vocational or Meister graduate who holds a job and skipped university gets one more screen three years into work: apply through the workers' admission to evening and weekend courses (5,921 places in 2027), study in the employer's contract department (계약학과, 2,468 places; only at a big firm's plant or a public body), or keep working. About 72% get into the evening course and 86% into a contract department, and some stop halfway (18% and 8%); a degree finished by 30 adds to your pay at 30 and shows on the at-30 card.
   - **At 30:** your job, your pay, your rank among Korean earners next to the family you were born into (↑ or ↓, the honest heart of it), and where you live: Seoul for big firms and law, the 혁신도시 for public enterprises, home for teachers and civil servants; with your parents, a studio flat, a jeonse apartment, or one you own with your parents' help.
   - Everything rolls from its own seeded streams, so nothing before the ending moves, and an old save that already ended can play it too.
-- **Achievements:** 44 of them, from a perfect paper, SNU, 의대 and a fifth try to 개천에서 용 났다 (bottom fifth to SKY or medicine), leaving school and still reaching Seoul, a children's-home child reaching university, a retake-academy scholarship, surviving bullying, every High 3 month at a cram school, and at 30 a big company, the civil service, the top fifth, or bottom to top. They stay unlocked across lives on this device; locked ones show a hint. A toast announces each new one.
+- **Achievements:** 46 of them, from a perfect paper, SNU, 의대 and a fifth try to 개천에서 용 났다 (bottom fifth to SKY or medicine), leaving school and still reaching Seoul, a children's-home child reaching university, a retake-academy scholarship, surviving bullying, every High 3 month at a cram school, and at 30 a big company, the civil service, the top fifth, bottom to top, or a degree finished at evening lectures while working. They stay unlocked across lives on this device; locked ones show a hint. A toast announces each new one.
 - **Past lives:** the last 50 lives on this device with name, birth year, region, family, parents' jobs, outcome (and job at 30), best total, tries and achievements. **Live again** replays any of them from the same seed: the same family, talents and luck.
 - **Today's life:** a seed from the date, so everyone who starts it today is born into the same life. Compare with friends. Once you've played it, the new-life screen says how it went (v6.15).
 - **A share card** at the end, drawn in SVG: your name, birth year and place, family, where you ended up, your best 수능 grades, tries and a five-step ladder from the family you were born into to your fifth at 30. Long names, universities and jobs shrink to fit their line before anything is cut (v6.15). Download it as a PNG (or press and hold the picture where downloads are blocked).
@@ -526,23 +527,23 @@ The epilogue's logic is in `engine.js` (`startEpilogue`, `epiChoose`), its figur
 
 | University | Lives | Big firm | Public enterprise, civil service, teacher | Doctor, lawyer, nurse, researcher | SME, startup, trade, shop, service | No steady job | Mean pay a month | Top two fifths |
 |---|---|---|---|---|---|---|---|---|
-| No university | 9 | 0% | 0% | 0% | 100% | 0% | ₩287만 | 22% |
-| Junior college | 38 | 5% | 21% | 0% | 71% | 3% | ₩340만 | 42% |
-| Other four-year university | 198 | 0% | 18% | 10% | 66% | 6% | ₩325만 | 39% |
-| Mid (flagship nationals, rest of in-Seoul) | 129 | 16% | 26% | 15% | 39% | 4% | ₩369만 | 56% |
-| Top Seoul (SKKU to UOS) | 131 | 42% | 20% | 20% | 16% | 2% | ₩427만 | 75% |
-| SKY | 64 | 61% | 17% | 5% | 17% | 0% | ₩460만 | 75% |
-| Medical school | 31 | 0% | 0% | 100% | 0% | 0% | ₩595만 | 100% |
+| No university | 5 | 0% | 0% | 0% | 100% | 0% | ₩284만 | 20% |
+| Junior college | 37 | 5% | 24% | 0% | 68% | 3% | ₩346만 | 46% |
+| Other four-year university | 200 | 0% | 17% | 11% | 67% | 6% | ₩326만 | 40% |
+| Mid (flagship nationals, rest of in-Seoul) | 136 | 21% | 27% | 14% | 34% | 4% | ₩379만 | 60% |
+| Top Seoul (SKKU to UOS) | 130 | 38% | 18% | 21% | 22% | 2% | ₩417만 | 71% |
+| SKY | 62 | 65% | 19% | 5% | 11% | 0% | ₩462만 | 79% |
+| Medical school | 30 | 0% | 0% | 100% | 0% | 0% | ₩604만 | 100% |
 
 By the family you were born into (your own earnings fifth at 30 against your family's household fifth at birth):
 
 | Born into | Lives | Four-year university | SKY or medicine | Mean pay a month | Mean fifth at 30 | Up | Same | Down | Top fifth |
 |---|---|---|---|---|---|---|---|---|---|
-| Bottom fifth | 132 | 92% | 16% | ₩352만 | 3.46 | 93% | 7% | 0% | 16% |
-| Second fifth | 131 | 92% | 15% | ₩364만 | 3.51 | 91% | 6% | 3% | 15% |
-| Middle fifth | 111 | 89% | 16% | ₩391만 | 3.75 | 58% | 35% | 7% | 26% |
-| Fourth fifth | 107 | 96% | 15% | ₩415만 | 3.91 | 24% | 46% | 30% | 24% |
-| Top fifth | 119 | 92% | 18% | ₩414만 | 3.84 | 0% | 27% | 73% | 27% |
+| Bottom fifth | 132 | 93% | 14% | ₩352만 | 3.48 | 93% | 7% | 0% | 17% |
+| Second fifth | 131 | 93% | 14% | ₩370만 | 3.60 | 92% | 5% | 3% | 18% |
+| Middle fifth | 111 | 89% | 14% | ₩390만 | 3.70 | 58% | 34% | 8% | 23% |
+| Fourth fifth | 107 | 97% | 20% | ₩415만 | 3.89 | 26% | 42% | 32% | 26% |
+| Top fifth | 119 | 92% | 16% | ₩413만 | 3.84 | 0% | 27% | 73% | 27% |
 
 How to read it against reality:
 
@@ -589,7 +590,7 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 
 80 lives each, with families dealt from the real quintiles.
 
-- The bots always pick the first option at events (for bullying, that means telling a teacher and then reporting it).
+- The bots always pick the first option at events (for bullying, that means telling a teacher and then reporting it; at the Middle 3 talk, keeping going as they are, never the prep academy).
 - "Best affordable" means the most expensive study method the family's budget covers that turn.
 - In early childhood the bots play their own way: balanced mixes picture books, blocks, songs, playdates and the playground; the slacker watches cartoons and plays; the grinder and smart bots stick to picture books, blocks and songs. All of them go to an ordinary kindergarten.
 - "smart" looks after stress and health, reads in elementary school, adds a timed practice exam in October of High 3, and studies the subject with the most room to grow. It skips English past about the 90-point level and History once it is safe.
@@ -602,21 +603,21 @@ Before v2.4 these were 42%/26%, 59%/40%, 62%/42% and 74%/56%: up to 9% of a stro
 |---|---|---|---|---|---|---|---|---|
 | balanced, self-study, 1 try | 63 | 2.5 · 2.0 · 2.3 | 371 | 371 | 1.00 | 0% | 0% | 50% |
 | slacker (half games & friends), 1 try | 57 | 3.1 · 2.4 · 5.5 | 353 | 353 | 1.00 | 0% | 0% | 16% |
-| grinder (no rest), self-study, 1 try | 67 | 2.7 · 2.0 · 2.6 | 377 | 377 | 1.00 | 3% | 0% | 60% |
-| smart, online lectures, 1 try | 67 | 2.1 · 2.1 · 2.4 | 380 | 380 | 1.00 | 1% | 0% | 69% |
-| smart, best affordable method, 1 try | 69 | 1.9 · 1.9 · 2.3 | 385 | 385 | 1.00 | 8% | 1% | 79% |
-| smart, best affordable, retakes up to 3 tries | 69 | 1.9 · 1.9 · 2.3 | 385 | 412 | 2.56 | 78% | 29% | 99% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 2.0 · 2.0 · 2.3 | 384 | 420 | 3.67 | 91% | 84% | 98% |
-| smart, best affordable, tries for selective schools, 1 try | 69 | 1.9 · 1.9 · 2.2 | 387 | 387 | 1.00 | 9% | 3% | 74% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 2.0 · 1.9 · 2.3 | 384 | 419 | 3.73 | 91% | 84% | 98% |
+| grinder (no rest), self-study, 1 try | 67 | 2.8 · 2.1 · 2.5 | 375 | 375 | 1.00 | 5% | 0% | 61% |
+| smart, online lectures, 1 try | 67 | 2.1 · 2.0 · 2.4 | 381 | 381 | 1.00 | 3% | 0% | 74% |
+| smart, best affordable method, 1 try | 69 | 1.8 · 1.9 · 2.3 | 387 | 387 | 1.00 | 5% | 1% | 75% |
+| smart, best affordable, retakes up to 3 tries | 69 | 1.8 · 1.9 · 2.3 | 387 | 413 | 2.45 | 79% | 30% | 99% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 69 | 1.9 · 1.9 · 2.2 | 386 | 419 | 3.42 | 95% | 91% | 100% |
+| smart, best affordable, tries for selective schools, 1 try | 69 | 2.0 · 1.9 · 2.3 | 385 | 385 | 1.00 | 8% | 1% | 78% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 69 | 1.8 · 1.9 · 2.1 | 387 | 420 | 3.51 | 95% | 91% | 100% |
 | balanced, self-study, vocational high school, 1 try | 60 | 2.6 · 2.1 · 2.6 | 359 | 359 | 1.00 | 0% | 0% | 31% |
 | balanced, self-study, leaves school at High 1, 1 try | 62 | 2.6 · 2.5 · 2.6 | 367 | 367 | 1.00 | 0% | 0% | 44% |
-| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.2 · 1.8 · 2.4 | 384 | 384 | 1.00 | 8% | 1% | 70% |
+| smart, best affordable, leaves school at High 1, 1 try | 68 | 2.0 · 1.8 · 2.4 | 384 | 384 | 1.00 | 1% | 1% | 81% |
 | smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | 63 | 2.2 · 2.1 · 2.6 | 378 | 378 | 1.00 | 6% | 1% | 61% |
 | balanced, self-study, 1 try, 정시 only (no 수시) | 63 | 2.5 · 2.0 · 2.3 | 371 | 371 | 1.00 | 0% | 0% | 40% |
-| smart, best affordable, 1 try, 정시 only (no 수시) | 69 | 1.9 · 1.9 · 2.3 | 385 | 385 | 1.00 | 8% | 1% | 75% |
-| smart, best affordable, builds the school record, 1 try | 68 | 2.2 · 1.8 · 2.4 | 384 | 384 | 1.00 | 24% | 9% | 81% |
-| smart, best affordable, 1 try, the same lives as girls | 69 | 1.9 · 1.9 · 2.2 | 387 | 387 | 1.00 | 9% | 1% | 84% |
+| smart, best affordable, 1 try, 정시 only (no 수시) | 69 | 1.8 · 1.9 · 2.3 | 387 | 387 | 1.00 | 6% | 1% | 75% |
+| smart, best affordable, builds the school record, 1 try | 68 | 2.2 · 1.9 · 2.3 | 382 | 382 | 1.00 | 23% | 6% | 86% |
+| smart, best affordable, 1 try, the same lives as girls | 69 | 1.9 · 1.9 · 2.2 | 387 | 387 | 1.00 | 6% | 1% | 78% |
 
 Admissions in the same lives (v6.0): the 내신 average at the end of High 3's first semester, the record score (as an ordinary university reads it), how many 수시 applications the bot sent on its first try, how often it got a 수시 offer on its first try, how often the school it finally enrolled at came through 수시 (on any try), and how often that school was a women's university:
 
@@ -624,21 +625,21 @@ Admissions in the same lives (v6.0): the 내신 average at the end of High 3's f
 |---|---|---|---|---|---|---|
 | balanced, self-study, 1 try | 2.87 | 43 | 3.1 | 26% | 26% | 0% |
 | slacker (half games & friends), 1 try | 3.47 | 32 | 2.4 | 13% | 13% | 0% |
-| grinder (no rest), self-study, 1 try | 2.59 | 43 | 2.9 | 21% | 21% | 0% |
-| smart, online lectures, 1 try | 2.56 | 46 | 2.5 | 18% | 18% | 0% |
-| smart, best affordable method, 1 try | 2.39 | 48 | 2.7 | 20% | 20% | 0% |
-| smart, best affordable, retakes up to 3 tries | 2.39 | 48 | 0.1 | 1% | 11% | 0% |
-| smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.39 | 49 | 0.0 | 0% | 16% | 0% |
-| smart, best affordable, tries for selective schools, 1 try | 2.48 | 49 | 2.2 | 16% | 16% | 0% |
-| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 2.52 | 48 | 0.0 | 0% | 16% | 0% |
+| grinder (no rest), self-study, 1 try | 2.60 | 43 | 2.6 | 18% | 18% | 0% |
+| smart, online lectures, 1 try | 2.56 | 46 | 2.8 | 20% | 20% | 0% |
+| smart, best affordable method, 1 try | 2.39 | 48 | 1.8 | 14% | 14% | 0% |
+| smart, best affordable, retakes up to 3 tries | 2.39 | 48 | 0.1 | 1% | 16% | 0% |
+| smart, best affordable, 이과, chasing 의대, up to 5 tries | 2.40 | 49 | 0.0 | 0% | 19% | 0% |
+| smart, best affordable, tries for selective schools, 1 try | 2.49 | 49 | 2.7 | 20% | 20% | 0% |
+| smart, best affordable, 이과, tries for a science high school, 의대 up to 5 tries | 2.49 | 48 | 0.0 | 0% | 18% | 0% |
 | balanced, self-study, vocational high school, 1 try | 1.90 | 48 | 4.3 | 41% | 41% | 0% |
 | balanced, self-study, leaves school at High 1, 1 try | - | 26 | 2.1 | 13% | 13% | 0% |
-| smart, best affordable, leaves school at High 1, 1 try | - | 26 | 2.1 | 15% | 15% | 0% |
+| smart, best affordable, leaves school at High 1, 1 try | - | 26 | 2.0 | 16% | 16% | 0% |
 | smart, best affordable, leaves at Middle 1, 수능 a year early, 1 try | - | - | 1.4 | 10% | 10% | 0% |
 | balanced, self-study, 1 try, 정시 only (no 수시) | 2.87 | 43 | 0.0 | 0% | 0% | 0% |
 | smart, best affordable, 1 try, 정시 only (no 수시) | 2.39 | 48 | 0.0 | 0% | 0% | 0% |
-| smart, best affordable, builds the school record, 1 try | 2.38 | 65 | 4.7 | 51% | 51% | 0% |
-| smart, best affordable, 1 try, the same lives as girls | 2.39 | 49 | 2.6 | 20% | 20% | 5% |
+| smart, best affordable, builds the school record, 1 try | 2.38 | 64 | 4.5 | 54% | 54% | 0% |
+| smart, best affordable, 1 try, the same lives as girls | 2.39 | 48 | 1.8 | 15% | 15% | 5% |
 
 How much luck spreads lives that follow the same strategy, before (v4.1) and after the luck changes (v4.2). "Skill r²" is how much of the spread in first totals is explained by ability entering High 3; the rest is luck (the exam day, the paper, an accident in High 3, a family that can suddenly afford tutors, or can't):
 
@@ -651,54 +652,54 @@ The smart bot with the best affordable method, first try only, by the family it 
 
 | Family | Lives | Start | First total | SKY+ | In-Seoul+ |
 |---|---|---|---|---|---|
-| Low income | 12 | 67 | 381 | 17% | 75% |
-| Lower-middle income | 22 | 67 | 388 | 5% | 82% |
-| Middle income | 16 | 69 | 383 | 6% | 75% |
-| Upper-middle income | 23 | 71 | 388 | 9% | 83% |
-| High income | 7 | 66 | 382 | 0% | 71% |
+| Low income | 15 | 66 | 387 | 7% | 60% |
+| Lower-middle income | 17 | 67 | 382 | 6% | 71% |
+| Middle income | 20 | 70 | 387 | 0% | 70% |
+| Upper-middle income | 19 | 70 | 391 | 5% | 95% |
+| High income | 9 | 69 | 386 | 11% | 78% |
 
 By region kind, where the life ended up (the same smart bot, first try; 의대 is the bot chasing it, within five tries). The bots always take an event's first option, so many high-income bot families accept the Daechi-dong move, which is why Gangnam has more lives here than its birth share:
 
 | Region | Lives | Start | First total | SKY+ | In-Seoul+ | 의대 |
 |---|---|---|---|---|---|---|
-| Gangnam | 16 | 68 | 388 | 0% | 75% | 75% |
-| Seoul academy district | 5 | 71 | 389 | 0% | 80% | 100% |
-| Seoul | 5 | 72 | 389 | 20% | 80% | 100% |
-| Capital-region city | 21 | 68 | 386 | 10% | 81% | 71% |
-| Big city | 11 | 71 | 384 | 9% | 91% | 100% |
-| Mid-sized city | 13 | 68 | 387 | 8% | 85% | 85% |
-| Rural county | 9 | 66 | 373 | 11% | 56% | 89% |
+| Gangnam | 16 | 68 | 388 | 6% | 81% | 88% |
+| Seoul academy district | 5 | 71 | 387 | 0% | 100% | 100% |
+| Seoul | 5 | 72 | 397 | 0% | 80% | 100% |
+| Capital-region city | 21 | 68 | 386 | 10% | 67% | 86% |
+| Big city | 11 | 71 | 386 | 0% | 91% | 100% |
+| Mid-sized city | 13 | 68 | 388 | 0% | 77% | 92% |
+| Rural county | 9 | 66 | 379 | 11% | 44% | 89% |
 
-What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 71% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
+What each trait is worth, in a paired test: the same 80 lives (smart bot, best affordable method, first try) replayed with only that trait, against the same lives with none (in-Seoul+ 73% with none). A trait changes which events happen and when, so differences of a point or two are within the noise:
 
 | Trait | Δ start | Δ first total | In-Seoul+ |
 |---|---|---|---|
-| Sturdy (튼튼한 아기) | +0.3 | +1.9 | 78% |
-| Easygoing (순한 아기) | +0.1 | +0.1 | 74% |
-| Curious (호기심 많은 아기) | +0.5 | +1.2 | 78% |
-| Good sleeper (잘 자는 아기) | -0.0 | -0.9 | 73% |
-| Unflappable (겁 없는 아기) | +0.0 | +0.5 | 75% |
-| All smiles (잘 웃는 아기) | -0.0 | +0.6 | 75% |
-| Pencil (연필) | +1.7 | +4.8 | 83% |
-| Book (책) | +1.0 | +1.4 | 81% |
-| Computer mouse (마우스) | +1.2 | +3.0 | 83% |
-| Stethoscope (청진기) | +0.8 | -1.0 | 78% |
-| Microphone (마이크) | +1.0 | +0.8 | 76% |
-| Judge's gavel (판사봉) | +1.0 | +0.8 | 76% |
-| Ball (공) | +0.3 | +2.4 | 84% |
-| Thread (실) | +0.2 | +1.0 | 79% |
-| Money (돈) | +0.2 | -0.1 | 78% |
-| Paintbrush (붓) | -0.1 | -0.4 | 75% |
+| Sturdy (튼튼한 아기) | +0.3 | +0.6 | 73% |
+| Easygoing (순한 아기) | +0.0 | -0.8 | 74% |
+| Curious (호기심 많은 아기) | +0.4 | +2.4 | 85% |
+| Good sleeper (잘 자는 아기) | +0.0 | +0.8 | 75% |
+| Unflappable (겁 없는 아기) | +0.0 | -0.7 | 71% |
+| All smiles (잘 웃는 아기) | -0.0 | -0.3 | 70% |
+| Pencil (연필) | +1.8 | +4.2 | 86% |
+| Book (책) | +0.9 | +2.0 | 79% |
+| Computer mouse (마우스) | +1.0 | +2.9 | 83% |
+| Stethoscope (청진기) | +0.7 | +0.4 | 78% |
+| Microphone (마이크) | +0.9 | +2.1 | 81% |
+| Judge's gavel (판사봉) | +1.0 | +3.2 | 79% |
+| Ball (공) | +0.3 | +1.6 | 78% |
+| Thread (실) | +0.4 | +3.2 | 78% |
+| Money (돈) | +0.2 | +0.7 | 73% |
+| Paintbrush (붓) | -0.0 | -1.1 | 71% |
 
 Who raises you, on the same 80 lives (smart bot, best affordable method, first try) with the family setup forced at birth. Lives that start with both parents can still lose one later:
 
 | Setup at birth | Start | First total | In-Seoul+ |
 |---|---|---|---|
-| Both parents | 69 | 385 | 79% |
-| Single mom | 68 | 385 | 75% |
-| Single dad | 68 | 385 | 80% |
-| Grandparents | 67 | 381 | 68% |
-| Children's home | 67 | 381 | 74% |
+| Both parents | 69 | 386 | 76% |
+| Single mom | 68 | 383 | 76% |
+| Single dad | 68 | 384 | 79% |
+| Grandparents | 67 | 384 | 79% |
+| Children's home | 67 | 380 | 74% |
 
 What the tables show:
 
@@ -708,12 +709,13 @@ What the tables show:
 - **Family income matters, but it moves:** families change fifths two or three times a life, so where you're born matters less than it did, and a promotion or a layoff in High school can matter more. Retakes close much of the gap either way.
 - **Where you live matters too:** Gangnam's academies give the strongest start, while local and rural quotas help students outside the capital (the region groups above are small, so treat them as a direction, not exact rates).
 - **School choice nudges rather than decides:** the bot that tries for selective schools mostly lands in private ones by lottery (a few get into 자사고 or an international middle school) and does slightly better; the smart bot rarely studies far enough ahead in math and science for a science school; a vocational school costs a 수능 candidate about 12 points of total and a block a turn, though its easier 내신 opens 수시 doors (see below).
-- **A children's home is the hardest start, not a closed door:** the same lives start 3 points lower and score 9 lower on a first try, and 74% reach an in-Seoul+ university against 79% with both parents (기회균형 helps in both rounds); the leaving-care money then makes self-study retakes affordable.
+- **A children's home is the hardest start, not a closed door:** the same lives start 2 points lower and score 6 lower on a first try, and 74% reach an in-Seoul+ university against 76% with both parents (기회균형 helps in both rounds); the leaving-care money then makes self-study retakes affordable.
 - **Leaving school is a trade, not a shortcut:** the extra hours almost make up for the lost lessons, motivation and the GED, but not quite, and you lose the quotas; what you gain is freedom from school (and bullying) and a spare year if you sit early.
-- **수시 adds chances, but they cost something:** with the same lives, the balanced bot reaches in-Seoul+ 49% of the time against 39% with 정시 only, mostly through essay exams and record reviews at schools above its 정시 level. The smart bot gains little (83% against 81%) and loses a few SKY+ places (8% against 10%): an early offer from a school the September mock made look ambitious can turn out below what the 수능 would have reached, and it rules out 정시 (수시 납치).
-- **The record is what 수시 rewards:** the bot that spends one block a turn on exam prep, research projects, its club and volunteering scores 6 points less on the 수능 but doubles its SKY+ share (16%) and gets an early offer 54% of the time, through record reviews. Bots that build no record sit at a record score of 40–50, below the lines of most Seoul schools' record reviews, so for them 수시 is mostly a lottery of essay exams.
+- **수시 adds chances, but they cost something:** with the same lives, the balanced bot reaches in-Seoul+ 49% of the time against 39% with 정시 only, mostly through essay exams and record reviews at schools above its 정시 level. The smart bot gains nothing on in-Seoul+ (75% against 75%) and nothing on SKY+ (5% against 6%): an early offer from a school the September mock made look ambitious can turn out below what the 수능 would have reached, and it rules out 정시 (수시 납치).
+- **The record is what 수시 rewards:** the bot that spends one block a turn on exam prep, research projects, its club and volunteering scores 5 points less on the 수능 but has four times the SKY+ share (23% against 5%) and gets an early offer 54% of the time, through record reviews. Bots that build no record sit at a record score of 40–50, below the lines of most Seoul schools' record reviews, so for them 수시 is mostly a lottery of essay exams.
 - **Plausibility:** in reality about 80% of places go to 수시 and the average applicant sends 4.96 applications; the bots send 2–5 and only above their 정시 level, so their 20–55% "enrolled via 수시" is lower than the national share, which is dominated by students applying to schools at or below their level and by provincial universities that fill about 90% in 수시. A vocational school's weaker classmates give an easy 내신 (2.0), which counts 0.5 of a grade worse in 교과 but still opens record reviews and the 기회균형 and 농어촌 quotas, so 31% of those lives reach in-Seoul+ against 18% with 정시 only (the same lives, measured separately).
 - **Women's universities** open about one more option in the 85–93 band to girls; with the same lives, 5% of girls enroll at one, and the overall numbers barely move.
+- **Middle school now costs something (v6.17):** a bot that studies every block (the grinder) has three times the slumps and sleepless months in middle school (0.31 a life against 0.10), and starts High 1 at stress 61 instead of 46; the smart bot, which takes an afternoon with friends when stress passes 62, starts High 1 at 52 instead of 39 and scores the same. The balanced bot, with friends in its week, doesn't notice (start, 1st total and every rate unchanged).
 - **Retakes** add about 10–20 points of 국수탐 standard total each.
 - **Medical school** takes talent, a sciences track and usually several years: the bot chasing it rarely gets in on the first try, but a near-optimal player who keeps retaking usually makes it within five.
 
@@ -731,6 +733,14 @@ What the tables show:
 - `sim.js`: the headless calibration and strategy-bot script; `--epilogue [lives]` plays only the epilogue tables.
 
 ## Changelog
+
+- **v6.17:** from the twelfth daily play-through (five lives in both languages: a Gwangju boy from the fourth fifth who aimed at the 자사고, signed up at the prep academy in Middle 3, missed it and reached Kyungpook National; a Daegu girl from the bottom fifth who drew, saw friends every turn, settled on the local high school and was a lawyer at 30; a Gwangju boy who left school in High 1 and retook once by self-study; a Mokdong girl from the fourth fifth whose mom was laid off and whose parents divorced, so every selective school was out of reach; and a Jeonju girl from the second fifth with a part-time job who moved to Suwon in Middle 2 and retook at an academy; plus headless-browser playthroughs and a count of middle-school stress over 150 lives for three bots).
+  - **Middle school has its own pressure:** a student could study every block from Middle 1 to Middle 3 and never need a rest. A balanced player's stress sat at 0–7 the whole time, and even the bot that never rests stayed around 45, because middle school weighed exactly what High 1 does. Now every graded semester brings 수행평가 deadlines and exam weeks (`MID_PRESSURE`, +4 a turn; not the free semester), and Middle 3's second semester, the applications, 3 more (`GOIP_PRESSURE`). Grounded in the time-use survey (middle schoolers study 5h45m a day against 5h05m in elementary school), the 78% in private education and the 49.5% of 13–18s whose main worry is study. A player who mixes in friends barely notices; one who studies every block meets slumps and sleepless months (three times as often for the grinder bot) and starts High 1 more stressed (61 against 46), so rest blocks matter before High 1.
+  - **A real choice at the Middle 3 talk:** when an academic selective school (자사고, 외고, 과학고) is open and the budget stretches to it, the homeroom teacher's talk now ends in a choice: keep going as you are; sign up at the prep academy for selective high schools (특목고·자사고 입시반: ₩350,000 a month at capital prices, ₩490,000 in Gangnam, out of the education budget for the rest of Middle 3, with 6 more stress a turn and extra lessons a year ahead in the subjects those schools select on, worth about +5 points on a 자사고 chance and +7 on a science high's, measured on the same lives); or settle on the local high school (−6 stress, and no application pressure in the fall). A budget cut that no longer covers the academy ends it with a log line. Events can now decide their number of choices when they fire (`choices` as a function), so the talk stays information only when there's nothing to choose, and a talk already queued in an old save plays as before.
+  - **A new school isn't the first day of middle school:** a girl who moved to Suwon in Middle 2 met her new seatmate on "the first day of middle school". A seatmate after a move or a transfer now meets you on "your first day at the new school" (전학 온 첫날).
+  - **Lectures after work:** a new achievement for a degree finished through the workers' admission (v6.14) while holding a job.
+  - **A lighter PC방:** the picture was 51 KB; each row's monitors, their glow and the chairs are now two `<pattern>`s, and the gamers' headsets one path a row (41–43 KB, the same picture).
+  - Balance: calibration and the top end are byte-identical. The bots never take the prep academy (they always answer events with the first option), so only the pressure moves the tables: the balanced, slacker and vocational rows are unchanged (friends in their week keep middle-school stress low); the grinder's first total moves 377 → 375, the smart rows +0–2 (best affordable 385 → 387), and the rest by noise as stress-driven events change the dice from middle school on (의대 within 5 tries 84 → 91%, in-Seoul+ for the smart bot 79 → 75%). The epilogue table moved by a few lives a row; regenerated.
 
 - **v6.16:** from the eleventh daily play-through (six lives in both languages, looking closely at middle school and High 1–2: a Suwon girl from the top fifth who spent every turn with friends, a Jeonju boy from the bottom fifth who gamed and retook once by self-study, then did 36 months of alternative service, a Gangnam girl at Daewon International Middle School who missed the foreign language high's selection, a Haenam boy in the bottom fifth with a part-time job, a Busan boy who aimed at the science high, retook at an academy and served in the navy, and a Mokdong girl whose parents divorced in Middle 2, which put the 자사고 and the foreign language high she'd planned on out of reach; plus headless-browser playthroughs and a count of the events in middle school and High 1–2 over 200 lives).
   - **The Middle 3 high-school talk:** middle school is six turns, and nothing said where you stood for high school until the school screen at the very end, when it was too late to change anything. Middle 3 now opens with the homeroom teacher's talk (고입 진학 상담, the `goip` event): your chance at each selective high school that's open to you, the ones your marks don't reach yet, and the ones your parents' budget can't cover (and whether that's since the money got tighter), with two semesters left. It's information only: it reads no RNG and changes nothing.

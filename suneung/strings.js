@@ -1187,6 +1187,7 @@
         noUni: ["Another road", "Lived a life without university.", "Put the pencil down."],
         college: ["Learn a craft", "Enrolled at a junior college.", "Two or three years and a profession."],
         hired: ["Hired out of school", "Took a job straight from a vocational high school.", "The employment office calls in August."],
+        nightDegree: ["Lectures after work", "Finished a university degree while holding down a job.", "Three years into the job, the workers' admission opens."],
         bigCo: ["Company badge", "At a big company at 30.", "Pass a big company's open recruitment."],
         civil: ["Iron rice bowl", "A civil servant at 30.", "Pass the civil service exam."],
         lawyer: ["Counsel", "A lawyer at 30.", "Law school and the bar."],
@@ -2167,6 +2168,7 @@
         noUni: ["다른 길", "대학 없이 인생을 살았다.", "펜을 내려놓기."],
         college: ["기술을 배우다", "전문대에 입학했다.", "2–3년, 그리고 직업."],
         hired: ["졸업 전 취업", "특성화고에서 바로 취업했다.", "8월, 취업부에서 연락이 온다."],
+        nightDegree: ["퇴근 후 강의실", "일하면서 대학 학위를 마쳤다.", "입사 3년 차, 재직자 전형이 열린다."],
         bigCo: ["대기업 사원증", "서른 살에 대기업에 다닌다.", "대기업 공채에 합격하기."],
         civil: ["철밥통", "서른 살에 공무원이다.", "공무원 시험 합격."],
         lawyer: ["변호사님", "서른 살에 변호사다.", "로스쿨과 변호사시험."],
@@ -3458,6 +3460,32 @@
     "log.schoolOut": (p, h) => "형편이 어려워져 " + listKo(p.ids.slice(0, -1).map((id) => h.schoolNoun(id)).concat(josa(h.schoolNoun(p.ids[p.ids.length - 1]), "은", "는"))) + " 이제 부모님 교육비로 감당할 수 없다.",
     "school.no.costFell": (p) => p.y + "년 형편이 어려워진 뒤로 부모님 교육비로는 학비를 감당할 수 없습니다.",
   });
+  // v6.17: the Middle 3 talk as a choice, when a prep academy for selective high schools is on offer
+  // (p.prep its fee a month, p.b the education budget a month): the talk itself is the question.
+  Object.assign(MSG.en, {
+    "ev.goip.text": (p, h) => MSG.en["ev.goip." + (p.o && p.o.length ? "r" : "none")](p, h) + (p.prep ? " The prep academy for selective high schools near you runs weeknights and Saturdays until the applications: " +
+      h.won(p.prep) + " a month, out of your parents' " + h.won(p.b) + " education budget." : ""),
+    "ev.goip.c": (p, h) => ["Keep going as you are", "Sign up at the prep academy (" + h.won(p.prep) + " a month, harder semesters)", "Settle on the local high school"],
+    "ev.goip.r0": "You keep to your own routine. The school screen at the end of the year will show where the marks got you.",
+    "ev.goip.r1": (p, h) => "You sign up. Weeknights until ten and every Saturday, a year ahead of the school's syllabus, with a level test every month. " +
+      h.won(p.prep) + " a month comes out of the education budget until the applications. (Stress up, the selective schools' subjects get extra lessons)",
+    "ev.goip.r2": "You tell your parents you'll go to the local high school with your friends. They look relieved, and so do you. (Stress down: no applications this fall)",
+    "log.prepStop": "With the budget cut, there's no money for the prep academy any more. You stop going.",
+  });
+  Object.assign(MSG.ko, {
+    "ev.goip.text": (p, h) => MSG.ko["ev.goip." + (p.o && p.o.length ? "r" : "none")](p, h) + (p.prep ? " 근처 특목고·자사고 입시학원은 원서 낼 때까지 평일 저녁과 토요일 수업이다. 한 달 " +
+      h.won(p.prep) + "으로, 부모님 교육비 " + h.won(p.b) + "에서 나간다." : ""),
+    "ev.goip.c": (p, h) => ["지금처럼 한다", "입시학원에 등록한다 (한 달 " + h.won(p.prep) + ", 더 힘든 두 학기)", "동네 일반고로 마음을 정한다"],
+    "ev.goip.r0": "지금 하던 대로 한다. 성적이 어디까지 닿았는지는 연말 원서 철에 알게 된다.",
+    "ev.goip.r1": (p, h) => "등록했다. 평일 밤 열 시까지, 토요일마다, 학교 진도보다 1년 앞서 나가고 매달 레벨테스트가 있다. 원서 낼 때까지 교육비에서 한 달 " +
+      h.won(p.prep) + "이 나간다. (스트레스 상승, 특목고·자사고 과목 추가 수업)",
+    "ev.goip.r2": "친구들과 동네 일반고에 가겠다고 부모님께 말한다. 부모님도, 나도 한결 홀가분하다. (스트레스 하락: 올가을 원서 부담 없음)",
+    "log.prepStop": "교육비가 줄어 입시학원비를 더 낼 수 없다. 학원을 그만둔다.",
+  });
+  // v6.17: a seatmate at a new middle school after a move or a transfer (p.nw) meets you on your first
+  // day there, not on the first day of middle school. Without p.nw (old saves) the old text.
+  named("en", "ev.soc-seatmate.r.mid", (p, h, old) => (p.nw ? "Your first day at the new school. The student next to you, " + h.full(p.a) + ", whispers that the homeroom teacher looks scary, and you both laugh at exactly the wrong moment." : old()));
+  named("ko", "ev.soc-seatmate.r.mid", (p, h, old) => (p.nw ? "전학 온 첫날. 옆자리 " + josa(h.full(p.a), "이", "가") + " 담임 선생님이 무섭게 생겼다고 속삭인다. 하필 그 순간 둘 다 웃음이 터졌다." : old()));
   // The rival's running score (v6.16): a streak or a turnaround, then the tally, before the closing
   // "(Motivation up)" / "(Fired up)". Without w/l (old saves' logs) the old text.
   const rivalEn = (p, h, win) => {
