@@ -1225,7 +1225,10 @@
     const drawMap = () => Art.koreaMap({ focus: g.region, home: g.region, aria: T("school.mapTitle"),
       schools: opts.filter((o) => o.real).map((o) => ({ lat: o.real.lat, lon: o.real.lon, n: o.n, id: o.blocked ? null : o.id, cls: (o.blocked ? "closed" : o.def ? "def" : "") + (o.id === pick.id ? " sel" : "") })) });
     const map = n && Art.areaBox && Art.areaBox(g.region) ? '<figure class="school-map"><div id="schoolMap">' + drawMap() + "</div><figcaption>" + esc(T("school.mapTitle")) + "</figcaption></figure>" : "";
-    openModal(t[top.stage], "<p>" + esc(x[top.stage]) + "</p>" + map + '<div class="unis">' + rows + "</div>", [
+    // v6.18: settled on the local high school at the Middle 3 talk (goip): say so; the local school is
+    // the default pick already.
+    const settled = top.stage === "high" && g.flags.goipEase ? '<p class="note warn">' + esc(T("school.settled")) + "</p>" : "";
+    openModal(t[top.stage], settled + "<p>" + esc(x[top.stage]) + "</p>" + map + '<div class="unis">' + rows + "</div>", [
       { label: T("school.go"), primary: true, run: () => {
         const msg = game.pickSchool(pick.id);
         const v = msg.key.split(".").pop();
