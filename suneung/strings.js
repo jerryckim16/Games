@@ -7,6 +7,14 @@
 (function (root) {
   "use strict";
 
+  // A logged choice and what came of it: "choice. result", unless the result already opens with the
+  // choice's own words (the 진로 survey's "Medicine. Your homeroom teacher nods..."), which would read
+  // "Medicine. Medicine. ..." (v6.18).
+  const chose = (c, res) => {
+    const cc = String(c || "").toLowerCase().replace(/[.!?\s]+$/, "");
+    return cc && String(res).toLowerCase().indexOf(cc) === 0 ? res : c + ". " + res;
+  };
+
   // ---------- names and units ----------
   const DATA = {
     en: {
@@ -519,6 +527,8 @@
       "school.realFar": (p, h) => "in " + h.realPlace(p.city) + ", " + p.km + " km away",
       "school.realHere": "near home",
       "school.mapTitle": "Your area's schools",
+      // v6.18: on the high-school screen after settling on the local school at the Middle 3 talk.
+      "school.settled": "At the Middle 3 talk you told your parents you'd go to the local high school, so it's picked below. If you've changed your mind, the other schools are still open to apply to.",
       "log.school": (p, h) => { const at = (p.real ? h.realSchool(p.real) + ", " : "") + h.schoolNoun(p.id); return p.id === "homeCare" ? "You stay home with family instead of going to kindergarten." : p.got || p.want === p.id ? "You start at " + at + "." : "You applied to " + h.schoolNoun(p.want) + " but didn't get in, so you start at " + at + "."; },
       "log.schoolMove": (p, h) => "The move means a new school: " + (p.real ? h.realSchool(p.real) + ", " : "") + h.schoolNoun(p.id) + ".",
       "track.forced": (p, h) => "Your school only teaches the " + h.track(p.t) + " track.",
@@ -723,7 +733,7 @@
         if (p.id === "eve") return "The night before the exam: " + h.t(p.r.key, p.r.p);
         if (p.id === "lunch") return "Exam-day lunch: " + h.t(p.r.key, p.r.p);
         const res = h.t(p.r.key, p.r.p);
-        return p.c == null ? res : h.t("ev." + p.id + ".text") + " → " + h.t("ev." + p.id + ".c")[p.c] + ". " + res;
+        return p.c == null ? res : h.t("ev." + p.id + ".text") + " → " + chose(h.t("ev." + p.id + ".c")[p.c], res);
       },
       "log.mock": (p, h) => h.mock(p.m, p.sch) + ": " + h.grades(p.g, p.pre) + (p.hd ? " (" + ({ engHard: "a brutal English paper", engEasy: "an easy English paper", hard: "a killer " + h.sub(p.hs) + " paper", easy: "an easy " + h.sub(p.hs) + " paper" })[p.hd] + ")" : ""),
       "log.suneung": (p, h) => (p.y + 1) + " Suneung: " + h.grades(p.g) + " · standard-score total " + p.total,
@@ -1503,6 +1513,7 @@
       "school.realFar": (p, h) => p.city + ", " + p.km + "km 거리",
       "school.realHere": "집 근처",
       "school.mapTitle": "우리 동네 학교",
+      "school.settled": "중3 진학 상담 때 동네 일반고에 가겠다고 부모님께 말해서 아래에 골라 두었다. 마음이 바뀌었다면 다른 학교에도 아직 지원할 수 있다.",
       "log.school": (p, h) => { const at = p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id); return p.id === "homeCare" ? "유치원 대신 집에서 가족과 지내기로 했다." : p.got || p.want === p.id ? at + "에 입학했다." : h.schoolNoun(p.want) + "에 지원했지만 떨어져서 " + at + "에 입학했다."; },
       "log.schoolMove": (p, h) => "이사하면서 학교도 옮겼다: " + (p.real ? p.real + "(" + h.school(p.id) + ")" : h.schoolNoun(p.id)) + ".",
       "track.forced": (p, h) => "우리 학교에는 " + h.track(p.t) + "만" + " 있다.",
@@ -1711,7 +1722,7 @@
         if (p.id === "eve") return "수능 전날 밤: " + h.t(p.r.key, p.r.p);
         if (p.id === "lunch") return "수능 도시락: " + h.t(p.r.key, p.r.p);
         const res = h.t(p.r.key, p.r.p);
-        return p.c == null ? res : h.t("ev." + p.id + ".text") + " → " + h.t("ev." + p.id + ".c")[p.c] + ". " + res;
+        return p.c == null ? res : h.t("ev." + p.id + ".text") + " → " + chose(h.t("ev." + p.id + ".c")[p.c], res);
       },
       "log.mock": (p, h) => h.mock(p.m, p.sch) + ": " + h.grades(p.g, p.pre) + (p.hd ? " (" + ({ engHard: "불영어", engEasy: "물영어", hard: h.sub(p.hs) + " 고난도", easy: h.sub(p.hs) + " 저난도" })[p.hd] + ")" : ""),
       "log.suneung": (p, h) => (p.y + 1) + "학년도 수능: " + h.grades(p.g) + " · 국수탐 표준점수 합 " + p.total,
@@ -3343,8 +3354,8 @@
   named("en", "ev.lonely.text", (p, h, old) => (p.a ? cap(h.nm(p.a)) + " and your old classmates post photos from a school trip. You've talked to nobody but family all week." : old()));
   named("ko", "ev.lonely.text", (p, h, old) => (p.a ? h.nm(p.a) + "와 예전 반 친구들이 수학여행 사진을 올렸다. 이번 주에 가족 말고는 아무하고도 말을 안 했다." : old()));
   // Log lines: an event's question names its people (q), and a turn says who you spent it with.
-  named("en", "log.event", (p, h, old) => (p.q && p.c != null ? h.t("ev." + p.id + ".text", p.q) + " → " + h.t("ev." + p.id + ".c", p.q)[p.c] + ". " + h.t(p.r.key, p.r.p) : old()));
-  named("ko", "log.event", (p, h, old) => (p.q && p.c != null ? h.t("ev." + p.id + ".text", p.q) + " → " + h.t("ev." + p.id + ".c", p.q)[p.c] + ". " + h.t(p.r.key, p.r.p) : old()));
+  named("en", "log.event", (p, h, old) => (p.q && p.c != null ? h.t("ev." + p.id + ".text", p.q) + " → " + chose(h.t("ev." + p.id + ".c", p.q)[p.c], h.t(p.r.key, p.r.p)) : old()));
+  named("ko", "log.event", (p, h, old) => (p.q && p.c != null ? h.t("ev." + p.id + ".text", p.q) + " → " + chose(h.t("ev." + p.id + ".c", p.q)[p.c], h.t(p.r.key, p.r.p)) : old()));
   named("en", "log.month", (p, h, old) => old() + (p.fr ? " · time with " + h.nm(p.fr) + (p.sg ? " (studied together)" : "") : ""));
   named("ko", "log.month", (p, h, old) => old() + (p.fr ? " · " + h.nm(p.fr) + "와 함께" + (p.sg ? "(같이 공부)" : "") : ""));
 

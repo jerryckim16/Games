@@ -299,10 +299,12 @@
   // one is open to you: PREP_FEE a month (capital prices; Gangnam dearer) out of the education budget for
   // Middle 3, PREP_STRESS more pressure a turn, and PREP_YEAR (a year's worth, like CLASS_YEAR) of extra
   // lessons, taught ahead of the year (선행), in the subjects those schools select on. Middle-school
-  // participants in private education spend ₩628,000 a month on average (2024).
+  // participants in private education spend ₩628,000 a month on average (2024). v6.18: PREP_YEAR 0.7 ->
+  // 0.45 now that the talk comes before Middle 3's first semester and the academy runs both of them
+  // (a full year of fees and stress instead of half): its effect on the school screen stays near v6.17's.
   const PREP_FEE = 350000;
   const PREP_STRESS = 6;
-  const PREP_YEAR = 0.7;
+  const PREP_YEAR = 0.45;
   const PREP_SUBJ = { autoHigh: ["kor", "math", "eng", "inq1", "inq2"], langHigh: ["eng", "kor"], sciHigh: ["math", "inq2"] };
 
   // ---------- early childhood ----------
@@ -1360,7 +1362,8 @@
     { id: "career", weight: 100, when: (g) => g.grade === 7 && g.month === 3 && !g.flags.career && !g.dropoutActive(), run: (g) => { g.flags.career = 1; bump(g, { motivation: 8 }); return "r"; } },
     // v6.16: Middle 3 opens with the high-school talk (고입 진학 상담): where the special high schools
     // stand on today's marks, which ones the family can't pay for, and two semesters left to move the
-    // numbers before the school screen. Only information: it reads no RNG and changes nothing.
+    // numbers before the school screen (since v6.18 it comes before Middle 3's first turn is played, from
+    // nextTurn()). It reads no RNG.
     // p.o: [{ id, p }] the open ones (chance now, %), p.no: those your marks don't reach yet, p.cost:
     // shut by the fees (p.fell: since the money got tighter).
     {
@@ -3331,6 +3334,11 @@
           this.addLog("log.balance", { why: this.balanceWhy() }, "milestone");
         }
         if (this.grade === 11 && this.dropout != null && this.flags.ged != null) this.queue.push({ type: "event", id: "early", choices: 2 });
+        // v6.18: the Middle 3 talk (goip) opens the year, before its first semester is played, so "two
+        // semesters left" is true and a prep academy signed up for there runs both of them. It reads no
+        // RNG. A v6.17 save already in Middle 3's March turn still gets it from advance() as before.
+        const goip = EVENTS.find((e) => e.id === "goip");
+        if (goip.when(this)) this.fireEvent(goip);
       }
       // Severe bullying costs a block a turn: days you can't face school, or can't focus when you're there.
       if (this.bully && this.bully.lv >= 3) this.lostBlocks += 1;

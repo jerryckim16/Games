@@ -192,6 +192,8 @@ function playCareer(seed, bot, opts) {
     const top = g.queue[0];
     if (!top) {
       if (g.grade === 12 && g.month === 3 && g.attempt === 1 && !at12) at12 = Object.assign({}, g.skills);
+      // v6.18: the high school it got and its stress on the first day of High 1 (the prep-academy table).
+      if (g.grade === 10 && g.month === 3 && !g.simHigh) g.simHigh = { id: g.schoolInfo().id, stress: g.stress };
       // Dropout bots leave school at the start of their grade.
       if (opts.quitAt && g.grade >= opts.quitAt && !g.quitBlock()) g.quitSchool();
       let plan = BOTS[bot](g);
@@ -203,7 +205,9 @@ function playCareer(seed, bot, opts) {
       continue;
     }
     // The bots sit the 수능, so they turn down the vocational high's job offer (v6.8).
-    if (top.type === "event") { g.choose((top.id === "early" && !opts.early) || top.id === "joboffer" ? 1 : 0); continue; }
+    // opts.goip (v6.18): the answer to the Middle 3 talk when it asks (1 = the prep academy).
+    if (top.type === "event" && top.id === "goip") g.simGoipAsk = top.choices > 1;
+    if (top.type === "event") { g.choose((top.id === "early" && !opts.early) || top.id === "joboffer" ? 1 : top.id === "goip" && opts.goip && top.choices > opts.goip ? opts.goip : 0); continue; }
     if (top.type === "birth") { g.dismiss(); continue; }
     // Schools: the public one unless the bot has a list of schools it tries for (first open one with
     // a fair chance).
@@ -262,6 +266,8 @@ function strategies() {
     { label: "smart, best affordable, sci, 의대 up to 5", bot: "smart", method: "tutor", maxAttempts: 5, goal: "med", track: "sci", inq: ["bio", "earth"] },
     // Schools: aiming for the selective ones, a science school for a 의대 chaser, a vocational school.
     { label: "smart, best affordable, selective schools, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", schools: ["intlMid", "sciHigh", "autoHigh", "langHigh", "privElem", "privMid", "privHigh"] },
+    // v6.18: the same, signing up at the prep academy when the Middle 3 talk offers it.
+    { label: "smart, selective schools + prep, 1 try", bot: "smart", method: "tutor", maxAttempts: 1, goal: "college", schools: ["intlMid", "sciHigh", "autoHigh", "langHigh", "privElem", "privMid", "privHigh"], goip: 1 },
     { label: "smart, sci, science high, 의대 up to 5", bot: "smart", method: "tutor", maxAttempts: 5, goal: "med", track: "sci", inq: ["bio", "earth"], schools: ["sciHigh"] },
     { label: "balanced, vocational high, 1 try", bot: "balanced", method: "self", maxAttempts: 1, goal: "college", schools: ["vocHigh"] },
     // Leaving school (자퇴): from grade 10, and from grade 7 with the Suneung a year early.
@@ -310,6 +316,15 @@ function strategies() {
       if (g.simSusiOffer) a.susiOffer++;
       if (g.simVia === "susi") a.viaSusi++;
       if (uni && S.UNIVERSITIES[UIDX(uni)].women) a.women++;
+      if (c.schools && c.schools.indexOf("autoHigh") >= 0) {
+        a.hiN = (a.hiN || 0) + 1;
+        if (g.simGoipAsk) a.ask = (a.ask || 0) + 1;
+        if (g.flags.goipPrep) a.prep = (a.prep || 0) + 1;
+        const h = g.simHigh || {};
+        a.hi = a.hi || {};
+        a.hi[h.id] = (a.hi[h.id] || 0) + 1;
+        a.hiStress = (a.hiStress || 0) + (h.stress || 0);
+      }
       const rk = byKind[g.regionInfo().kind];
       if (ci === 4) { rk.n++; rk.start += avg; rk.std += results[0].total; if (tr.sky) rk.sky++; if (tr.seoul) rk.seoul++; }
       if (ci === 6) { rk.mn++; if (uni === "med") rk.med++; }
@@ -340,6 +355,16 @@ function strategies() {
     const a = acc[ci];
     console.log(c.label.padEnd(42), (a.naeN ? (a.nae / a.naeN).toFixed(2) : "-").padStart(4), "|", (a.recN ? (a.rec / a.recN).toFixed(0) : "-").padStart(6), "|",
       (a.apps / seeds).toFixed(1).padStart(4), "|", p(a.susiOffer).padStart(10), "|", p(a.viaSusi).padStart(8), "|", p(a.women).padStart(12));
+  });
+  // v6.18: the selective-school bots with and without the prep academy: how often the Middle 3 talk
+  // offered it, which high school they got, and their stress on the first day of High 1.
+  console.log("\nSelective high schools (the same lives, first day of High 1):");
+  console.log("strategy".padEnd(42) + "offered | prep | 자사고 | 외고 | 과학고 | stress");
+  configs.forEach((c, ci) => {
+    const a = acc[ci];
+    if (!a.hiN) return;
+    const q = (id) => p(a.hi[id] || 0, a.hiN);
+    console.log(c.label.padEnd(42), p(a.ask || 0, a.hiN).padStart(7), "|", p(a.prep || 0, a.hiN), "|", q("autoHigh").padStart(6), "|", q("langHigh"), "|", q("sciHigh").padStart(6), "|", (a.hiStress / a.hiN).toFixed(0).padStart(6));
   });
   // How far luck spreads lives that follow the same strategy: their ability entering High 3 and their
   // first 수능 totals, from the unluckiest tenth to the luckiest.
