@@ -19,7 +19,7 @@
     sName: $("sName"), sMoney: $("sMoney"), sAllowance: $("sAllowance"), sFam: $("sFam"), sFamSub: $("sFamSub"), sFamCard: $("sFamCard"),
     skills: $("skills"), condition: $("condition"), planTitle: $("planTitle"), blocksLeft: $("blocksLeft"),
     method: $("method"), methodNote: $("methodNote"), activities: $("activities"), planCost: $("planCost"),
-    planErr: $("planErr"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"), traits: $("traits"), mainMap: $("mainMap"), mapHome: $("mapHome"), mapHint: $("mapHint"),
+    planErr: $("planErr"), planSpend: $("planSpend"), repeatBtn: $("repeatBtn"), clearBtn: $("clearBtn"), nextBtn: $("nextBtn"), moveBtn: $("moveBtn"), quitBtn: $("quitBtn"), lessonNote: $("lessonNote"), traits: $("traits"), mainMap: $("mainMap"), mapHome: $("mapHome"), mapHint: $("mapHint"),
     people: $("people"), peopleTeacher: $("peopleTeacher"), peopleNote: $("peopleNote"),
     chart: $("chart"), legend: $("legend"), log: $("log"), history: $("history"), newLifeBtn: $("newLifeBtn"),
     modal: $("modal"), modalTitle: $("modalTitle"), modalBody: $("modalBody"), modalButtons: $("modalButtons"),
@@ -91,7 +91,8 @@
 
   // ---------- language ----------
   // Subject names follow the game being shown: before the track choice there is none.
-  function ctx() { return game ? { inq: game.inq, track: game.track, parents: game.parents || "both" } : { inq: null, track: null, parents: "both" }; }
+  // out (v6.19): a care leaver lives alone, so strings.js reads key + ".careOut" before ".care".
+  function ctx() { return game ? { inq: game.inq, track: game.track, parents: game.parents || "both", out: !!game.flags && game.flags.careLeft != null } : { inq: null, track: null, parents: "both" }; }
   let lang = store.get(LANG_KEY);
   if (lang !== "en" && lang !== "ko") lang = /^ko\b/i.test(navigator.language || "") ? "ko" : "en";
   let L = window.SuneungText.make(lang, ctx);
@@ -508,9 +509,17 @@
     const income = g.income(plan);
     const budget = g.budget();
     const over = Math.max(0, cost - budget);
-    els.planCost.textContent = done ? "" : T("plan.cost", { c: cost, b: budget, o: over, e: income, m: g.money + income - over });
+    // v6.19: the prep academy's fee already came out of the budget (allowance()), so say so.
+    const pf = g.prepOn() ? g.prepFee() * g.turnMonths() : 0;
+    els.planCost.textContent = done ? "" : T("plan.cost", { c: cost, b: budget, o: over, e: income, m: g.money + income - over, pf });
+    els.planCost.classList.toggle("warn", !done && over > income);
+    // The same draw on your savings next to Next, where it can't be missed (the line above sits under
+    // every card). Hidden when the plan can't be paid at all: planErr says so. Display only.
+    const draw = done || !used ? 0 : Math.max(0, over - income);
+    els.planSpend.textContent = draw ? T("plan.spend", { o: draw, m: g.money - draw }) : "";
+    els.planSpend.classList.toggle("hidden", !draw || draw > g.money);
     const err = used === n ? g.validate(plan, method) : null;
-    els.planErr.textContent = err ? T(err, { n }) : "";
+    els.planErr.textContent = err ? T(err, { n, s: Math.max(0, cost - budget - g.money - income) }) : "";
     els.nextBtn.disabled = done || used !== n || !!err || g.queue.length > 0;
     els.nextBtn.textContent = !g.inSchool() && g.month === 11 ? T("plan.sit") : T("plan.next", { st: g.status });
     els.repeatBtn.disabled = done || !g.lastPlan;
@@ -623,7 +632,9 @@
     if (now - nextAt < 700 || els.nextBtn.disabled) return;
     nextAt = now;
     const was = game.status;
-    const before = { stress: game.stress, health: game.health, motivation: game.motivation, money: game.money, logN: game.log.length };
+    // v6.19: what this turn's plan takes from your savings, for the "This turn" chip.
+    const draw = Math.max(0, game.planCost(plan, method) - game.budget() - game.income(plan));
+    const before = { stress: game.stress, health: game.health, motivation: game.motivation, money: game.money, logN: game.log.length, draw };
     lastMove = null; // the route of a move stays on the map until the next turn
     try {
       game.advance(plan, method);
@@ -656,7 +667,7 @@
     moved.sort((a, b) => Math.abs(b.v) - Math.abs(a.v));
     const cond = moved.find((x) => x.k !== "motivation") || moved[0];
     if (cond) chips.push({ key: "sum.stat", p: cond, tone: (cond.k === "stress" ? cond.v < 0 : cond.v > 0) ? "good" : "bad" });
-    if (month.p.cost) chips.push({ key: "sum.spent", p: { a: month.p.cost }, tone: "cost" });
+    if (month.p.cost) chips.push({ key: "sum.spent", p: { a: month.p.cost, o: before.draw || 0 }, tone: "cost" });
     else if (g.money > before.money) chips.push({ key: "sum.earned", p: { a: g.money - before.money }, tone: "good" });
     const rep = fresh.find((l) => l.key === "log.report");
     // v6.11: the free semester has no exams, so no rank chip.

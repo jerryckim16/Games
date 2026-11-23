@@ -370,15 +370,19 @@
       "plan.methodNote": (p, h) => "×" + p.x + " study speed · " + (p.cost ? h.won(p.cost) + " per study block a month" : "free") + " · " +
         (p.sens >= 1 ? "only as good as your motivation" : p.sens >= 0.6 ? "keeps you on task" : "barely depends on motivation"),
       "plan.studyHint": (p) => "Ability " + p.v + (p.s === "eng" ? " · absolute grading: 90+ is grade 1" : p.s === "hist" ? " · absolute grading: 40+ is grade 1" : ""),
-      "plan.cost": (p, h) => "Costs " + h.won(p.c) + " of the " + h.won(p.b) + " education budget" + (p.o ? " (" + h.won(p.o) + " from your savings)" : "") +
+      // v6.19: past the budget it says "all of it, and this much of your savings"; p.pf is what the
+      // prep academy already took out of the budget this turn.
+      "plan.cost": (p, h) => "Costs " + h.won(p.c) + (p.o ? ": all of the " + h.won(p.b) + " education budget" + (p.pf ? " left after the prep academy (" + h.won(p.pf) + ")" : "") + " and " + h.won(p.o) + " from your savings" :
+        " of the " + h.won(p.b) + " education budget" + (p.pf ? " left after the prep academy (" + h.won(p.pf) + ")" : "")) +
         (p.e ? " · earns " + h.won(p.e) : "") + " · savings after: " + h.wonShort(p.m),
+      "plan.spend": (p, h) => "−" + h.wonShort(p.o) + " savings (" + h.wonShort(p.m) + " left)",
       "plan.less": "Less {a}", "plan.more": "More {a}",
       "plan.repeat": "Same as last time", "plan.clear": "Clear", "plan.sit": "Sit the exam →",
       "plan.next": (p) => ({ early: "Next year →", elem: "Next year →", mid: "Next semester →", high: "Next season →" })[p.st] || "Next month →",
       "err.count": "Each activity needs a whole number of blocks.",
       "err.blocks": "Use exactly {n} blocks.",
       "err.method": "Pick a study method.",
-      "err.money": "Not enough money for this plan.",
+      "err.money": (p, h) => "Not enough money for this plan" + (p.s ? ": " + h.won(p.s) + " short. Online lectures and self-study cost less." : "."),
 
       "log.title": "Life log",
       "history.title": "Exam history",
@@ -769,6 +773,11 @@
       // v6.10: a carer doesn't brag about a friend's son, and dinner in a home isn't a family's.
       "ev.nag.text.care": "Your carer finds your phone screen time: 6 hours a day. \"The older kids here are up past midnight studying for their exams, you know.\"",
       "ev.nag.r1.care": "Doors slam. You eat dinner at the far end of the table for three days.",
+      // v6.19: after leaving care (".careOut"), nobody hands you a lunch box or checks your phone.
+      "ev.nag.text.careOut": "Your phone's weekly report pops up: 6 hours of screen time a day. In your rooftop room there's nobody to see it but you.",
+      "ev.nag.c.careOut": ["Lock the phone in a timer box", "Shrug and keep scrolling"],
+      "ev.nag.r1.careOut": "Nobody slams a door. The scrolling just goes on, past 2am, for three nights.",
+      "ev.lunch.text.careOut": "Exam morning in your rooftop room. Last night you packed your own lunch box. What's inside?",
       "ev.crush.text": "Someone from your study room slips you a note and a canned coffee. 😳",
       "ev.crush.c": ["Start dating", "Politely say \"after the exam\""],
       "ev.crush.r0a": "You quiz each other on vocabulary at the café. Weirdly productive.",
@@ -1357,15 +1366,17 @@
       "plan.methodNote": (p, h) => "학습 속도 ×" + p.x + " · " + (p.cost ? "공부 한 칸당 월 " + h.won(p.cost) : "무료") + " · " +
         (p.sens >= 1 ? "의지가 약하면 효과도 약함" : p.sens >= 0.6 ? "공부를 붙잡아 줌" : "의지와 거의 상관없음"),
       "plan.studyHint": (p) => "실력 " + p.v + (p.s === "eng" ? " · 절대평가: 90점 이상 1등급" : p.s === "hist" ? " · 절대평가: 40점 이상 1등급" : ""),
-      "plan.cost": (p, h) => "교육비 " + h.won(p.b) + " 중 " + h.won(p.c) + " 사용" + (p.o ? " (" + h.won(p.o) + "은 용돈에서)" : "") +
+      "plan.cost": (p, h) => "교육비 " + h.won(p.b) + (p.pf ? "(입시학원비 " + h.won(p.pf) + "을 뺀 나머지)" : "") +
+        (p.o ? (p.pf ? "를" : "을") + " 모두 쓰고 " + h.won(p.o) + "은 용돈에서 (모두 " + h.won(p.c) + ")" : " 중 " + h.won(p.c) + " 사용") +
         (p.e ? " · 수입 " + h.won(p.e) : "") + " · 남는 용돈 " + h.wonShort(p.m),
+      "plan.spend": (p, h) => "용돈 −" + h.wonShort(p.o) + " (남음 " + h.wonShort(p.m) + ")",
       "plan.less": "{a} 줄이기", "plan.more": "{a} 늘리기",
       "plan.repeat": "지난번과 같게", "plan.clear": "비우기", "plan.sit": "수능 보러 가기 →",
       "plan.next": (p) => ({ early: "다음 해 →", elem: "다음 해 →", mid: "다음 학기 →", high: "다음 계절 →" })[p.st] || "다음 달 →",
       "err.count": "칸 수는 정수여야 합니다.",
       "err.blocks": "{n}칸을 모두 배정하세요.",
       "err.method": "공부 방법을 고르세요.",
-      "err.money": "이 계획을 하기엔 돈이 부족합니다.",
+      "err.money": (p, h) => "이 계획을 하기엔 돈이 부족합니다" + (p.s ? ": " + h.won(p.s) + " 모자랍니다. 인강과 독학은 돈이 덜 듭니다." : "."),
 
       "log.title": "인생 기록",
       "history.title": "시험 기록",
@@ -1756,6 +1767,10 @@
       "ev.nag.r1": "문이 쾅 닫힌다. 사흘 동안 저녁 식탁이 조용하다.",
       "ev.nag.text.care": "보육원 선생님이 휴대폰 사용 시간을 봤다. 하루 6시간. \"여기 고3 애들은 밤 12시 넘어서까지 공부하는 거 알지?\"",
       "ev.nag.r1.care": "문이 쾅 닫힌다. 사흘 동안 식탁 맨 끝자리에서 밥을 먹는다.",
+      "ev.nag.text.careOut": "휴대폰 주간 리포트가 뜬다. 하루 사용 시간 6시간. 옥탑방에서는 그걸 볼 사람이 나밖에 없다.",
+      "ev.nag.c.careOut": ["휴대폰을 타임락 상자에 넣는다", "어깨를 으쓱하고 계속 본다"],
+      "ev.nag.r1.careOut": "문을 쾅 닫을 사람도 없다. 사흘 밤 내내 새벽 2시 넘어서까지 화면을 넘긴다.",
+      "ev.lunch.text.careOut": "옥탑방에서 맞는 수능 날 아침. 어젯밤 도시락을 직접 쌌다. 무엇이 들어 있을까?",
       "ev.crush.text": "독서실의 누군가가 쪽지와 캔커피를 건넸다. 😳",
       "ev.crush.c": ["사귄다", "\"수능 끝나고\"라고 정중하게 말한다"],
       "ev.crush.r0a": "카페에서 서로 영단어 시험을 내 준다. 의외로 효율적이다.",
@@ -2764,7 +2779,9 @@
         const c = ctx && ctx();
         // A life in care reads its own version of a message where one exists (key + ".care"), and so
         // does a life with one parent or with grandparents (v6.13: key + ".mom", ".dad", ".grand").
-        const alt = c && c.parents && c.parents !== "both" ? M[key + "." + c.parents] : null;
+        // v6.19: someone who has left care (c.out) lives alone: key + ".careOut" comes first.
+        const own = c && c.parents === "care" && c.out ? M[key + ".careOut"] : null;
+        const alt = own != null ? own : c && c.parents && c.parents !== "both" ? M[key + "." + c.parents] : null;
         const v = alt != null ? alt : M[key];
         if (v == null) return key;
         let out;
@@ -3375,7 +3392,7 @@
     "sum.title": "This turn",
     "sum.gain": (p, h) => h.sub(p.s) + " +" + p.v,
     "sum.stat": (p, h) => h.t("cond." + p.k) + " " + (p.v > 0 ? "+" : "−") + Math.abs(p.v),
-    "sum.spent": (p, h) => "Spent " + h.wonShort(p.a),
+    "sum.spent": (p, h) => "Spent " + h.wonShort(p.a) + (p.o ? " (" + h.wonShort(p.o) + " of it savings)" : ""),
     "sum.earned": (p, h) => "Earned " + h.wonShort(p.a),
     "sum.rank": "Class rank {r} of {of}",
     "sum.free": "Free semester: no exams",
@@ -3404,7 +3421,7 @@
     "sum.title": "이번 턴",
     "sum.gain": (p, h) => h.sub(p.s) + " +" + p.v,
     "sum.stat": (p, h) => h.t("cond." + p.k) + " " + (p.v > 0 ? "+" : "−") + Math.abs(p.v),
-    "sum.spent": (p, h) => h.wonShort(p.a) + " 지출",
+    "sum.spent": (p, h) => h.wonShort(p.a) + " 지출" + (p.o ? " (용돈 " + h.wonShort(p.o) + ")" : ""),
     "sum.earned": (p, h) => h.wonShort(p.a) + " 수입",
     "sum.rank": "반 {r}등 ({of}명 중)",
     "sum.free": "자유학기: 시험 없음",
@@ -3475,8 +3492,11 @@
   // (p.prep its fee a month, p.b the education budget a month): the talk itself is the question.
   Object.assign(MSG.en, {
     "ev.goip.text": (p, h) => MSG.en["ev.goip." + (p.o && p.o.length ? "r" : "none")](p, h) + (p.prep ? " The prep academy for selective high schools near you runs weeknights and Saturdays until the applications: " +
-      h.won(p.prep) + " a month, out of your parents' " + h.won(p.b) + " education budget." : ""),
-    "ev.goip.c": (p, h) => ["Keep going as you are", "Sign up at the prep academy (" + h.won(p.prep) + " a month, harder semesters)", "Settle on the local high school"],
+      h.won(p.prep) + " a month, out of your parents' " + h.won(p.b) + " education budget." : "") +
+      // v6.19: what the academy leaves for the plan you already have, and what that takes from savings.
+      (p.ov ? " With last semester's plan on top (" + h.won(p.hw) + " a month), " + h.won(p.ov) + " a month would come out of your own savings: " + h.won(p.tot) +
+        " by the applications" + (p.tot > p.sv ? ", more than the " + h.won(p.sv) + " you have, so you'd have to switch to cheaper lessons." : ", of the " + h.won(p.sv) + " you have.") : ""),
+    "ev.goip.c": (p, h) => ["Keep going as you are", "Sign up at the prep academy (" + h.won(p.prep) + " a month" + (p.ov ? ", so " + h.won(p.ov) + " a month from your savings" : "") + ", harder semesters)", "Settle on the local high school"],
     "ev.goip.r0": "You keep to your own routine. The school screen at the end of the year will show where the marks got you.",
     "ev.goip.r1": (p, h) => "You sign up. Weeknights until ten and every Saturday, a year ahead of the school's syllabus, with a level test every month. " +
       h.won(p.prep) + " a month comes out of the education budget until the applications. (Stress up, the selective schools' subjects get extra lessons)",
@@ -3485,8 +3505,10 @@
   });
   Object.assign(MSG.ko, {
     "ev.goip.text": (p, h) => MSG.ko["ev.goip." + (p.o && p.o.length ? "r" : "none")](p, h) + (p.prep ? " 근처 특목고·자사고 입시학원은 원서 낼 때까지 평일 저녁과 토요일 수업이다. 한 달 " +
-      h.won(p.prep) + "으로, 부모님 교육비 " + h.won(p.b) + "에서 나간다." : ""),
-    "ev.goip.c": (p, h) => ["지금처럼 한다", "입시학원에 등록한다 (한 달 " + h.won(p.prep) + ", 더 힘든 두 학기)", "동네 일반고로 마음을 정한다"],
+      h.won(p.prep) + "으로, 부모님 교육비 " + h.won(p.b) + "에서 나간다." : "") +
+      (p.ov ? " 지난 학기 계획(한 달 " + h.won(p.hw) + ")까지 하면 한 달 " + h.won(p.ov) + "씩 내 용돈에서 나간다. 원서 낼 때까지 " + h.won(p.tot) +
+        (p.tot > p.sv ? "으로, 가진 용돈 " + h.won(p.sv) + "보다 많아 더 싼 공부 방법으로 바꿔야 한다." : "으로, 가진 용돈 " + h.won(p.sv) + "에서 나가는 돈이다.") : ""),
+    "ev.goip.c": (p, h) => ["지금처럼 한다", "입시학원에 등록한다 (한 달 " + h.won(p.prep) + (p.ov ? ", 그러면 용돈에서 한 달 " + h.won(p.ov) : "") + ", 더 힘든 두 학기)", "동네 일반고로 마음을 정한다"],
     "ev.goip.r0": "지금 하던 대로 한다. 성적이 어디까지 닿았는지는 연말 원서 철에 알게 된다.",
     "ev.goip.r1": (p, h) => "등록했다. 평일 밤 열 시까지, 토요일마다, 학교 진도보다 1년 앞서 나가고 매달 레벨테스트가 있다. 원서 낼 때까지 교육비에서 한 달 " +
       h.won(p.prep) + "이 나간다. (스트레스 상승, 특목고·자사고 과목 추가 수업)",
