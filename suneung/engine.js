@@ -1375,12 +1375,19 @@
         // v6.17: a prep academy when an academic selective school is open and the budget covers it
         // (p.prep: its fee a month, p.b: the budget a month). Then the talk is a choice (choices below).
         const prep = open.some((x) => PREP_SUBJ[x.id]) && g.allowance() >= g.prepFee() ? g.prepFee() : 0;
+        // v6.19: the academy's fee leaves less of the budget for the cram school you already go to, and
+        // the rest comes out of your own savings without a word. Say what last semester's plan would
+        // cost a month on top of it (p.hw), how much of that is savings (p.ov, and p.tot over both
+        // semesters) and what you have (p.sv).
+        // Display only: reads no RNG and changes nothing.
+        const mon = prep && g.lastPlan ? g.planCost(g.lastPlan, g.method) / g.turnMonths() : 0;
+        const ov = Math.max(0, mon - (g.allowance() - prep));
         return Object.assign({
           o: open.map((x) => ({ id: x.id, p: Math.max(1, Math.round(x.p * 100)) })),
           no: o.filter((x) => x.blocked === "admit").map((x) => x.id),
           cost: o.filter((x) => x.blocked === "cost").map((x) => x.id),
           fell: o.some((x) => x.blocked === "cost" && fell.indexOf(x.id) >= 0) ? 1 : 0,
-        }, prep ? { prep, b: g.allowance() } : null);
+        }, prep ? { prep, b: g.allowance() } : null, ov > 0 ? { hw: Math.round(mon), ov: Math.round(ov), tot: Math.round(ov) * 2 * g.turnMonths(), sv: g.money } : null);
       },
       // v6.17: with a prep academy on offer: 0 keep going as you are, 1 the prep academy, 2 settle on
       // the local high school (no application pressure in the fall). Without one, information only.
